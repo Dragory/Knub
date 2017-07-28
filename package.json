@@ -1,0 +1,37 @@
+{
+  "name": "newbotframework",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "precommit": "lint-staged",
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/escape-string-regexp": "0.0.30",
+    "@types/node": "^8.0.15",
+    "husky": "^0.14.3",
+    "lint-staged": "^4.0.2",
+    "prettier": "^1.5.3",
+    "ts-node": "^3.2.1",
+    "tslint": "^5.5.0",
+    "tslint-config-prettier": "^1.1.0",
+    "typescript": "^2.4.2"
+  },
+  "peerDependencies": {
+    "eris": "^0.7.0",
+    "eris-typings": "github:aurieh/eris-typings#dev"
+  }
+}

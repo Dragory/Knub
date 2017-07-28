@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "module": "system",
+    "noImplicitAny": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "baseUrl": "./",
+    "paths": {
+      "eris": ["eris", "node_modules/eris-typings/index"]
+    },
+    "outFile": "dist/index.js",
+    "sourceMap": true,
+    "declaration": true
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
