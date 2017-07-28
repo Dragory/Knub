@@ -10,7 +10,8 @@
     "test": "mocha -r ts-node/register test/**/*.ts",
     "precommit": "lint-staged",
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "format": "prettier --write \"./**/*.ts\""
   },
   "lint-staged": {
     "*.ts": [

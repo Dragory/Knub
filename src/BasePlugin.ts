@@ -32,12 +32,12 @@ export abstract class BasePlugin {
   }
 
   // Wrap register() in a promise
-  public internalRegister(...args: any[]): Promise<any> {
+  public runRegister(...args: any[]): Promise<any> {
     return Promise.resolve(this.register(...args));
   }
 
   // Clear event handlers and wrap deregister() in a promise
-  public internalDeregister(): Promise<any> {
+  public runDeregister(): Promise<any> {
     this.clearEventHandlers();
     return Promise.resolve(this.deregister());
   }
