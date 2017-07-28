@@ -1,14 +1,19 @@
 {
   "compilerOptions": {
-    "module": "system",
+    "module": "CommonJS",
     "noImplicitAny": true,
     "allowSyntheticDefaultImports": true,
     "target": "ESNext",
     "baseUrl": "./",
     "paths": {
-      "eris": ["eris", "node_modules/eris-typings/index"]
+      "eris": ["eris", "node_modules/eris-typings/index"],
+      "minimist-string": ["minimist-string", "@types/minimist-string"]
     },
-    "outFile": "dist/index.js",
+    "typeRoots": [
+      "node_modules/@types",
+      "@types"
+    ],
+    "outDir": "dist",
     "sourceMap": true,
     "declaration": true
   },

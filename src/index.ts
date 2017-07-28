@@ -1,1 +1,1 @@
-console.log('hi');
+export { BasePlugin } from "./BasePlugin";

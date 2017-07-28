@@ -7,7 +7,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha -r ts-node/register test/**/*.ts",
     "precommit": "lint-staged",
     "build": "tsc",
     "prepublishOnly": "npm run build"
@@ -18,20 +18,27 @@
       "git add"
     ]
   },
-  "dependencies": {},
+  "dependencies": {
+    "escape-string-regexp": "^1.0.5",
+    "minimist-string": "^1.0.2"
+  },
   "devDependencies": {
+    "@types/chai": "^4.0.1",
     "@types/escape-string-regexp": "0.0.30",
+    "@types/minimist": "^1.2.0",
+    "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.15",
+    "chai": "^4.1.0",
+    "eris": "^0.7.0",
+    "eris-typings": "github:aurieh/eris-typings#dev",
     "husky": "^0.14.3",
     "lint-staged": "^4.0.2",
+    "mocha": "^3.4.2",
     "prettier": "^1.5.3",
     "ts-node": "^3.2.1",
     "tslint": "^5.5.0",
     "tslint-config-prettier": "^1.1.0",
     "typescript": "^2.4.2"
   },
-  "peerDependencies": {
-    "eris": "^0.7.0",
-    "eris-typings": "github:aurieh/eris-typings#dev"
-  }
+  "peerDependencies": {}
 }
