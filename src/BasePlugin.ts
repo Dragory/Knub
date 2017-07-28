@@ -1,13 +1,11 @@
-import {Client} from 'eris';
+import { Client } from "eris";
 
 export class BasePlugin {
-    protected bot: Client;
-    protected pluginConfig: object;
+  protected bot: Client;
+  protected pluginConfig: object;
 
-    constructor(bot: Client, pluginConfig: object) {
-        this.bot = bot;
-        this.pluginConfig = pluginConfig;
-        // a
-        // b
-    }
+  constructor(bot: Client, pluginConfig: object) {
+    this.bot = bot;
+    this.pluginConfig = pluginConfig;
+  }
 }
