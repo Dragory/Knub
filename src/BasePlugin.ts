@@ -7,5 +7,6 @@ export class BasePlugin {
     constructor(bot: Client, pluginConfig: object) {
         this.bot = bot;
         this.pluginConfig = pluginConfig;
+        // a
     }
 }
