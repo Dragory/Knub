@@ -13,7 +13,7 @@
     "prepublishOnly": "npm run build"
   },
   "lint-staged": {
-    "src/**/*.ts": [
+    "*.ts": [
       "prettier --write",
       "git add"
     ]

@@ -8,5 +8,6 @@ export class BasePlugin {
         this.bot = bot;
         this.pluginConfig = pluginConfig;
         // a
+        // b
     }
 }
