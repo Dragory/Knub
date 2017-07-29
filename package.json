@@ -7,9 +7,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "mocha -r ts-node/register test/**/*.ts",
+    "test": "mocha -r ts-node/register test/**/*.ts -- --trace-warnings",
     "precommit": "lint-staged",
-    "build": "tsc",
+    "build": "tsc src/index.ts",
     "prepublishOnly": "npm run build",
     "format": "prettier --write \"./**/*.ts\""
   },

@@ -1,5 +1,5 @@
 import { Client } from "eris";
-import path from "path";
+import * as path from "path";
 
 import { BaseConfig } from "./BaseConfig";
 import { BasePlugin } from "./BasePlugin";
@@ -13,38 +13,107 @@ export type CustomConfigStorageCreator = (
 ) => BaseConfig | Promise<BaseConfig>;
 
 export interface IPluginList {
-  [key: string]: BasePlugin;
+  [key: string]: typeof BasePlugin;
 }
 
 export interface IOptions {
-  plugins: IPluginList;
   defaultPlugins?: string[];
   configStorage?: string | CustomConfigStorageCreator;
   [key: string]: any;
 }
 
+export interface IGuildData {
+  id: string;
+  config: BaseConfig;
+  plugins: Map<string, BasePlugin>;
+}
+
 export default class BotFramework {
   protected bot: Client;
+  protected plugins: Map<string, typeof BasePlugin>;
   protected options: IOptions;
+  protected guilds: Map<string, IGuildData>;
 
-  constructor(bot: Client, options: IOptions) {
+  constructor(bot: Client, plugins: IPluginList, options: IOptions) {
     this.bot = bot;
-    this.options = options;
+
+    this.plugins = new Map();
+
+    Object.keys(plugins).forEach(key => {
+      this.plugins.set(key, plugins[key]);
+    });
+
+    const defaultOptions: IOptions = {
+      configStorage: "json",
+      defaultPlugins: Array.from(this.plugins.keys())
+    };
+
+    this.options = { ...defaultOptions, ...options };
+
+    this.guilds = new Map();
   }
 
-  protected getConfig(id: string): Promise<BaseConfig> {
+  public async initGuild(guildId: string): Promise<IGuildData> {
+    const guildConfig = await this.getConfig(`guild_${guildId}`);
+
+    const enabledPlugins: string[] = await guildConfig.get(
+      "plugins",
+      this.options.defaultPlugins
+    );
+    const plugins = new Map();
+
+    const loadPromises = enabledPlugins.map(async pluginName => {
+      const plugin = await this.loadPlugin(guildId, pluginName, guildConfig);
+      plugins.set(pluginName, plugin);
+    });
+
+    await Promise.all(loadPromises);
+
+    return {
+      config: guildConfig,
+      id: guildId,
+      plugins
+    };
+  }
+
+  protected async loadPlugin(
+    guildId: string,
+    pluginName: string,
+    guildConfig: BaseConfig
+  ): Promise<BasePlugin> {
+    if (!this.plugins.has(pluginName)) {
+      throw new Error(`Unknown plugin: ${pluginName}`);
+    }
+
+    const pluginConfig = await this.getConfig(
+      `guild_${guildId}_plugin_${pluginName}`
+    );
+
+    const PluginObj: typeof BasePlugin = this.plugins.get(pluginName);
+    const plugin = new PluginObj(this.bot, guildId, guildConfig, pluginConfig);
+
+    await plugin.runLoad();
+
+    return plugin;
+  }
+
+  protected async unloadPlugin(plugin: BasePlugin): Promise<void> {
+    await plugin.runUnload();
+  }
+
+  protected async getConfig(id: string): Promise<BaseConfig> {
     if (typeof this.options.configStorage === "string") {
       // Built-in config types
       if (this.options.configStorage === "json") {
         // Flat JSON files
         const dir = this.options.jsonDataDir || "data";
-        return Promise.resolve(new JsonConfig(path.join(dir, `${id}.json`)));
+        return new JsonConfig(path.join(dir, `${id}.json`));
       } else {
         throw new Error("Invalid configStorage specified");
       }
     } else if (typeof this.options.configStorage === "function") {
       // Custom config type
-      return Promise.resolve(this.options.configStorage(id));
+      return this.options.configStorage(id);
     }
   }
 }

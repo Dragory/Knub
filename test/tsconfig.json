@@ -9,18 +9,15 @@
     ],
     "baseUrl": "./",
     "paths": {
-      "eris": ["eris", "node_modules/eris-typings/index"],
-      "minimist-string": ["minimist-string", "@types/minimist-string"]
+      "eris": ["eris", "../node_modules/eris-typings/index"],
+      "minimist-string": ["minimist-string", "../@types/minimist-string"]
     },
     "typeRoots": [
-      "node_modules/@types",
-      "@types"
+      "../node_modules/@types",
+      "../@types"
     ],
     "outDir": "dist",
     "sourceMap": true,
     "declaration": true
-  },
-  "include": [
-    "src/**/*"
-  ]
+  }
 }

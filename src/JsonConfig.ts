@@ -1,11 +1,15 @@
-import fs from "fs";
-import path from "path";
+import * as fs from "fs";
+import * as path from "path";
 import { promisify } from "util";
 
 import { BaseConfig } from "./BaseConfig";
 
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
+
+const fn = async () => {
+  console.log("hi");
+};
 
 export interface IConfig {
   [key: string]: any;

@@ -4,7 +4,7 @@ import { BaseConfig } from "./BaseConfig";
 
 export type CallbackFunctionVariadic = (...args: any[]) => void;
 
-export abstract class BasePlugin {
+export class BasePlugin {
   protected bot: Client;
   protected guildId: string;
   protected guildConfig: BaseConfig;
@@ -25,21 +25,23 @@ export abstract class BasePlugin {
     this.eventHandlers = new Map();
   }
 
-  public abstract register(): any;
+  public load(): any {
+    // Empty by default
+  }
 
-  public deregister(): any {
+  public unload(): any {
     // Empty by default
   }
 
   // Wrap register() in a promise
-  public runRegister(...args: any[]): Promise<any> {
-    return Promise.resolve(this.register(...args));
+  public runLoad(...args: any[]): Promise<any> {
+    return Promise.resolve(this.load(...args));
   }
 
   // Clear event handlers and wrap deregister() in a promise
-  public runDeregister(): Promise<any> {
+  public runUnload(): Promise<any> {
     this.clearEventHandlers();
-    return Promise.resolve(this.deregister());
+    return Promise.resolve(this.unload());
   }
 
   protected on(
