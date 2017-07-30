@@ -3,7 +3,7 @@ import minimistString = require("minimist-string");
 
 export interface IParsedCommand {
   prefix: string;
-  command: string;
+  commandName: string;
   args: any;
 }
 
@@ -16,13 +16,13 @@ export function parse(prefix: string, str: string): IParsedCommand {
     return null;
   }
 
-  const command = matches[1];
+  const commandName = matches[1];
   const argStr = matches[2] || "";
   const args = minimistString(argStr);
 
   return {
     args,
-    command,
+    commandName,
     prefix
   };
 }

@@ -1,15 +1,23 @@
-import { Channel, Client, Guild } from "eris";
+import { Channel, Client, Guild, GuildChannel, Message } from "eris";
 
 import { BaseConfig } from "./BaseConfig";
+import { parse as parseCommand } from "./CommandParser";
 
 export type CallbackFunctionVariadic = (...args: any[]) => void;
+
+export type CommandHandlerFunction = (
+  msg: Message,
+  args?: object
+) => void | Promise<void>;
 
 export class BasePlugin {
   protected bot: Client;
   protected guildId: string;
   protected guildConfig: BaseConfig;
   protected pluginConfig: BaseConfig;
-  protected eventHandlers: Map<string, any[]>;
+  private eventHandlers: Map<string, any[]>;
+  private commandHandlers: Map<string, CommandHandlerFunction[]>;
+  private commandListenerRegistered: boolean = false;
 
   constructor(
     bot: Client,
@@ -25,14 +33,6 @@ export class BasePlugin {
     this.eventHandlers = new Map();
   }
 
-  public load(): any {
-    // Empty by default
-  }
-
-  public unload(): any {
-    // Empty by default
-  }
-
   // Wrap register() in a promise
   public runLoad(...args: any[]): Promise<any> {
     return Promise.resolve(this.load(...args));
@@ -42,6 +42,14 @@ export class BasePlugin {
   public runUnload(): Promise<any> {
     this.clearEventHandlers();
     return Promise.resolve(this.unload());
+  }
+
+  protected load(): any {
+    // Implemented by plugin, empty by default
+  }
+
+  protected unload(): any {
+    // Implemented by plugin, empty by default
   }
 
   protected on(
@@ -84,7 +92,7 @@ export class BasePlugin {
     return removeListener;
   }
 
-  protected off(eventName: string, listener: CallbackFunctionVariadic) {
+  protected off(eventName: string, listener: CallbackFunctionVariadic): void {
     this.bot.removeListener(eventName, listener);
 
     if (this.eventHandlers.has(eventName)) {
@@ -93,7 +101,7 @@ export class BasePlugin {
     }
   }
 
-  protected clearEventHandlers() {
+  protected clearEventHandlers(): void {
     for (const [eventName, listeners] of this.eventHandlers) {
       listeners.forEach(listener => {
         this.bot.removeListener(eventName, listener);
@@ -101,5 +109,76 @@ export class BasePlugin {
     }
 
     this.eventHandlers.clear();
+  }
+
+  protected normalizeCommandName(commandName: string): string {
+    // Commands are case-insensitive and cannot contain whitespace
+    return commandName.trim().toLowerCase().replace(/\s/g, "");
+  }
+
+  protected onCommand(
+    commandName: string,
+    handler: CommandHandlerFunction
+  ): () => void {
+    if (!this.commandListenerRegistered) {
+      // If this is the first command we're registering for this plugin,
+      // register the event handler to parse messages for commands
+      this.on("messageCreate", this.runMessageCommands.bind(this));
+      this.commandListenerRegistered = true;
+    }
+
+    const normalizedCommandName = this.normalizeCommandName(commandName);
+
+    if (!this.commandHandlers.has(normalizedCommandName)) {
+      this.commandHandlers.set(normalizedCommandName, []);
+    }
+
+    this.commandHandlers.get(normalizedCommandName).push(handler);
+
+    // Return function to unregister the handler
+    return () => {
+      if (this.commandHandlers.has(normalizedCommandName)) {
+        const commands = this.commandHandlers.get(normalizedCommandName);
+        commands.splice(commands.indexOf(handler), 1);
+      }
+    };
+  }
+
+  protected async runMessageCommands(msg: Message): Promise<void> {
+    if (!(msg.channel instanceof GuildChannel)) {
+      // Ignore private messages
+      return;
+    }
+
+    if (msg.channel.guild.id !== this.guildId) {
+      // Restrict to this plugin's guild
+      return;
+    }
+
+    if (msg.content == null || msg.content.trim() === "") {
+      // Ignore messages without text (e.g. images, embeds, etc.)
+      return;
+    }
+
+    const prefix = await this.guildConfig.get("prefix", "!");
+    const parsedCommand = parseCommand(prefix, msg.content);
+
+    if (!parsedCommand) {
+      return;
+    }
+
+    const normalizedCommandName = this.normalizeCommandName(
+      parsedCommand.commandName
+    );
+
+    if (!this.commandHandlers.has(normalizedCommandName)) {
+      return;
+    }
+
+    const handlers = this.commandHandlers.get(normalizedCommandName);
+    for (const handler of handlers) {
+      // Run each handler sequentially
+      await handler(msg, parsedCommand.args);
+    }
   }
 }
