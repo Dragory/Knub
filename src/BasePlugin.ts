@@ -10,25 +10,42 @@ export type CommandHandlerFunction = (
   args?: object
 ) => void | Promise<void>;
 
+export interface ICommandOptions {
+  permissions?: {
+    permissions?: string[];
+    roles?: string[];
+    users?: string[];
+  };
+}
+
+export interface ICommandSpecification {
+  name: string;
+  handler: CommandHandlerFunction;
+  options: ICommandOptions;
+}
+
 export class BasePlugin {
   protected bot: Client;
   protected guildId: string;
   protected guildConfig: BaseConfig;
   protected pluginConfig: BaseConfig;
+  protected pluginName: string;
   private eventHandlers: Map<string, any[]>;
-  private commandHandlers: Map<string, CommandHandlerFunction[]>;
+  private registeredCommands: Map<string, ICommandSpecification[]>;
   private commandListenerRegistered: boolean = false;
 
   constructor(
     bot: Client,
     guildId: string,
     guildConfig: BaseConfig,
-    pluginConfig: BaseConfig
+    pluginConfig: BaseConfig,
+    pluginName: string
   ) {
     this.bot = bot;
     this.guildId = guildId;
     this.guildConfig = guildConfig;
     this.pluginConfig = pluginConfig;
+    this.pluginName = pluginName;
 
     this.eventHandlers = new Map();
   }
@@ -52,6 +69,68 @@ export class BasePlugin {
     // Implemented by plugin, empty by default
   }
 
+  protected async isAllowed(
+    msg: Message,
+    command?: ICommandSpecification
+  ): Promise<boolean> {
+    const [
+      pluginChannelBlacklist,
+      commandChannelBlacklist
+    ] = await Promise.all([
+      this.guildConfig.get("pluginChannelBlacklist"),
+      this.guildConfig.get("commandChannelBlacklist")
+    ]);
+
+    // Is this plugin blacklisted on this channel entirely?
+    if (
+      pluginChannelBlacklist[this.pluginName] &&
+      pluginChannelBlacklist[this.pluginName].includes(msg.channel.id)
+    ) {
+      return false;
+    }
+
+    // Is this command blacklisted on this channel?
+    if (
+      commandChannelBlacklist[this.pluginName] &&
+      commandChannelBlacklist[this.pluginName][command.name] &&
+      commandChannelBlacklist[this.pluginName][command.name].includes(
+        msg.channel.id
+      )
+    ) {
+      return false;
+    }
+
+    // Basic permissions
+    if (
+      command.options.permissions.permissions &&
+      command.options.permissions.permissions.some(
+        perm => !msg.member.permission.has(perm)
+      )
+    ) {
+      return false;
+    }
+
+    // Role permissions
+    if (
+      command.options.permissions.roles &&
+      command.options.permissions.roles.some(
+        roleId => !msg.member.roles.includes(roleId)
+      )
+    ) {
+      return false;
+    }
+
+    // User id permissions
+    if (
+      command.options.permissions.users &&
+      !command.options.permissions.users.includes(msg.member.id)
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
   protected on(
     eventName: string,
     listener: CallbackFunctionVariadic
@@ -63,7 +142,7 @@ export class BasePlugin {
     // Create a wrapper for the listener function that checks the first argument
     // for a Channel or Guild. If one is found, verify their guild id matches with
     // this plugin's guild id.
-    const wrappedListener = (...args: any[]) => {
+    const wrappedListener = async (...args: any[]) => {
       if (args[0] instanceof Channel) {
         if (args[0].guild && args[0].guild.id !== this.guildId) {
           return;
@@ -76,7 +155,13 @@ export class BasePlugin {
         }
       }
 
-      return listener(...args);
+      if (args[0] instanceof Message) {
+        if (!await this.isAllowed(args[0])) {
+          return;
+        }
+      }
+
+      listener(...args);
     };
 
     // Actually register the listener on the Eris client and store the listener
@@ -118,7 +203,8 @@ export class BasePlugin {
 
   protected onCommand(
     commandName: string,
-    handler: CommandHandlerFunction
+    handler: CommandHandlerFunction,
+    options: ICommandOptions = null
   ): () => void {
     if (!this.commandListenerRegistered) {
       // If this is the first command we're registering for this plugin,
@@ -129,17 +215,23 @@ export class BasePlugin {
 
     const normalizedCommandName = this.normalizeCommandName(commandName);
 
-    if (!this.commandHandlers.has(normalizedCommandName)) {
-      this.commandHandlers.set(normalizedCommandName, []);
+    if (!this.registeredCommands.has(normalizedCommandName)) {
+      this.registeredCommands.set(normalizedCommandName, []);
     }
 
-    this.commandHandlers.get(normalizedCommandName).push(handler);
+    const command: ICommandSpecification = {
+      handler,
+      name: commandName,
+      options: options || {}
+    };
 
-    // Return function to unregister the handler
+    this.registeredCommands.get(normalizedCommandName).push(command);
+
+    // Return function to unregister the command
     return () => {
-      if (this.commandHandlers.has(normalizedCommandName)) {
-        const commands = this.commandHandlers.get(normalizedCommandName);
-        commands.splice(commands.indexOf(handler), 1);
+      if (this.registeredCommands.has(normalizedCommandName)) {
+        const commands = this.registeredCommands.get(normalizedCommandName);
+        commands.splice(commands.indexOf(command), 1);
       }
     };
   }
@@ -167,18 +259,20 @@ export class BasePlugin {
       return;
     }
 
-    const normalizedCommandName = this.normalizeCommandName(
-      parsedCommand.commandName
-    );
+    const normalizedCommandName = this.normalizeCommandName(parsedCommand.name);
 
-    if (!this.commandHandlers.has(normalizedCommandName)) {
+    if (!this.registeredCommands.has(normalizedCommandName)) {
       return;
     }
 
-    const handlers = this.commandHandlers.get(normalizedCommandName);
-    for (const handler of handlers) {
+    const commands = this.registeredCommands.get(normalizedCommandName);
+    for (const command of commands) {
       // Run each handler sequentially
-      await handler(msg, parsedCommand.args);
+      if (!await this.isAllowed(msg, command)) {
+        continue;
+      }
+
+      await command.handler(msg, parsedCommand.args);
     }
   }
 }

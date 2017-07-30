@@ -3,7 +3,7 @@ import minimistString = require("minimist-string");
 
 export interface IParsedCommand {
   prefix: string;
-  commandName: string;
+  name: string;
   args: any;
 }
 
@@ -22,7 +22,7 @@ export function parse(prefix: string, str: string): IParsedCommand {
 
   return {
     args,
-    commandName,
+    name: commandName,
     prefix
   };
 }
