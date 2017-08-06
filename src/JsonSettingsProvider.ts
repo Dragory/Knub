@@ -2,28 +2,25 @@ import * as fs from "fs";
 import * as path from "path";
 import { promisify } from "util";
 
-import { BaseConfig } from "./BaseConfig";
+import { ISettingsProvider } from "./ISettingsProvider";
 
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
-
-const fn = async () => {
-  console.log("hi");
-};
 
 export interface IConfig {
   [key: string]: any;
 }
 
-export class JsonConfig extends BaseConfig {
+export class JsonSettingsProvider implements ISettingsProvider {
   protected path: string;
   protected saveQueue: Promise<any>;
   protected config: IConfig;
+  protected loadPromise: Promise<any>;
 
   constructor(filePath: string) {
-    super();
     this.path = filePath;
     this.config = null;
+    this.loadPromise = null;
 
     this.saveQueue = Promise.resolve();
   }
@@ -60,12 +57,20 @@ export class JsonConfig extends BaseConfig {
     await this.saveQueue;
 
     if (!this.config) {
-      try {
-        const data = await readFileAsync(this.path, { encoding: "utf8" });
-        this.config = JSON.parse(data);
-      } catch (e) {
-        this.config = {};
+      if (this.loadPromise) {
+        return this.loadPromise;
       }
+
+      this.loadPromise = Promise.resolve(
+        (async () => {
+          try {
+            const data = await readFileAsync(this.path, { encoding: "utf8" });
+            this.config = JSON.parse(data);
+          } catch (e) {
+            this.config = {};
+          }
+        })()
+      );
     }
   }
 
