@@ -50,17 +50,16 @@ export interface IMatchedCommand {
   args: IArgumentMap;
 }
 
-const argDefinitionSimpleRegex = /<.*?>/g;
+const argDefinitionSimpleRegex = /[<\[].*?[>\]]/g;
 
 const argDefinitionRegex = new RegExp(
-  "<" +
-  "([a-z0-9]+)" + // Argument name
-  "(?:\\:([a-z]+))?" + // Argument type
-  "(\\?)?" + // "?" to mark argument as optional
-  "(\\$)?" + // "$" to mark argument as a catch-all for the rest of the argument string
-  "(?:=(.+?))?" + // Default value
-  "(\\.\\.\\.)?" + // "..." to mark argument as a rest argument
-    ">",
+  "[<\\[]" +
+  "([a-z0-9]+?)" + // (1) Argument name
+  "(?:\\:([a-z]+?))?" + // (2) Argument type
+  "(?:=(.+?))?" + // (3) Default value
+  "(\\.\\.\\.)?" + // (4) "..." to mark argument as a rest argument
+  "(\\$)?" + // (5) "$" to mark argument as a catch-all for the rest of the argument string
+    "[>\\]]",
   "i"
 );
 
@@ -75,6 +74,15 @@ export class MissingArgumentError extends Error {
   }
 }
 
+const defaultParameter: IParameter = {
+  name: null,
+  type: "string",
+  required: true,
+  catchAll: false,
+  def: null,
+  rest: false
+};
+
 export class CommandManager {
   public commands: ICommandDefinition[] = [];
 
@@ -83,150 +91,149 @@ export class CommandManager {
    *
    * Examples:
    *
-   * addCommand("addrole <user:Member> <role:Role>", (msg, args) => ...)
-   *   Adds a command called "addrole" with two required arguments without default values
+   * addCommand("addrole", "<user:Member> <role:Role>", (msg, args) => ...)
+   *   Adds a command called "addrole" with two required arguments without default values.
+   *   These arguments are added in a easily-readable string format.
+   *
+   * addCommand("setgreeting", [{name: "msg", type: "string", catchAll: true}], (msg, args) => ...)
+   *   Adds a command with a required argument "msg" that captures the entire rest of the arguments.
+   *   These arguments are added in a more programmable, array of objects format.
    *
    * addCommand(/p[io]ng/, (msg, args) => ...)
    *   Adds a command with a regex trigger and no arguments
    *
-   * addCommand("setgreeting <msg:string>", {msg: {def: someLongText}}, (msg, args) => ...)
-   *   Adds a command with a required argument "msg".
-   *   The argument's default value is set to a variable in the second argument.
-   *   In this case, the second argument is an object with argument name as the key and argument details as the value.
-   *
-   * addCommand("8ball", [{name: "question"}], (msg, args) => ...)
-   *   Adds a command with arguments defined in an array
-   *
-   * addCommand("addroles <user:Member> <roleName:string...>", (msg, args) => ...)
+   * addCommand("addroles", "<user:Member> <roleName:string...>", (msg, args) => ...)
    *   Adds a command with a required, repeatable argument "roleName"
    */
   public add(command: string | RegExp, ...rest: any[]) {
     let trigger: RegExp;
-    let args: IParameter[] = [];
+    let parameters: IParameter[] = [];
+    let handler: CommandHandler = null;
+    let options = {};
+    let inputParams = [];
 
-    if (typeof command === "string") {
-      // If the first argument is a string, parse command name + arguments from it
-      const argDefinitions = command.match(argDefinitionSimpleRegex) || [];
-      let hadOptional = false;
-      let hadRest = false;
-      let hadCatchAll = false;
-
-      args = argDefinitions.map((argDefinition, i) => {
-        const details = argDefinition.match(argDefinitionRegex);
-        if (!details) {
-          throw new Error(`Invalid argument definition: ${argDefinition}`);
-        }
-
-        let def: any = details[5];
-        const isRest = details[6] === "...";
-        const isOptional = details[3] === "?" || def != null;
-        const isCatchAll = details[4] === "$";
-
-        if (isOptional) {
-          hadOptional = true;
-        } else if (hadOptional) {
-          throw new Error(`Optional arguments must come last`);
-        }
-
-        if (hadRest) {
-          throw new Error(`Rest argument must come last`);
-        }
-
-        if (isRest) {
-          hadRest = true;
-        }
-
-        if (hadCatchAll) {
-          throw new Error(`Catch-all argument must come last`);
-        }
-
-        if (isCatchAll) {
-          hadCatchAll = true;
-        }
-
-        if (isRest && def != null) {
-          throw new Error(
-            `Rest argument default values need to be defined in the second argument`
-          );
-        }
-
-        if (isRest && isCatchAll) {
-          throw new Error(
-            `Argument cannot be a rest argument and a catch-all argument at the same time`
-          );
-        }
-
-        if (isRest) {
-          def = [];
-        }
-
-        if (isCatchAll && def == null) {
-          def = "";
-        }
-
-        return {
-          name: details[1],
-          type: details[2] || "string",
-          required: !isOptional,
-          catchAll: isCatchAll,
-          def,
-          rest: isRest
-        };
-      });
-
-      const commandWithoutArgs = command
-        .replace(argDefinitionSimpleRegex, "")
-        .trim();
-      trigger = new RegExp(escapeStringRegex(commandWithoutArgs), "i");
+    // Support a variable amount of arguments:
+    if (rest.length === 3) {
+      // command, args, callback, options
+      [inputParams, handler, options] = rest;
+    } else if (rest.length === 2) {
+      if (typeof rest[1] === "function") {
+        // command, args, callback
+        [inputParams, handler] = rest;
+      } else {
+        // command, callback, options
+        [handler, options] = rest;
+      }
+    } else if (rest.length === 1) {
+      // command, callback
+      handler = rest[0];
     } else {
-      // If the first argument is regex, use it directly
+      throw new Error("Invalid number of arguments for CommandManager::add");
+    }
+
+    // Command can either be a plain string or a regex
+    // If string, escape it and turn it into regex
+    if (typeof command === "string") {
+      trigger = new RegExp(escapeStringRegex(command), "i");
+    } else {
       trigger = command;
     }
 
-    let handler: CommandHandler = null;
-    let options = {};
-
-    if (rest.length > 1 && typeof rest[rest.length - 1] === "object") {
-      options = rest[rest.length - 1];
-      rest = rest.slice(0, -1);
-    }
-
-    if (rest.length === 1) {
-      // No extra argument info
-      handler = rest[0];
-    } else if (rest.length === 2) {
-      // Second parameter is extra argument info
-      const argDetails = rest[0];
-      handler = rest[1];
-
-      if (Array.isArray(argDetails)) {
-        // Array of argument definitions
-        args = args.concat(argDetails);
-      } else if (typeof argDetails === "object") {
-        // Object of name => argument definition
-        // Go through all defined arguments and extend their settings with settings from the object, if any
-        args.forEach(arg => {
-          if (argDetails[arg.name]) {
-            Object.assign(arg, argDetails[arg.name]);
-          }
-        });
-      }
+    // If arguments are provided in string format, parse it
+    if (typeof inputParams === "string") {
+      parameters = this.parseParameterString(inputParams);
+    } else if (Array.isArray(inputParams)) {
+      parameters = inputParams;
     } else {
-      throw new Error(`Invalid argument count for addCommand`);
+      throw new Error(`Invalid parameter definition`);
     }
 
+    parameters = parameters.map(obj =>
+      Object.assign({}, defaultParameter, obj)
+    );
+
+    // Validate arguments to prevent unsupported behaviour
+    let hadOptional = false;
+    let hadRest = false;
+    let hadCatchAll = false;
+
+    parameters.forEach(arg => {
+      if (!arg.required) {
+        hadOptional = true;
+      } else if (hadOptional) {
+        throw new Error(`Optional arguments must come last`);
+      }
+
+      if (hadRest) {
+        throw new Error(`Rest argument must come last`);
+      }
+
+      if (arg.rest) {
+        hadRest = true;
+      }
+
+      if (hadCatchAll) {
+        throw new Error(`Catch-all argument must come last`);
+      }
+
+      if (arg.catchAll) {
+        hadCatchAll = true;
+      }
+
+      if (arg.rest && arg.catchAll) {
+        throw new Error(
+          `Argument cannot be a rest argument and a catch-all argument at the same time`
+        );
+      }
+    });
+
+    // Actually add the command to the manager
     const definition: ICommandDefinition = {
       trigger,
-      parameters: args,
+      parameters,
       handler,
       options
     };
 
     this.commands.push(definition);
 
+    // Return a function to remove the command
     return () => {
       this.commands.splice(this.commands.indexOf(definition), 1);
     };
+  }
+
+  public parseParameterString(str: string): IParameter[] {
+    const parameterDefinitions = str.match(argDefinitionSimpleRegex) || [];
+
+    return parameterDefinitions.map((parameterDefinition, i) => {
+      const details = parameterDefinition.match(argDefinitionRegex);
+      if (!details) {
+        throw new Error(`Invalid argument definition: ${parameterDefinition}`);
+      }
+
+      let defaultValue: any = details[3];
+      const isRest = details[4] === "...";
+      const isOptional = parameterDefinition[0] === "[" || defaultValue != null;
+      const isCatchAll = details[5] === "$";
+
+      if (isRest) {
+        defaultValue = [];
+      }
+
+      if (isCatchAll && defaultValue == null) {
+        defaultValue = "";
+      }
+
+      return {
+        name: details[1],
+        type: details[2] || "string",
+        required: !isOptional,
+        catchAll: isCatchAll,
+        def: defaultValue,
+        rest: isRest
+      };
+    });
   }
 
   public parseArguments(str: string): Array<{ index: number; value: string }> {

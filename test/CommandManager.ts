@@ -23,32 +23,32 @@ describe("CommandManager", () => {
       /* empty */
     };
 
-    manager.add("addrole <user:Member> <arg2:string=somedefault>", noop);
+    manager.add("addrole", "<user:Member> <arg2:string=somedefault>", noop);
     manager.add(/p[io]ng/, noop);
     manager.add(
       "setgreeting <msg:string$>",
-      { msg: { def: "something" } },
+      [{ msg: { def: "something" } }],
       noop
     );
     manager.add("8ball", [{ name: "question" }], noop);
-    manager.add("addroles <user:Member> <roleName:string?...>", noop);
+    manager.add("addroles", "<user:Member> [roleName:string...]", noop);
 
     expect(manager.commands.length).to.equal(5);
   });
 
-  it("should parse arguments from string", () => {
+  it("should parse parameters", () => {
     const manager = new CommandManager();
     const noop = () => {
       /* empty */
     };
 
-    manager.add("addrole <user:Member> <arg2:string=somedefault>", noop);
+    manager.add("addrole", "<user:Member> <arg2:string=somedefault>", noop);
     manager.add(
-      "setgreeting <msg:string$>",
-      { msg: { def: "something" } },
+      "setgreeting",
+      [{ name: "msg", type: "string", catchAll: true, def: "something" }],
       noop
     );
-    manager.add("addroles <roleNames:string?...>", noop);
+    manager.add("addroles", "[roleNames:string...]", noop);
 
     expect(manager.commands[0].parameters.length).to.equal(2);
 
@@ -91,14 +91,9 @@ describe("CommandManager", () => {
       /* empty */
     };
 
-    manager.add("addrole <user:Member> <arg2:string=somedefault>", noop);
-    manager.add(
-      "setgreeting <msg:string$>",
-      { msg: { def: "something" } },
-      noop
-    );
-    manager.add("addroles <roleNames:string?...>", noop);
-    manager.add("addroles <roleStr$>", noop);
+    manager.add("addrole", "<user:Member> <arg2:string=somedefault>", noop);
+    manager.add("addroles", "[roleNames:string...]", noop);
+    manager.add("addroles", "<roleStr$>", noop);
 
     const result = manager.matchCommand(
       "!",
