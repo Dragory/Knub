@@ -4,5 +4,5 @@ import { BotFramework } from "./BotFramework";
 export default BotFramework;
 export { BotFramework as Hermes };
 
-export { ISettingsProvider } from "./ISettingsProvider";
+export { IConfigProvider } from "./IConfigProvider";
 export { Plugin } from "./Plugin";

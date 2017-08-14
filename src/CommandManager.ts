@@ -1,12 +1,11 @@
 import escapeStringRegex = require("escape-string-regexp");
 import { Message } from "eris";
-import { IPermissions } from "./permissions";
+import { ICommandPermissions } from "./ConfigInterfaces";
 
 export interface IParameter {
   name: string;
   type?: string;
   required?: boolean;
-  catchAll?: boolean;
   def?: any;
   rest?: boolean;
 }
@@ -37,7 +36,7 @@ export interface ICommandDefinition {
   handler: CommandHandler;
   options: {
     description?: string;
-    permissions?: IPermissions;
+    permissions?: ICommandPermissions;
     allowDMs?: boolean;
     filters?: CommandFilter[];
   };
@@ -58,7 +57,6 @@ const argDefinitionRegex = new RegExp(
   "(?:\\:([a-z]+?))?" + // (2) Argument type
   "(?:=(.+?))?" + // (3) Default value
   "(\\.\\.\\.)?" + // (4) "..." to mark argument as a rest argument
-  "(\\$)?" + // (5) "$" to mark argument as a catch-all for the rest of the argument string
     "[>\\]]",
   "i"
 );
@@ -78,7 +76,6 @@ const defaultParameter: IParameter = {
   name: null,
   type: "string",
   required: true,
-  catchAll: false,
   def: null,
   rest: false
 };
@@ -95,7 +92,7 @@ export class CommandManager {
    *   Adds a command called "addrole" with two required arguments without default values.
    *   These arguments are added in a easily-readable string format.
    *
-   * addCommand("setgreeting", [{name: "msg", type: "string", catchAll: true}], (msg, args) => ...)
+   * addCommand("setgreeting", [{name: "msg", type: "string"}], (msg, args) => ...)
    *   Adds a command with a required argument "msg" that captures the entire rest of the arguments.
    *   These arguments are added in a more programmable, array of objects format.
    *
@@ -155,7 +152,6 @@ export class CommandManager {
     // Validate arguments to prevent unsupported behaviour
     let hadOptional = false;
     let hadRest = false;
-    let hadCatchAll = false;
 
     parameters.forEach(arg => {
       if (!arg.required) {
@@ -170,20 +166,6 @@ export class CommandManager {
 
       if (arg.rest) {
         hadRest = true;
-      }
-
-      if (hadCatchAll) {
-        throw new Error(`Catch-all argument must come last`);
-      }
-
-      if (arg.catchAll) {
-        hadCatchAll = true;
-      }
-
-      if (arg.rest && arg.catchAll) {
-        throw new Error(
-          `Argument cannot be a rest argument and a catch-all argument at the same time`
-        );
       }
     });
 
@@ -215,21 +197,15 @@ export class CommandManager {
       let defaultValue: any = details[3];
       const isRest = details[4] === "...";
       const isOptional = parameterDefinition[0] === "[" || defaultValue != null;
-      const isCatchAll = details[5] === "$";
 
       if (isRest) {
         defaultValue = [];
-      }
-
-      if (isCatchAll && defaultValue == null) {
-        defaultValue = "";
       }
 
       return {
         name: details[1],
         type: details[2] || "string",
         required: !isOptional,
-        catchAll: isCatchAll,
         def: defaultValue,
         rest: isRest
       };
@@ -272,6 +248,13 @@ export class CommandManager {
         } else {
           current += char;
         }
+      } else if (
+        !inQuote &&
+        char === "-" &&
+        chars.slice(i - 1, 4).join("") === " -- "
+      ) {
+        current = chars.slice(i + 3).join("");
+        break;
       } else {
         current += char;
       }
@@ -308,20 +291,26 @@ export class CommandManager {
       const parsedArg = parsedArguments[i];
       let value;
 
-      if (parsedArg == null || parsedArg.value === "") {
+      if (param.rest) {
+        const restArgs = parsedArguments.slice(i);
+        if (param.required && restArgs.length === 0) {
+          throw new MissingArgumentError(param);
+        }
+
+        args[param.name] = {
+          parameter: param,
+          value: restArgs
+        };
+
+        break;
+      } else if (parsedArg == null || parsedArg.value === "") {
         if (param.required) {
           throw new MissingArgumentError(param);
         } else {
           value = param.def;
         }
       } else {
-        let parsedValue = parsedArg.value;
-        if (param.catchAll) {
-          const chars = [...str];
-          parsedValue = chars.slice(parsedArg.index).join("");
-        }
-
-        value = parsedValue;
+        value = parsedArg.value;
       }
 
       args[param.name] = {

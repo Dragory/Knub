@@ -21,14 +21,20 @@
   },
   "dependencies": {
     "escape-string-regexp": "^1.0.5",
-    "minimist-string": "^1.0.2"
+    "js-yaml": "^3.9.1",
+    "lodash.at": "^4.6.0",
+    "minimist-string": "^1.0.2",
+    "winston": "^2.3.1"
   },
   "devDependencies": {
     "@types/chai": "^4.0.1",
     "@types/escape-string-regexp": "0.0.30",
+    "@types/js-yaml": "^3.9.0",
+    "@types/lodash.at": "^4.6.3",
     "@types/minimist": "^1.2.0",
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.15",
+    "@types/winston": "^2.3.4",
     "chai": "^4.1.0",
     "eris": "^0.7.0",
     "eris-typings": "github:aurieh/eris-typings#dev",

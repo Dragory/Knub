@@ -3,26 +3,45 @@ import {
   Client,
   Guild,
   GuildChannel,
+  Member,
   Message,
   PrivateChannel
 } from "eris";
+import at from "lodash.at";
+import * as winston from "winston";
 
-import { CommandManager, ICommandDefinition } from "./CommandManager";
-import { ISettingsProvider } from "./ISettingsProvider";
-import { IPermissions, isAllowed } from "./permissions";
+import {
+  CommandManager,
+  IArgument,
+  IArgumentMap,
+  ICommandDefinition,
+  IMatchedCommand
+} from "./CommandManager";
+import {
+  ICommandPermissions,
+  IPermissionLevels,
+  IPluginPermissions
+} from "./ConfigInterfaces";
+import { IConfigProvider } from "./IConfigProvider";
+import { getChannelId, getRoleId, getUserId } from "./utils";
 
 export type CallbackFunctionVariadic = (...args: any[]) => void;
+
+export interface IArbitraryObj {
+  [key: string]: any;
+}
 
 export class Plugin {
   public name: string;
   public description: string;
-  public defaultPermissions: IPermissions;
+  public guildId: string;
 
   protected bot: Client;
-  protected guildId: string;
-  protected guildConfig: ISettingsProvider;
-  protected pluginConfig: ISettingsProvider;
+  protected guildConfig: IConfigProvider;
+  protected pluginConfig: IConfigProvider;
   protected pluginName: string;
+  protected logger: winston.LoggerInstance;
+  protected parent: any;
 
   protected commands: CommandManager;
 
@@ -31,15 +50,19 @@ export class Plugin {
   constructor(
     bot: Client,
     guildId: string,
-    guildConfig: ISettingsProvider,
-    pluginConfig: ISettingsProvider,
-    pluginName: string
+    guildConfig: IConfigProvider,
+    pluginConfig: IConfigProvider,
+    pluginName: string,
+    logger: winston.LoggerInstance,
+    parent: any
   ) {
     this.bot = bot;
     this.guildId = guildId;
     this.guildConfig = guildConfig;
     this.pluginConfig = pluginConfig;
     this.pluginName = pluginName;
+    this.logger = logger;
+    this.parent = parent;
 
     this.commands = new CommandManager();
 
@@ -74,29 +97,80 @@ export class Plugin {
     this.onDirectMessage(this.runMessageCommands.bind(this));
   }
 
-  protected async isPluginAllowed(msg: Message): Promise<boolean> {
-    const [
-      pluginChannelBlacklist,
-      pluginChannelWhitelist,
-      pluginPermissions
-    ] = await Promise.all([
-      this.pluginConfig.get("channelWhitelist", []),
-      this.pluginConfig.get("channelBlacklist", []),
-      this.pluginConfig.get("permissions", {})
-    ]);
+  protected async config(path: string, def: any = null) {
+    let value: any;
 
-    // Check channel whitelist and blacklist for this plugin
-    // Having a whitelist always overrides the blacklist
-    if (pluginChannelWhitelist.length) {
-      if (!pluginChannelWhitelist.includes(msg.channel.id)) {
-        return false;
+    value = this.pluginConfig.get(path);
+    if (value != null) {
+      return value;
+    }
+
+    const defaultConfig = await this.getDefaultConfig();
+    value = at(defaultConfig, [path])[0];
+    if (value != null) {
+      return value;
+    }
+
+    return def;
+  }
+
+  protected getDefaultConfig(): IArbitraryObj | Promise<IArbitraryObj> {
+    return {};
+  }
+
+  protected getDefaultPermissions():
+    | IPluginPermissions
+    | Promise<IPluginPermissions> {
+    return {};
+  }
+
+  protected async getMemberLevel(member: Member): Promise<number> {
+    const levels: IPermissionLevels = await this.guildConfig.get(
+      `permissions.levels`,
+      {}
+    );
+
+    for (const id in levels) {
+      if (member.id === id || member.roles.includes(id)) {
+        return levels[id];
       }
-    } else if (pluginChannelBlacklist.includes(msg.channel.id)) {
+    }
+
+    return 0;
+  }
+
+  protected async isPluginAllowed(msg: Message): Promise<boolean> {
+    const defaultPermissions = this.getDefaultPermissions();
+    const configPermissions: IPluginPermissions = await this.guildConfig.get(
+      `permissions.plugins.${this.name}`,
+      {}
+    );
+    const permissions: IPluginPermissions = Object.assign(
+      {},
+      defaultPermissions,
+      configPermissions
+    );
+
+    if (
+      permissions.channels &&
+      permissions.channels.length &&
+      !permissions.channels.includes(msg.channel.id)
+    ) {
       return false;
     }
 
-    // Permission check
-    if (!isAllowed(pluginPermissions, msg.member)) {
+    if (
+      permissions.exclude_channels &&
+      permissions.exclude_channels.length &&
+      permissions.exclude_channels.includes(msg.channel.id)
+    ) {
+      return false;
+    }
+
+    if (
+      permissions.level &&
+      (await this.getMemberLevel(msg.member)) < permissions.level
+    ) {
       return false;
     }
 
@@ -105,12 +179,39 @@ export class Plugin {
 
   protected async isCommandAllowed(
     msg: Message,
-    command: ICommandDefinition
+    command: IMatchedCommand
   ): Promise<boolean> {
-    // Permission check
+    const defaultPermissions =
+      command.commandDefinition.options.permissions || {};
+    const configPermissions: ICommandPermissions = await this.guildConfig.get(
+      `permissions.plugins.${this.name}.${command.name}`,
+      {}
+    );
+    const permissions: ICommandPermissions = Object.assign(
+      {},
+      defaultPermissions,
+      configPermissions
+    );
+
     if (
-      command.options.permissions &&
-      !isAllowed(command.options.permissions, msg.member)
+      permissions.channels &&
+      permissions.channels.length &&
+      !permissions.channels.includes(msg.channel.id)
+    ) {
+      return false;
+    }
+
+    if (
+      permissions.exclude_channels &&
+      permissions.exclude_channels.length &&
+      permissions.exclude_channels.includes(msg.channel.id)
+    ) {
+      return false;
+    }
+
+    if (
+      permissions.level &&
+      (await this.getMemberLevel(msg.member)) < permissions.level
     ) {
       return false;
     }
@@ -198,9 +299,55 @@ export class Plugin {
     this.eventHandlers.clear();
   }
 
-  protected normalizeCommandName(commandName: string): string {
-    // Commands are case-insensitive and cannot contain whitespace
-    return commandName.trim().toLowerCase().replace(/\s/g, "");
+  protected convertArgType(arg: IArgument, msg: Message): any {
+    const type = arg.parameter.type.toLowerCase();
+
+    if (type === "string") {
+      return String(arg.value);
+    } else if (type === "number") {
+      return parseFloat(arg.value);
+    } else if (type === "user") {
+      const userId = getUserId(arg.value);
+      if (!userId) {
+        throw new Error(`Could not convert ${arg.value} to a user id`);
+      }
+    } else if (type === "member") {
+      if (!(msg.channel instanceof GuildChannel)) {
+        throw new Error(`Type 'Member' can only be used in guilds`);
+      }
+
+      const userId = getUserId(arg.value);
+      if (!userId) {
+        throw new Error(`Could not convert ${arg.value} to a user id`);
+      }
+
+      const member = msg.channel.guild.members.get(userId);
+      if (!member) {
+        throw new Error(`Could not convert user id ${userId} to a member`);
+      }
+
+      return member;
+    } else if (type === "channel") {
+      const channelId = getChannelId(arg.value);
+      if (!channelId) {
+        throw new Error(`Could not convert ${arg.value} to a channel id`);
+      }
+
+      return this.bot.getChannel(channelId);
+    } else if (type === "role") {
+      if (!(msg.channel instanceof GuildChannel)) {
+        throw new Error(`Type 'Role' can only be used in guilds`);
+      }
+
+      const roleId = getRoleId(arg.value);
+      if (!roleId) {
+        throw new Error(`Could not convert ${arg.value} to a role id`);
+      }
+
+      return msg.channel.guild.roles.get(roleId);
+    } else {
+      throw new Error(`Unknown type: ${type}`);
+    }
   }
 
   protected async runMessageCommands(msg: Message): Promise<void> {
@@ -222,25 +369,59 @@ export class Plugin {
         msg.channel instanceof PrivateChannel &&
         !command.commandDefinition.options.allowDMs
       ) {
-        return;
+        continue;
       }
 
       if (!(msg.channel instanceof GuildChannel)) {
-        return;
+        continue;
       }
 
       // Run command permission checks
-      if (!await this.isCommandAllowed(msg, command.commandDefinition)) {
+      if (!await this.isCommandAllowed(msg, command)) {
+        continue;
+      }
+
+      // Convert arg types
+      let hadInvalidArg = false;
+      for (const argName in command.args) {
+        const arg = command.args[argName];
+        try {
+          if (Array.isArray(arg.value)) {
+            arg.value = arg.value.map(a => this.convertArgType(a, msg));
+          } else {
+            arg.value = this.convertArgType(arg, msg);
+          }
+        } catch (e) {
+          winston.warn(String(e));
+          msg.channel.createMessage({
+            embed: {
+              description: `Could not convert argument \`${argName}\` to \`${arg
+                .parameter.type}${arg.parameter.rest ? "[]" : ""}\``,
+              color: parseInt("ee4400", 16)
+            }
+          });
+          hadInvalidArg = true;
+          break;
+        }
+      }
+
+      if (hadInvalidArg) {
         continue;
       }
 
       // Run custom filters, if any
+      let filterFailed = false;
       if (command.commandDefinition.options.filters) {
         for (const filterFn of command.commandDefinition.options.filters) {
           if (!await Promise.resolve(filterFn(msg, command))) {
-            continue;
+            filterFailed = true;
+            break;
           }
         }
+      }
+
+      if (filterFailed) {
+        continue;
       }
 
       await command.commandDefinition.handler(msg, command.args, command);
