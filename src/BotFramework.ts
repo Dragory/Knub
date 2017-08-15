@@ -1,8 +1,9 @@
-import { Client, Guild } from "eris";
+import { Client, Guild } from "discord.js";
 import * as path from "path";
 import * as winston from "winston";
 
 import { IConfigProvider } from "./IConfigProvider";
+import { logger } from "./logger";
 import { Plugin } from "./Plugin";
 import { YamlConfigProvider } from "./YamlConfigProvider";
 
@@ -33,14 +34,20 @@ export interface IGuildData {
 }
 
 export class BotFramework {
+  protected token: string;
   protected bot: Client;
   protected plugins: Map<string, typeof Plugin>;
   protected options: IOptions;
+  protected djsOptions: any;
   protected guilds: Map<string, IGuildData>;
-  private logger: winston.LoggerInstance;
 
-  constructor(bot: Client, plugins: IPluginList, options: IOptions = {}) {
-    this.bot = bot;
+  constructor(
+    token: string,
+    plugins: IPluginList,
+    options: IOptions = {},
+    djsOptions: any = {}
+  ) {
+    this.token = token;
 
     this.plugins = new Map();
 
@@ -61,67 +68,48 @@ export class BotFramework {
     };
 
     this.options = { ...defaultOptions, ...options };
+    this.djsOptions = djsOptions;
 
-    this.logger = new winston.Logger({
-      transports: [
-        new winston.transports.Console({
-          level: this.options.logLevel,
-
-          timestamp() {
-            return new Date().toISOString();
-          },
-
-          formatter(opts) {
-            let meta = opts.meta ? JSON.stringify(opts.meta) : null;
-            if (meta === "{}") {
-              meta = null;
-            }
-
-            return `[${opts.timestamp()}] [${opts.level.toUpperCase()}] ${opts.message ||
-              ""} ${meta ? "\n\t" + meta : ""}`.trim();
-          }
-        })
-      ]
-    });
+    logger.transports.console.level = this.options.logLevel;
 
     this.guilds = new Map();
   }
 
-  public async load(): Promise<void> {
-    this.logger.info("Connecting to Discord...");
+  public async run(): Promise<void> {
+    this.bot = new Client(this.djsOptions);
 
     this.bot.on("debug", async str => {
-      this.logger.debug(`[ERIS] ${str}`);
+      logger.debug(`[DJS] ${str}`);
     });
 
     this.bot.on("error", async (err: Error) => {
-      this.logger.error(`[ERIS] ${String(err)}`);
+      logger.error(`[DJS] ${String(err)}`);
     });
 
     const loadErrorTimeout = setTimeout(() => {
-      this.logger.info("This is taking unusually long. Check the token?");
+      logger.info("This is taking unusually long. Check the token?");
     }, 10 * 1000);
 
     this.bot.on("ready", async () => {
       clearTimeout(loadErrorTimeout);
 
-      this.logger.info("Bot connected! Loading guilds...");
+      logger.info("Bot connected! Loading guilds...");
 
-      this.bot.on("guildAvailable", guild => {
-        this.logger.info(`Joined guild: ${guild.id}`);
+      this.bot.on("guildAvailable", (guild: Guild) => {
+        logger.info(`Joined guild: ${guild.id}`);
         this.loadGuild(guild.id);
       });
 
-      this.bot.on("guildUnavailable", guild => {
-        this.logger.info(`Left guild: ${guild.id}`);
+      this.bot.on("guildUnavailable", (guild: Guild) => {
+        logger.info(`Left guild: ${guild.id}`);
         this.unloadGuild(guild.id);
       });
 
       await this.loadAllGuilds();
-      this.logger.info("Guilds loaded!");
+      logger.info("Guilds loaded!");
     });
 
-    this.bot.connect();
+    this.bot.login(this.token);
   }
 
   public async loadAllGuilds(): Promise<void> {
@@ -224,7 +212,6 @@ export class BotFramework {
       guildConfig,
       pluginConfig,
       pluginName,
-      this.logger,
       this
     );
 

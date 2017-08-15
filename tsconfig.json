@@ -10,9 +10,7 @@
     ],
     "baseUrl": "./",
     "paths": {
-      "eris": ["eris", "node_modules/eris-typings/index"],
-      "minimist-string": ["minimist-string", "@types/minimist-string"],
-      "winston": ["winston", "node_modules/@types/winston"]
+      "minimist-string": ["minimist-string", "@types/minimist-string"]
     },
     "typeRoots": [
       "node_modules/@types",

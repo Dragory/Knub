@@ -1,21 +1,23 @@
 import {
   Channel,
   Client,
+  DMChannel,
   Guild,
   GuildChannel,
-  Member,
+  GuildMember,
   Message,
-  PrivateChannel
-} from "eris";
-import at from "lodash.at";
+  RichEmbed
+} from "discord.js";
 import * as winston from "winston";
+const at = require("lodash.at");
 
 import {
   CommandManager,
   IArgument,
   IArgumentMap,
   ICommandDefinition,
-  IMatchedCommand
+  IMatchedCommand,
+  MissingArgumentError
 } from "./CommandManager";
 import {
   ICommandPermissions,
@@ -23,7 +25,8 @@ import {
   IPluginPermissions
 } from "./ConfigInterfaces";
 import { IConfigProvider } from "./IConfigProvider";
-import { getChannelId, getRoleId, getUserId } from "./utils";
+import { logger } from "./logger";
+import { errorEmbed, getChannelId, getRoleId, getUserId } from "./utils";
 
 export type CallbackFunctionVariadic = (...args: any[]) => void;
 
@@ -40,7 +43,6 @@ export class Plugin {
   protected guildConfig: IConfigProvider;
   protected pluginConfig: IConfigProvider;
   protected pluginName: string;
-  protected logger: winston.LoggerInstance;
   protected parent: any;
 
   protected commands: CommandManager;
@@ -53,7 +55,6 @@ export class Plugin {
     guildConfig: IConfigProvider,
     pluginConfig: IConfigProvider,
     pluginName: string,
-    logger: winston.LoggerInstance,
     parent: any
   ) {
     this.bot = bot;
@@ -61,7 +62,6 @@ export class Plugin {
     this.guildConfig = guildConfig;
     this.pluginConfig = pluginConfig;
     this.pluginName = pluginName;
-    this.logger = logger;
     this.parent = parent;
 
     this.commands = new CommandManager();
@@ -91,7 +91,7 @@ export class Plugin {
   }
 
   protected registerMainListener(): void {
-    this.on("messageCreate", this.runMessageCommands.bind(this));
+    this.on("message", this.runMessageCommands.bind(this));
 
     // BasePlugin::on ignores direct messages
     this.onDirectMessage(this.runMessageCommands.bind(this));
@@ -124,14 +124,18 @@ export class Plugin {
     return {};
   }
 
-  protected async getMemberLevel(member: Member): Promise<number> {
+  protected async getMemberLevel(member: GuildMember): Promise<number> {
+    if (member.guild.owner === member) {
+      return 99999;
+    }
+
     const levels: IPermissionLevels = await this.guildConfig.get(
       `permissions.levels`,
       {}
     );
 
     for (const id in levels) {
-      if (member.id === id || member.roles.includes(id)) {
+      if (member.id === id || member.roles.has(id)) {
         return levels[id];
       }
     }
@@ -142,7 +146,7 @@ export class Plugin {
   protected async isPluginAllowed(msg: Message): Promise<boolean> {
     const defaultPermissions = this.getDefaultPermissions();
     const configPermissions: IPluginPermissions = await this.guildConfig.get(
-      `permissions.plugins.${this.name}`,
+      `permissions.plugins.${this.pluginName}`,
       {}
     );
     const permissions: IPluginPermissions = Object.assign(
@@ -184,7 +188,7 @@ export class Plugin {
     const defaultPermissions =
       command.commandDefinition.options.permissions || {};
     const configPermissions: ICommandPermissions = await this.guildConfig.get(
-      `permissions.plugins.${this.name}.${command.name}`,
+      `permissions.plugins.${this.pluginName}.commands.${command.name}`,
       {}
     );
     const permissions: ICommandPermissions = Object.assign(
@@ -233,11 +237,7 @@ export class Plugin {
     const wrappedListener = async (...args: any[]) => {
       let guild;
 
-      if (args[0] instanceof Channel) {
-        if (!(args[0] instanceof GuildChannel)) {
-          return;
-        }
-
+      if (args[0] instanceof GuildChannel) {
         guild = args[0].guild;
       }
 
@@ -250,7 +250,7 @@ export class Plugin {
           return;
         }
 
-        guild = args[0];
+        guild = args[0].channel.guild;
       }
 
       if (guild && guild.id !== this.guildId) {
@@ -267,7 +267,7 @@ export class Plugin {
       listener(...args);
     };
 
-    // Actually register the listener on the Eris client and store the listener
+    // Actually register the listener on the discord.js client and store the listener
     // so we can automatically clear it when the plugin is deregistered
     this.bot.on(eventName, wrappedListener);
     this.eventHandlers.get(eventName).push(wrappedListener);
@@ -299,52 +299,70 @@ export class Plugin {
     this.eventHandlers.clear();
   }
 
-  protected convertArgType(arg: IArgument, msg: Message): any {
-    const type = arg.parameter.type.toLowerCase();
-
+  protected async convertArgType(
+    value: any,
+    type: string,
+    msg: Message
+  ): Promise<any> {
     if (type === "string") {
-      return String(arg.value);
+      return String(value);
     } else if (type === "number") {
-      return parseFloat(arg.value);
+      return parseFloat(value);
     } else if (type === "user") {
-      const userId = getUserId(arg.value);
+      const userId = getUserId(value);
       if (!userId) {
-        throw new Error(`Could not convert ${arg.value} to a user id`);
+        throw new Error(`Could not convert ${value} to a user id`);
       }
     } else if (type === "member") {
       if (!(msg.channel instanceof GuildChannel)) {
         throw new Error(`Type 'Member' can only be used in guilds`);
       }
 
-      const userId = getUserId(arg.value);
+      const userId = getUserId(value);
       if (!userId) {
-        throw new Error(`Could not convert ${arg.value} to a user id`);
+        throw new Error(`Could not convert ${value} to a user id`);
       }
 
-      const member = msg.channel.guild.members.get(userId);
+      const user = this.bot.users.get(userId);
+      if (!user) {
+        throw new Error(`Could not convert user id ${userId} to a user`);
+      }
+
+      const member =
+        msg.guild.members.get(user.id) || (await msg.guild.fetchMember(user));
       if (!member) {
         throw new Error(`Could not convert user id ${userId} to a member`);
       }
 
       return member;
     } else if (type === "channel") {
-      const channelId = getChannelId(arg.value);
+      const channelId = getChannelId(value);
       if (!channelId) {
-        throw new Error(`Could not convert ${arg.value} to a channel id`);
+        throw new Error(`Could not convert ${value} to a channel id`);
       }
 
-      return this.bot.getChannel(channelId);
+      const channel = this.bot.channels.get(channelId);
+      if (!channel) {
+        throw new Error(`Channel ${channelId} not found`);
+      }
+
+      return channel;
     } else if (type === "role") {
       if (!(msg.channel instanceof GuildChannel)) {
         throw new Error(`Type 'Role' can only be used in guilds`);
       }
 
-      const roleId = getRoleId(arg.value);
+      const roleId = getRoleId(value);
       if (!roleId) {
-        throw new Error(`Could not convert ${arg.value} to a role id`);
+        throw new Error(`Could not convert ${value} to a role id`);
       }
 
-      return msg.channel.guild.roles.get(roleId);
+      const role = msg.channel.guild.roles.get(roleId);
+      if (!role) {
+        throw new Error(`Could not convert ${roleId} to a Role`);
+      }
+
+      return role;
     } else {
       throw new Error(`Unknown type: ${type}`);
     }
@@ -358,15 +376,26 @@ export class Plugin {
 
     const prefix = await this.guildConfig.get("prefix", "!");
 
-    const matchedCommands = this.commands.findCommandsInString(
-      msg.content,
-      prefix
-    );
+    const {
+      commands: matchedCommands,
+      errors
+    } = this.commands.findCommandsInString(msg.content, prefix);
+
+    if (matchedCommands.length === 0 && errors.length > 0) {
+      const firstError = errors[0];
+      if (firstError instanceof MissingArgumentError) {
+        msg.channel.send(
+          "",
+          errorEmbed(`Missing argument \`${firstError.arg.name}\``)
+        );
+      }
+      return;
+    }
 
     // Run each matching command sequentially
     for (const command of matchedCommands) {
       if (
-        msg.channel instanceof PrivateChannel &&
+        msg.channel instanceof DMChannel &&
         !command.commandDefinition.options.allowDMs
       ) {
         continue;
@@ -385,21 +414,31 @@ export class Plugin {
       let hadInvalidArg = false;
       for (const argName in command.args) {
         const arg = command.args[argName];
+
+        if (arg.value == null && !arg.parameter.required) {
+          continue;
+        }
+
+        const type = arg.parameter.type.toLowerCase();
+
         try {
           if (Array.isArray(arg.value)) {
-            arg.value = arg.value.map(a => this.convertArgType(a, msg));
+            for (const [i, value] of arg.value.entries()) {
+              arg.value[i] = await this.convertArgType(arg.value[i], type, msg);
+            }
           } else {
-            arg.value = this.convertArgType(arg, msg);
+            arg.value = await this.convertArgType(arg.value, type, msg);
           }
         } catch (e) {
-          winston.warn(String(e));
-          msg.channel.createMessage({
-            embed: {
-              description: `Could not convert argument \`${argName}\` to \`${arg
-                .parameter.type}${arg.parameter.rest ? "[]" : ""}\``,
-              color: parseInt("ee4400", 16)
-            }
-          });
+          const typeName = `${arg.parameter.type}${arg.parameter.rest
+            ? "[]"
+            : ""}`;
+          msg.channel.send(
+            "",
+            errorEmbed(
+              `Could not convert argument ${arg.parameter.name} to ${typeName}`
+            )
+          );
           hadInvalidArg = true;
           break;
         }
@@ -424,7 +463,12 @@ export class Plugin {
         continue;
       }
 
-      await command.commandDefinition.handler(msg, command.args, command);
+      const argsToPass: any = {};
+      for (const name in command.args) {
+        argsToPass[name] = command.args[name].value;
+      }
+
+      await command.commandDefinition.handler(msg, argsToPass, command);
     }
   }
 
@@ -433,24 +477,24 @@ export class Plugin {
    * we need a special function to add listeners for direct messages
    */
   protected onDirectMessage(listener: CallbackFunctionVariadic): () => void {
-    if (!this.eventHandlers.has("messageCreate")) {
-      this.eventHandlers.set("messageCreate", []);
+    if (!this.eventHandlers.has("message")) {
+      this.eventHandlers.set("message", []);
     }
 
     const wrappedListener = (msg: Message) => {
-      if (!(msg.channel instanceof PrivateChannel)) {
+      if (!(msg.channel instanceof DMChannel)) {
         return;
       }
 
       listener(msg);
     };
 
-    this.bot.on("messageCreate", wrappedListener);
-    this.eventHandlers.get("messageCreate").push(wrappedListener);
+    this.bot.on("message", wrappedListener);
+    this.eventHandlers.get("message").push(wrappedListener);
 
     // Return a function to clear the listener
     const removeListener = () => {
-      this.off("messageCreate", wrappedListener);
+      this.off("message", wrappedListener);
     };
 
     return removeListener;

@@ -1,3 +1,5 @@
+import { RichEmbed } from "discord.js";
+
 const userMentionRegex = /^<@\!?([0-9]+)>$/;
 const channelMentionRegex = /^<@([0-9]+)>$/;
 const roleMentionRegex = /^<&([0-9]+)>$/;
@@ -48,4 +50,13 @@ export function getRoleId(str: string) {
   }
 
   return null;
+}
+
+export function errorEmbed(str: string) {
+  return {
+    embed: new RichEmbed({
+      description: str,
+      color: parseInt("ee4400", 16)
+    })
+  };
 }

@@ -1,5 +1,5 @@
 import escapeStringRegex = require("escape-string-regexp");
-import { Message } from "eris";
+import { Message } from "discord.js";
 import { ICommandPermissions } from "./ConfigInterfaces";
 
 export interface IParameter {
@@ -299,7 +299,7 @@ export class CommandManager {
 
         args[param.name] = {
           parameter: param,
-          value: restArgs
+          value: restArgs.map(a => a.value)
         };
 
         break;
@@ -327,16 +327,30 @@ export class CommandManager {
     };
   }
 
-  public findCommandsInString(str: string, prefix: string): IMatchedCommand[] {
+  public findCommandsInString(
+    str: string,
+    prefix: string
+  ): { commands: IMatchedCommand[]; errors: Error[] } {
     const commands: IMatchedCommand[] = [];
+    const errors: Error[] = [];
 
     this.commands.forEach(command => {
-      const matchedCommand = this.matchCommand(prefix, command, str);
-      if (matchedCommand) {
-        commands.push(matchedCommand);
+      try {
+        const matchedCommand = this.matchCommand(prefix, command, str);
+
+        if (matchedCommand) {
+          commands.push(matchedCommand);
+        }
+      } catch (e) {
+        if (e instanceof MissingArgumentError) {
+          errors.push(e);
+          return;
+        } else {
+          throw e;
+        }
       }
     });
 
-    return commands;
+    return { commands, errors };
   }
 }

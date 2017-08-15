@@ -20,6 +20,7 @@
     ]
   },
   "dependencies": {
+    "discord.js": "^11.1.0",
     "escape-string-regexp": "^1.0.5",
     "js-yaml": "^3.9.1",
     "lodash.at": "^4.6.0",
@@ -36,8 +37,6 @@
     "@types/node": "^8.0.15",
     "@types/winston": "^2.3.4",
     "chai": "^4.1.0",
-    "eris": "^0.7.0",
-    "eris-typings": "github:aurieh/eris-typings#dev",
     "husky": "^0.14.3",
     "lint-staged": "^4.0.2",
     "mocha": "^3.4.2",

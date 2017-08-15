@@ -1,10 +1,11 @@
 import * as fs from "fs";
 import { promisify } from "util";
 
-import yaml from "js-yaml";
-import at from "lodash.at";
+import * as yaml from "js-yaml";
+const at = require("lodash.at");
 
 import { IConfigProvider } from "./IConfigProvider";
+import { logger } from "./logger";
 
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
@@ -27,7 +28,14 @@ export class YamlConfigProvider implements IConfigProvider {
 
   public async get(path: string, def: any = null): Promise<any> {
     await this.loadConfig();
-    return at(this.config, [path])[0];
+
+    const value = at(this.config, [path])[0];
+
+    if (value != null) {
+      return value;
+    } else {
+      return def;
+    }
   }
 
   public async has(path: string): Promise<boolean> {
@@ -53,21 +61,25 @@ export class YamlConfigProvider implements IConfigProvider {
   protected async loadConfig(): Promise<void> {
     await this.saveQueue;
 
-    if (!this.config) {
-      if (this.loadPromise) {
-        return this.loadPromise;
-      }
+    if (this.config) {
+      return;
+    }
 
+    if (!this.loadPromise) {
       this.loadPromise = Promise.resolve(
         (async () => {
           try {
             const data = await readFileAsync(this.path, { encoding: "utf8" });
             this.config = yaml.safeLoad(data);
           } catch (e) {
+            logger.warn(`Could not parse config at ${this.path}`);
+            logger.warn(`[YAML] ${String(e)}`);
             this.config = {};
           }
         })()
       );
     }
+
+    return this.loadPromise;
   }
 }
