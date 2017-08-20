@@ -1,8 +1,8 @@
 {
-  "name": "newbotframework",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "name": "knub",
+  "version": "1.0.0",
+  "description": "A bot framework for Discord",
+  "author": "Miikka Virtanen <contact@mivir.fi>",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
