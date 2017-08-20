@@ -45,7 +45,7 @@ describe("CommandManager", () => {
     manager.add("addrole", "<user:Member> <arg2:string=somedefault>", noop);
     manager.add(
       "setgreeting",
-      [{ name: "msg", type: "string", catchAll: true, def: "something" }],
+      [{ name: "msg", type: "string", def: "something" }],
       noop
     );
     manager.add("addroles", "[roleNames:string...]", noop);
@@ -56,7 +56,6 @@ describe("CommandManager", () => {
       name: "user",
       type: "Member",
       required: true,
-      catchAll: false,
       def: undefined,
       rest: false
     });
@@ -65,7 +64,6 @@ describe("CommandManager", () => {
       name: "arg2",
       type: "string",
       required: false,
-      catchAll: false,
       def: "somedefault",
       rest: false
     });
@@ -74,7 +72,6 @@ describe("CommandManager", () => {
       name: "msg",
       type: "string",
       required: true,
-      catchAll: true,
       def: "something",
       rest: false
     });
@@ -93,7 +90,7 @@ describe("CommandManager", () => {
 
     manager.add("addrole", "<user:Member> <arg2:string=somedefault>", noop);
     manager.add("addroles", "[roleNames:string...]", noop);
-    manager.add("addroles", "<roleStr$>", noop);
+    manager.add("addroles", "<roleStr:string>", noop);
 
     const result = manager.matchCommand(
       "!",
@@ -104,6 +101,6 @@ describe("CommandManager", () => {
     expect(result.args.arg2.value).to.equal("somedefault");
 
     const multiResult = manager.findCommandsInString("!addroles NA EU", "!");
-    expect(multiResult.length).to.equal(2);
+    expect(multiResult.commands.length).to.equal(2);
   });
 });
