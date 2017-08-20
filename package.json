@@ -9,7 +9,7 @@
   "scripts": {
     "test": "mocha -r ts-node/register test/**/*.ts -- --trace-warnings",
     "precommit": "lint-staged",
-    "build": "tsc src/index.ts",
+    "build": "rm -r dist && tsc",
     "prepublishOnly": "npm run build",
     "format": "prettier --write \"./**/*.ts\""
   },
