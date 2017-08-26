@@ -20,6 +20,8 @@ export interface IPluginPermissions {
   exclude_channels?: string[];
   users?: string[];
   exclude_users?: string[];
+  roles?: string[];
+  exclude_roles?: string[];
   commands?: {
     [key: string]: ICommandPermissions;
   };
@@ -31,4 +33,6 @@ export interface ICommandPermissions {
   exclude_channels?: string[];
   users?: string[];
   exclude_users?: string[];
+  roles?: string[];
+  exclude_roles?: string[];
 }
