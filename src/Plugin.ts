@@ -391,6 +391,13 @@ export class Plugin {
       if (!userId) {
         throw new Error(`Could not convert ${value} to a user id`);
       }
+
+      const user = this.bot.users.get(userId);
+      if (!user) {
+        throw new Error(`Could not convert user id ${userId} to a user`);
+      }
+
+      return user;
     } else if (type === "member") {
       if (!(msg.channel instanceof GuildChannel)) {
         throw new Error(`Type 'Member' can only be used in guilds`);
