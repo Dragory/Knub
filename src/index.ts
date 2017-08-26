@@ -8,3 +8,5 @@ export { IConfigProvider } from "./IConfigProvider";
 export { Plugin } from "./Plugin";
 
 export { logger } from "./logger";
+
+export { ICommandOptions } from "./CommandManager";

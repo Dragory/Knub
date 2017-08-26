@@ -30,16 +30,18 @@ export type CommandFilter = (
   command: IMatchedCommand
 ) => boolean | Promise<boolean>;
 
+export interface ICommandOptions {
+  description?: string;
+  permissions?: ICommandPermissions;
+  allowDMs?: boolean;
+  filters?: CommandFilter[];
+}
+
 export interface ICommandDefinition {
   trigger: RegExp;
   parameters: IParameter[];
   handler: CommandHandler;
-  options: {
-    description?: string;
-    permissions?: ICommandPermissions;
-    allowDMs?: boolean;
-    filters?: CommandFilter[];
-  };
+  options: ICommandOptions;
 }
 
 export interface IMatchedCommand {
