@@ -10,6 +10,7 @@
     "test": "mocha -r ts-node/register test/**/*.ts -- --trace-warnings",
     "precommit": "lint-staged",
     "build": "rm -r dist && tsc",
+    "prepublishOnly": "npm run build",
     "watch": "rm -r dist && tsc --watch",
     "format": "prettier --write \"./**/*.ts\""
   },
