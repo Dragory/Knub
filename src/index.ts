@@ -1,3 +1,5 @@
+import "reflect-metadata";
+
 import { BotFramework } from "./BotFramework";
 
 // Include both, a named and default export
@@ -5,7 +7,7 @@ export default BotFramework;
 export { BotFramework as Knub };
 
 export { IConfigProvider } from "./IConfigProvider";
-export { Plugin } from "./Plugin";
+export { Plugin, command, onEvent } from "./Plugin";
 
 export { logger } from "./logger";
 

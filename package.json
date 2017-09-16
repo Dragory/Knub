@@ -10,6 +10,7 @@
     "test": "mocha -r ts-node/register test/**/*.ts -- --trace-warnings",
     "precommit": "lint-staged",
     "build": "rm -r dist && tsc",
+    "watch": "rm -r dist && tsc --watch",
     "prepublishOnly": "npm run build",
     "format": "prettier --write \"./**/*.ts\""
   },
@@ -25,6 +26,7 @@
     "js-yaml": "^3.9.1",
     "lodash.at": "^4.6.0",
     "minimist-string": "^1.0.2",
+    "reflect-metadata": "^0.1.10",
     "winston": "^2.3.1"
   },
   "devDependencies": {

@@ -34,9 +34,11 @@ export interface IArbitraryObj {
   [key: string]: any;
 }
 
-export class Plugin {
-  public name: string;
-  public description: string;
+/**
+ * If you'd like to use Knub as just a plugin loader, but not use any of the other functionality
+ * provided by the main Plugin class, extending this class ensures compatibility.
+ */
+export class BareClass {
   public guildId: string;
 
   protected bot: Client;
@@ -44,10 +46,6 @@ export class Plugin {
   protected pluginConfig: IConfigProvider;
   protected pluginName: string;
   protected parent: any;
-
-  protected commands: CommandManager;
-
-  private eventHandlers: Map<string, any[]>;
 
   constructor(
     bot: Client,
@@ -63,40 +61,108 @@ export class Plugin {
     this.pluginConfig = pluginConfig;
     this.pluginName = pluginName;
     this.parent = parent;
+  }
+}
+
+/**
+ * The base class for Knub plugins. Contains functionality for guild and plugin configuration, guild specific commands, and guild specific event listeners.
+ * Commands can also be registered with the exported @command decorator.
+ * Event listeners can also be registered with the exported @onEvent decorator.
+ */
+export class Plugin extends BareClass {
+  /**
+   * Basic plugin information
+   */
+
+  public name: string;
+  public description: string;
+
+  protected commands: CommandManager;
+  protected eventHandlers: Map<string, any[]>;
+
+  constructor(
+    bot: Client,
+    guildId: string,
+    guildConfig: IConfigProvider,
+    pluginConfig: IConfigProvider,
+    pluginName: string,
+    parent: any
+  ) {
+    super(bot, guildId, guildConfig, pluginConfig, pluginName, parent);
 
     this.commands = new CommandManager();
-
     this.eventHandlers = new Map();
-
-    this.registerMainListener();
+    this.registerCommandMessageListeners();
   }
 
-  // Wrap register() in a promise
-  public runLoad(...args: any[]): Promise<any> {
-    return Promise.resolve(this.load(...args));
+  /**
+   * Run plugin-defined load() function and load commands/event listeners registered with decorators
+   */
+  public async runLoad(): Promise<any> {
+    await Promise.resolve(this.onLoad());
+
+    // Have to do this to access class methods
+    const nonEnumerableProps = Object.getOwnPropertyNames(
+      this.constructor.prototype
+    );
+    const enumerableProps = Object.keys(this);
+    const props = [...nonEnumerableProps, ...enumerableProps];
+
+    for (const prop of props) {
+      const value = this[prop];
+      if (typeof value !== "function") {
+        continue;
+      }
+
+      // Command handlers
+      const command = Reflect.getMetadata("command", this, prop);
+      if (command) {
+        this.commands.add(command.args[0], command.args[1] || [], value);
+      }
+
+      // Event listeners
+      const event = Reflect.getMetadata("event", this, prop);
+      if (event) {
+        this.on(event.args[0], value);
+      }
+    }
   }
 
-  // Clear event handlers and wrap deregister() in a promise
+  /**
+   * Clear event handlers and run plugin-defined unload() function
+   */
   public runUnload(): Promise<any> {
     this.clearEventHandlers();
-    return Promise.resolve(this.unload());
+    return Promise.resolve(this.onUnload());
   }
 
-  protected load(): any {
-    // Implemented by plugin, empty by default
+  /**
+   * Code to run when the plugin is loaded
+   */
+  protected onLoad(): any {
+    // Implemented by plugin
   }
 
-  protected unload(): any {
-    // Implemented by plugin, empty by default
+  /**
+   * Code to run when the plugin is unloaded
+   */
+  protected onUnload(): any {
+    // Implemented by plugin
   }
 
-  protected registerMainListener(): void {
+  /**
+   * Registers the message listeners for commands
+   */
+  protected registerCommandMessageListeners(): void {
     this.on("message", this.runMessageCommands.bind(this));
 
-    // BasePlugin::on ignores direct messages
+    // Plugin::on ignores direct messages
     this.onDirectMessage(this.runMessageCommands.bind(this));
   }
 
+  /**
+   * Retrieve a plugin config value
+   */
   protected async config(path: string, def: any = null) {
     let value: any;
 
@@ -114,16 +180,27 @@ export class Plugin {
     return def;
   }
 
+  /**
+   * Returns this plugin's default configuration
+   */
   protected getDefaultConfig(): IArbitraryObj | Promise<IArbitraryObj> {
+    // Implemented by plugin
     return {};
   }
 
+  /**
+   * Returns this plugin's default permissions
+   */
   protected getDefaultPermissions():
     | IPluginPermissions
     | Promise<IPluginPermissions> {
+    // Implemented by plugin
     return {};
   }
 
+  /**
+   * Returns the given member's permission level
+   */
   protected async getMemberLevel(member: GuildMember): Promise<number> {
     if (member.guild.owner === member) {
       return 99999;
@@ -143,6 +220,9 @@ export class Plugin {
     return 0;
   }
 
+  /**
+   * Checks the given message's channel and author to determine whether the plugin should react to it
+   */
   protected async isPluginAllowed(msg: Message): Promise<boolean> {
     const defaultPermissions = this.getDefaultPermissions();
     const configPermissions: IPluginPermissions = await this.guildConfig.get(
@@ -220,6 +300,9 @@ export class Plugin {
     return true;
   }
 
+  /**
+   * Checks the given message's channel and author and compares them to the command's permissions to determine whether to run the command
+   */
   protected async isCommandAllowed(
     msg: Message,
     command: IMatchedCommand
@@ -301,6 +384,9 @@ export class Plugin {
     return true;
   }
 
+  /**
+   * Adds a guild-specific event listener for the given event
+   */
   protected on(
     eventName: string,
     listener: CallbackFunctionVariadic
@@ -358,6 +444,9 @@ export class Plugin {
     return removeListener;
   }
 
+  /**
+   * Removes the given listener from the event
+   */
   protected off(eventName: string, listener: CallbackFunctionVariadic): void {
     this.bot.removeListener(eventName, listener);
 
@@ -367,6 +456,9 @@ export class Plugin {
     }
   }
 
+  /**
+   * Clears all event listeners registered with on()
+   */
   protected clearEventHandlers(): void {
     for (const [eventName, listeners] of this.eventHandlers) {
       listeners.forEach(listener => {
@@ -377,6 +469,10 @@ export class Plugin {
     this.eventHandlers.clear();
   }
 
+  /**
+   * Converts the given command argument to the given type.
+   * Allowed types include string, number, User, Member, Channel, Role
+   */
   protected async convertArgType(
     value: any,
     type: string,
@@ -453,6 +549,9 @@ export class Plugin {
     }
   }
 
+  /**
+   * Runs all matching commands in the message
+   */
   protected async runMessageCommands(msg: Message): Promise<void> {
     if (msg.content == null || msg.content.trim() === "") {
       // Ignore messages without text (e.g. images, embeds, etc.)
@@ -558,8 +657,7 @@ export class Plugin {
   }
 
   /**
-   * Since by default direct messages are ignored by BasePlugin::on,
-   * we need a special function to add listeners for direct messages
+   * Since by default direct messages are ignored by BasePlugin::on, we need a special function to add listeners for direct messages
    */
   protected onDirectMessage(listener: CallbackFunctionVariadic): () => void {
     if (!this.eventHandlers.has("message")) {
@@ -584,4 +682,32 @@ export class Plugin {
 
     return removeListener;
   }
+}
+
+/**
+ * Decorator for turning a class method into a command handler
+ */
+export function command(...args: any[]) {
+  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+    Reflect.defineMetadata(
+      "command",
+      { args, prop: propertyKey },
+      target,
+      propertyKey
+    );
+  };
+}
+
+/**
+ * Decorator for turning a class method into an event listener
+ */
+export function onEvent(...args: any[]) {
+  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+    Reflect.defineMetadata(
+      "event",
+      { args, prop: propertyKey },
+      target,
+      propertyKey
+    );
+  };
 }

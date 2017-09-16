@@ -221,7 +221,7 @@ export class BotFramework {
   }
 
   public async unloadPlugin(plugin: Plugin): Promise<void> {
-    await plugin.runUnload();
+    await plugin.runUnload(); // aaa
   }
 
   public async reloadPlugin(plugin: Plugin): Promise<void> {

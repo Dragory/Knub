@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "module": "CommonJS",
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
     "target": "ES2017",
     "lib": [
       "es6",
-      "es7"
+      "es7",
+      "es2017"
     ],
     "baseUrl": "./",
     "paths": {
@@ -18,7 +19,8 @@
     ],
     "outDir": "dist",
     "sourceMap": true,
-    "declaration": true
+    "declaration": true,
+    "experimentalDecorators": true
   },
   "include": [
     "src/**/*"
