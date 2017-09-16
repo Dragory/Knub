@@ -10,12 +10,11 @@
     ],
     "baseUrl": "./",
     "paths": {
-      "eris": ["eris", "../node_modules/eris-typings/index"],
-      "minimist-string": ["minimist-string", "../@types/minimist-string"]
+      "minimist-string": ["minimist-string", "../types/minimist-string"]
     },
     "typeRoots": [
       "../node_modules/@types",
-      "../@types"
+      "../types"
     ],
     "outDir": "dist",
     "sourceMap": true,
