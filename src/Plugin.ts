@@ -2,6 +2,7 @@ import {
   Channel,
   Client,
   DMChannel,
+  GroupDMChannel,
   Guild,
   GuildChannel,
   GuildMember,
@@ -122,7 +123,7 @@ export class Plugin extends BarePlugin {
         this.commands.add(
           metaCommand.command,
           metaCommand.parameters,
-          value,
+          value.bind(this),
           metaCommand.options
         );
       }
@@ -130,7 +131,7 @@ export class Plugin extends BarePlugin {
       // Event listeners
       const event = Reflect.getMetadata("event", this, prop);
       if (event) {
-        this.on(event.eventName, value);
+        this.on(event.eventName, value.bind(this), event.restrict || undefined);
       }
     }
   }
@@ -162,9 +163,6 @@ export class Plugin extends BarePlugin {
    */
   protected registerCommandMessageListeners(): void {
     this.on("message", this.runMessageCommands.bind(this));
-
-    // Plugin::on ignores direct messages
-    this.onDirectMessage(this.runMessageCommands.bind(this));
   }
 
   /**
@@ -396,16 +394,59 @@ export class Plugin extends BarePlugin {
    */
   protected on(
     eventName: string,
-    listener: CallbackFunctionVariadic
+    listener: CallbackFunctionVariadic,
+    restrict: string = "guild"
   ): () => void {
     if (!this.eventHandlers.has(eventName)) {
       this.eventHandlers.set(eventName, []);
     }
 
-    // Create a wrapper for the listener function that checks the first argument
-    // for a Channel or Guild. If one is found, verify their guild id matches with
-    // this plugin's guild id.
+    // Create a wrapper for the listener that checks:
+    // 1) That the event matches the restrict param (guild/dm/group)
+    // 2) That the event's guild (if present) matches this plugin's guild
     const wrappedListener = async (...args: any[]) => {
+      if (restrict === "dm") {
+        // Restrict to direct messages
+        if (args[0] instanceof Channel && !(args[0] instanceof DMChannel)) {
+          return;
+        }
+
+        if (
+          args[0] instanceof Message &&
+          !(args[0].channel instanceof DMChannel)
+        ) {
+          return;
+        }
+      } else if (restrict === "guild") {
+        // Restrict to guild events
+        if (args[0] instanceof Channel && !(args[0] instanceof GuildChannel)) {
+          return;
+        }
+
+        if (
+          args[0] instanceof Message &&
+          !(args[0].channel instanceof GuildChannel)
+        ) {
+          return;
+        }
+      } else if (restrict === "group") {
+        // Restrict to group DM events
+        if (
+          args[0] instanceof Channel &&
+          !(args[0] instanceof GroupDMChannel)
+        ) {
+          return;
+        }
+
+        if (
+          args[0] instanceof Message &&
+          !(args[0].channel instanceof GroupDMChannel)
+        ) {
+          return;
+        }
+      }
+
+      // Guild check
       let guild;
 
       if (args[0] instanceof GuildChannel) {
@@ -417,19 +458,20 @@ export class Plugin extends BarePlugin {
       }
 
       if (args[0] instanceof Message) {
-        if (!(args[0].channel instanceof GuildChannel)) {
-          return;
+        if (args[0].channel instanceof GuildChannel) {
+          guild = args[0].channel.guild;
         }
-
-        guild = args[0].channel.guild;
       }
 
       if (guild && guild.id !== this.guildId) {
         return;
       }
 
-      // Check permissions
-      if (args[0] instanceof Message) {
+      // Permission check
+      if (
+        args[0] instanceof Message &&
+        args[0].channel instanceof GuildChannel
+      ) {
         if (!await this.isPluginAllowed(args[0])) {
           return;
         }
@@ -662,33 +704,6 @@ export class Plugin extends BarePlugin {
       await command.commandDefinition.handler(msg, argsToPass, command);
     }
   }
-
-  /**
-   * Since by default direct messages are ignored by BasePlugin::on, we need a special function to add listeners for direct messages
-   */
-  protected onDirectMessage(listener: CallbackFunctionVariadic): () => void {
-    if (!this.eventHandlers.has("message")) {
-      this.eventHandlers.set("message", []);
-    }
-
-    const wrappedListener = (msg: Message) => {
-      if (!(msg.channel instanceof DMChannel)) {
-        return;
-      }
-
-      listener(msg);
-    };
-
-    this.bot.on("message", wrappedListener);
-    this.eventHandlers.get("message").push(wrappedListener);
-
-    // Return a function to clear the listener
-    const removeListener = () => {
-      this.off("message", wrappedListener);
-    };
-
-    return removeListener;
-  }
 }
 
 /**
@@ -712,11 +727,11 @@ export function CommandDecorator(
 /**
  * Decorator for turning a class method into an event listener
  */
-export function OnEventDecorator(eventName: string) {
+export function OnEventDecorator(eventName: string, restrict: string = null) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata(
       "event",
-      { eventName, _prop: propertyKey },
+      { eventName, restrict, _prop: propertyKey },
       target,
       propertyKey
     );
