@@ -98,37 +98,16 @@ export class CommandManager {
    *   Adds a command with a required argument "msg" that captures the entire rest of the arguments.
    *   These arguments are added in a more programmable, array of objects format.
    *
-   * addCommand(/p[io]ng/, (msg, args) => ...)
-   *   Adds a command with a regex trigger and no arguments
-   *
    * addCommand("addroles", "<user:Member> <roleName:string...>", (msg, args) => ...)
    *   Adds a command with a required, repeatable argument "roleName"
    */
-  public add(command: string | RegExp, ...rest: any[]) {
+  public add(
+    command: string | RegExp,
+    parameters: string | IParameter[],
+    handler: CommandHandler,
+    options: ICommandOptions = {}
+  ) {
     let trigger: RegExp;
-    let parameters: IParameter[] = [];
-    let handler: CommandHandler = null;
-    let options = {};
-    let inputParams = [];
-
-    // Support a variable amount of arguments:
-    if (rest.length === 3) {
-      // command, args, callback, options
-      [inputParams, handler, options] = rest;
-    } else if (rest.length === 2) {
-      if (typeof rest[1] === "function") {
-        // command, args, callback
-        [inputParams, handler] = rest;
-      } else {
-        // command, callback, options
-        [handler, options] = rest;
-      }
-    } else if (rest.length === 1) {
-      // command, callback
-      handler = rest[0];
-    } else {
-      throw new Error("Invalid number of arguments for CommandManager::add");
-    }
 
     // Command can either be a plain string or a regex
     // If string, escape it and turn it into regex
@@ -139,12 +118,10 @@ export class CommandManager {
     }
 
     // If arguments are provided in string format, parse it
-    if (typeof inputParams === "string") {
-      parameters = this.parseParameterString(inputParams);
-    } else if (Array.isArray(inputParams)) {
-      parameters = inputParams;
-    } else {
-      throw new Error(`Invalid parameter definition`);
+    if (typeof parameters === "string") {
+      parameters = this.parseParameterString(parameters);
+    } else if (parameters == null) {
+      parameters = [];
     }
 
     parameters = parameters.map(obj =>

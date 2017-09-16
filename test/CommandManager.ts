@@ -24,10 +24,10 @@ describe("CommandManager", () => {
     };
 
     manager.add("addrole", "<user:Member> <arg2:string=somedefault>", noop);
-    manager.add(/p[io]ng/, noop);
+    manager.add(/p[io]ng/, null, noop);
     manager.add(
       "setgreeting <msg:string$>",
-      [{ msg: { def: "something" } }],
+      [{ name: "msg", def: "something" }],
       noop
     );
     manager.add("8ball", [{ name: "question" }], noop);

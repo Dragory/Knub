@@ -16,7 +16,9 @@ import {
   IArgument,
   IArgumentMap,
   ICommandDefinition,
+  ICommandOptions,
   IMatchedCommand,
+  IParameter,
   MissingArgumentError
 } from "./CommandManager";
 import {
@@ -115,15 +117,20 @@ export class Plugin extends BarePlugin {
       }
 
       // Command handlers
-      const command = Reflect.getMetadata("command", this, prop);
-      if (command) {
-        this.commands.add(command.args[0], command.args[1] || [], value);
+      const metaCommand = Reflect.getMetadata("command", this, prop);
+      if (metaCommand) {
+        this.commands.add(
+          metaCommand.command,
+          metaCommand.parameters,
+          value,
+          metaCommand.options
+        );
       }
 
       // Event listeners
       const event = Reflect.getMetadata("event", this, prop);
       if (event) {
-        this.on(event.args[0], value);
+        this.on(event.eventName, value);
       }
     }
   }
@@ -687,11 +694,15 @@ export class Plugin extends BarePlugin {
 /**
  * Decorator for turning a class method into a command handler
  */
-export function command(...args: any[]) {
+export function CommandDecorator(
+  command: string | RegExp,
+  parameters: string | IParameter[],
+  options: ICommandOptions = {}
+) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata(
       "command",
-      { args, prop: propertyKey },
+      { command, parameters, options, _prop: propertyKey },
       target,
       propertyKey
     );
@@ -701,11 +712,11 @@ export function command(...args: any[]) {
 /**
  * Decorator for turning a class method into an event listener
  */
-export function onEvent(...args: any[]) {
+export function OnEventDecorator(eventName: string) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata(
       "event",
-      { args, prop: propertyKey },
+      { eventName, _prop: propertyKey },
       target,
       propertyKey
     );
