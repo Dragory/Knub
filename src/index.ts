@@ -7,7 +7,7 @@ export default BotFramework;
 export { BotFramework as Knub };
 
 export { IConfigProvider } from "./IConfigProvider";
-export { Plugin, command, onEvent } from "./Plugin";
+export { Plugin, BarePlugin, command, onEvent } from "./Plugin";
 
 export { logger } from "./logger";
 

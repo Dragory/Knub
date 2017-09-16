@@ -38,7 +38,7 @@ export interface IArbitraryObj {
  * If you'd like to use Knub as just a plugin loader, but not use any of the other functionality
  * provided by the main Plugin class, extending this class ensures compatibility.
  */
-export class BareClass {
+export class BarePlugin {
   public guildId: string;
 
   protected bot: Client;
@@ -69,7 +69,7 @@ export class BareClass {
  * Commands can also be registered with the exported @command decorator.
  * Event listeners can also be registered with the exported @onEvent decorator.
  */
-export class Plugin extends BareClass {
+export class Plugin extends BarePlugin {
   /**
    * Basic plugin information
    */
