@@ -711,7 +711,7 @@ export class Plugin extends BarePlugin {
  */
 export function CommandDecorator(
   command: string | RegExp,
-  parameters: string | IParameter[],
+  parameters: string | IParameter[] = [],
   options: ICommandOptions = {}
 ) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
