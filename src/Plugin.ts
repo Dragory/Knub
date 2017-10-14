@@ -7,7 +7,8 @@ import {
   GuildChannel,
   GuildMember,
   Message,
-  RichEmbed
+  RichEmbed,
+  User
 } from "discord.js";
 import * as winston from "winston";
 const at = require("lodash.at");
