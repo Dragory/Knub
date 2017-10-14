@@ -21,7 +21,7 @@
     ]
   },
   "dependencies": {
-    "discord.js": "^11.1.0",
+    "discord.js": "^11.2.1",
     "escape-string-regexp": "^1.0.5",
     "js-yaml": "^3.9.1",
     "lodash.at": "^4.6.0",
