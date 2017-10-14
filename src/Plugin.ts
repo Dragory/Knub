@@ -131,7 +131,12 @@ export class Plugin extends BarePlugin {
       // Event listeners
       const event = Reflect.getMetadata("event", this, prop);
       if (event) {
-        this.on(event.eventName, value.bind(this), event.restrict || undefined);
+        this.on(
+          event.eventName,
+          value.bind(this),
+          event.restrict || undefined,
+          event.ignoreSelf || undefined
+        );
       }
     }
   }
@@ -395,7 +400,8 @@ export class Plugin extends BarePlugin {
   protected on(
     eventName: string,
     listener: CallbackFunctionVariadic,
-    restrict: string = "guild"
+    restrict: string = "guild",
+    ignoreSelf: bool = true
   ): () => void {
     if (!this.eventHandlers.has(eventName)) {
       this.eventHandlers.set(eventName, []);
@@ -404,6 +410,7 @@ export class Plugin extends BarePlugin {
     // Create a wrapper for the listener that checks:
     // 1) That the event matches the restrict param (guild/dm/group)
     // 2) That the event's guild (if present) matches this plugin's guild
+    // 3) That, if requested, we'll ignore events we triggered ourself (e.g. our own messages)
     const wrappedListener = async (...args: any[]) => {
       if (restrict === "dm") {
         // Restrict to direct messages
@@ -442,6 +449,21 @@ export class Plugin extends BarePlugin {
           args[0] instanceof Message &&
           !(args[0].channel instanceof GroupDMChannel)
         ) {
+          return;
+        }
+      }
+
+      // Ignore self
+      if (ignoreSelf) {
+        if (args[0] instanceof Message && args[0].author === this.bot.user) {
+          return;
+        }
+
+        if (args[0] instanceof GuildMember && args[0].user === this.bot.user) {
+          return;
+        }
+
+        if (args[0] instanceof User && args[0] === this.bot.user) {
           return;
         }
       }
@@ -727,11 +749,15 @@ export function CommandDecorator(
 /**
  * Decorator for turning a class method into an event listener
  */
-export function OnEventDecorator(eventName: string, restrict: string = null) {
+export function OnEventDecorator(
+  eventName: string,
+  restrict: string = null,
+  ignoreSelf: bool = null
+) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata(
       "event",
-      { eventName, restrict, _prop: propertyKey },
+      { eventName, restrict, ignoreSelf, _prop: propertyKey },
       target,
       propertyKey
     );
