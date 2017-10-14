@@ -401,7 +401,7 @@ export class Plugin extends BarePlugin {
     eventName: string,
     listener: CallbackFunctionVariadic,
     restrict: string = "guild",
-    ignoreSelf: bool = true
+    ignoreSelf: boolean = true
   ): () => void {
     if (!this.eventHandlers.has(eventName)) {
       this.eventHandlers.set(eventName, []);
@@ -752,7 +752,7 @@ export function CommandDecorator(
 export function OnEventDecorator(
   eventName: string,
   restrict: string = null,
-  ignoreSelf: bool = null
+  ignoreSelf: boolean = null
 ) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata(
