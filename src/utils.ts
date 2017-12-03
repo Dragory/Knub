@@ -1,4 +1,4 @@
-import { RichEmbed } from "discord.js";
+import { MessageEmbed } from "discord.js";
 
 const userMentionRegex = /^<@\!?([0-9]+)>$/;
 const channelMentionRegex = /^<@([0-9]+)>$/;
@@ -54,7 +54,7 @@ export function getRoleId(str: string) {
 
 export function errorEmbed(str: string) {
   return {
-    embed: new RichEmbed({
+    embed: new MessageEmbed({
       description: str,
       color: parseInt("ee4400", 16)
     })

@@ -7,7 +7,6 @@ import {
   GuildChannel,
   GuildMember,
   Message,
-  RichEmbed,
   User
 } from "discord.js";
 import * as winston from "winston";
@@ -583,7 +582,7 @@ export class Plugin extends BarePlugin {
       }
 
       const member =
-        msg.guild.members.get(user.id) || (await msg.guild.fetchMember(user));
+        msg.guild.members.get(user.id) || (await msg.guild.members.fetch(user));
       if (!member) {
         throw new Error(`Could not convert user id ${userId} to a member`);
       }
