@@ -302,6 +302,7 @@ export class Plugin extends BarePlugin {
 
     // Permission level
     if (
+      msg.member &&
       permissions.level &&
       (await this.getMemberLevel(msg.member)) < permissions.level
     ) {
