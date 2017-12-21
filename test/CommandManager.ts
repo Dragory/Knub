@@ -49,6 +49,7 @@ describe("CommandManager", () => {
       noop
     );
     manager.add("addroles", "[roleNames:string...]", noop);
+    manager.add("addnote", "<note:string$>", noop);
 
     expect(manager.commands[0].parameters.length).to.equal(2);
 
@@ -57,7 +58,8 @@ describe("CommandManager", () => {
       type: "Member",
       required: true,
       def: undefined,
-      rest: false
+      rest: false,
+      catchAll: false
     });
 
     expect(manager.commands[0].parameters[1]).to.deep.equal({
@@ -65,7 +67,8 @@ describe("CommandManager", () => {
       type: "string",
       required: false,
       def: "somedefault",
-      rest: false
+      rest: false,
+      catchAll: false
     });
 
     expect(manager.commands[1].parameters[0]).to.deep.equal({
@@ -73,13 +76,15 @@ describe("CommandManager", () => {
       type: "string",
       required: true,
       def: "something",
-      rest: false
+      rest: false,
+      catchAll: false
     });
 
     expect(manager.commands[2].parameters[0].rest).to.equal(true);
     expect(JSON.stringify(manager.commands[2].parameters[0].def)).to.equal(
       "[]"
     );
+    expect(manager.commands[3].parameters[0].catchAll).to.equal(true);
   });
 
   it("should match added commands", () => {
@@ -102,5 +107,21 @@ describe("CommandManager", () => {
 
     const multiResult = manager.findCommandsInString("!addroles NA EU", "!");
     expect(multiResult.commands.length).to.equal(2);
+  });
+
+  it("should handle catchAll correctly", () => {
+    const manager = new CommandManager();
+    const noop = () => {
+      /* empty */
+    };
+
+    manager.add("addnote", "<num:number> <note:string$>", noop);
+
+    const result = manager.matchCommand(
+      "!",
+      manager.commands[0],
+      "!addnote 1234 Hello how are you doing\nthere"
+    );
+    expect(result.args.note.value).to.equal("Hello how are you doing\nthere");
   });
 });

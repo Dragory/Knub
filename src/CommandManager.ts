@@ -8,6 +8,7 @@ export interface IParameter {
   required?: boolean;
   def?: any;
   rest?: boolean;
+  catchAll?: boolean;
 }
 
 export interface IArgument {
@@ -59,6 +60,7 @@ const argDefinitionRegex = new RegExp(
   "(?:\\:([a-z]+?))?" + // (2) Argument type
   "(?:=(.+?))?" + // (3) Default value
   "(\\.\\.\\.)?" + // (4) "..." to mark argument as a rest argument
+  "(\\$)?" + // (5) "$" to mark the argument as a "catch-all" for the rest of the arguments (will be returned as the full string, unlike "...")
     "[>\\]]",
   "i"
 );
@@ -79,7 +81,8 @@ const defaultParameter: IParameter = {
   type: "string",
   required: true,
   def: null,
-  rest: false
+  rest: false,
+  catchAll: false
 };
 
 export class CommandManager {
@@ -131,6 +134,7 @@ export class CommandManager {
     // Validate arguments to prevent unsupported behaviour
     let hadOptional = false;
     let hadRest = false;
+    let hadCatchAll = false;
 
     parameters.forEach(arg => {
       if (!arg.required) {
@@ -145,6 +149,14 @@ export class CommandManager {
 
       if (arg.rest) {
         hadRest = true;
+      }
+
+      if (hadCatchAll) {
+        throw new Error(`CatchAll argument must come last`);
+      }
+
+      if (arg.catchAll) {
+        hadCatchAll = true;
       }
     });
 
@@ -167,7 +179,7 @@ export class CommandManager {
   public parseParameterString(str: string): IParameter[] {
     const parameterDefinitions = str.match(argDefinitionSimpleRegex) || [];
 
-    return parameterDefinitions.map((parameterDefinition, i) => {
+    return parameterDefinitions.map((parameterDefinition, i): IParameter => {
       const details = parameterDefinition.match(argDefinitionRegex);
       if (!details) {
         throw new Error(`Invalid argument definition: ${parameterDefinition}`);
@@ -176,6 +188,7 @@ export class CommandManager {
       let defaultValue: any = details[3];
       const isRest = details[4] === "...";
       const isOptional = parameterDefinition[0] === "[" || defaultValue != null;
+      const isCatchAll = details[5] === "$";
 
       if (isRest) {
         defaultValue = [];
@@ -186,7 +199,8 @@ export class CommandManager {
         type: details[2] || "string",
         required: !isOptional,
         def: defaultValue,
-        rest: isRest
+        rest: isRest,
+        catchAll: isCatchAll
       };
     });
   }
@@ -254,7 +268,7 @@ export class CommandManager {
     const escapedPrefix =
       typeof prefix === "string" ? escapeStringRegex(prefix) : prefix.source;
     const regex = new RegExp(
-      `^(${escapedPrefix})(${command.trigger.source})(?:\\s(.+))?$`,
+      `^(${escapedPrefix})(${command.trigger.source})(?:\\s([\\s\\S]+))?$`,
       "i"
     );
     const match = str.match(regex);
@@ -263,7 +277,8 @@ export class CommandManager {
       return null;
     }
 
-    const parsedArguments = this.parseArguments(match[3] || "");
+    const argStr = match[3] || "";
+    const parsedArguments = this.parseArguments(argStr);
     const args: IArgumentMap = {};
 
     for (const [i, param] of command.parameters.entries()) {
@@ -290,6 +305,10 @@ export class CommandManager {
         }
       } else {
         value = parsedArg.value;
+      }
+
+      if (param.catchAll) {
+        value = [...argStr].slice(parsedArg.index).join("");
       }
 
       args[param.name] = {
