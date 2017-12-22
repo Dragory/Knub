@@ -265,8 +265,18 @@ export class CommandManager {
     command: ICommandDefinition,
     str: string
   ): IMatchedCommand {
-    const escapedPrefix =
-      typeof prefix === "string" ? escapeStringRegex(prefix) : prefix.source;
+    let escapedPrefix;
+
+    if (typeof prefix === "string") {
+      if (prefix.match(/^\/.+\/$/)) {
+        escapedPrefix = prefix.slice(1, -1);
+      } else {
+        escapedPrefix = escapeStringRegex(prefix);
+      }
+    } else {
+      escapedPrefix = prefix.source;
+    }
+
     const regex = new RegExp(
       `^(${escapedPrefix})(${command.trigger.source})(?:\\s([\\s\\S]+))?$`,
       "i"

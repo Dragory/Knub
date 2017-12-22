@@ -124,4 +124,25 @@ describe("CommandManager", () => {
     );
     expect(result.args.note.value).to.equal("Hello how are you doing\nthere");
   });
+
+  it("should recognize regex prefixes", () => {
+    const manager = new CommandManager();
+    const noop = () => {
+      /* empty */
+    };
+
+    manager.add("cmd", [], noop);
+
+    const prefix = "/(?:!|\\.\\.)/";
+
+    const test1 = manager.matchCommand(prefix, manager.commands[0], "!cmd");
+
+    const test2 = manager.matchCommand(prefix, manager.commands[0], "..cmd");
+
+    const test3 = manager.matchCommand(prefix, manager.commands[0], ";;cmd");
+
+    expect(test1).to.not.equal(null);
+    expect(test2).to.not.equal(null);
+    expect(test3).to.equal(null);
+  });
 });
