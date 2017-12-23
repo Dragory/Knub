@@ -486,6 +486,10 @@ export class Plugin extends BarePlugin {
         }
       }
 
+      if (args[0] instanceof GuildMember) {
+        guild = args[0].guild;
+      }
+
       if (guild && guild.id !== this.guildId) {
         return;
       }
