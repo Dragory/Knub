@@ -43,6 +43,7 @@ export interface IArbitraryObj {
  */
 export class BarePlugin {
   public guildId: string;
+  public guild: Guild;
 
   protected bot: Client;
   protected guildConfig: IConfigProvider;
@@ -64,6 +65,8 @@ export class BarePlugin {
     this.pluginConfig = pluginConfig;
     this.pluginName = pluginName;
     this.parent = parent;
+
+    this.guild = this.bot.guilds.get(this.guildId);
   }
 }
 
