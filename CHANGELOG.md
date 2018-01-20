@@ -7,3 +7,4 @@
   * Registered just like regular plugins, but using the `globalPlugins` property instead
   * Non-guild-specific permissions
 * Guild/channel/user/message checks for events should now be more reliable
+* Renamed `Plugin.parent` to `Plugin.knub`
