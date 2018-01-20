@@ -13,8 +13,9 @@ export const logger = new winston.Logger({
           meta = null;
         }
 
-        return `[${opts.timestamp()}] [${opts.level.toUpperCase()}] ${opts.message ||
-          ""} ${meta ? "\n\t" + meta : ""}`.trim();
+        return `[${opts.timestamp()}] [${opts.level.toUpperCase()}] ${opts.message || ""} ${
+          meta ? "\n\t" + meta : ""
+        }`.trim();
       }
     })
   ]

@@ -1,28 +1,27 @@
 import { Client, Guild } from "discord.js";
 import * as path from "path";
-import * as winston from "winston";
 
 import { IConfigProvider } from "./IConfigProvider";
 import { logger } from "./logger";
 import { Plugin } from "./Plugin";
 import { YamlConfigProvider } from "./YamlConfigProvider";
+import { GlobalPlugin } from "./GlobalPlugin";
 
-export type SettingsProviderFactory = (
-  id: string
-) => IConfigProvider | Promise<IConfigProvider>;
+export type SettingsProviderFactory = (id: string) => IConfigProvider | Promise<IConfigProvider>;
 
 export interface IPluginList {
   [key: string]: typeof Plugin;
+}
+
+export interface IGlobalPluginList {
+  [key: string]: typeof GlobalPlugin;
 }
 
 export interface IOptions {
   logLevel?: string;
   autoInitGuilds?: boolean;
   settingsProvider?: string | SettingsProviderFactory;
-  getEnabledPlugins?: (
-    guildId: string,
-    guildConfig: IConfigProvider
-  ) => string[] | Promise<string[]>;
+  getEnabledPlugins?: (guildId: string, guildConfig: IConfigProvider) => string[] | Promise<string[]>;
   canLoadGuild?: (guildId: string) => boolean | Promise<boolean>;
   [key: string]: any;
 }
@@ -33,26 +32,47 @@ export interface IGuildData {
   loadedPlugins: Map<string, Plugin>;
 }
 
-export class BotFramework {
+export interface IKnubArgs {
+  token: string;
+  plugins?: IPluginList;
+  globalPlugins?: IGlobalPluginList;
+  options?: IOptions;
+  djsOptions?: any;
+}
+
+const defaultKnubParams: IKnubArgs = {
+  token: null,
+  plugins: {},
+  globalPlugins: {},
+  options: {},
+  djsOptions: {}
+};
+
+export class Knub {
   protected token: string;
   protected bot: Client;
+  protected globalPlugins: Map<string, typeof GlobalPlugin>;
+  protected loadedGlobalPlugins: Map<string, GlobalPlugin>;
   protected plugins: Map<string, typeof Plugin>;
   protected options: IOptions;
   protected djsOptions: any;
   protected guilds: Map<string, IGuildData>;
+  protected globalConfig: IConfigProvider;
 
-  constructor(
-    token: string,
-    plugins: IPluginList,
-    options: IOptions = {},
-    djsOptions: any = {}
-  ) {
-    this.token = token;
+  constructor(userArgs: IKnubArgs) {
+    const args: IKnubArgs = Object.assign({}, defaultKnubParams, userArgs);
+
+    this.token = args.token;
+
+    this.globalPlugins = new Map();
+    this.loadedGlobalPlugins = new Map();
+    Object.keys(args.globalPlugins).forEach(key => {
+      this.globalPlugins.set(key, args.globalPlugins[key]);
+    });
 
     this.plugins = new Map();
-
-    Object.keys(plugins).forEach(key => {
-      this.plugins.set(key, plugins[key]);
+    Object.keys(args.plugins).forEach(key => {
+      this.plugins.set(key, args.plugins[key]);
     });
 
     const defaultOptions: IOptions = {
@@ -67,8 +87,8 @@ export class BotFramework {
       canLoadGuild: () => true
     };
 
-    this.options = { ...defaultOptions, ...options };
-    this.djsOptions = djsOptions;
+    this.options = { ...defaultOptions, ...args.options };
+    this.djsOptions = args.djsOptions;
 
     logger.transports.console.level = this.options.logLevel;
 
@@ -93,7 +113,14 @@ export class BotFramework {
     this.bot.on("ready", async () => {
       clearTimeout(loadErrorTimeout);
 
-      logger.info("Bot connected! Loading guilds...");
+      logger.info("Bot connected!");
+
+      logger.info("Loading global plugins...");
+
+      await this.loadGlobalConfig();
+      await this.loadAllGlobalPlugins();
+
+      logger.info("Loading guilds..");
 
       this.bot.on("guildAvailable", (guild: Guild) => {
         logger.info(`Joined guild: ${guild.id}`);
@@ -106,7 +133,7 @@ export class BotFramework {
       });
 
       await this.loadAllGuilds();
-      logger.info("Guilds loaded!");
+      logger.info("All loaded, the bot is now running!");
     });
 
     this.bot.login(this.token);
@@ -146,23 +173,19 @@ export class BotFramework {
     guildData.config = await this.getConfig(`${guildData.id}`);
 
     // Load plugins
-    const enabledPlugins = await this.options.getEnabledPlugins(
-      guildData.id,
-      guildData.config
-    );
+    const enabledPlugins = await this.options.getEnabledPlugins(guildData.id, guildData.config);
 
     const loadPromises = enabledPlugins.map(async pluginName => {
-      const plugin = await this.loadPlugin(
-        guildData.id,
-        pluginName,
-        guildData.config
-      );
+      const plugin = await this.loadPlugin(guildData.id, pluginName, guildData.config);
       guildData.loadedPlugins.set(pluginName, plugin);
     });
 
     await Promise.all(loadPromises);
   }
 
+  /**
+   * Unloads all plugins in the specified guild, and removes the guild from the list of loaded guilds
+   */
   public async unloadGuild(guildId: string): Promise<void> {
     const guildData = this.guilds.get(guildId);
     if (!guildData) {
@@ -173,8 +196,6 @@ export class BotFramework {
       await this.unloadPlugin(plugin);
       this.guilds.delete(guildId);
     }
-
-    return this.loadGuild(guildId);
   }
 
   public async reloadGuild(guildId: string): Promise<void> {
@@ -182,11 +203,7 @@ export class BotFramework {
     await this.loadGuild(guildId);
   }
 
-  public async loadPlugin(
-    guildId: string,
-    pluginName: string,
-    guildConfig: IConfigProvider
-  ): Promise<Plugin> {
+  public async loadPlugin(guildId: string, pluginName: string, guildConfig: IConfigProvider): Promise<Plugin> {
     if (!this.plugins.has(pluginName)) {
       throw new Error(`Unknown plugin: ${pluginName}`);
     }
@@ -201,19 +218,12 @@ export class BotFramework {
           };
         }
 
-        const prop: any = target[name];
+        return target[name];
       }
     });
 
     const PluginObj: typeof Plugin = this.plugins.get(pluginName);
-    const plugin = new PluginObj(
-      this.bot,
-      guildId,
-      guildConfig,
-      pluginConfig,
-      pluginName,
-      this
-    );
+    const plugin = new PluginObj(this.bot, guildId, guildConfig, pluginConfig, pluginName, this);
 
     await plugin.runLoad();
 
@@ -221,13 +231,72 @@ export class BotFramework {
   }
 
   public async unloadPlugin(plugin: Plugin): Promise<void> {
-    await plugin.runUnload(); // aaa
+    await plugin.runUnload();
   }
 
   public async reloadPlugin(plugin: Plugin): Promise<void> {
     await this.unloadPlugin(plugin);
     const guild = this.guilds.get(plugin.guildId);
-    await this.loadPlugin(guild.id, plugin.name, guild.config);
+    await this.loadPlugin(guild.id, plugin.pluginName, guild.config);
+  }
+
+  public async loadGlobalPlugin(pluginName: string): Promise<GlobalPlugin> {
+    if (!this.globalPlugins.has(pluginName)) {
+      throw new Error(`Unknown global plugin: ${pluginName}`);
+    }
+
+    // Create a proxy for globalConfig that only returns the settings for this plugin
+    const pluginConfig = new Proxy(this.globalConfig, {
+      get(target, name) {
+        if (name === "get") {
+          const origFn = target[name];
+          return (getPath: string, def: any = null) => {
+            return origFn.call(target, `plugins.${pluginName}.${getPath}`, def);
+          };
+        }
+
+        return target[name];
+      }
+    });
+
+    const PluginObj: typeof GlobalPlugin = this.globalPlugins.get(pluginName);
+    const plugin = new PluginObj(this.bot, this.globalConfig, pluginConfig, pluginName, this);
+
+    await plugin.runLoad();
+    this.loadedGlobalPlugins.set(pluginName, plugin);
+
+    return plugin;
+  }
+
+  public async unloadGlobalPlugin(plugin: GlobalPlugin): Promise<void> {
+    this.loadedGlobalPlugins.delete(plugin.pluginName);
+    await plugin.runUnload();
+  }
+
+  public async reloadGlobalPlugin(plugin: GlobalPlugin): Promise<void> {
+    await this.unloadGlobalPlugin(plugin);
+    await this.loadGlobalPlugin(plugin.name);
+  }
+
+  public async reloadAllGlobalPlugins() {
+    for (const plugin of this.loadedGlobalPlugins.values()) {
+      this.reloadGlobalPlugin(plugin);
+    }
+  }
+
+  public async loadAllGlobalPlugins() {
+    for (const name of this.globalPlugins.keys()) {
+      this.loadGlobalPlugin(name);
+    }
+  }
+
+  public async reloadGlobalConfig() {
+    await this.loadGlobalConfig();
+    await this.reloadAllGlobalPlugins();
+  }
+
+  public async loadGlobalConfig() {
+    this.globalConfig = await this.getConfig("global");
   }
 
   protected async getConfig(id: string): Promise<IConfigProvider> {

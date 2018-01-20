@@ -14,7 +14,7 @@ export interface IPermissionLevels {
   [key: string]: number;
 }
 
-export interface IPluginPermissions {
+export interface IBasicPermissions {
   level?: number;
   channels?: string[];
   exclude_channels?: string[];
@@ -22,17 +22,20 @@ export interface IPluginPermissions {
   exclude_users?: string[];
   roles?: string[];
   exclude_roles?: string[];
+}
+
+export interface IPluginPermissions extends IBasicPermissions {
   commands?: {
     [key: string]: ICommandPermissions;
   };
 }
 
-export interface ICommandPermissions {
-  level?: number;
-  channels?: string[];
-  exclude_channels?: string[];
+export interface IGlobalPluginPermissions {
   users?: string[];
-  exclude_users?: string[];
-  roles?: string[];
-  exclude_roles?: string[];
+}
+
+export interface ICommandPermissions extends IBasicPermissions {}
+
+export interface IGlobalCommandPermissions {
+  users?: string[];
 }

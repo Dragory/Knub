@@ -1,18 +1,8 @@
-import {
-  Channel,
-  Client,
-  DMChannel,
-  GroupDMChannel,
-  Guild,
-  GuildChannel,
-  GuildMember,
-  Message,
-  User
-} from "discord.js";
+import { Client, DMChannel, GroupDMChannel, Message } from "discord.js";
 const at = require("lodash.at");
 
 import { CommandManager, IMatchedCommand, MissingArgumentError } from "./CommandManager";
-import { ICommandPermissions, IPermissionLevels, IPluginPermissions } from "./ConfigInterfaces";
+import { IGlobalCommandPermissions, IGlobalPluginPermissions } from "./ConfigInterfaces";
 import { IConfigProvider } from "./IConfigProvider";
 import {
   CallbackFunctionVariadic,
@@ -25,67 +15,33 @@ import {
 } from "./utils";
 import { getDefaultPrefix, maybeRunCommand } from "./commandUtils";
 import { Knub } from "./Knub";
-import { checkBasicPermissions } from "./permissionUtils";
 
-/**
- * If you'd like to use Knub as just a plugin loader, but not use any of the other functionality
- * provided by the main Plugin class, extending this class ensures compatibility.
- */
-export class BarePlugin {
-  public guildId: string;
-  public guild: Guild;
+export class GlobalPlugin {
+  public name: string;
+  public description: string;
 
   public pluginName: string; // Internal name for the plugin
 
   protected bot: Client;
-  protected guildConfig: IConfigProvider;
+  protected globalConfig: IConfigProvider;
   protected pluginConfig: IConfigProvider;
-
   protected knub: Knub;
-
-  constructor(
-    bot: Client,
-    guildId: string,
-    guildConfig: IConfigProvider,
-    pluginConfig: IConfigProvider,
-    pluginName: string,
-    knub: Knub
-  ) {
-    this.bot = bot;
-    this.guildId = guildId;
-    this.guildConfig = guildConfig;
-    this.pluginConfig = pluginConfig;
-    this.pluginName = pluginName;
-
-    this.knub = knub;
-
-    this.guild = this.bot.guilds.get(this.guildId);
-  }
-}
-
-/**
- * The base class for Knub plugins. Contains functionality for guild and plugin configuration,
- * guild specific commands, and guild specific event listeners.
- * Commands can also be registered with the exported @command decorator.
- * Event listeners can also be registered with the exported @onEvent decorator.
- */
-export class Plugin extends BarePlugin {
-  // Plugin name and description for e.g. dashboards
-  public name: string;
-  public description: string;
 
   protected commands: CommandManager;
   protected eventHandlers: Map<string, any[]>;
 
   constructor(
     bot: Client,
-    guildId: string,
-    guildConfig: IConfigProvider,
+    globalConfig: IConfigProvider,
     pluginConfig: IConfigProvider,
     pluginName: string,
-    parent: any
+    knub: Knub
   ) {
-    super(bot, guildId, guildConfig, pluginConfig, pluginName, parent);
+    this.bot = bot;
+    this.globalConfig = globalConfig;
+    this.pluginConfig = pluginConfig;
+    this.pluginName = pluginName;
+    this.knub = knub;
 
     this.commands = new CommandManager();
     this.eventHandlers = new Map();
@@ -93,7 +49,7 @@ export class Plugin extends BarePlugin {
   }
 
   /**
-   * Run plugin-defined onLoad() function and load commands/event listeners registered with decorators
+   * Run plugin-defined load() function and load commands/event listeners registered with decorators
    */
   public async runLoad(): Promise<any> {
     await Promise.resolve(this.onLoad());
@@ -124,7 +80,7 @@ export class Plugin extends BarePlugin {
   }
 
   /**
-   * Clear event handlers and run plugin-defined onUnload() function
+   * Clear event handlers and run plugin-defined unload() function
    */
   public runUnload(): Promise<any> {
     this.clearEventHandlers();
@@ -183,81 +139,52 @@ export class Plugin extends BarePlugin {
   /**
    * Returns this plugin's default permissions
    */
-  protected getDefaultPermissions(): IPluginPermissions | Promise<IPluginPermissions> {
+  protected getDefaultPermissions(): IGlobalPluginPermissions | Promise<IGlobalPluginPermissions> {
     // Implemented by plugin
     return {};
   }
 
   /**
-   * Returns the given member's permission level
-   */
-  protected async getMemberLevel(member: GuildMember): Promise<number> {
-    if (member.guild.owner === member) {
-      return 99999;
-    }
-
-    const levels: IPermissionLevels = await this.guildConfig.get(`permissions.levels`, {});
-
-    for (const id in levels) {
-      if (member.id === id || member.roles.has(id)) {
-        return levels[id];
-      }
-    }
-
-    return 0;
-  }
-
-  /**
-   * Checks the given message's channel and author to determine whether the plugin should react to it
+   * Checks the given message's author to determine whether the plugin should react to it.
+   * If no permissions are defined, react to everyone.
    */
   protected async isPluginAllowed(msg: Message): Promise<boolean> {
     const defaultPermissions = this.getDefaultPermissions();
-    const configPermissions: IPluginPermissions = await this.guildConfig.get(
+    const configPermissions: IGlobalPluginPermissions = await this.globalConfig.get(
       `permissions.plugins.${this.pluginName}`,
       {}
     );
-    const permissions: IPluginPermissions = Object.assign({}, defaultPermissions, configPermissions);
+    const permissions: IGlobalPluginPermissions = Object.assign({}, defaultPermissions, configPermissions);
 
-    // Check basic permissions
-    if (!checkBasicPermissions(permissions, msg)) {
-      return false;
-    }
-
-    // Check level-based permissions
-    if (msg.member && permissions.level && (await this.getMemberLevel(msg.member)) < permissions.level) {
-      return false;
+    if (permissions.users && permissions.users.length && permissions.users.includes(msg.author.id)) {
+      return true;
     }
 
     return true;
   }
 
   /**
-   * Checks the given message's channel and author and compares them to the command's permissions
+   * Checks the given message's author and compares it to the command's permissions
    * to determine whether to run the command
    */
   protected async isCommandAllowed(msg: Message, command: IMatchedCommand): Promise<boolean> {
     const defaultPermissions = command.commandDefinition.options.permissions || {};
-    const configPermissions: ICommandPermissions = await this.guildConfig.get(
+    const configPermissions: IGlobalCommandPermissions = await this.globalConfig.get(
       `permissions.plugins.${this.pluginName}.commands.${command.name}`,
       {}
     );
-    const permissions: ICommandPermissions = Object.assign({}, defaultPermissions, configPermissions);
+    const permissions: IGlobalCommandPermissions = Object.assign({}, defaultPermissions, configPermissions);
 
-    // Check basic permissions
-    if (!checkBasicPermissions(permissions, msg)) {
-      return false;
-    }
-
-    // Check level-based permissions
-    if (permissions.level && (await this.getMemberLevel(msg.member)) < permissions.level) {
-      return false;
+    // Explicit user IDs
+    if (permissions.users && permissions.users.length && permissions.users.includes(msg.author.id)) {
+      return true;
     }
 
     return true;
   }
 
   /**
-   * Adds a guild-specific event listener for the given event
+   * Adds a an event listener for the given event
    */
   protected on(
     eventName: string,
@@ -272,8 +199,7 @@ export class Plugin extends BarePlugin {
     // Create a wrapper for the listener that checks:
     // 1) That the event matches the restrict param (guild/dm/group)
     // 2) That we ignore our own events if ignoreSelf is true
-    // 3) That the event's guild (if present) matches this plugin's guild
-    // 4) If the event has a message, that the message author has the permissions to trigger events
+    // 3) If the event has a message, that the message author has the permissions to trigger events
     const wrappedListener = async (...args: any[]) => {
       const guild = eventToGuild[eventName] ? eventToGuild[eventName](...args) : null;
       const user = eventToUser[eventName] ? eventToUser[eventName](...args) : null;
@@ -287,9 +213,6 @@ export class Plugin extends BarePlugin {
 
       // Ignore self
       if (ignoreSelf && user === this.bot.user) return;
-
-      // Guild check
-      if (guild && guild.id !== this.guildId) return;
 
       // Permission check
       if (message && !await this.isPluginAllowed(message)) return;
@@ -344,7 +267,7 @@ export class Plugin extends BarePlugin {
       return;
     }
 
-    const prefix = await this.guildConfig.get("prefix", getDefaultPrefix(this.bot));
+    const prefix = await this.globalConfig.get("prefix", getDefaultPrefix(this.bot));
 
     const { commands: matchedCommands, errors } = this.commands.findCommandsInString(msg.content, prefix);
 
@@ -360,7 +283,7 @@ export class Plugin extends BarePlugin {
     for (const command of matchedCommands) {
       // Check permissions
       if (!await this.isCommandAllowed(msg, command)) {
-        continue;
+        return;
       }
 
       // Run the command

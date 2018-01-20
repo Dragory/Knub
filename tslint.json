@@ -10,6 +10,9 @@
     "max-classes-per-file": [false],
     "prefer-conditional-expression": false,
     "prefer-object-spread": false,
-    "forin": false
+    "forin": false,
+    "max-line-length": [true, 120],
+    "curly": false,
+    "ordered-imports": false
   }
 }

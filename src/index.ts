@@ -1,18 +1,16 @@
 import "reflect-metadata";
 
-import { BotFramework } from "./BotFramework";
+import { Knub } from "./Knub";
 
 // Include both, a named and default export
-export default BotFramework;
-export { BotFramework as Knub };
+export default Knub;
+export { Knub };
 
 export { IConfigProvider } from "./IConfigProvider";
-export {
-  Plugin,
-  BarePlugin,
-  CommandDecorator as command,
-  OnEventDecorator as onEvent
-} from "./Plugin";
+export { Plugin, BarePlugin } from "./Plugin";
+export { GlobalPlugin } from "./GlobalPlugin";
+
+export { CommandDecorator as command, OnEventDecorator as onEvent } from "./commandUtils";
 
 export { logger } from "./logger";
 

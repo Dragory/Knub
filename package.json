@@ -21,7 +21,7 @@
     ]
   },
   "dependencies": {
-    "discord.js": "github:hydrabolt/discord.js#master",
+    "discord.js": "github:hydrabolt/discord.js#fbd25f867742bac5511e47bbf69274bdc82ccb23",
     "escape-string-regexp": "^1.0.5",
     "js-yaml": "^3.9.1",
     "lodash.at": "^4.6.0",
@@ -42,10 +42,10 @@
     "husky": "^0.14.3",
     "lint-staged": "^4.0.2",
     "mocha": "^3.4.2",
-    "prettier": "^1.5.3",
+    "prettier": "^1.10.2",
     "ts-node": "^3.2.1",
-    "tslint": "^5.5.0",
-    "tslint-config-prettier": "^1.1.0",
+    "tslint": "^5.9.1",
+    "tslint-config-prettier": "^1.6.0",
     "typescript": "^2.4.2"
   },
   "peerDependencies": {}

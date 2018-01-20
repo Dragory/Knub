@@ -20,16 +20,9 @@ export interface IArgumentMap {
   [name: string]: IArgument;
 }
 
-export type CommandHandler = (
-  msg?: Message,
-  args?: object,
-  command?: IMatchedCommand
-) => void | Promise<void>;
+export type CommandHandler = (msg?: Message, args?: object, command?: IMatchedCommand) => void | Promise<void>;
 
-export type CommandFilter = (
-  msg: Message,
-  command: IMatchedCommand
-) => boolean | Promise<boolean>;
+export type CommandFilter = (msg: Message, command: IMatchedCommand) => boolean | Promise<boolean>;
 
 export interface ICommandOptions {
   description?: string;
@@ -93,15 +86,15 @@ export class CommandManager {
    *
    * Examples:
    *
-   * addCommand("addrole", "<user:Member> <role:Role>", (msg, args) => ...)
+   * add("addrole", "<user:Member> <role:Role>", (msg, args) => ...)
    *   Adds a command called "addrole" with two required arguments without default values.
    *   These arguments are added in a easily-readable string format.
    *
-   * addCommand("setgreeting", [{name: "msg", type: "string"}], (msg, args) => ...)
+   * add("setgreeting", [{name: "msg", type: "string"}], (msg, args) => ...)
    *   Adds a command with a required argument "msg" that captures the entire rest of the arguments.
    *   These arguments are added in a more programmable, array of objects format.
    *
-   * addCommand("addroles", "<user:Member> <roleName:string...>", (msg, args) => ...)
+   * add("addroles", "<user:Member> <roleName:string...>", (msg, args) => ...)
    *   Adds a command with a required, repeatable argument "roleName"
    */
   public add(
@@ -127,9 +120,7 @@ export class CommandManager {
       parameters = [];
     }
 
-    parameters = parameters.map(obj =>
-      Object.assign({}, defaultParameter, obj)
-    );
+    parameters = parameters.map(obj => Object.assign({}, defaultParameter, obj));
 
     // Validate arguments to prevent unsupported behaviour
     let hadOptional = false;
@@ -241,11 +232,7 @@ export class CommandManager {
         } else {
           current += char;
         }
-      } else if (
-        !inQuote &&
-        char === "-" &&
-        chars.slice(i - 1, 4).join("") === " -- "
-      ) {
+      } else if (!inQuote && char === "-" && chars.slice(i - 1, 4).join("") === " -- ") {
         current = chars.slice(i + 3).join("");
         break;
       } else {
@@ -260,11 +247,7 @@ export class CommandManager {
     return args;
   }
 
-  public matchCommand(
-    prefix: string | RegExp,
-    command: ICommandDefinition,
-    str: string
-  ): IMatchedCommand {
+  public matchCommand(prefix: string | RegExp, command: ICommandDefinition, str: string): IMatchedCommand {
     let escapedPrefix;
 
     if (typeof prefix === "string") {
@@ -277,10 +260,7 @@ export class CommandManager {
       escapedPrefix = prefix.source;
     }
 
-    const regex = new RegExp(
-      `^(${escapedPrefix})(${command.trigger.source})(?:\\s([\\s\\S]+))?$`,
-      "i"
-    );
+    const regex = new RegExp(`^(${escapedPrefix})(${command.trigger.source})(?:\\s([\\s\\S]+))?$`, "i");
     const match = str.match(regex);
 
     if (!match) {
@@ -335,10 +315,7 @@ export class CommandManager {
     };
   }
 
-  public findCommandsInString(
-    str: string,
-    prefix: string
-  ): { commands: IMatchedCommand[]; errors: Error[] } {
+  public findCommandsInString(str: string, prefix: string): { commands: IMatchedCommand[]; errors: Error[] } {
     const commands: IMatchedCommand[] = [];
     const errors: Error[] = [];
 
