@@ -240,6 +240,10 @@ export class Knub {
     await this.loadPlugin(guild.id, plugin.pluginName, guild.config);
   }
 
+  public getPlugins(): Map<string, typeof Plugin> {
+    return this.plugins;
+  }
+
   public async loadGlobalPlugin(pluginName: string): Promise<GlobalPlugin> {
     if (!this.globalPlugins.has(pluginName)) {
       throw new Error(`Unknown global plugin: ${pluginName}`);
@@ -288,6 +292,10 @@ export class Knub {
     for (const name of this.globalPlugins.keys()) {
       this.loadGlobalPlugin(name);
     }
+  }
+
+  public getGlobalPlugins(): Map<string, typeof GlobalPlugin> {
+    return this.globalPlugins;
   }
 
   public async reloadGlobalConfig() {
