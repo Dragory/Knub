@@ -1,3 +1,16 @@
+# 6.2.0
+* Knub now extends `EventEmitter` and emits several events:
+  * `loadingFinished`
+  * `guildLoaded`
+  * `guildUnloaded`
+  * `guildPluginLoaded`
+  * `guildPluginUnloaded`
+  * `globalPluginLoaded`
+  * `globalPluginUnloaded`
+
+# 6.1.0
+* Add `Knub.getPlugins()` and `Knub.getGlobalPlugins()`
+
 # 6.0.0
 * Knub now takes an arguments object as the first and only argument
 * Changed default prefix from ! to mentioning the bot

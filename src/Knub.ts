@@ -6,6 +6,7 @@ import { logger } from "./logger";
 import { Plugin } from "./Plugin";
 import { YamlConfigProvider } from "./YamlConfigProvider";
 import { GlobalPlugin } from "./GlobalPlugin";
+import EventEmitter = NodeJS.EventEmitter;
 
 export type SettingsProviderFactory = (id: string) => IConfigProvider | Promise<IConfigProvider>;
 
@@ -48,7 +49,7 @@ const defaultKnubParams: IKnubArgs = {
   djsOptions: {}
 };
 
-export class Knub {
+export class Knub extends EventEmitter {
   protected token: string;
   protected bot: Client;
   protected globalPlugins: Map<string, typeof GlobalPlugin>;
@@ -60,6 +61,8 @@ export class Knub {
   protected globalConfig: IConfigProvider;
 
   constructor(userArgs: IKnubArgs) {
+    super();
+
     const args: IKnubArgs = Object.assign({}, defaultKnubParams, userArgs);
 
     this.token = args.token;
@@ -134,9 +137,10 @@ export class Knub {
 
       await this.loadAllGuilds();
       logger.info("All loaded, the bot is now running!");
+      this.emit("loadingFinished");
     });
 
-    this.bot.login(this.token);
+    await this.bot.login(this.token);
   }
 
   public async loadAllGuilds(): Promise<void> {
@@ -181,6 +185,7 @@ export class Knub {
     });
 
     await Promise.all(loadPromises);
+    this.emit("guildLoaded", guildId);
   }
 
   /**
@@ -196,6 +201,8 @@ export class Knub {
       await this.unloadPlugin(plugin);
       this.guilds.delete(guildId);
     }
+
+    this.emit("guildUnloaded", guildId);
   }
 
   public async reloadGuild(guildId: string): Promise<void> {
@@ -226,12 +233,14 @@ export class Knub {
     const plugin = new PluginObj(this.bot, guildId, guildConfig, pluginConfig, pluginName, this);
 
     await plugin.runLoad();
+    this.emit("guildPluginLoaded", guildId, pluginName);
 
     return plugin;
   }
 
   public async unloadPlugin(plugin: Plugin): Promise<void> {
     await plugin.runUnload();
+    this.emit("guildPluginUnloaded", plugin.guildId, plugin.pluginName);
   }
 
   public async reloadPlugin(plugin: Plugin): Promise<void> {
@@ -269,12 +278,15 @@ export class Knub {
     await plugin.runLoad();
     this.loadedGlobalPlugins.set(pluginName, plugin);
 
+    this.emit("globalPluginLoaded", pluginName);
+
     return plugin;
   }
 
   public async unloadGlobalPlugin(plugin: GlobalPlugin): Promise<void> {
     this.loadedGlobalPlugins.delete(plugin.pluginName);
     await plugin.runUnload();
+    this.emit("globalPluginUnloaded", plugin.pluginName);
   }
 
   public async reloadGlobalPlugin(plugin: GlobalPlugin): Promise<void> {
