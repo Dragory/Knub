@@ -1,3 +1,6 @@
+# 6.3.0
+* Add `Knub.getGuildData()`
+
 # 6.2.0
 * Knub now extends `EventEmitter` and emits several events:
   * `loadingFinished`
