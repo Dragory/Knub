@@ -210,8 +210,8 @@ export class Knub extends EventEmitter {
     await this.loadGuild(guildId);
   }
 
-  public async getGuildData(guildId: string) {
-    return this.guilds[guildId];
+  public getGuildData(guildId: string): IGuildData {
+    return this.guilds.get(guildId);
   }
 
   public async loadPlugin(guildId: string, pluginName: string, guildConfig: IConfigProvider): Promise<Plugin> {

@@ -1,3 +1,6 @@
+# 6.3.1
+* Fix `Knub.getGuildData()`
+
 # 6.3.0
 * Add `Knub.getGuildData()`
 
