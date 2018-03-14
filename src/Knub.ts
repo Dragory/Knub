@@ -6,7 +6,7 @@ import { logger } from "./logger";
 import { Plugin } from "./Plugin";
 import { YamlConfigProvider } from "./YamlConfigProvider";
 import { GlobalPlugin } from "./GlobalPlugin";
-import EventEmitter = NodeJS.EventEmitter;
+import * as EventEmitter from "events";
 
 export type SettingsProviderFactory = (id: string) => IConfigProvider | Promise<IConfigProvider>;
 
@@ -41,6 +41,19 @@ export interface IKnubArgs {
   djsOptions?: any;
 }
 
+export interface IPluginWithRuntimeConfig {
+  0: typeof Plugin;
+  1: any;
+}
+
+export interface IGlobalPluginWithRuntimeConfig {
+  0: typeof GlobalPlugin;
+  1: any;
+}
+
+export type IPluginMap = Map<string, (typeof Plugin) | IPluginWithRuntimeConfig>;
+export type IGlobalPluginMap = Map<string, (typeof GlobalPlugin) | IGlobalPluginWithRuntimeConfig>;
+
 const defaultKnubParams: IKnubArgs = {
   token: null,
   plugins: {},
@@ -52,9 +65,9 @@ const defaultKnubParams: IKnubArgs = {
 export class Knub extends EventEmitter {
   protected token: string;
   protected bot: Client;
-  protected globalPlugins: Map<string, typeof GlobalPlugin>;
+  protected globalPlugins: IGlobalPluginMap;
   protected loadedGlobalPlugins: Map<string, GlobalPlugin>;
-  protected plugins: Map<string, typeof Plugin>;
+  protected plugins: IPluginMap;
   protected options: IOptions;
   protected djsOptions: any;
   protected guilds: Map<string, IGuildData>;
@@ -233,8 +246,19 @@ export class Knub extends EventEmitter {
       }
     });
 
-    const PluginObj: typeof Plugin = this.plugins.get(pluginName);
-    const plugin = new PluginObj(this.bot, guildId, guildConfig, pluginConfig, pluginName, this);
+    const PluginDef = this.plugins.get(pluginName);
+    let PluginObj: typeof Plugin;
+    let pluginRuntimeConfig: any;
+
+    if (Array.isArray(PluginDef)) {
+      PluginObj = PluginDef[0];
+      pluginRuntimeConfig = PluginDef[1];
+    } else {
+      PluginObj = PluginDef as typeof Plugin;
+      pluginRuntimeConfig = null;
+    }
+
+    const plugin = new PluginObj(this.bot, guildId, guildConfig, pluginConfig, pluginName, this, pluginRuntimeConfig);
 
     await plugin.runLoad();
     this.emit("guildPluginLoaded", guildId, pluginName);
@@ -253,7 +277,7 @@ export class Knub extends EventEmitter {
     await this.loadPlugin(guild.id, plugin.pluginName, guild.config);
   }
 
-  public getPlugins(): Map<string, typeof Plugin> {
+  public getPlugins(): IPluginMap {
     return this.plugins;
   }
 
@@ -276,8 +300,19 @@ export class Knub extends EventEmitter {
       }
     });
 
-    const PluginObj: typeof GlobalPlugin = this.globalPlugins.get(pluginName);
-    const plugin = new PluginObj(this.bot, this.globalConfig, pluginConfig, pluginName, this);
+    const PluginDef = this.globalPlugins.get(pluginName);
+    let PluginObj: typeof GlobalPlugin;
+    let pluginRuntimeConfig: any;
+
+    if (Array.isArray(PluginDef)) {
+      PluginObj = PluginDef[0];
+      pluginRuntimeConfig = PluginDef[1];
+    } else {
+      PluginObj = PluginDef as typeof GlobalPlugin;
+      pluginRuntimeConfig = null;
+    }
+
+    const plugin = new PluginObj(this.bot, this.globalConfig, pluginConfig, pluginName, this, pluginRuntimeConfig);
 
     await plugin.runLoad();
     this.loadedGlobalPlugins.set(pluginName, plugin);
@@ -310,7 +345,7 @@ export class Knub extends EventEmitter {
     }
   }
 
-  public getGlobalPlugins(): Map<string, typeof GlobalPlugin> {
+  public getGlobalPlugins(): IGlobalPluginMap {
     return this.globalPlugins;
   }
 

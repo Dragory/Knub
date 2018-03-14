@@ -40,6 +40,7 @@ export class BarePlugin {
   protected bot: Client;
   protected guildConfig: IConfigProvider;
   protected pluginConfig: IConfigProvider;
+  protected runtimeConfig: any;
 
   protected knub: Knub;
 
@@ -49,13 +50,15 @@ export class BarePlugin {
     guildConfig: IConfigProvider,
     pluginConfig: IConfigProvider,
     pluginName: string,
-    knub: Knub
+    knub: Knub,
+    runtimeConfig: any
   ) {
     this.bot = bot;
     this.guildId = guildId;
     this.guildConfig = guildConfig;
     this.pluginConfig = pluginConfig;
     this.pluginName = pluginName;
+    this.runtimeConfig = runtimeConfig;
 
     this.knub = knub;
 
@@ -83,9 +86,10 @@ export class Plugin extends BarePlugin {
     guildConfig: IConfigProvider,
     pluginConfig: IConfigProvider,
     pluginName: string,
-    parent: any
+    knub: Knub,
+    runtimeConfig: any
   ) {
-    super(bot, guildId, guildConfig, pluginConfig, pluginName, parent);
+    super(bot, guildId, guildConfig, pluginConfig, pluginName, knub, runtimeConfig);
 
     this.commands = new CommandManager();
     this.eventHandlers = new Map();

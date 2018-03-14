@@ -1,3 +1,7 @@
+# 7.0.0
+* Allow passing runtime config to Plugins and GlobalPlugins by passing an array of `[Plugin, <config>]` in `plugins` or `globalPlugins`.
+This runtime config is available to plugins in `this.runtimeConfig`. If no config is passed (i.e. by using the regular way of setting plugins), `this.runtimeConfig` is set to `null`.
+
 # 6.3.1
 * Fix `Knub.getGuildData()`
 

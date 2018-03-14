@@ -25,6 +25,8 @@ export class GlobalPlugin {
   protected bot: Client;
   protected globalConfig: IConfigProvider;
   protected pluginConfig: IConfigProvider;
+  protected runtimeConfig: any;
+
   protected knub: Knub;
 
   protected commands: CommandManager;
@@ -35,12 +37,15 @@ export class GlobalPlugin {
     globalConfig: IConfigProvider,
     pluginConfig: IConfigProvider,
     pluginName: string,
-    knub: Knub
+    knub: Knub,
+    runtimeConfig: any
   ) {
     this.bot = bot;
     this.globalConfig = globalConfig;
     this.pluginConfig = pluginConfig;
     this.pluginName = pluginName;
+    this.runtimeConfig = runtimeConfig;
+
     this.knub = knub;
 
     this.commands = new CommandManager();
