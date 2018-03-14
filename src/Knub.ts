@@ -261,14 +261,14 @@ export class Knub extends EventEmitter {
     const plugin = new PluginObj(this.bot, guildId, guildConfig, pluginConfig, pluginName, this, pluginRuntimeConfig);
 
     await plugin.runLoad();
-    this.emit("guildPluginLoaded", guildId, pluginName);
+    this.emit("guildPluginLoaded", guildId, pluginName, plugin);
 
     return plugin;
   }
 
   public async unloadPlugin(plugin: Plugin): Promise<void> {
     await plugin.runUnload();
-    this.emit("guildPluginUnloaded", plugin.guildId, plugin.pluginName);
+    this.emit("guildPluginUnloaded", plugin.guildId, plugin.pluginName, plugin);
   }
 
   public async reloadPlugin(plugin: Plugin): Promise<void> {

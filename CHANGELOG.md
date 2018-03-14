@@ -1,3 +1,9 @@
+# 7.0.3
+* Pass the plugin object as the third argument in the `guildPluginLoaded` and `guildPluginUnloaded` events
+
+# 7.0.1-7.0.2
+* Lock Discord.js version to 11.3.2
+
 # 7.0.0
 * Allow passing runtime config to Plugins and GlobalPlugins by passing an array of `[Plugin, <config>]` in `plugins` or `globalPlugins`.
 This runtime config is available to plugins in `this.runtimeConfig`. If no config is passed (i.e. by using the regular way of setting plugins), `this.runtimeConfig` is set to `null`.
