@@ -10,12 +10,22 @@ import * as EventEmitter from "events";
 
 export type SettingsProviderFactory = (id: string) => IConfigProvider | Promise<IConfigProvider>;
 
+export interface IPluginWithRuntimeConfig {
+  0: typeof Plugin;
+  1: any;
+}
+
+export interface IGlobalPluginWithRuntimeConfig {
+  0: typeof GlobalPlugin;
+  1: any;
+}
+
 export interface IPluginList {
-  [key: string]: typeof Plugin;
+  [key: string]: (typeof Plugin) | IPluginWithRuntimeConfig;
 }
 
 export interface IGlobalPluginList {
-  [key: string]: typeof GlobalPlugin;
+  [key: string]: (typeof GlobalPlugin) | IGlobalPluginWithRuntimeConfig;
 }
 
 export interface IOptions {
@@ -39,16 +49,6 @@ export interface IKnubArgs {
   globalPlugins?: IGlobalPluginList;
   options?: IOptions;
   djsOptions?: any;
-}
-
-export interface IPluginWithRuntimeConfig {
-  0: typeof Plugin;
-  1: any;
-}
-
-export interface IGlobalPluginWithRuntimeConfig {
-  0: typeof GlobalPlugin;
-  1: any;
 }
 
 export type IPluginMap = Map<string, (typeof Plugin) | IPluginWithRuntimeConfig>;
