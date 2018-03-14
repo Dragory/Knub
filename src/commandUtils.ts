@@ -48,7 +48,7 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
       throw new Error(`Could not convert user id ${userId} to a user`);
     }
 
-    const member = msg.guild.members.get(user.id) || (await msg.guild.members.fetch(user));
+    const member = msg.guild.members.get(user.id) || (await msg.guild.fetchMember(user));
     if (!member) {
       throw new Error(`Could not convert user id ${userId} to a member`);
     }

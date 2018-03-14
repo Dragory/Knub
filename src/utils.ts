@@ -1,4 +1,4 @@
-import { Channel, ClientUserGuildSettings, ClientUserSettings, Guild, Message, MessageEmbed, User } from "discord.js";
+import { Channel, ClientUserGuildSettings, Guild, Message, RichEmbed, User } from "discord.js";
 
 export type CallbackFunctionVariadic = (...args: any[]) => void;
 
@@ -60,7 +60,7 @@ export function getRoleId(str: string) {
 
 export function errorEmbed(str: string) {
   return {
-    embed: new MessageEmbed({
+    embed: new RichEmbed({
       description: str,
       color: parseInt("ee4400", 16)
     })
