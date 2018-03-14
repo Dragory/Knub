@@ -21,7 +21,7 @@
     ]
   },
   "dependencies": {
-    "discord.js": "github:hydrabolt/discord.js#fbd25f867742bac5511e47bbf69274bdc82ccb23",
+    "discord.js": "^11.3.2",
     "escape-string-regexp": "^1.0.5",
     "js-yaml": "^3.9.1",
     "lodash.at": "^4.6.0",
