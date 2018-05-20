@@ -1,6 +1,5 @@
 import escapeStringRegex = require("escape-string-regexp");
 import { Message } from "discord.js";
-import { ICommandPermissions } from "./ConfigInterfaces";
 
 export interface IParameter {
   name: string;
@@ -26,7 +25,7 @@ export type CommandFilter = (msg: Message, command: IMatchedCommand) => boolean 
 
 export interface ICommandOptions {
   description?: string;
-  permissions?: ICommandPermissions;
+  requiredPermission?: string;
   allowDMs?: boolean;
   filters?: CommandFilter[];
 }

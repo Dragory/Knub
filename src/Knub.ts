@@ -1,23 +1,25 @@
 import { Client, Guild } from "discord.js";
-import * as path from "path";
+import * as util from "util";
+import * as fs from "fs";
 
-import { IConfigProvider } from "./IConfigProvider";
 import { logger } from "./logger";
 import { Plugin } from "./Plugin";
-import { YamlConfigProvider } from "./YamlConfigProvider";
 import { GlobalPlugin } from "./GlobalPlugin";
 import * as EventEmitter from "events";
+import { IGlobalConfig, IGuildConfig, IPluginOptions } from "./configInterfaces";
+import * as yaml from "js-yaml";
 
-export type SettingsProviderFactory = (id: string) => IConfigProvider | Promise<IConfigProvider>;
+const at = require("lodash.at");
+const merge = require("lodash.merge");
 
 export interface IPluginWithRuntimeConfig {
   0: typeof Plugin;
-  1: any;
+  1: IPluginOptions;
 }
 
 export interface IGlobalPluginWithRuntimeConfig {
   0: typeof GlobalPlugin;
-  1: any;
+  1: IPluginOptions;
 }
 
 export interface IPluginList {
@@ -31,15 +33,15 @@ export interface IGlobalPluginList {
 export interface IOptions {
   logLevel?: string;
   autoInitGuilds?: boolean;
-  settingsProvider?: string | SettingsProviderFactory;
-  getEnabledPlugins?: (guildId: string, guildConfig: IConfigProvider) => string[] | Promise<string[]>;
+  getConfig?: (id: string) => any | Promise<any>;
+  getEnabledPlugins?: (guildId: string, guildConfig: IGuildConfig) => string[] | Promise<string[]>;
   canLoadGuild?: (guildId: string) => boolean | Promise<boolean>;
   [key: string]: any;
 }
 
 export interface IGuildData {
   id: string;
-  config: IConfigProvider;
+  config: IGuildConfig;
   loadedPlugins: Map<string, Plugin>;
 }
 
@@ -53,6 +55,8 @@ export interface IKnubArgs {
 
 export type IPluginMap = Map<string, (typeof Plugin) | IPluginWithRuntimeConfig>;
 export type IGlobalPluginMap = Map<string, (typeof GlobalPlugin) | IGlobalPluginWithRuntimeConfig>;
+
+const readFileAsync = util.promisify(fs.readFile);
 
 const defaultKnubParams: IKnubArgs = {
   token: null,
@@ -71,7 +75,7 @@ export class Knub extends EventEmitter {
   protected options: IOptions;
   protected djsOptions: any;
   protected guilds: Map<string, IGuildData>;
-  protected globalConfig: IConfigProvider;
+  protected globalConfig: IGlobalConfig;
 
   constructor(userArgs: IKnubArgs) {
     super();
@@ -93,7 +97,13 @@ export class Knub extends EventEmitter {
 
     const defaultOptions: IOptions = {
       logLevel: "info",
-      configStorage: "yaml",
+
+      // Default YAML-based config files
+      async getConfig(id) {
+        const configPath = `config/${id}.yml`;
+        const yamlString = await readFileAsync(configPath, { encoding: "utf8" });
+        return yaml.safeLoad(yamlString);
+      },
 
       // Load all plugins by default
       getEnabledPlugins: async (guildId, guildConfig) => {
@@ -187,7 +197,7 @@ export class Knub extends EventEmitter {
     }
 
     // Load config
-    guildData.config = await this.getConfig(`${guildData.id}`);
+    guildData.config = await this.options.getConfig(guildData.id);
 
     // Load plugins
     const enabledPlugins = await this.options.getEnabledPlugins(guildData.id, guildData.config);
@@ -227,38 +237,28 @@ export class Knub extends EventEmitter {
     return this.guilds.get(guildId);
   }
 
-  public async loadPlugin(guildId: string, pluginName: string, guildConfig: IConfigProvider): Promise<Plugin> {
+  public async loadPlugin(guildId: string, pluginName: string, guildConfig: IGuildConfig): Promise<Plugin> {
     if (!this.plugins.has(pluginName)) {
       throw new Error(`Unknown plugin: ${pluginName}`);
     }
 
-    // Create a proxy for guildConfig that only returns the settings for this plugin
-    const pluginConfig = new Proxy(guildConfig, {
-      get(target, name) {
-        if (name === "get") {
-          const origFn = target[name];
-          return (getPath: string, def: any = null) => {
-            return origFn.call(target, `plugins.${pluginName}.${getPath}`, def);
-          };
-        }
-
-        return target[name];
-      }
-    });
+    const pluginOptions = at(guildConfig, `plugins.${pluginName}`)[0];
 
     const PluginDef = this.plugins.get(pluginName);
     let PluginObj: typeof Plugin;
-    let pluginRuntimeConfig: any;
+    let pluginRuntimeOptions: IPluginOptions;
 
     if (Array.isArray(PluginDef)) {
       PluginObj = PluginDef[0];
-      pluginRuntimeConfig = PluginDef[1];
+      pluginRuntimeOptions = PluginDef[1];
     } else {
       PluginObj = PluginDef as typeof Plugin;
-      pluginRuntimeConfig = null;
+      pluginRuntimeOptions = null;
     }
 
-    const plugin = new PluginObj(this.bot, guildId, guildConfig, pluginConfig, pluginName, this, pluginRuntimeConfig);
+    const mergedPluginOptions: IPluginOptions = merge({}, pluginOptions, pluginRuntimeOptions);
+
+    const plugin = new PluginObj(this.bot, guildId, guildConfig, mergedPluginOptions, pluginName, this);
 
     await plugin.runLoad();
     this.emit("guildPluginLoaded", guildId, pluginName, plugin);
@@ -286,23 +286,11 @@ export class Knub extends EventEmitter {
       throw new Error(`Unknown global plugin: ${pluginName}`);
     }
 
-    // Create a proxy for globalConfig that only returns the settings for this plugin
-    const pluginConfig = new Proxy(this.globalConfig, {
-      get(target, name) {
-        if (name === "get") {
-          const origFn = target[name];
-          return (getPath: string, def: any = null) => {
-            return origFn.call(target, `plugins.${pluginName}.${getPath}`, def);
-          };
-        }
-
-        return target[name];
-      }
-    });
+    const pluginOptions: IPluginOptions = at(this.globalConfig, `plugins.${pluginName}`)[0] || {};
 
     const PluginDef = this.globalPlugins.get(pluginName);
     let PluginObj: typeof GlobalPlugin;
-    let pluginRuntimeConfig: any;
+    let pluginRuntimeConfig: IPluginOptions;
 
     if (Array.isArray(PluginDef)) {
       PluginObj = PluginDef[0];
@@ -312,7 +300,9 @@ export class Knub extends EventEmitter {
       pluginRuntimeConfig = null;
     }
 
-    const plugin = new PluginObj(this.bot, this.globalConfig, pluginConfig, pluginName, this, pluginRuntimeConfig);
+    const mergedPluginOptions: IPluginOptions = merge({}, pluginOptions, pluginRuntimeConfig);
+
+    const plugin = new PluginObj(this.bot, null, this.globalConfig, mergedPluginOptions, pluginName, this);
 
     await plugin.runLoad();
     this.loadedGlobalPlugins.set(pluginName, plugin);
@@ -355,22 +345,6 @@ export class Knub extends EventEmitter {
   }
 
   public async loadGlobalConfig() {
-    this.globalConfig = await this.getConfig("global");
-  }
-
-  protected async getConfig(id: string): Promise<IConfigProvider> {
-    if (typeof this.options.configStorage === "string") {
-      // Built-in providers
-      if (this.options.configStorage === "yaml") {
-        // Yaml
-        const dir = this.options.guildConfigDir || "guilds";
-        return new YamlConfigProvider(path.join(dir, `${id}.yml`));
-      } else {
-        throw new Error("Invalid configStorage specified");
-      }
-    } else if (typeof this.options.configStorage === "function") {
-      // Custom provider
-      return this.options.configStorage(id);
-    }
+    this.globalConfig = await this.options.getConfig("global");
   }
 }

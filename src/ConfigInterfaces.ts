@@ -1,41 +1,42 @@
+export interface IPermissionLevelDefinitions {
+  [roleOrUserId: string]: number;
+}
+
 export interface IGuildConfig {
-  permissions?: IPermissions;
+  prefix?: string;
+
+  levels?: IPermissionLevelDefinitions;
+
   plugins?: {
-    [key: string]: any;
+    [key: string]: IPluginOptions;
   };
 }
 
-export interface IPermissions {
-  levels?: IPermissionLevels;
-  plugins?: IPluginPermissions;
-}
-
-export interface IPermissionLevels {
-  [key: string]: number;
-}
-
-export interface IBasicPermissions {
-  level?: number;
-  channels?: string[];
-  exclude_channels?: string[];
-  users?: string[];
-  exclude_users?: string[];
-  roles?: string[];
-  exclude_roles?: string[];
-}
-
-export interface IPluginPermissions extends IBasicPermissions {
-  commands?: {
-    [key: string]: ICommandPermissions;
+export interface IGlobalConfig {
+  plugins?: {
+    [key: string]: IPluginOptions;
   };
 }
 
-export interface IGlobalPluginPermissions {
-  users?: string[];
+export interface IPluginOptions {
+  enabled?: boolean;
+  permissions?: IMergedPermissions;
+  config?: IMergedConfig;
 }
 
-export interface ICommandPermissions extends IBasicPermissions {}
+export interface IMergedPermissions {
+  default?: any;
+  levels?: any;
+  channels?: any;
+  users?: any;
+  roles?: any;
+}
 
-export interface IGlobalCommandPermissions {
-  users?: string[];
+export interface IMergedConfig {
+  default?: any;
+  levels?: any;
+  channels?: any;
+  users?: any;
+  roles?: any;
+  [key: string]: any;
 }

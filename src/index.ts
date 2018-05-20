@@ -6,11 +6,10 @@ import { Knub } from "./Knub";
 export default Knub;
 export { Knub };
 
-export { IConfigProvider } from "./IConfigProvider";
-export { Plugin, BarePlugin } from "./Plugin";
+export { Plugin } from "./Plugin";
 export { GlobalPlugin } from "./GlobalPlugin";
 
-export { CommandDecorator as command, OnEventDecorator as onEvent } from "./commandUtils";
+export { default as decorators } from "./decorators";
 
 export { logger } from "./logger";
 

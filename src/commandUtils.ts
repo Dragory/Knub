@@ -120,11 +120,11 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
 }
 
 export async function maybeRunCommand(command: IMatchedCommand, msg: Message) {
-  if (msg.channel instanceof DMChannel && !command.commandDefinition.options.allowDMs) {
-    return;
-  }
-
-  if (!(msg.channel instanceof GuildChannel)) {
+  if (msg.channel instanceof DMChannel) {
+    if (!command.commandDefinition.options.allowDMs) {
+      return;
+    }
+  } else if (!(msg.channel instanceof GuildChannel)) {
     return;
   }
 
@@ -152,26 +152,4 @@ export async function maybeRunCommand(command: IMatchedCommand, msg: Message) {
   }
 
   await command.commandDefinition.handler(msg, argsToPass, command);
-}
-
-/**
- * PLUGINS: Decorator for turning a class method into a command handler
- */
-export function CommandDecorator(
-  command: string | RegExp,
-  parameters: string | IParameter[] = [],
-  options: ICommandOptions = {}
-) {
-  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    Reflect.defineMetadata("command", { command, parameters, options, _prop: propertyKey }, target, propertyKey);
-  };
-}
-
-/**
- * PLUGINS: Decorator for turning a class method into an event listener
- */
-export function OnEventDecorator(eventName: string, restrict: string = null, ignoreSelf: boolean = null) {
-  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    Reflect.defineMetadata("event", { eventName, restrict, ignoreSelf, _prop: propertyKey }, target, propertyKey);
-  };
 }

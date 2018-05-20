@@ -1,81 +1,47 @@
-import {
-  Channel,
-  Client,
-  DMChannel,
-  GroupDMChannel,
-  Guild,
-  GuildChannel,
-  GuildMember,
-  Message,
-  User
-} from "discord.js";
+import { Channel, Client, DMChannel, GroupDMChannel, Guild, GuildMember, Message, User } from "discord.js";
 const at = require("lodash.at");
 
-import { CommandManager, IMatchedCommand, MissingArgumentError } from "./CommandManager";
-import { ICommandPermissions, IPermissionLevels, IPluginPermissions } from "./ConfigInterfaces";
-import { IConfigProvider } from "./IConfigProvider";
+import { CommandManager, MissingArgumentError } from "./CommandManager";
+import {
+  IGuildConfig,
+  IMergedConfig,
+  IMergedPermissions,
+  IPermissionLevelDefinitions,
+  IPluginOptions
+} from "./configInterfaces";
 import {
   CallbackFunctionVariadic,
   errorEmbed,
   eventToChannel,
   eventToGuild,
   eventToMessage,
-  eventToUser,
-  IArbitraryObj
+  eventToUser
 } from "./utils";
 import { getDefaultPrefix, maybeRunCommand } from "./commandUtils";
 import { Knub } from "./Knub";
-import { checkBasicPermissions } from "./permissionUtils";
+import { getMatchingConfigOrPermissions, hasPermission, mergeConfig } from "./configUtils";
 
 /**
- * If you'd like to use Knub as just a plugin loader, but not use any of the other functionality
- * provided by the main Plugin class, extending this class ensures compatibility.
+ * Base class for Knub plugins
  */
-export class BarePlugin {
+export class Plugin {
+  // Guild info - these will be null for global plugins
   public guildId: string;
   public guild: Guild;
 
-  public pluginName: string; // Internal name for the plugin
+  // Internal name for the plugin
+  public pluginName: string;
 
-  protected bot: Client;
-  protected guildConfig: IConfigProvider;
-  protected pluginConfig: IConfigProvider;
-  protected runtimeConfig: any;
-
-  protected knub: Knub;
-
-  constructor(
-    bot: Client,
-    guildId: string,
-    guildConfig: IConfigProvider,
-    pluginConfig: IConfigProvider,
-    pluginName: string,
-    knub: Knub,
-    runtimeConfig: any
-  ) {
-    this.bot = bot;
-    this.guildId = guildId;
-    this.guildConfig = guildConfig;
-    this.pluginConfig = pluginConfig;
-    this.pluginName = pluginName;
-    this.runtimeConfig = runtimeConfig;
-
-    this.knub = knub;
-
-    this.guild = this.bot.guilds.get(this.guildId);
-  }
-}
-
-/**
- * The base class for Knub plugins. Contains functionality for guild and plugin configuration,
- * guild specific commands, and guild specific event listeners.
- * Commands can also be registered with the exported @command decorator.
- * Event listeners can also be registered with the exported @onEvent decorator.
- */
-export class Plugin extends BarePlugin {
   // Plugin name and description for e.g. dashboards
   public name: string;
   public description: string;
+
+  protected bot: Client;
+  protected guildConfig: IGuildConfig;
+  protected pluginOptions: IPluginOptions;
+  protected runtimeConfig: any;
+
+  protected knub: Knub;
 
   protected commands: CommandManager;
   protected eventHandlers: Map<string, any[]>;
@@ -83,17 +49,24 @@ export class Plugin extends BarePlugin {
   constructor(
     bot: Client,
     guildId: string,
-    guildConfig: IConfigProvider,
-    pluginConfig: IConfigProvider,
+    guildConfig: IGuildConfig,
+    pluginOptions: IPluginOptions,
     pluginName: string,
-    knub: Knub,
-    runtimeConfig: any
+    knub: Knub
   ) {
-    super(bot, guildId, guildConfig, pluginConfig, pluginName, knub, runtimeConfig);
+    this.bot = bot;
+    this.guildId = guildId;
+    this.guildConfig = guildConfig;
+    this.pluginOptions = pluginOptions;
+    this.pluginName = pluginName;
+
+    this.knub = knub;
+
+    this.guild = this.guildId ? this.bot.guilds.get(this.guildId) : null;
 
     this.commands = new CommandManager();
     this.eventHandlers = new Map();
-    this.registerCommandMessageListeners();
+    this.registerCommandMessageListener();
   }
 
   /**
@@ -113,16 +86,29 @@ export class Plugin extends BarePlugin {
         continue;
       }
 
-      // Command handlers
+      const requiredPermission = Reflect.getMetadata("requiredPermission", this, prop);
+
+      // Command handler from decorator
       const metaCommand = Reflect.getMetadata("command", this, prop);
       if (metaCommand) {
-        this.commands.add(metaCommand.command, metaCommand.parameters, value.bind(this), metaCommand.options);
+        const opts = metaCommand.options || {};
+        if (requiredPermission && requiredPermission.permission) {
+          opts.requiredPermission = requiredPermission.permission;
+        }
+
+        this.commands.add(metaCommand.command, metaCommand.parameters, value.bind(this), opts);
       }
 
-      // Event listeners
+      // Event listener from decorator
       const event = Reflect.getMetadata("event", this, prop);
       if (event) {
-        this.on(event.eventName, value.bind(this), event.restrict || undefined, event.ignoreSelf || undefined);
+        this.on(
+          event.eventName,
+          value.bind(this),
+          event.restrict || undefined,
+          event.ignoreSelf || undefined,
+          requiredPermission && requiredPermission.permission
+        );
       }
     }
   }
@@ -150,36 +136,16 @@ export class Plugin extends BarePlugin {
   }
 
   /**
-   * Registers the message listeners for commands
+   * Registers the message listener for commands
    */
-  protected registerCommandMessageListeners(): void {
-    this.on("message", this.runMessageCommands.bind(this));
-  }
-
-  /**
-   * Retrieve a plugin config value
-   */
-  protected async config(path: string, def: any = null) {
-    let value: any;
-
-    value = this.pluginConfig.get(path);
-    if (value != null) {
-      return value;
-    }
-
-    const defaultConfig = await this.getDefaultConfig();
-    value = at(defaultConfig, [path])[0];
-    if (value != null) {
-      return value;
-    }
-
-    return def;
+  protected registerCommandMessageListener(): void {
+    this.on("message", this.runCommandsInMessage.bind(this));
   }
 
   /**
    * Returns this plugin's default configuration
    */
-  protected getDefaultConfig(): IArbitraryObj | Promise<IArbitraryObj> {
+  private getDefaultConfig(): IMergedConfig {
     // Implemented by plugin
     return {};
   }
@@ -187,20 +153,94 @@ export class Plugin extends BarePlugin {
   /**
    * Returns this plugin's default permissions
    */
-  protected getDefaultPermissions(): IPluginPermissions | Promise<IPluginPermissions> {
+  private getDefaultPermissions(): IMergedPermissions {
     // Implemented by plugin
     return {};
   }
 
   /**
+   * Returns the plugin's default configuration merged with its loaded configuration
+   */
+  private getMergedConfig(): IMergedConfig {
+    const defaultConfig = this.getDefaultConfig();
+    const pluginConfig = this.pluginOptions.config || {};
+    return mergeConfig({}, defaultConfig, pluginConfig);
+  }
+
+  /**
+   * Returns the plugin's default permissions merged with its loaded permissions
+   */
+  private getMergedPermissions(): IMergedConfig {
+    const defaultPermissions = this.getDefaultPermissions();
+    const pluginPermissions = this.pluginOptions.permissions || {};
+    return mergeConfig({}, defaultPermissions, pluginPermissions);
+  }
+
+  /**
+   * Get a config value from the plugin's merged config
+   */
+  protected config(path: string, def: any = null) {
+    const mergedConfig = this.getMergedConfig();
+    const matchingConfig = getMatchingConfigOrPermissions(mergedConfig);
+    const value = at(matchingConfig, path)[0];
+
+    return typeof value !== "undefined" ? value : def;
+  }
+
+  /**
+   * Get a config value from the plugin's merged config.
+   * Uses `message` to evaluate which config values apply.
+   */
+  protected msgConfig(msg: Message, path: string, def: any = null) {
+    const memberLevel = msg.member ? this.getMemberLevel(msg.member) : null;
+    const mergedConfig = this.getMergedConfig();
+    const matchingConfig = getMatchingConfigOrPermissions(
+      mergedConfig,
+      memberLevel,
+      msg.author,
+      msg.member,
+      msg.channel
+    );
+
+    const value = at(matchingConfig, path)[0];
+
+    return typeof value !== "undefined" ? value : def;
+  }
+
+  /**
+   * Get a config value from the plugin's merged config.
+   * Uses `channel` to evaluate which config values apply.
+   */
+  protected channelConfig(channel: Channel, path: string, def: any = null) {
+    const mergedConfig = this.getMergedConfig();
+    const matchingConfig = getMatchingConfigOrPermissions(mergedConfig, null, null, null, channel);
+
+    const value = at(matchingConfig, path)[0];
+
+    return typeof value !== "undefined" ? value : def;
+  }
+
+  /**
+   * Get a config value from the plugin's merged config.
+   * Uses `user` to evaluate which config values apply.
+   */
+  protected userConfig(user: User, path: string, def: any = null) {
+    const mergedConfig = this.getMergedConfig();
+    const matchingConfig = getMatchingConfigOrPermissions(mergedConfig, null, user, null, null);
+    const value = at(matchingConfig, path)[0];
+
+    return typeof value !== "undefined" ? value : def;
+  }
+
+  /**
    * Returns the given member's permission level
    */
-  protected async getMemberLevel(member: GuildMember): Promise<number> {
+  protected getMemberLevel(member: GuildMember): number {
     if (member.guild.owner === member) {
       return 99999;
     }
 
-    const levels: IPermissionLevels = await this.guildConfig.get(`permissions.levels`, {});
+    const levels: IPermissionLevelDefinitions = this.guildConfig.levels;
 
     for (const id in levels) {
       if (member.id === id || member.roles.has(id)) {
@@ -212,62 +252,14 @@ export class Plugin extends BarePlugin {
   }
 
   /**
-   * Checks the given message's channel and author to determine whether the plugin should react to it
-   */
-  protected async isPluginAllowed(msg: Message): Promise<boolean> {
-    const defaultPermissions = this.getDefaultPermissions();
-    const configPermissions: IPluginPermissions = await this.guildConfig.get(
-      `permissions.plugins.${this.pluginName}`,
-      {}
-    );
-    const permissions: IPluginPermissions = Object.assign({}, defaultPermissions, configPermissions);
-
-    // Check basic permissions
-    if (!checkBasicPermissions(permissions, msg)) {
-      return false;
-    }
-
-    // Check level-based permissions
-    if (msg.member && permissions.level && (await this.getMemberLevel(msg.member)) < permissions.level) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Checks the given message's channel and author and compares them to the command's permissions
-   * to determine whether to run the command
-   */
-  protected async isCommandAllowed(msg: Message, command: IMatchedCommand): Promise<boolean> {
-    const defaultPermissions = command.commandDefinition.options.permissions || {};
-    const configPermissions: ICommandPermissions = await this.guildConfig.get(
-      `permissions.plugins.${this.pluginName}.commands.${command.name}`,
-      {}
-    );
-    const permissions: ICommandPermissions = Object.assign({}, defaultPermissions, configPermissions);
-
-    // Check basic permissions
-    if (!checkBasicPermissions(permissions, msg)) {
-      return false;
-    }
-
-    // Check level-based permissions
-    if (permissions.level && (await this.getMemberLevel(msg.member)) < permissions.level) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
    * Adds a guild-specific event listener for the given event
    */
   protected on(
     eventName: string,
     listener: CallbackFunctionVariadic,
     restrict: string = "guild",
-    ignoreSelf: boolean = true
+    ignoreSelf: boolean = true,
+    requiredPermission: string = null
   ): () => void {
     if (!this.eventHandlers.has(eventName)) {
       this.eventHandlers.set(eventName, []);
@@ -293,10 +285,16 @@ export class Plugin extends BarePlugin {
       if (ignoreSelf && user === this.bot.user) return;
 
       // Guild check
-      if (guild && guild.id !== this.guildId) return;
+      if (this.guildId && guild && guild.id !== this.guildId) return;
 
       // Permission check
-      if (message && !await this.isPluginAllowed(message)) return;
+      if (requiredPermission) {
+        const memberLevel = message && message.member ? this.getMemberLevel(message.member) : null;
+        const mergedPermissions = this.getMergedPermissions();
+        if (!hasPermission(requiredPermission, mergedPermissions, memberLevel, user, message.member, channel)) {
+          return;
+        }
+      }
 
       // Call the original listener
       listener(...args);
@@ -342,13 +340,13 @@ export class Plugin extends BarePlugin {
   /**
    * Runs all matching commands in the message
    */
-  protected async runMessageCommands(msg: Message): Promise<void> {
+  private async runCommandsInMessage(msg: Message): Promise<void> {
     // Ignore messages without text (e.g. images, embeds, etc.)
     if (msg.content == null || msg.content.trim() === "") {
       return;
     }
 
-    const prefix = await this.guildConfig.get("prefix", getDefaultPrefix(this.bot));
+    const prefix = this.guildConfig.prefix || getDefaultPrefix(this.bot);
 
     const { commands: matchedCommands, errors } = this.commands.findCommandsInString(msg.content, prefix);
 
@@ -363,8 +361,13 @@ export class Plugin extends BarePlugin {
     // Run each matching command sequentially
     for (const command of matchedCommands) {
       // Check permissions
-      if (!await this.isCommandAllowed(msg, command)) {
-        continue;
+      const requiredPermission = command.commandDefinition.options.requiredPermission;
+      if (requiredPermission) {
+        const mergedPermissions = this.getMergedPermissions();
+        const memberLevel = msg.member ? this.getMemberLevel(msg.member) : null;
+        if (!hasPermission(requiredPermission, mergedPermissions, memberLevel, msg.author, msg.member, msg.channel)) {
+          return;
+        }
       }
 
       // Run the command

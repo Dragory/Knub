@@ -25,6 +25,8 @@
     "escape-string-regexp": "^1.0.5",
     "js-yaml": "^3.9.1",
     "lodash.at": "^4.6.0",
+    "lodash.difference": "^4.5.0",
+    "lodash.merge": "^4.6.1",
     "minimist-string": "^1.0.2",
     "reflect-metadata": "^0.1.10",
     "winston": "^2.3.1"
@@ -41,7 +43,7 @@
     "chai": "^4.1.0",
     "husky": "^0.14.3",
     "lint-staged": "^4.0.2",
-    "mocha": "^3.4.2",
+    "mocha": "^5.2.0",
     "prettier": "^1.10.2",
     "ts-node": "^3.2.1",
     "tslint": "^5.9.1",
