@@ -57,6 +57,7 @@ export type IPluginMap = Map<string, (typeof Plugin) | IPluginWithRuntimeConfig>
 export type IGlobalPluginMap = Map<string, (typeof GlobalPlugin) | IGlobalPluginWithRuntimeConfig>;
 
 const readFileAsync = util.promisify(fs.readFile);
+const accessAsync = util.promisify(fs.access);
 
 const defaultKnubParams: IKnubArgs = {
   token: null,
@@ -101,6 +102,13 @@ export class Knub extends EventEmitter {
       // Default YAML-based config files
       async getConfig(id) {
         const configPath = `config/${id}.yml`;
+
+        try {
+          await accessAsync(configPath);
+        } catch (e) {
+          return {};
+        }
+
         const yamlString = await readFileAsync(configPath, { encoding: "utf8" });
         return yaml.safeLoad(yamlString);
       },
