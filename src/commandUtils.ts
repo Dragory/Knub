@@ -6,6 +6,8 @@ export function getDefaultPrefix(client: Client) {
   return `/<@!?${client.user.id}> /`;
 }
 
+export class CommandValueTypeError extends Error {}
+
 /**
  * Converts `value` to the specified type.
  * This is separate from CommandManager since CommandManager is designed to be independent from djs/the rest of the framework,
@@ -24,66 +26,66 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
   } else if (type === "user") {
     const userId = getUserId(value);
     if (!userId) {
-      throw new Error(`Could not convert ${value} to a user id`);
+      throw new CommandValueTypeError(`Could not convert ${value} to a user id`);
     }
 
     const user = bot.users.get(userId);
     if (!user) {
-      throw new Error(`Could not convert user id ${userId} to a user`);
+      throw new CommandValueTypeError(`Could not convert user id ${userId} to a user`);
     }
 
     return user;
   } else if (type === "member") {
     if (!(msg.channel instanceof GuildChannel)) {
-      throw new Error(`Type 'Member' can only be used in guilds`);
+      throw new CommandValueTypeError(`Type 'Member' can only be used in guilds`);
     }
 
     const userId = getUserId(value);
     if (!userId) {
-      throw new Error(`Could not convert ${value} to a user id`);
+      throw new CommandValueTypeError(`Could not convert ${value} to a user id`);
     }
 
     const user = bot.users.get(userId);
     if (!user) {
-      throw new Error(`Could not convert user id ${userId} to a user`);
+      throw new CommandValueTypeError(`Could not convert user id ${userId} to a user`);
     }
 
     const member = msg.guild.members.get(user.id) || (await msg.guild.fetchMember(user));
     if (!member) {
-      throw new Error(`Could not convert user id ${userId} to a member`);
+      throw new CommandValueTypeError(`Could not convert user id ${userId} to a member`);
     }
 
     return member;
   } else if (type === "channel") {
     const channelId = getChannelId(value);
     if (!channelId) {
-      throw new Error(`Could not convert ${value} to a channel id`);
+      throw new CommandValueTypeError(`Could not convert ${value} to a channel id`);
     }
 
     const channel = bot.channels.get(channelId);
     if (!channel) {
-      throw new Error(`Channel ${channelId} not found`);
+      throw new CommandValueTypeError(`Channel ${channelId} not found`);
     }
 
     return channel;
   } else if (type === "role") {
     if (!(msg.channel instanceof GuildChannel)) {
-      throw new Error(`Type 'Role' can only be used in guilds`);
+      throw new CommandValueTypeError(`Type 'Role' can only be used in guilds`);
     }
 
     const roleId = getRoleId(value);
     if (!roleId) {
-      throw new Error(`Could not convert ${value} to a role id`);
+      throw new CommandValueTypeError(`Could not convert ${value} to a role id`);
     }
 
     const role = msg.channel.guild.roles.get(roleId);
     if (!role) {
-      throw new Error(`Could not convert ${roleId} to a Role`);
+      throw new CommandValueTypeError(`Could not convert ${roleId} to a Role`);
     }
 
     return role;
   } else {
-    throw new Error(`Unknown type: ${type}`);
+    throw new CommandValueTypeError(`Unknown type: ${type}`);
   }
 }
 
@@ -114,7 +116,7 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
       }
     } catch (e) {
       const typeName = `${arg.parameter.type}${arg.parameter.rest ? "[]" : ""}`;
-      throw new Error(`Could not convert argument ${arg.parameter.name} to ${typeName}`);
+      throw new CommandValueTypeError(`Could not convert argument ${arg.parameter.name} to ${typeName}`);
     }
   }
 }

@@ -17,7 +17,7 @@ import {
   eventToMessage,
   eventToUser
 } from "./utils";
-import { getDefaultPrefix, maybeRunCommand } from "./commandUtils";
+import { CommandValueTypeError, getDefaultPrefix, maybeRunCommand } from "./commandUtils";
 import { Knub } from "./Knub";
 import { getMatchingConfigOrPermissions, hasPermission, mergeConfig } from "./configUtils";
 
@@ -374,8 +374,12 @@ export class Plugin {
       try {
         await maybeRunCommand(command, msg, this.bot);
       } catch (e) {
-        msg.channel.send("", errorEmbed(e.message));
-        continue;
+        if (e instanceof CommandValueTypeError) {
+          msg.channel.send("", errorEmbed(e.message));
+          continue;
+        } else {
+          throw e;
+        }
       }
     }
   }
