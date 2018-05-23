@@ -129,7 +129,7 @@ export async function maybeRunCommand(command: IMatchedCommand, msg: Message) {
   }
 
   // Convert arg types
-  convertArgumentTypes(command.args, msg, this.bot);
+  await convertArgumentTypes(command.args, msg, this.bot);
 
   // Run custom filters, if any
   let filterFailed = false;
