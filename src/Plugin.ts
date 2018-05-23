@@ -372,7 +372,7 @@ export class Plugin {
 
       // Run the command
       try {
-        await maybeRunCommand(command, msg);
+        await maybeRunCommand(command, msg, this.bot);
       } catch (e) {
         msg.channel.send("", errorEmbed(e.message));
         continue;

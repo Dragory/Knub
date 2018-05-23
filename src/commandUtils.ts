@@ -119,7 +119,7 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
   }
 }
 
-export async function maybeRunCommand(command: IMatchedCommand, msg: Message) {
+export async function maybeRunCommand(command: IMatchedCommand, msg: Message, bot: Client) {
   if (msg.channel instanceof DMChannel) {
     if (!command.commandDefinition.options.allowDMs) {
       return;
