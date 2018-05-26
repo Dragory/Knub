@@ -110,7 +110,7 @@ export class Knub extends EventEmitter {
         }
 
         const yamlString = await readFileAsync(configPath, { encoding: "utf8" });
-        return yaml.safeLoad(yamlString);
+        return yaml.safeLoad(yamlString) || {};
       },
 
       // Load all plugins by default
