@@ -145,7 +145,7 @@ export class Plugin {
   /**
    * Returns this plugin's default configuration
    */
-  private getDefaultConfig(): IMergedConfig {
+  protected getDefaultConfig(): IMergedConfig {
     // Implemented by plugin
     return {};
   }
@@ -153,7 +153,7 @@ export class Plugin {
   /**
    * Returns this plugin's default permissions
    */
-  private getDefaultPermissions(): IMergedPermissions {
+  protected getDefaultPermissions(): IMergedPermissions {
     // Implemented by plugin
     return {};
   }
