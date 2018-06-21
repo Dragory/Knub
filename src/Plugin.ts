@@ -1,11 +1,11 @@
-import { Channel, Client, DMChannel, GroupDMChannel, Guild, GuildMember, Message, User } from "discord.js";
+import { Channel, Client, PrivateChannel, GroupChannel, Guild, Member, Message, User } from "eris";
 const at = require("lodash.at");
 
 import { CommandManager, MissingArgumentError } from "./CommandManager";
 import {
   IGuildConfig,
-  IMergedConfig,
-  IMergedPermissions,
+  IPluginConfig,
+  IPluginPermissions,
   IPermissionLevelDefinitions,
   IPluginOptions
 } from "./configInterfaces";
@@ -19,7 +19,7 @@ import {
 } from "./utils";
 import { CommandValueTypeError, getDefaultPrefix, maybeRunCommand } from "./commandUtils";
 import { Knub } from "./Knub";
-import { getMatchingConfigOrPermissions, hasPermission, mergeConfig } from "./configUtils";
+import { getMatchingPluginOptions, hasPermission, IMatchParams, mergeConfig } from "./configUtils";
 
 /**
  * Base class for Knub plugins
@@ -37,9 +37,9 @@ export class Plugin {
   public description: string;
 
   protected bot: Client;
-  protected guildConfig: IGuildConfig;
-  protected pluginOptions: IPluginOptions;
-  protected runtimeConfig: any;
+  private readonly guildConfig: IGuildConfig;
+  private readonly pluginOptions: IPluginOptions;
+  private mergedPluginOptions: IPluginOptions;
 
   protected knub: Knub;
 
@@ -116,9 +116,10 @@ export class Plugin {
   /**
    * Clear event handlers and run plugin-defined onUnload() function
    */
-  public runUnload(): Promise<any> {
+  public async runUnload(): Promise<any> {
     this.clearEventHandlers();
-    return Promise.resolve(this.onUnload());
+    await Promise.resolve(this.onUnload());
+    this.clearMergedOptions();
   }
 
   /**
@@ -139,21 +140,13 @@ export class Plugin {
    * Registers the message listener for commands
    */
   protected registerCommandMessageListener(): void {
-    this.on("message", this.runCommandsInMessage.bind(this));
+    this.on("messageCreate", this.runCommandsInMessage.bind(this));
   }
 
   /**
    * Returns this plugin's default configuration
    */
-  protected getDefaultConfig(): IMergedConfig {
-    // Implemented by plugin
-    return {};
-  }
-
-  /**
-   * Returns this plugin's default permissions
-   */
-  protected getDefaultPermissions(): IMergedPermissions {
+  protected getDefaultOptions(): IPluginOptions {
     // Implemented by plugin
     return {};
   }
@@ -161,89 +154,70 @@ export class Plugin {
   /**
    * Returns the plugin's default configuration merged with its loaded configuration
    */
-  private getMergedConfig(): IMergedConfig {
-    const defaultConfig = this.getDefaultConfig();
-    const pluginConfig = this.pluginOptions.config || {};
-    return mergeConfig({}, defaultConfig, pluginConfig);
+  private getMergedOptions(): IPluginOptions {
+    if (!this.mergedPluginOptions) {
+      const defaultOptions = this.getDefaultOptions();
+      this.mergedPluginOptions = mergeConfig({}, defaultOptions, this.pluginOptions);
+    }
+
+    return this.mergedPluginOptions;
   }
 
-  /**
-   * Returns the plugin's default permissions merged with its loaded permissions
-   */
-  private getMergedPermissions(): IMergedConfig {
-    const defaultPermissions = this.getDefaultPermissions();
-    const pluginPermissions = this.pluginOptions.permissions || {};
-    return mergeConfig({}, defaultPermissions, pluginPermissions);
+  private clearMergedOptions() {
+    this.mergedPluginOptions = null;
   }
 
-  /**
-   * Get a config value from the plugin's merged config
-   */
-  protected config(path: string, def: any = null) {
-    const mergedConfig = this.getMergedConfig();
-    const matchingConfig = getMatchingConfigOrPermissions(mergedConfig);
-    const value = at(matchingConfig, path)[0];
+  protected configValue(path: string, def: any = null, matchParams: IMatchParams = {}) {
+    const mergedOptions = this.getMergedOptions();
+    const matchingOptions = getMatchingPluginOptions(mergedOptions, matchParams);
+    const value = at(matchingOptions.config, path)[0];
 
     return typeof value !== "undefined" ? value : def;
   }
 
-  /**
-   * Get a config value from the plugin's merged config.
-   * Uses `message` to evaluate which config values apply.
-   */
-  protected msgConfig(msg: Message, path: string, def: any = null) {
-    const memberLevel = msg.member ? this.getMemberLevel(msg.member) : null;
-    const mergedConfig = this.getMergedConfig();
-    const matchingConfig = getMatchingConfigOrPermissions(
-      mergedConfig,
-      memberLevel,
-      msg.author,
-      msg.member,
-      msg.channel
-    );
+  protected configValueForMsg(msg: Message, path: string, def: any = null) {
+    const level = msg.member ? this.getMemberLevel(msg.member) : null;
+    return this.configValue(path, def, {
+      level,
+      userId: msg.author.id,
+      channelId: msg.channel.id,
+      memberRoles: msg.member ? msg.member.roles : []
+    });
+  }
 
-    const value = at(matchingConfig, path)[0];
+  protected configValueForChannel(channel: Channel, path: string, def: any = null) {
+    return this.configValue(path, def, {
+      channelId: channel.id
+    });
+  }
 
-    return typeof value !== "undefined" ? value : def;
+  protected configValueForUser(user: User, path: string, def: any = null) {
+    return this.configValue(path, def, {
+      userId: user.id
+    });
+  }
+
+  protected configValueForMember(member: Member, path: string, def: any = null) {
+    const level = this.getMemberLevel(member);
+    return this.configValue(path, def, {
+      level,
+      userId: member.user.id,
+      memberRoles: member.roles
+    });
   }
 
   /**
-   * Get a config value from the plugin's merged config.
-   * Uses `channel` to evaluate which config values apply.
+   * Returns the member's permission level
    */
-  protected channelConfig(channel: Channel, path: string, def: any = null) {
-    const mergedConfig = this.getMergedConfig();
-    const matchingConfig = getMatchingConfigOrPermissions(mergedConfig, null, null, null, channel);
-
-    const value = at(matchingConfig, path)[0];
-
-    return typeof value !== "undefined" ? value : def;
-  }
-
-  /**
-   * Get a config value from the plugin's merged config.
-   * Uses `user` to evaluate which config values apply.
-   */
-  protected userConfig(user: User, path: string, def: any = null) {
-    const mergedConfig = this.getMergedConfig();
-    const matchingConfig = getMatchingConfigOrPermissions(mergedConfig, null, user, null, null);
-    const value = at(matchingConfig, path)[0];
-
-    return typeof value !== "undefined" ? value : def;
-  }
-
-  /**
-   * Returns the given member's permission level
-   */
-  protected getMemberLevel(member: GuildMember): number {
-    if (member.guild.owner === member) {
+  protected getMemberLevel(member: Member): number {
+    if (member.guild.ownerID === member.id) {
       return 99999;
     }
 
     const levels: IPermissionLevelDefinitions = this.guildConfig.levels;
 
     for (const id in levels) {
-      if (member.id === id || member.roles.has(id)) {
+      if (member.id === id || member.roles.includes(id)) {
         return levels[id];
       }
     }
@@ -277,9 +251,9 @@ export class Plugin {
       const message = eventToMessage[eventName] ? eventToMessage[eventName](...args) : null;
 
       // Restrictions
-      if (restrict === "dm" && !(channel instanceof DMChannel)) return;
+      if (restrict === "dm" && !(channel instanceof PrivateChannel)) return;
       if (restrict === "guild" && !guild) return;
-      if (restrict === "group" && !(channel instanceof GroupDMChannel)) return;
+      if (restrict === "group" && !(channel instanceof GroupChannel)) return;
 
       // Ignore self
       if (ignoreSelf && user === this.bot.user) return;
@@ -289,9 +263,16 @@ export class Plugin {
 
       // Permission check
       if (requiredPermission) {
-        const memberLevel = message && message.member ? this.getMemberLevel(message.member) : null;
-        const mergedPermissions = this.getMergedPermissions();
-        if (!hasPermission(requiredPermission, mergedPermissions, memberLevel, user, message.member, channel)) {
+        const level = message && message.member ? this.getMemberLevel(message.member) : null;
+        const mergedOptions = this.getMergedOptions();
+        const matchParams: IMatchParams = {
+          level,
+          userId: user && user.id,
+          channelId: channel && channel.id,
+          memberRoles: message.member && message.member.roles
+        };
+
+        if (!hasPermission(requiredPermission, mergedOptions, matchParams)) {
           return;
         }
       }
@@ -353,7 +334,7 @@ export class Plugin {
     if (matchedCommands.length === 0 && errors.length > 0) {
       const firstError = errors[0];
       if (firstError instanceof MissingArgumentError) {
-        msg.channel.send("", errorEmbed(`Missing argument \`${firstError.arg.name}\``));
+        msg.channel.createMessage({ embed: errorEmbed(`Missing argument \`${firstError.arg.name}\``) });
       }
       return;
     }
@@ -363,9 +344,16 @@ export class Plugin {
       // Check permissions
       const requiredPermission = command.commandDefinition.options.requiredPermission;
       if (requiredPermission) {
-        const mergedPermissions = this.getMergedPermissions();
-        const memberLevel = msg.member ? this.getMemberLevel(msg.member) : null;
-        if (!hasPermission(requiredPermission, mergedPermissions, memberLevel, msg.author, msg.member, msg.channel)) {
+        const mergedOptions = this.getMergedOptions();
+        const level = msg.member && this.getMemberLevel(msg.member);
+        const matchParams: IMatchParams = {
+          level,
+          userId: msg.author.id,
+          channelId: msg.channel.id,
+          memberRoles: msg.member && msg.member.roles
+        };
+
+        if (!hasPermission(requiredPermission, mergedOptions, matchParams)) {
           return;
         }
       }
@@ -375,7 +363,7 @@ export class Plugin {
         await maybeRunCommand(command, msg, this.bot);
       } catch (e) {
         if (e instanceof CommandValueTypeError) {
-          msg.channel.send("", errorEmbed(e.message));
+          msg.channel.createMessage({ embed: errorEmbed(e.message) });
           continue;
         } else {
           throw e;

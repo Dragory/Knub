@@ -1,6 +1,6 @@
-import { Client, DMChannel, GuildChannel, Message } from "discord.js";
+import { Client, Guild, GuildChannel, TextChannel, Message, PrivateChannel } from "eris";
 import { getChannelId, getRoleId, getUserId } from "./utils";
-import { IArgumentMap, ICommandOptions, IMatchedCommand, IParameter } from "./CommandManager";
+import { IArgumentMap, IMatchedCommand } from "./CommandManager";
 
 export function getDefaultPrefix(client: Client) {
   return `/<@!?${client.user.id}> /`;
@@ -9,13 +9,11 @@ export function getDefaultPrefix(client: Client) {
 export class CommandValueTypeError extends Error {}
 
 /**
- * Converts `value` to the specified type.
- * This is separate from CommandManager since CommandManager is designed to be independent from djs/the rest of the framework,
- * while several types here require the djs Client object to work.
+ * Converts `value` to the specified type
  * @param {any} value
  * @param {string} type
- * @param {"discord.js".Message} msg
- * @param {"discord.js".Client} bot
+ * @param {Message} msg
+ * @param {Client} bot
  * @returns {Promise<any>}
  */
 export async function convertToType(value: any, type: string, msg: Message, bot: Client): Promise<any> {
@@ -50,7 +48,7 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
       throw new CommandValueTypeError(`Could not convert user id ${userId} to a user`);
     }
 
-    const member = msg.guild.members.get(user.id) || (await msg.guild.fetchMember(user));
+    const member = msg.channel.guild.members.get(user.id);
     if (!member) {
       throw new CommandValueTypeError(`Could not convert user id ${userId} to a member`);
     }
@@ -62,7 +60,8 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
       throw new CommandValueTypeError(`Could not convert ${value} to a channel id`);
     }
 
-    const channel = bot.channels.get(channelId);
+    const channelGuildId = bot.channelGuildMap[channelId];
+    const channel = channelGuildId ? bot.guilds.get(channelGuildId).channels.get(channelId) : null;
     if (!channel) {
       throw new CommandValueTypeError(`Channel ${channelId} not found`);
     }
@@ -92,8 +91,8 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
 /**
  * Runs convertToType in-place for each argument in 'args'.
  * @param {IArgumentMap} args
- * @param {"discord.js".Message} msg
- * @param {"discord.js".Client} bot
+ * @param {Message} msg
+ * @param {Client} bot
  * @returns {Promise<void>}
  */
 export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot: Client) {
@@ -108,7 +107,7 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
 
     try {
       if (Array.isArray(arg.value)) {
-        for (const [i, value] of arg.value.entries()) {
+        for (const [i] of arg.value.entries()) {
           arg.value[i] = await convertToType(arg.value[i], type, msg, bot);
         }
       } else {
@@ -122,7 +121,13 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
 }
 
 export async function maybeRunCommand(command: IMatchedCommand, msg: Message, bot: Client) {
-  if (msg.channel instanceof DMChannel) {
+  console.log("msg", msg);
+  // console.log('channel', msg.channel);
+  // console.log('TextChannel', TextChannel);
+  console.log("message is Message", msg instanceof Message);
+  console.log("channel is text channel", msg.channel instanceof TextChannel);
+  console.log("channel is guild channel", msg.channel instanceof GuildChannel);
+  if (msg.channel instanceof PrivateChannel) {
     if (!command.commandDefinition.options.allowDMs) {
       return;
     }
@@ -137,7 +142,7 @@ export async function maybeRunCommand(command: IMatchedCommand, msg: Message, bo
   let filterFailed = false;
   if (command.commandDefinition.options.filters) {
     for (const filterFn of command.commandDefinition.options.filters) {
-      if (!await Promise.resolve(filterFn(msg, command))) {
+      if (!await filterFn(msg, command)) {
         filterFailed = true;
         break;
       }

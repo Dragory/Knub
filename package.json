@@ -21,13 +21,11 @@
     ]
   },
   "dependencies": {
-    "discord.js": "^11.3.2",
     "escape-string-regexp": "^1.0.5",
     "js-yaml": "^3.9.1",
     "lodash.at": "^4.6.0",
     "lodash.difference": "^4.5.0",
     "lodash.merge": "^4.6.1",
-    "minimist-string": "^1.0.2",
     "reflect-metadata": "^0.1.10",
     "winston": "^2.3.1"
   },
@@ -50,5 +48,7 @@
     "tslint-config-prettier": "^1.6.0",
     "typescript": "^2.4.2"
   },
-  "peerDependencies": {}
+  "peerDependencies": {
+    "eris": "^0.8.6"
+  }
 }

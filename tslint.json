@@ -14,6 +14,7 @@
     "max-line-length": [true, 120],
     "curly": false,
     "ordered-imports": false,
-    "member-ordering": false
+    "member-ordering": false,
+    "no-implicit-dependencies": false
   }
 }

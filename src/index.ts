@@ -12,5 +12,7 @@ export { GlobalPlugin } from "./GlobalPlugin";
 export { default as decorators } from "./decorators";
 
 export { logger } from "./logger";
+import * as utils from "./utils";
+export { utils };
 
 export { ICommandOptions } from "./CommandManager";

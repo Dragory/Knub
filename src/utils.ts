@@ -1,12 +1,8 @@
-import { Channel, ClientUserGuildSettings, Guild, Message, RichEmbed, User } from "discord.js";
+import { Channel, Guild, Message, User } from "eris";
 
 export type CallbackFunctionVariadic = (...args: any[]) => void;
 
-export interface IArbitraryObj {
-  [key: string]: any;
-}
-
-const userMentionRegex = /^<@\!?([0-9]+)>$/;
+const userMentionRegex = /^<@!?([0-9]+)>$/;
 const channelMentionRegex = /^<@([0-9]+)>$/;
 const roleMentionRegex = /^<&([0-9]+)>$/;
 
@@ -60,10 +56,8 @@ export function getRoleId(str: string) {
 
 export function errorEmbed(str: string) {
   return {
-    embed: new RichEmbed({
-      description: str,
-      color: parseInt("ee4400", 16)
-    })
+    description: str,
+    color: parseInt("ee4400", 16)
   };
 }
 
@@ -88,75 +82,81 @@ export interface IEventToMessage {
 export const eventToGuild: IEventToGuild = {
   channelCreate: c => c.guild,
   channelDelete: c => c.guild,
-  channelPinsUpdate: c => c.guild,
-  channelUpdate: (_, c) => c.guild,
-  clientUserGuildSettingsUpdate: (s: ClientUserGuildSettings) => s.client.guilds.get(s.guildID),
-  emojiCreate: e => e.guild,
-  emojiDelete: e => e.guild,
-  emojiUpdate: (_, e) => e.guild,
+  channelPinUpdate: c => c.guild,
+  channelUpdate: c => c.guild,
   guildBanAdd: id,
   guildBanRemove: id,
   guildCreate: id,
   guildDelete: id,
-  guildMemberAdd: m => m.guild,
-  guildMemberAvailable: m => m.guild,
-  guildMemberRemove: m => m.guild,
-  guildMembersChunk: (_, g) => g,
-  guildMemberSpeaking: m => m.guild,
-  guildMemberUpdate: (_, m) => m.guild,
+  guildEmojisUpdate: id,
+  guildMemberAdd: id,
+  guildMemberRemove: id,
+  guildMemberChunk: id,
+  guildMemberUpdate: id,
   guildUnavailable: id,
-  guildUpdate: (_, g) => g,
-  message: m => m.guild,
-  messageDelete: m => m.guild,
-  messageDeleteBulk: c => (c.size ? c.first.guild : undefined),
-  messageReactionAdd: r => r.message.guild,
-  messageReactionRemove: r => r.message.guild,
-  messageReactionRemoveAll: m => m.guild,
-  messageUpdate: (_, m) => m.guild,
-  presenceUpdate: (_, m) => m.guild,
-  roleCreate: r => r.guild,
-  roleDelete: r => r.guild,
-  roleUpdate: (_, r) => r.guild,
+  guildUpdate: id,
+  guildRoleCreate: id,
+  guildRoleDelete: id,
+  guildRoleUpdate: id,
+  messageCreate: m => m.channel.guild,
+  messageDelete: m => m.channel.guild,
+  messageDeleteBulk: c => c[0] && c[0].channel && c[0].channel.guild_id,
+  messageReactionAdd: m => m.channel.guild,
+  messageReactionRemove: m => m.channel.guild,
+  messageReactionRemoveAll: m => m.channel.guild,
+  messageUpdate: m => m.channel.guild,
+  presenceUpdate: m => m.guild,
   typingStart: c => c.guild,
   typingStop: c => c.guild,
-  voiceStateUpdate: (_, m) => m.guild
+  voiceChannelJoin: m => m.guild,
+  voiceChannelLeave: m => m.guild,
+  voiceChannelSwitch: m => m.guild,
+  voiceStateUpdate: m => m.guild,
+  unavailableGuildCreate: id
 };
 
 export const eventToUser: IEventToUser = {
-  clientUserGuildSettingsUpdate: (s: ClientUserGuildSettings) => s.client.user,
   guildBanAdd: (_, u) => u,
   guildBanRemove: (_, u) => u,
-  guildMemberAdd: m => m.user,
-  guildMemberAvailable: m => m.user,
+  guildMemberAdd: (_, m) => m.user,
+  guildMemberChunk: (_, m) => m[0] && m[0].user,
   guildMemberRemove: m => m.user,
-  guildMemberSpeaking: m => m.user,
   guildMemberUpdate: (_, m) => m.user,
-  message: m => m.author,
-  messageReactionAdd: (_, u) => u,
-  messageReactionRemove: (_, u) => u,
-  messageUpdate: (_, m) => m.author,
-  presenceUpdate: (_, m) => m.user,
+  messageCreate: m => m.author,
+  messageDelete: m => m.author,
+  messageDeleteBulk: m => m[0] && m.author,
+  messageReactionAdd: (m, _, uId) => {
+    const member = m.channel.guild && m.channel.guild.members.get(uId);
+    return member && member.user;
+  },
+  messageReactionRemove: (m, _, uId) => {
+    const member = m.channel.guild && m.channel.guild.members.get(uId);
+    return member && member.user;
+  },
+  messageUpdate: m => m.author,
+  presenceUpdate: m => m.user,
   typingStart: (_, u) => u,
   typingStop: (_, u) => u,
-  userNoteUpdate: id,
   userUpdate: id,
-  voiceStateUpdate: (_, m) => m.user
+  voiceStateUpdate: m => m.user
 };
 
 export const eventToChannel: IEventToChannel = {
   channelCreate: id,
   channelDelete: id,
   channelPinsUpdate: id,
-  channelUpdate: (_, c) => c,
-  typingStart: id,
-  typingStop: id
+  channelUpdate: id,
+  channelRecipientAdd: id,
+  channelRecipientRemove: id,
+  typingStart: id
 };
 
 export const eventToMessage: IEventToMessage = {
-  message: id,
+  messageCreate: id,
   messageDelete: id,
-  messageReactionAdd: r => r.message,
-  messageReactionRemove: r => r.message,
+  messageDeleteBulk: m => m[0],
+  messageReactionAdd: id,
+  messageReactionRemove: id,
   messageReactionRemoveAll: id,
-  messageUpdate: (_, m) => m
+  messageUpdate: id
 };

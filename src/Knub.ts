@@ -1,4 +1,4 @@
-import { Client, Guild } from "discord.js";
+import { Client, Guild } from "eris";
 import * as util from "util";
 import * as fs from "fs";
 
@@ -8,9 +8,9 @@ import { GlobalPlugin } from "./GlobalPlugin";
 import * as EventEmitter from "events";
 import { IGlobalConfig, IGuildConfig, IPluginOptions } from "./configInterfaces";
 import * as yaml from "js-yaml";
+import { mergeConfig } from "./configUtils";
 
 const at = require("lodash.at");
-const merge = require("lodash.merge");
 
 export interface IPluginWithRuntimeConfig {
   0: typeof Plugin;
@@ -46,11 +46,9 @@ export interface IGuildData {
 }
 
 export interface IKnubArgs {
-  token: string;
   plugins?: IPluginList;
   globalPlugins?: IGlobalPluginList;
   options?: IOptions;
-  djsOptions?: any;
 }
 
 export type IPluginMap = Map<string, (typeof Plugin) | IPluginWithRuntimeConfig>;
@@ -60,15 +58,12 @@ const readFileAsync = util.promisify(fs.readFile);
 const accessAsync = util.promisify(fs.access);
 
 const defaultKnubParams: IKnubArgs = {
-  token: null,
   plugins: {},
   globalPlugins: {},
-  options: {},
-  djsOptions: {}
+  options: {}
 };
 
 export class Knub extends EventEmitter {
-  protected token: string;
   protected bot: Client;
   protected globalPlugins: IGlobalPluginMap;
   protected loadedGlobalPlugins: Map<string, GlobalPlugin>;
@@ -78,12 +73,12 @@ export class Knub extends EventEmitter {
   protected guilds: Map<string, IGuildData>;
   protected globalConfig: IGlobalConfig;
 
-  constructor(userArgs: IKnubArgs) {
+  constructor(client: Client, userArgs: IKnubArgs) {
     super();
 
     const args: IKnubArgs = Object.assign({}, defaultKnubParams, userArgs);
 
-    this.token = args.token;
+    this.bot = client;
 
     this.globalPlugins = new Map();
     this.loadedGlobalPlugins = new Map();
@@ -114,7 +109,7 @@ export class Knub extends EventEmitter {
       },
 
       // Load all plugins by default
-      getEnabledPlugins: async (guildId, guildConfig) => {
+      getEnabledPlugins: async () => {
         return Array.from(this.plugins.keys());
       },
 
@@ -122,7 +117,6 @@ export class Knub extends EventEmitter {
     };
 
     this.options = { ...defaultOptions, ...args.options };
-    this.djsOptions = args.djsOptions;
 
     logger.transports.console.level = this.options.logLevel;
 
@@ -130,14 +124,12 @@ export class Knub extends EventEmitter {
   }
 
   public async run(): Promise<void> {
-    this.bot = new Client(this.djsOptions);
-
     this.bot.on("debug", async str => {
-      logger.debug(`[DJS] ${str}`);
+      logger.debug(`[ERIS] ${str}`);
     });
 
     this.bot.on("error", async (err: Error) => {
-      logger.error(`[DJS] ${String(err)}`);
+      logger.error(`[ERIS] ${String(err)}`);
     });
 
     const loadErrorTimeout = setTimeout(() => {
@@ -171,7 +163,7 @@ export class Knub extends EventEmitter {
       this.emit("loadingFinished");
     });
 
-    await this.bot.login(this.token);
+    await this.bot.connect();
   }
 
   public async loadAllGuilds(): Promise<void> {
@@ -264,7 +256,7 @@ export class Knub extends EventEmitter {
       pluginRuntimeOptions = null;
     }
 
-    const mergedPluginOptions: IPluginOptions = merge({}, pluginOptions, pluginRuntimeOptions);
+    const mergedPluginOptions: IPluginOptions = mergeConfig({}, pluginOptions, pluginRuntimeOptions);
 
     const plugin = new PluginObj(this.bot, guildId, guildConfig, mergedPluginOptions, pluginName, this);
 
@@ -308,7 +300,7 @@ export class Knub extends EventEmitter {
       pluginRuntimeConfig = null;
     }
 
-    const mergedPluginOptions: IPluginOptions = merge({}, pluginOptions, pluginRuntimeConfig);
+    const mergedPluginOptions: IPluginOptions = mergeConfig({}, pluginOptions, pluginRuntimeConfig);
 
     const plugin = new PluginObj(this.bot, null, this.globalConfig, mergedPluginOptions, pluginName, this);
 

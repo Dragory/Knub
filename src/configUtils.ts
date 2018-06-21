@@ -1,22 +1,31 @@
-import { IMergedConfig, IMergedPermissions } from "./configInterfaces";
-import { Channel, GuildMember, Message, User } from "discord.js";
+import { IPluginOptions } from "./configInterfaces";
 
 const at = require("lodash.at");
 const diff = require("lodash.difference");
 
-const isNumRegex = /\d/;
-const isNum = v => isNumRegex.test(v);
-
 const modRegex = /^[+\-=]/;
-const splitMod = (v): [string, string] => {
+const splitMod = (v, defaultMod): [string, string] => {
   const res = modRegex.exec(v);
-  return res ? [res[0], v.slice(1)] : ["+", v];
+  return res ? [res[0], v.slice(1)] : [defaultMod, v];
 };
 
-export function mergeConfig(target, ...sources) {
+const condRegex = /^(\D+)(\d+)$/;
+const splitCond = (v, defaultCond): [string, string] => {
+  const match = condRegex.exec(v);
+  return match ? [match[1], match[2]] : [defaultCond, v];
+};
+
+const levelRangeRegex = /^([<>=!]+)(\d+)$/;
+const splitLevelRange = (v, defaultMod): [string, number] => {
+  const match = levelRangeRegex.exec(v);
+  return match ? [match[1], parseInt(match[2], 10)] : [defaultMod, parseInt(v, 10)];
+};
+
+export function mergeConfig<T>(target: T, ...sources: T[]): T {
   for (const source of sources) {
     for (const [rawKey, value] of Object.entries(source)) {
-      const [mod, key] = splitMod(rawKey);
+      const defaultMod = Array.isArray(value) ? "=" : "+";
+      const [mod, key] = splitMod(rawKey, defaultMod);
 
       if (mod === "+") {
         if (Array.isArray(value)) {
@@ -39,83 +48,135 @@ export function mergeConfig(target, ...sources) {
   return target;
 }
 
-export function getMatchingConfigOrPermissions(
-  config: IMergedConfig | IMergedPermissions,
-  memberLevel: number = null,
-  user: User = null,
-  member: GuildMember = null,
-  channel: Channel = null
-) {
-  const finalConfig = {};
-
-  // Default (from the config)
-  if (config.default) {
-    mergeConfig(finalConfig, config.default);
-  }
-
-  // Level-based
-  if (config.levels && memberLevel != null) {
-    for (const [level, levelPerms] of Object.entries(config.levels)) {
-      const [mode, theLevel] = isNum(level[0]) ? [">=", parseInt(level, 10)] : [level[0], parseInt(level.slice(1), 10)];
-
-      if (mode === "<" && !(memberLevel < theLevel)) continue;
-      else if (mode === "<=" && !(memberLevel <= theLevel)) continue;
-      else if (mode === ">" && !(memberLevel > theLevel)) continue;
-      else if (mode === ">=" && !(memberLevel >= theLevel)) continue;
-      else if (mode === "=" && !(memberLevel === theLevel)) continue;
-      else if (mode === "!" && !(memberLevel !== theLevel)) continue;
-
-      mergeConfig(finalConfig, levelPerms);
-    }
-  }
-
-  // Channel-based
-  if (config.channels && channel) {
-    for (const [channelId, channelPerms] of Object.entries(config.channels)) {
-      const [mode, theChannelId] = isNum(channelId[0]) ? ["=", channelId] : [channelId[0], channelId.slice(1)];
-
-      if (mode === "=" && !(channel.id === theChannelId)) continue;
-      else if (mode === "!" && !(channel.id !== theChannelId)) continue;
-
-      mergeConfig(finalConfig, channelPerms);
-    }
-  }
-
-  // Role-based
-  if (config.roles && member) {
-    for (const [role, rolePerms] of Object.entries(config.roles)) {
-      const [mode, theRole] = isNum(role[0]) ? ["=", role] : [role[0], role.slice(1)];
-
-      if (mode === "=" && !member.roles.has(theRole)) continue;
-      else if (mode === "!" && member.roles.has(theRole)) continue;
-
-      mergeConfig(finalConfig, rolePerms);
-    }
-  }
-
-  // User-based
-  if (config.users) {
-    for (const [userId, userPerms] of Object.entries(config.users)) {
-      const [mode, theUser] = isNum(userId[0]) ? ["=", userId] : [userId[0], userId.slice(1)];
-
-      if (mode === "=" && !(user.id === theUser)) continue;
-      else if (mode === "!" && !(user.id === theUser)) continue;
-
-      mergeConfig(finalConfig, userPerms);
-    }
-  }
-
-  return finalConfig;
+export interface IMatchParams {
+  level?: number;
+  userId?: string;
+  memberRoles?: string[];
+  channelId?: string;
 }
 
-export function hasPermission(
-  requiredPermission: string,
-  permissions: IMergedPermissions,
-  memberLevel: number,
-  user: User,
-  member: GuildMember,
-  channel: Channel
-) {
-  const matchingPerms = getMatchingConfigOrPermissions(permissions, memberLevel, user, member, channel);
-  return !!at(matchingPerms, requiredPermission)[0];
+export function getMatchingPluginOptions(pluginOptions: IPluginOptions, matchParams: IMatchParams) {
+  const finalOpts: IPluginOptions = {
+    config: mergeConfig({}, pluginOptions.config || {}),
+    permissions: mergeConfig({}, pluginOptions.permissions || {})
+  };
+
+  const overrides = pluginOptions.overrides || [];
+  for (const override of overrides) {
+    const matches = [];
+
+    // Match on level
+    // For a successful match, requires ALL of the specified level conditions to match
+    if (override.level) {
+      const matchLevel = matchParams.level;
+      if (matchLevel) {
+        const levels = Array.isArray(override.level) ? override.level : [override.level];
+        let match = levels.length > 0; // Zero level conditions = assume user error, don't match
+
+        for (const level of levels) {
+          const [mode, theLevel] = splitLevelRange(level, ">=");
+
+          if (mode === "<" && !(matchLevel < theLevel)) match = false;
+          else if (mode === "<=" && !(matchLevel <= theLevel)) match = false;
+          else if (mode === ">" && !(matchLevel > theLevel)) match = false;
+          else if (mode === ">=" && !(matchLevel >= theLevel)) match = false;
+          else if (mode === "=" && !(matchLevel === theLevel)) match = false;
+          else if (mode === "!" && !(matchLevel !== theLevel)) match = false;
+        }
+
+        matches.push(match);
+      } else {
+        matches.push(false);
+      }
+    }
+
+    // Match on channel
+    // For a successful match, requires ANY of the specified channels to match, WITHOUT exclusions
+    if (override.channel) {
+      const matchChannel = matchParams.channelId;
+      if (matchChannel) {
+        const channels = Array.isArray(override.channel) ? override.channel : [override.channel];
+        let match = false;
+
+        for (const channelId of channels) {
+          const [mode, theChannelId] = splitCond(channelId, "=");
+
+          if (mode === "=") match = match || matchChannel === theChannelId;
+          else if (mode === "!" && matchChannel === theChannelId) {
+            match = false;
+            break;
+          }
+        }
+
+        matches.push(match);
+      } else {
+        matches.push(false);
+      }
+    }
+
+    // Match on role
+    // For a successful match, requires ALL specified roles and exclusions to match
+    if (override.role) {
+      const matchRoles = matchParams.memberRoles;
+      if (matchRoles) {
+        const roles = Array.isArray(override.role) ? override.role : [override.role];
+        let match = roles.length > 0;
+
+        for (const role of roles) {
+          const [mode, theRole] = splitCond(role, "=");
+
+          if (mode === "=") match = match && matchRoles.includes(theRole);
+          else if (mode === "!") match = match && !matchRoles.includes(theRole);
+        }
+
+        matches.push(match);
+      } else {
+        matches.push(false);
+      }
+    }
+
+    // Match on user ID
+    // For a successful match, requires ANY of the specified user IDs to match, WITHOUT exclusions
+    if (override.user) {
+      const matchUser = matchParams.userId;
+      if (matchUser) {
+        const users = Array.isArray(override.user) ? override.user : [override.user];
+        let match = false;
+
+        for (const user of users) {
+          const [mode, userId] = splitCond(user, "=");
+
+          if (mode === "=") match = match || matchUser === userId;
+          else if (mode === "!" && matchUser === userId) {
+            match = false;
+            break;
+          }
+        }
+
+        matches.push(match);
+      } else {
+        matches.push(false);
+      }
+    }
+
+    // Based on override type, require any or all matches to have matched
+    let acceptMatches;
+    if (!override.type || override.type === "all") {
+      acceptMatches = !matches.some(v => !v);
+    } else {
+      acceptMatches = matches.some(v => v);
+    }
+
+    if (acceptMatches) {
+      if (override.config) mergeConfig(finalOpts.config, override.config);
+      if (override.permissions) mergeConfig(finalOpts.permissions, override.permissions);
+    }
+  }
+
+  return finalOpts;
+}
+
+export function hasPermission(requiredPermission: string, pluginOptions: IPluginOptions, matchParams: IMatchParams) {
+  const matchingPluginOpts = getMatchingPluginOptions(pluginOptions, matchParams);
+  return !!at(matchingPluginOpts.permissions, requiredPermission)[0];
 }

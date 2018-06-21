@@ -20,23 +20,25 @@ export interface IGlobalConfig {
 
 export interface IPluginOptions {
   enabled?: boolean;
-  permissions?: IMergedPermissions;
-  config?: IMergedConfig;
+  permissions?: IPluginPermissions;
+  config?: IPluginConfig;
+  overrides?: IPluginConfigOverride[];
 }
 
-export interface IMergedPermissions {
-  default?: any;
-  levels?: any;
-  channels?: any;
-  users?: any;
-  roles?: any;
+export interface IPluginConfigOverride {
+  channel?: string | string[];
+  level?: string | string[];
+  user?: string | string[];
+  role?: string | string[];
+  type?: "any" | "all";
+  config?: IPluginConfig;
+  permissions?: IPluginPermissions;
 }
 
-export interface IMergedConfig {
-  default?: any;
-  levels?: any;
-  channels?: any;
-  users?: any;
-  roles?: any;
+export interface IPluginPermissions {
+  [key: string]: any;
+}
+
+export interface IPluginConfig {
   [key: string]: any;
 }

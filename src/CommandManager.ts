@@ -1,5 +1,5 @@
 import escapeStringRegex = require("escape-string-regexp");
-import { Message } from "discord.js";
+import { Message } from "eris";
 
 export interface IParameter {
   name: string;
