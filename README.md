@@ -1,3 +1,3 @@
 # Knub
 
-README coming soon(tm)
+README.md coming soon(tm)
