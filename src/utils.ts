@@ -136,19 +136,27 @@ export const eventToUser: IEventToUser = {
   messageUpdate: m => m.author,
   presenceUpdate: m => m.user,
   typingStart: (_, u) => u,
-  typingStop: (_, u) => u,
   userUpdate: id,
   voiceStateUpdate: m => m.user
 };
 
 export const eventToChannel: IEventToChannel = {
+  messageCreate: m => m.channel,
+  messageDelete: m => m.channel,
+  messageDeleteBulk: m => m[0] && m.channel,
+  messageReactionAdd: m => m.channel,
+  messageReactionRemove: m => m.channel,
+  messageReactionUpdate: m => m.channel,
   channelCreate: id,
   channelDelete: id,
   channelPinsUpdate: id,
   channelUpdate: id,
   channelRecipientAdd: id,
   channelRecipientRemove: id,
-  typingStart: id
+  typingStart: id,
+  voiceChannelJoin: (_, c) => c,
+  voiceChannelLeave: (_, c) => c,
+  voiceChannelSwitch: (_, c) => c
 };
 
 export const eventToMessage: IEventToMessage = {

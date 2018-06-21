@@ -12,22 +12,22 @@ import { mergeConfig } from "./configUtils";
 
 const at = require("lodash.at");
 
-export interface IPluginWithRuntimeConfig {
+export interface IPluginWithRuntimeOptions {
   0: typeof Plugin;
   1: IPluginOptions;
 }
 
-export interface IGlobalPluginWithRuntimeConfig {
+export interface IGlobalPluginWithRuntimeOptions {
   0: typeof GlobalPlugin;
   1: IPluginOptions;
 }
 
 export interface IPluginList {
-  [key: string]: (typeof Plugin) | IPluginWithRuntimeConfig;
+  [key: string]: (typeof Plugin) | IPluginWithRuntimeOptions;
 }
 
 export interface IGlobalPluginList {
-  [key: string]: (typeof GlobalPlugin) | IGlobalPluginWithRuntimeConfig;
+  [key: string]: (typeof GlobalPlugin) | IGlobalPluginWithRuntimeOptions;
 }
 
 export interface IOptions {
@@ -51,8 +51,8 @@ export interface IKnubArgs {
   options?: IOptions;
 }
 
-export type IPluginMap = Map<string, (typeof Plugin) | IPluginWithRuntimeConfig>;
-export type IGlobalPluginMap = Map<string, (typeof GlobalPlugin) | IGlobalPluginWithRuntimeConfig>;
+export type IPluginMap = Map<string, (typeof Plugin) | IPluginWithRuntimeOptions>;
+export type IGlobalPluginMap = Map<string, (typeof GlobalPlugin) | IGlobalPluginWithRuntimeOptions>;
 
 const readFileAsync = util.promisify(fs.readFile);
 const accessAsync = util.promisify(fs.access);
@@ -242,7 +242,7 @@ export class Knub extends EventEmitter {
       throw new Error(`Unknown plugin: ${pluginName}`);
     }
 
-    const pluginOptions = at(guildConfig, `plugins.${pluginName}`)[0];
+    const pluginOptions = at(guildConfig, `plugins.${pluginName}`)[0] || {};
 
     const PluginDef = this.plugins.get(pluginName);
     let PluginObj: typeof Plugin;
@@ -256,7 +256,7 @@ export class Knub extends EventEmitter {
       pluginRuntimeOptions = null;
     }
 
-    const mergedPluginOptions: IPluginOptions = mergeConfig({}, pluginOptions, pluginRuntimeOptions);
+    const mergedPluginOptions: IPluginOptions = mergeConfig({}, pluginOptions, pluginRuntimeOptions || {});
 
     const plugin = new PluginObj(this.bot, guildId, guildConfig, mergedPluginOptions, pluginName, this);
 
@@ -290,17 +290,17 @@ export class Knub extends EventEmitter {
 
     const PluginDef = this.globalPlugins.get(pluginName);
     let PluginObj: typeof GlobalPlugin;
-    let pluginRuntimeConfig: IPluginOptions;
+    let pluginRuntimeOptions: IPluginOptions;
 
     if (Array.isArray(PluginDef)) {
       PluginObj = PluginDef[0];
-      pluginRuntimeConfig = PluginDef[1];
+      pluginRuntimeOptions = PluginDef[1];
     } else {
       PluginObj = PluginDef as typeof GlobalPlugin;
-      pluginRuntimeConfig = null;
+      pluginRuntimeOptions = null;
     }
 
-    const mergedPluginOptions: IPluginOptions = mergeConfig({}, pluginOptions, pluginRuntimeConfig);
+    const mergedPluginOptions: IPluginOptions = mergeConfig({}, pluginOptions, pluginRuntimeOptions || {});
 
     const plugin = new PluginObj(this.bot, null, this.globalConfig, mergedPluginOptions, pluginName, this);
 

@@ -167,7 +167,7 @@ export class Plugin {
     this.mergedPluginOptions = null;
   }
 
-  protected configValue(path: string, def: any = null, matchParams: IMatchParams = {}) {
+  protected configValue(path: string, def: any, matchParams: IMatchParams = {}) {
     const mergedOptions = this.getMergedOptions();
     const matchingOptions = getMatchingPluginOptions(mergedOptions, matchParams);
     const value = at(matchingOptions.config, path)[0];

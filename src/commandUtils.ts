@@ -121,12 +121,6 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
 }
 
 export async function maybeRunCommand(command: IMatchedCommand, msg: Message, bot: Client) {
-  console.log("msg", msg);
-  // console.log('channel', msg.channel);
-  // console.log('TextChannel', TextChannel);
-  console.log("message is Message", msg instanceof Message);
-  console.log("channel is text channel", msg.channel instanceof TextChannel);
-  console.log("channel is guild channel", msg.channel instanceof GuildChannel);
   if (msg.channel instanceof PrivateChannel) {
     if (!command.commandDefinition.options.allowDMs) {
       return;
