@@ -1,3 +1,7 @@
+# 9.1.0
+* Overrides from default plugin options and actual plugin options are now concatted instead of overwritten
+* Exported various interfaces to help with typings
+
 # 9.0.1
 * Fix default value being required for `Plugin.configValue()`
 
