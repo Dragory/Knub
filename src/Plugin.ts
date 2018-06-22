@@ -2,13 +2,7 @@ import { Channel, Client, PrivateChannel, GroupChannel, Guild, Member, Message, 
 const at = require("lodash.at");
 
 import { CommandManager, MissingArgumentError } from "./CommandManager";
-import {
-  IGuildConfig,
-  IPluginConfig,
-  IPluginPermissions,
-  IPermissionLevelDefinitions,
-  IPluginOptions
-} from "./configInterfaces";
+import { IGuildConfig, IPermissionLevelDefinitions, IPluginOptions } from "./configInterfaces";
 import {
   CallbackFunctionVariadic,
   errorEmbed,
