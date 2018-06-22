@@ -21,6 +21,21 @@ const splitLevelRange = (v, defaultMod): [string, number] => {
   return match ? [match[1], parseInt(match[2], 10)] : [defaultMod, parseInt(v, 10)];
 };
 
+export interface IMatchParams {
+  level?: number;
+  userId?: string;
+  memberRoles?: string[];
+  channelId?: string;
+}
+
+/**
+ * Basic deep merge with support for specifying merge "rules" with key prefixes.
+ * For example, prefixing the key of a property containing an array with "+" would concat the two arrays, while
+ * a prefix of "-" would calculate the difference ("remove items")
+ * @param {T} target
+ * @param {T} sources
+ * @returns {T}
+ */
 export function mergeConfig<T>(target: T, ...sources: T[]): T {
   for (const source of sources) {
     for (const [rawKey, value] of Object.entries(source)) {
@@ -48,14 +63,10 @@ export function mergeConfig<T>(target: T, ...sources: T[]): T {
   return target;
 }
 
-export interface IMatchParams {
-  level?: number;
-  userId?: string;
-  memberRoles?: string[];
-  channelId?: string;
-}
-
-export function getMatchingPluginOptions(pluginOptions: IPluginOptions, matchParams: IMatchParams) {
+/**
+ * Returns matching plugin options for the specified matchParams based on the overrides of the plugin options
+ */
+export function getMatchingPluginOptions(pluginOptions: IPluginOptions, matchParams: IMatchParams): IPluginOptions {
   const finalOpts: IPluginOptions = {
     config: mergeConfig({}, pluginOptions.config || {}),
     permissions: mergeConfig({}, pluginOptions.permissions || {})
@@ -176,7 +187,15 @@ export function getMatchingPluginOptions(pluginOptions: IPluginOptions, matchPar
   return finalOpts;
 }
 
-export function hasPermission(requiredPermission: string, pluginOptions: IPluginOptions, matchParams: IMatchParams) {
+/**
+ * Resolves permissions in pluginOptions based on matching matchParams and overrides,
+ * and then checks for the specified permission
+ */
+export function hasPermission(
+  requiredPermission: string,
+  pluginOptions: IPluginOptions,
+  matchParams: IMatchParams
+): boolean {
   const matchingPluginOpts = getMatchingPluginOptions(pluginOptions, matchParams);
   return !!at(matchingPluginOpts.permissions, requiredPermission)[0];
 }
