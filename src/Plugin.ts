@@ -151,7 +151,11 @@ export class Plugin {
   private getMergedOptions(): IPluginOptions {
     if (!this.mergedPluginOptions) {
       const defaultOptions = this.getDefaultOptions();
-      this.mergedPluginOptions = mergeConfig({}, defaultOptions, this.pluginOptions);
+      this.mergedPluginOptions = {
+        config: mergeConfig({}, defaultOptions.config, this.pluginOptions.config || {}),
+        permissions: mergeConfig({}, defaultOptions.permissions, this.pluginOptions.permissions || {}),
+        overrides: (defaultOptions.overrides || []).concat(this.pluginOptions.overrides || [])
+      };
     }
 
     return this.mergedPluginOptions;
