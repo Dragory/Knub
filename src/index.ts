@@ -16,3 +16,11 @@ import * as utils from "./utils";
 export { utils };
 
 export { ICommandOptions } from "./CommandManager";
+export {
+  IPermissionLevelDefinitions,
+  IPluginConfig,
+  IPluginPermissions,
+  IGuildConfig,
+  IGlobalConfig,
+  IPluginOptions
+} from "./configInterfaces";
