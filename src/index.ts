@@ -24,3 +24,5 @@ export {
   IGlobalConfig,
   IPluginOptions
 } from "./configInterfaces";
+
+export { waitForReaction, reply } from "./helpers";
