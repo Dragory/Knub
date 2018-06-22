@@ -1,3 +1,10 @@
+# 9.0.1
+* Fix default value being required for `Plugin.configValue()`
+
+# 9.0.0
+* Switch from Discord.js to Eris
+* New config format
+
 # 7.0.3
 * Pass the plugin object as the third argument in the `guildPluginLoaded` and `guildPluginUnloaded` events
 
