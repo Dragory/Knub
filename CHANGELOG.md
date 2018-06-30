@@ -1,3 +1,6 @@
+# 9.1.1
+* Change default `getEnabledPlugins()` function so it respects the plugin's `enabled` value (only if explicitly disabled)
+
 # 9.1.0
 * Overrides from default plugin options and actual plugin options are now concatted instead of overwritten
 * Exported various interfaces to help with typings
