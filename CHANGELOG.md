@@ -1,4 +1,4 @@
-# 9.1.1
+# 9.2.0
 * Change default `getEnabledPlugins()` function so it respects the plugin's `enabled` value (only if explicitly disabled)
 
 # 9.1.0
