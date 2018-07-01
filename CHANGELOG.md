@@ -1,3 +1,6 @@
+# 9.4.2
+* Fix `mergeConfig()` error when merging a null value
+
 # 9.4.1
 * Fix `Plugin.getMergedConfig()` throwing an error if default plugin options don't contain a `config` or `permissions` key
 
