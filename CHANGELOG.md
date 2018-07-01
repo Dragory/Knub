@@ -1,3 +1,6 @@
+# 9.4.3
+* Global config is now properly loaded from `global.yml` by default
+
 # 9.4.2
 * Fix `mergeConfig()` error when merging a null value
 

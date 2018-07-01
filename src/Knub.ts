@@ -96,7 +96,8 @@ export class Knub extends EventEmitter {
 
       // Default YAML-based config files
       async getConfig(id) {
-        const configPath = `config/${id}.yml`;
+        const configFile = id ? `${id}.yml` : "global.yml";
+        const configPath = `config/${configFile}`;
 
         try {
           await accessAsync(configPath);
