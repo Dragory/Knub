@@ -1,3 +1,6 @@
+# 9.4.0
+* Change default `getEnabledPlugins()` function so all plugins, except those that are explicitly disabled, are loaded by default
+
 # 9.3.0
 * Change default `getEnabledPlugins()` function so it respects the plugin's `enabled` value (only if explicitly disabled)
 

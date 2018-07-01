@@ -108,10 +108,11 @@ export class Knub extends EventEmitter {
         return yaml.safeLoad(yamlString) || {};
       },
 
-      // By default, load all configured plugins (= exist in the guildConfig) that haven't been explicitly disabled
+      // By default, load all plugins that haven't been explicitly disabled
       getEnabledPlugins: async (guildId, guildConfig) => {
+        const plugins = guildConfig.plugins || {};
         return Array.from(this.plugins.keys()).filter(pluginName => {
-          return guildConfig.plugins[pluginName] && guildConfig.plugins[pluginName].enabled !== false;
+          return !plugins[pluginName] || plugins[pluginName].enabled !== false;
         });
       },
 
