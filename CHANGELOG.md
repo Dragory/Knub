@@ -1,3 +1,6 @@
+# 9.4.1
+* Fix `Plugin.getMergedConfig()` throwing an error if default plugin options don't contain a `config` or `permissions` key
+
 # 9.4.0
 * Change default `getEnabledPlugins()` function so all plugins, except those that are explicitly disabled, are loaded by default
 

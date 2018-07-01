@@ -152,8 +152,8 @@ export class Plugin {
     if (!this.mergedPluginOptions) {
       const defaultOptions = this.getDefaultOptions();
       this.mergedPluginOptions = {
-        config: mergeConfig({}, defaultOptions.config, this.pluginOptions.config || {}),
-        permissions: mergeConfig({}, defaultOptions.permissions, this.pluginOptions.permissions || {}),
+        config: mergeConfig({}, defaultOptions.config || {}, this.pluginOptions.config || {}),
+        permissions: mergeConfig({}, defaultOptions.permissions || {}, this.pluginOptions.permissions || {}),
         overrides: (defaultOptions.overrides || []).concat(this.pluginOptions.overrides || [])
       };
     }
