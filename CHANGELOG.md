@@ -1,3 +1,6 @@
+# 9.4.4
+* Fixed error when using optional catchAll arguments
+
 # 9.4.3
 * Global config is now properly loaded from `global.yml` by default
 
