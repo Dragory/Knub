@@ -1,3 +1,7 @@
+# 9.4.5
+* Null/undefined values for command parameters are no longer converted to the specified type.
+This fixes e.g. a missing string argument getting the value "null" (as a string).
+
 # 9.4.4
 * Fixed error when using optional catchAll arguments
 
