@@ -296,7 +296,7 @@ export class CommandManager {
         value = parsedArg.value;
       }
 
-      if (param.catchAll) {
+      if (param.catchAll && parsedArg) {
         value = [...argStr].slice(parsedArg.index).join("");
       }
 
