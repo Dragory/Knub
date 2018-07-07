@@ -17,7 +17,9 @@ export class CommandValueTypeError extends Error {}
  * @returns {Promise<any>}
  */
 export async function convertToType(value: any, type: string, msg: Message, bot: Client): Promise<any> {
-  if (type === "string") {
+  if (value == null) {
+    return null;
+  } else if (type === "string") {
     return String(value);
   } else if (type === "number") {
     return parseFloat(value);
