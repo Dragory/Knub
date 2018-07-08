@@ -1,3 +1,6 @@
+# 9.4.7
+* Fix `waitForReaction()` failing to add the reactions
+
 # 9.4.6
 * Add timeout parameter to `waitForReaction()` (default 15sec)
 

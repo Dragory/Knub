@@ -7,7 +7,7 @@ export function waitForReaction(
   timeout = 15000
 ): Promise<Emoji> {
   return new Promise(async resolve => {
-    for (const reaction in availableReactions) {
+    for (const reaction of availableReactions) {
       await msg.addReaction(reaction);
     }
 
