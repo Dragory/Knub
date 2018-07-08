@@ -1,3 +1,6 @@
+# 9.4.8
+* Fix `waitForReaction()` reacting to its own reactions (heh)
+
 # 9.4.7
 * Fix `waitForReaction()` failing to add the reactions
 

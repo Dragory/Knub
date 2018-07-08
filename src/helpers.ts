@@ -16,8 +16,8 @@ export function waitForReaction(
       resolve(null);
     }, timeout);
 
-    bot.on("messageReactionAdd", (evMsg, emoji) => {
-      if (evMsg.id !== msg.id) return;
+    bot.on("messageReactionAdd", (evMsg, emoji, userId) => {
+      if (evMsg.id !== msg.id || userId === bot.user.id) return;
       clearTimeout(timeoutTimer);
       msg.removeReactions();
       resolve(emoji);
