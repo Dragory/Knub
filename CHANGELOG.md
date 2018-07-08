@@ -1,3 +1,6 @@
+# 9.4.6
+* Add timeout parameter to `waitForReaction()` (default 15sec)
+
 # 9.4.5
 * Null/undefined values for command parameters are no longer converted to the specified type.
 This fixes e.g. a missing string argument getting the value "null" (as a string).

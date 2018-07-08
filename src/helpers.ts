@@ -1,13 +1,24 @@
-import { Client, Message } from "eris";
+import { Client, Message, Emoji } from "eris";
 
-export function waitForReaction(bot: Client, msg: Message, availableReactions: string[]) {
+export function waitForReaction(
+  bot: Client,
+  msg: Message,
+  availableReactions: string[],
+  timeout = 15000
+): Promise<Emoji> {
   return new Promise(async resolve => {
     for (const reaction in availableReactions) {
       await msg.addReaction(reaction);
     }
 
+    const timeoutTimer = setTimeout(() => {
+      msg.removeReactions().catch(() => {}); // tslint:disable-line
+      resolve(null);
+    }, timeout);
+
     bot.on("messageReactionAdd", (evMsg, emoji) => {
       if (evMsg.id !== msg.id) return;
+      clearTimeout(timeoutTimer);
       msg.removeReactions();
       resolve(emoji);
     });
