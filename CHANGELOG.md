@@ -1,3 +1,6 @@
+# 9.4.9
+* Ignore errors when removing reactions from the `waitForReaction()` message
+
 # 9.4.8
 * Fix `waitForReaction()` reacting to its own reactions (heh)
 

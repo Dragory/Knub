@@ -19,7 +19,7 @@ export function waitForReaction(
     bot.on("messageReactionAdd", (evMsg, emoji, userId) => {
       if (evMsg.id !== msg.id || userId === bot.user.id) return;
       clearTimeout(timeoutTimer);
-      msg.removeReactions();
+      msg.removeReactions().catch(() => {}); // tslint:disable-line
       resolve(emoji);
     });
   });
