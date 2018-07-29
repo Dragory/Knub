@@ -89,8 +89,8 @@ describe("CommandManager", () => {
     expect(result.args.user.value).to.equal("1234");
     expect(result.args.arg2.value).to.equal("somedefault");
 
-    const multiResult = manager.findCommandsInString("!addroles NA EU", "!");
-    expect(multiResult.commands.length).to.equal(2);
+    const commands = manager.findCommandsInString("!addroles NA EU", "!");
+    expect(commands.length).to.equal(2);
   });
 
   it("should handle catchAll correctly", () => {
@@ -124,5 +124,25 @@ describe("CommandManager", () => {
     expect(test1).to.not.equal(null);
     expect(test2).to.not.equal(null);
     expect(test3).to.equal(null);
+  });
+
+  it("should have errors in mismatched commands", () => {
+    const manager = new CommandManager();
+    const noop = () => {
+      /* empty */
+    };
+
+    manager.add("cmd", "<arg:string>", noop);
+    manager.add("cmd", [], noop); // Same command, no arg requirements
+
+    const commands = manager.findCommandsInString("!cmd", "!");
+
+    // String matches both commands, but...
+    expect(commands.length).to.equal(2);
+
+    // First match (for the first command) has an error since the required param is missing
+    expect(commands[0].error).to.not.equal(null);
+    // Second match (for the second command) has no errors since there were no required params
+    expect(commands[1].error).to.equal(null);
   });
 });

@@ -1,7 +1,7 @@
 import { Channel, Client, PrivateChannel, GroupChannel, Guild, Member, Message, User } from "eris";
 const at = require("lodash.at");
 
-import { CommandManager, MissingArgumentError } from "./CommandManager";
+import { CommandManager } from "./CommandManager";
 import { IGuildConfig, IPermissionLevelDefinitions, IPluginOptions } from "./configInterfaces";
 import {
   CallbackFunctionVariadic,
@@ -326,19 +326,11 @@ export class Plugin {
     }
 
     const prefix = this.guildConfig.prefix || getDefaultPrefix(this.bot);
-
-    const { commands: matchedCommands, errors } = this.commands.findCommandsInString(msg.content, prefix);
-
-    if (matchedCommands.length === 0 && errors.length > 0) {
-      const firstError = errors[0];
-      if (firstError instanceof MissingArgumentError) {
-        msg.channel.createMessage({ embed: errorEmbed(`Missing argument \`${firstError.arg.name}\``) });
-      }
-      return;
-    }
+    const matchedCommands = this.commands.findCommandsInString(msg.content, prefix);
+    let onlyErrors = true;
 
     // Run each matching command sequentially
-    for (const command of matchedCommands) {
+    for (const [i, command] of matchedCommands.entries()) {
       // Check permissions
       const requiredPermission = command.commandDefinition.options.requiredPermission;
       if (requiredPermission) {
@@ -352,9 +344,24 @@ export class Plugin {
         };
 
         if (!hasPermission(requiredPermission, mergedOptions, matchParams)) {
-          return;
+          continue;
         }
       }
+
+      // Check for errors
+      if (command.error) {
+        // Only post errors if it's the last matched command and there have only been errors so far
+        // in the set of matched commands. This way if there are multiple "overlapping" commands,
+        // an error won't be reported when some of them match, nor will there be tons of spam if
+        // all of them have errors.
+        if (onlyErrors && i === matchedCommands.length - 1) {
+          msg.channel.createMessage({ embed: errorEmbed(command.error.message) });
+        }
+
+        continue;
+      }
+
+      onlyErrors = false;
 
       // Run the command
       try {

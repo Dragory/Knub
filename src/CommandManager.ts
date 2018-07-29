@@ -42,7 +42,10 @@ export interface IMatchedCommand {
   prefix: string;
   name: string;
   args: IArgumentMap;
+  error: CommandMatchError;
 }
+
+export class CommandMatchError extends Error {}
 
 const argDefinitionSimpleRegex = /[<\[].*?[>\]]/g;
 
@@ -58,15 +61,6 @@ const argDefinitionRegex = new RegExp(
 );
 
 const whitespace = /\s/;
-
-export class MissingArgumentError extends Error {
-  public arg: IParameter;
-
-  constructor(arg: IParameter) {
-    super(arg.name);
-    this.arg = arg;
-  }
-}
 
 const defaultParameter: IParameter = {
   name: null,
@@ -248,6 +242,7 @@ export class CommandManager {
 
   public matchCommand(prefix: string | RegExp, command: ICommandDefinition, str: string): IMatchedCommand {
     let escapedPrefix;
+    let error = null;
 
     if (typeof prefix === "string") {
       if (prefix.match(/^\/.+\/$/)) {
@@ -277,7 +272,8 @@ export class CommandManager {
       if (param.rest) {
         const restArgs = parsedArguments.slice(i);
         if (param.required && restArgs.length === 0) {
-          throw new MissingArgumentError(param);
+          error = new CommandMatchError(`Missing argument: ${param.name}`);
+          break;
         }
 
         args[param.name] = {
@@ -288,7 +284,8 @@ export class CommandManager {
         break;
       } else if (parsedArg == null || parsedArg.value === "") {
         if (param.required) {
-          throw new MissingArgumentError(param);
+          error = new CommandMatchError(`Missing argument: ${param.name}`);
+          break;
         } else {
           value = param.def;
         }
@@ -310,31 +307,16 @@ export class CommandManager {
       commandDefinition: command,
       prefix: match[1],
       name: match[2],
-      args
+      args: error ? {} : args,
+      error
     };
   }
 
-  public findCommandsInString(str: string, prefix: string): { commands: IMatchedCommand[]; errors: Error[] } {
-    const commands: IMatchedCommand[] = [];
-    const errors: Error[] = [];
-
-    this.commands.forEach(command => {
-      try {
-        const matchedCommand = this.matchCommand(prefix, command, str);
-
-        if (matchedCommand) {
-          commands.push(matchedCommand);
-        }
-      } catch (e) {
-        if (e instanceof MissingArgumentError) {
-          errors.push(e);
-          return;
-        } else {
-          throw e;
-        }
-      }
-    });
-
-    return { commands, errors };
+  public findCommandsInString(str: string, prefix: string): IMatchedCommand[] {
+    return this.commands.reduce((matchedCommands, command) => {
+      const matchedCommand = this.matchCommand(prefix, command, str);
+      if (matchedCommand) matchedCommands.push(matchedCommand);
+      return matchedCommands;
+    }, []);
   }
 }
