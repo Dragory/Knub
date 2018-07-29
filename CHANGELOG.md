@@ -1,3 +1,9 @@
+# 9.4.11
+* Fix slow reaction adding in waitForReaction
+
+# 9.4.10
+* Fix "missing argument" errors being shown for commands that you don't have a permission to run
+
 # 9.4.9
 * Ignore errors when removing reactions from the `waitForReaction()` message
 
