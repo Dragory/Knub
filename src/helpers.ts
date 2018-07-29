@@ -7,9 +7,7 @@ export function waitForReaction(
   timeout = 15000
 ): Promise<Emoji> {
   return new Promise(async resolve => {
-    for (const reaction of availableReactions) {
-      await msg.addReaction(reaction);
-    }
+    await Promise.all(availableReactions.map(reaction => msg.addReaction(reaction)));
 
     const timeoutTimer = setTimeout(() => {
       msg.removeReactions().catch(() => {}); // tslint:disable-line
