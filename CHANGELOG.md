@@ -1,3 +1,6 @@
+# 9.4.12
+* Add `restrictToUserId` param to `waitForReaction` helper
+
 # 9.4.11
 * Fix slow reaction adding in waitForReaction
 

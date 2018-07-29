@@ -4,6 +4,7 @@ export function waitForReaction(
   bot: Client,
   msg: Message,
   availableReactions: string[],
+  restrictToUserId: string = null,
   timeout = 15000
 ): Promise<Emoji> {
   return new Promise(async resolve => {
@@ -16,6 +17,9 @@ export function waitForReaction(
 
     bot.on("messageReactionAdd", (evMsg, emoji, userId) => {
       if (evMsg.id !== msg.id || userId === bot.user.id) return;
+      if (evMsg.author.bot) return;
+      if (restrictToUserId && userId !== restrictToUserId) return;
+
       clearTimeout(timeoutTimer);
       msg.removeReactions().catch(() => {}); // tslint:disable-line
       resolve(emoji);
