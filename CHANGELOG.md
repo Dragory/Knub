@@ -1,3 +1,6 @@
+# 9.4.13
+* Fix `waitForReaction` ignoring all reactions to bot messages
+
 # 9.4.12
 * Add `restrictToUserId` param to `waitForReaction` helper
 

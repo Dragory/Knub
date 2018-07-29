@@ -17,8 +17,10 @@ export function waitForReaction(
 
     bot.on("messageReactionAdd", (evMsg, emoji, userId) => {
       if (evMsg.id !== msg.id || userId === bot.user.id) return;
-      if (evMsg.author.bot) return;
       if (restrictToUserId && userId !== restrictToUserId) return;
+
+      const user = bot.users.get(userId);
+      if (user && user.bot) return;
 
       clearTimeout(timeoutTimer);
       msg.removeReactions().catch(() => {}); // tslint:disable-line
