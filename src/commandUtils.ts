@@ -22,7 +22,11 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
   } else if (type === "string") {
     return String(value);
   } else if (type === "number") {
-    return parseFloat(value);
+    const result = parseFloat(value);
+    if (Number.isNaN(result)) {
+      throw new CommandValueTypeError(`Could not convert ${value} to a number`);
+    }
+    return result;
   } else if (type === "user") {
     const userId = getUserId(value);
     if (!userId) {

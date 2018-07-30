@@ -1,3 +1,6 @@
+# 9.4.14
+* Fix `commandUtils.convertToType` accepting invalid number values for number params
+
 # 9.4.13
 * Fix `waitForReaction` ignoring all reactions to bot messages
 
