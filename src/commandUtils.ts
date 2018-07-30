@@ -26,6 +26,7 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
     if (Number.isNaN(result)) {
       throw new CommandValueTypeError(`Could not convert ${value} to a number`);
     }
+
     return result;
   } else if (type === "user") {
     const userId = getUserId(value);
@@ -89,6 +90,20 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
     }
 
     return role;
+  } else if (type === "userId") {
+    const userId = getUserId(value);
+    if (!userId) {
+      throw new CommandValueTypeError(`Could not convert ${value} to a user id`);
+    }
+
+    return userId;
+  } else if (type === "channelId") {
+    const channelId = getChannelId(value);
+    if (!channelId) {
+      throw new CommandValueTypeError(`Could not convert ${value} to a channel id`);
+    }
+
+    return channelId;
   } else {
     throw new CommandValueTypeError(`Unknown type: ${type}`);
   }

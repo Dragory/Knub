@@ -1,3 +1,6 @@
+# 9.5.0
+* Add `userId` and `channelId` command parameter types
+
 # 9.4.14
 * Fix `commandUtils.convertToType` accepting invalid number values for number params
 
