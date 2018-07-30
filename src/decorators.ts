@@ -9,7 +9,9 @@ function CommandDecorator(
   options: ICommandOptions = {}
 ) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    Reflect.defineMetadata("command", { command, parameters, options, _prop: propertyKey }, target, propertyKey);
+    const commands = Reflect.getMetadata("commands", target, propertyKey) || [];
+    commands.push({ command, parameters, options, _prop: propertyKey });
+    Reflect.defineMetadata("commands", commands, target, propertyKey);
   };
 }
 
@@ -18,7 +20,9 @@ function CommandDecorator(
  */
 function OnEventDecorator(eventName: string, restrict: string = null, ignoreSelf: boolean = null) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    Reflect.defineMetadata("event", { eventName, restrict, ignoreSelf, _prop: propertyKey }, target, propertyKey);
+    const events = Reflect.getMetadata("events", target, propertyKey) || [];
+    events.push({ eventName, restrict, ignoreSelf, _prop: propertyKey });
+    Reflect.defineMetadata("events", events, target, propertyKey);
   };
 }
 

@@ -82,27 +82,31 @@ export class Plugin {
 
       const requiredPermission = Reflect.getMetadata("requiredPermission", this, prop);
 
-      // Command handler from decorator
-      const metaCommand = Reflect.getMetadata("command", this, prop);
-      if (metaCommand) {
-        const opts = metaCommand.options || {};
-        if (requiredPermission && requiredPermission.permission) {
-          opts.requiredPermission = requiredPermission.permission;
-        }
+      // Command handlers from decorators
+      const metaCommands = Reflect.getMetadata("commands", this, prop);
+      if (metaCommands) {
+        for (const metaCommand of metaCommands) {
+          const opts = metaCommand.options || {};
+          if (requiredPermission && requiredPermission.permission) {
+            opts.requiredPermission = requiredPermission.permission;
+          }
 
-        this.commands.add(metaCommand.command, metaCommand.parameters, value.bind(this), opts);
+          this.commands.add(metaCommand.command, metaCommand.parameters, value.bind(this), opts);
+        }
       }
 
       // Event listener from decorator
-      const event = Reflect.getMetadata("event", this, prop);
-      if (event) {
-        this.on(
-          event.eventName,
-          value.bind(this),
-          event.restrict || undefined,
-          event.ignoreSelf || undefined,
-          requiredPermission && requiredPermission.permission
-        );
+      const metaEvents = Reflect.getMetadata("events", this, prop);
+      if (metaEvents) {
+        for (const metaEvent of metaEvents) {
+          this.on(
+            metaEvent.eventName,
+            value.bind(this),
+            metaEvent.restrict || undefined,
+            metaEvent.ignoreSelf || undefined,
+            requiredPermission && requiredPermission.permission
+          );
+        }
       }
     }
   }

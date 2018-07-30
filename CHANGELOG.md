@@ -1,3 +1,6 @@
+# 9.6.0
+* Allow applying multiple decorators for commands or events for one function
+
 # 9.5.1
 * Move argument type conversion before command error handling. This should help with parameter-overloaded commands.
 
