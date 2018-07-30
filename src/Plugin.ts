@@ -1,4 +1,4 @@
-import { Channel, Client, PrivateChannel, GroupChannel, Guild, Member, Message, User } from "eris";
+import { Channel, Client, PrivateChannel, GroupChannel, GuildChannel, Guild, Member, Message, User } from "eris";
 const at = require("lodash.at");
 
 import { CommandManager } from "./CommandManager";
@@ -11,7 +11,7 @@ import {
   eventToMessage,
   eventToUser
 } from "./utils";
-import { CommandValueTypeError, getDefaultPrefix, maybeRunCommand } from "./commandUtils";
+import { CommandValueTypeError, convertArgumentTypes, getDefaultPrefix, runCommand } from "./commandUtils";
 import { Knub } from "./Knub";
 import { getMatchingPluginOptions, hasPermission, IMatchParams, mergeConfig } from "./configUtils";
 
@@ -331,6 +331,15 @@ export class Plugin {
 
     // Run each matching command sequentially
     for (const [i, command] of matchedCommands.entries()) {
+      // Make sure this command is supposed to be run here
+      if (msg.channel instanceof PrivateChannel) {
+        if (!command.commandDefinition.options.allowDMs) {
+          return;
+        }
+      } else if (!(msg.channel instanceof GuildChannel)) {
+        return;
+      }
+
       // Check permissions
       const requiredPermission = command.commandDefinition.options.requiredPermission;
       if (requiredPermission) {
@@ -345,6 +354,15 @@ export class Plugin {
 
         if (!hasPermission(requiredPermission, mergedOptions, matchParams)) {
           continue;
+        }
+      }
+
+      // Convert arg types
+      if (!command.error) {
+        try {
+          await convertArgumentTypes(command.args, msg, this.bot);
+        } catch (e) {
+          command.error = e;
         }
       }
 
@@ -363,9 +381,24 @@ export class Plugin {
 
       onlyErrors = false;
 
+      // Run custom filters, if any
+      let filterFailed = false;
+      if (command.commandDefinition.options.filters) {
+        for (const filterFn of command.commandDefinition.options.filters) {
+          if (!await filterFn(msg, command)) {
+            filterFailed = true;
+            break;
+          }
+        }
+      }
+
+      if (filterFailed) {
+        continue;
+      }
+
       // Run the command
       try {
-        await maybeRunCommand(command, msg, this.bot);
+        await runCommand(command, msg, this.bot);
       } catch (e) {
         if (e instanceof CommandValueTypeError) {
           msg.channel.createMessage({ embed: errorEmbed(e.message) });

@@ -1,3 +1,6 @@
+# 9.5.1
+* Move argument type conversion before command error handling. This should help with parameter-overloaded commands.
+
 # 9.5.0
 * Add `userId` and `channelId` command parameter types
 

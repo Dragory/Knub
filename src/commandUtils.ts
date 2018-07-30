@@ -141,33 +141,7 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
   }
 }
 
-export async function maybeRunCommand(command: IMatchedCommand, msg: Message, bot: Client) {
-  if (msg.channel instanceof PrivateChannel) {
-    if (!command.commandDefinition.options.allowDMs) {
-      return;
-    }
-  } else if (!(msg.channel instanceof GuildChannel)) {
-    return;
-  }
-
-  // Convert arg types
-  await convertArgumentTypes(command.args, msg, bot);
-
-  // Run custom filters, if any
-  let filterFailed = false;
-  if (command.commandDefinition.options.filters) {
-    for (const filterFn of command.commandDefinition.options.filters) {
-      if (!await filterFn(msg, command)) {
-        filterFailed = true;
-        break;
-      }
-    }
-  }
-
-  if (filterFailed) {
-    return;
-  }
-
+export async function runCommand(command: IMatchedCommand, msg: Message, bot: Client) {
   const argsToPass: any = {};
   for (const name in command.args) {
     argsToPass[name] = command.args[name].value;
