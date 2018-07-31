@@ -1,3 +1,6 @@
+# 9.6.1
+* Fix `userId` and `channelId` parameter types
+
 # 9.6.0
 * Allow applying multiple decorators for commands or events for one function
 

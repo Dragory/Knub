@@ -90,14 +90,14 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
     }
 
     return role;
-  } else if (type === "userId") {
+  } else if (type === "userid") {
     const userId = getUserId(value);
     if (!userId) {
       throw new CommandValueTypeError(`Could not convert ${value} to a user id`);
     }
 
     return userId;
-  } else if (type === "channelId") {
+  } else if (type === "channelid") {
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new CommandValueTypeError(`Could not convert ${value} to a channel id`);
