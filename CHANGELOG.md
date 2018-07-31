@@ -1,3 +1,6 @@
+# 9.6.2
+* Fix `getEnabledPlugins` being called with a weird `this`
+
 # 9.6.1
 * Fix `userId` and `channelId` parameter types
 

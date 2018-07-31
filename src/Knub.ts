@@ -204,7 +204,7 @@ export class Knub extends EventEmitter {
     guildData.config = await this.options.getConfig(guildData.id);
 
     // Load plugins
-    const enabledPlugins = await this.options.getEnabledPlugins(guildData.id, guildData.config);
+    const enabledPlugins = await this.options.getEnabledPlugins.call(this, guildData.id, guildData.config);
 
     const loadPromises = enabledPlugins.map(async pluginName => {
       const plugin = await this.loadPlugin(guildData.id, pluginName, guildData.config);
