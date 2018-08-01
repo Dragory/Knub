@@ -10,12 +10,18 @@ export interface IGuildConfig {
   plugins?: {
     [key: string]: IPluginOptions;
   };
+
+  // Custom config values
+  [key: string]: any;
 }
 
 export interface IGlobalConfig {
   plugins?: {
     [key: string]: IPluginOptions;
   };
+
+  // Custom config values
+  [key: string]: any;
 }
 
 export interface IPluginOptions {

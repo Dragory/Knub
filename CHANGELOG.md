@@ -1,3 +1,6 @@
+# 9.6.4
+* Allow arbitrary props in guild and global config
+
 # 9.6.3
 * Add `getGlobalConfig` function to the Knub instance
 
