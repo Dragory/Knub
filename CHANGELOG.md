@@ -1,3 +1,6 @@
+# 9.6.3
+* Add `getGlobalConfig` function to the Knub instance
+
 # 9.6.2
 * Fix `getEnabledPlugins` being called with a weird `this`
 

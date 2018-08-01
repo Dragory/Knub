@@ -351,4 +351,8 @@ export class Knub extends EventEmitter {
   public async loadGlobalConfig() {
     this.globalConfig = await this.options.getConfig("global");
   }
+
+  public getGlobalConfig() {
+    return this.globalConfig;
+  }
 }
