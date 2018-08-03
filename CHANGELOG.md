@@ -1,3 +1,6 @@
+# 9.6.5
+* Fix error when reloading global plugins
+
 # 9.6.4
 * Allow arbitrary props in guild and global config
 

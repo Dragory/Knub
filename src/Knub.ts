@@ -324,12 +324,12 @@ export class Knub extends EventEmitter {
 
   public async reloadGlobalPlugin(plugin: GlobalPlugin): Promise<void> {
     await this.unloadGlobalPlugin(plugin);
-    await this.loadGlobalPlugin(plugin.name);
+    await this.loadGlobalPlugin(plugin.pluginName);
   }
 
   public async reloadAllGlobalPlugins() {
     for (const plugin of this.loadedGlobalPlugins.values()) {
-      this.reloadGlobalPlugin(plugin);
+      await this.reloadGlobalPlugin(plugin);
     }
   }
 
