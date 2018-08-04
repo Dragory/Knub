@@ -1,3 +1,6 @@
+# 9.6.6
+* Fix infinite loop when reloading all global plugins
+
 # 9.6.5
 * Fix error when reloading global plugins
 

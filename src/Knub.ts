@@ -328,7 +328,8 @@ export class Knub extends EventEmitter {
   }
 
   public async reloadAllGlobalPlugins() {
-    for (const plugin of this.loadedGlobalPlugins.values()) {
+    const loadedGlobalPlugins = Array.from(this.loadedGlobalPlugins.values());
+    for (const plugin of loadedGlobalPlugins) {
       await this.reloadGlobalPlugin(plugin);
     }
   }
