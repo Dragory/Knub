@@ -29,6 +29,7 @@ export interface IPluginOptions {
   permissions?: IPluginPermissions;
   config?: IPluginConfig;
   overrides?: IPluginConfigOverride[];
+  "=overrides"?: IPluginConfigOverride[];
 }
 
 export interface IPluginConfigOverride {

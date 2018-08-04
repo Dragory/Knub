@@ -158,7 +158,9 @@ export class Plugin {
       this.mergedPluginOptions = {
         config: mergeConfig({}, defaultOptions.config || {}, this.pluginOptions.config || {}),
         permissions: mergeConfig({}, defaultOptions.permissions || {}, this.pluginOptions.permissions || {}),
-        overrides: (defaultOptions.overrides || []).concat(this.pluginOptions.overrides || [])
+        overrides: this.pluginOptions["=overrides"]
+          ? this.pluginOptions["=overrides"]
+          : (this.pluginOptions.overrides || []).concat(defaultOptions.overrides || [])
       };
     }
 

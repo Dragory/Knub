@@ -1,3 +1,8 @@
+# 10.0.0
+* Default plugin overrides are now included *after* user overrides.
+This is, in most cases, more intuitive, because it allows e.g. default mod overrides to apply even if the user specifies their own overrides.
+* Allow specifying "=overrides" in plugin config to replace default overrides entirely
+
 # 9.6.6
 * Fix infinite loop when reloading all global plugins
 
