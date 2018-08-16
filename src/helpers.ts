@@ -1,4 +1,4 @@
-import { Client, Message, Emoji } from "eris";
+import { Client, Message, Emoji, TextChannel } from "eris";
 
 export function waitForReaction(
   bot: Client,
@@ -25,6 +25,28 @@ export function waitForReaction(
       clearTimeout(timeoutTimer);
       msg.removeReactions().catch(() => {}); // tslint:disable-line
       resolve(emoji);
+    });
+  });
+}
+
+export function waitForReply(
+  bot: Client,
+  channel: TextChannel,
+  restrictToUserId: string = null,
+  timeout = 15000
+): Promise<Message> {
+  return new Promise(async resolve => {
+    const timeoutTimer = setTimeout(() => {
+      resolve(null);
+    }, timeout);
+
+    bot.on("messageCreate", msg => {
+      if (!msg.channel || msg.channel.id !== channel.id) return;
+      if (msg.author && msg.author.id === bot.user.id) return;
+      if (restrictToUserId && (!msg.author || msg.author.id !== restrictToUserId)) return;
+
+      clearTimeout(timeoutTimer);
+      resolve(msg);
     });
   });
 }

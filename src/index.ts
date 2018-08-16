@@ -25,4 +25,4 @@ export {
   IPluginOptions
 } from "./configInterfaces";
 
-export { waitForReaction, reply } from "./helpers";
+export { waitForReaction, waitForReply, reply } from "./helpers";
