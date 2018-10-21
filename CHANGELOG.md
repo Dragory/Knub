@@ -1,3 +1,13 @@
+# 11.0.0
+* Replace default YAML config files with JSON
+  * Removes dependency on js-yaml
+* Replace default winston logger with a custom function
+  * Removes dependency on winston
+* Allow specifying a custom logging function
+  * `logFn` in Knub constructor argument `userArgs.options`
+* Update to TypeScript 3.1
+* Knub now requires Node.js 10 or higher
+
 # 10.1.0
 * Add `waitForReply` helper
 
