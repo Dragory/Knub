@@ -1,3 +1,6 @@
+# 11.1.0
+* Add `Plugin.hasPlugin()` and `Plugin.getPlugin()` for easier and more standardized interoperability between plugins
+
 # 11.0.0
 * Replace default YAML config files with JSON
   * Removes dependency on js-yaml

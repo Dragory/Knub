@@ -323,6 +323,24 @@ export class Plugin {
   }
 
   /**
+   * Checks whether the specified plugin for the same guild as this plugin exists
+   * Useful for interoperability between plugins
+   */
+  protected hasPlugin(name: string): boolean {
+    const guildData = this.knub.getGuildData(this.guildId);
+    return guildData.loadedPlugins.has(name);
+  }
+
+  /**
+   * Returns the specified plugin for the same guild as this plugin
+   * Useful for interoperability between plugins
+   */
+  protected getPlugin<T extends Plugin>(name: string): T {
+    const guildData = this.knub.getGuildData(this.guildId);
+    return guildData.loadedPlugins.get(name) as T;
+  }
+
+  /**
    * Runs all matching commands in the message
    */
   private async runCommandsInMessage(msg: Message): Promise<void> {
