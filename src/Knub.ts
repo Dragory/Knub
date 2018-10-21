@@ -1,13 +1,14 @@
 import { Client, Guild } from "eris";
-import * as util from "util";
-import * as fs from "fs";
+import path from "path";
 
-import { logger } from "./logger";
+import _fs from "fs";
+const fs = _fs.promises;
+
+import { logger, LoggerFn, setLoggerFn } from "./logger";
 import { Plugin } from "./Plugin";
 import { GlobalPlugin } from "./GlobalPlugin";
-import * as EventEmitter from "events";
+import EventEmitter from "events";
 import { IGlobalConfig, IGuildConfig, IPluginOptions } from "./configInterfaces";
-import * as yaml from "js-yaml";
 import { mergeConfig } from "./configUtils";
 
 const at = require("lodash.at");
@@ -31,11 +32,11 @@ export interface IGlobalPluginList {
 }
 
 export interface IOptions {
-  logLevel?: string;
   autoInitGuilds?: boolean;
   getConfig?: (id: string) => any | Promise<any>;
   getEnabledPlugins?: (guildId: string, guildConfig: IGuildConfig) => string[] | Promise<string[]>;
   canLoadGuild?: (guildId: string) => boolean | Promise<boolean>;
+  logFn?: LoggerFn;
   [key: string]: any;
 }
 
@@ -53,9 +54,6 @@ export interface IKnubArgs {
 
 export type IPluginMap = Map<string, (typeof Plugin) | IPluginWithRuntimeOptions>;
 export type IGlobalPluginMap = Map<string, (typeof GlobalPlugin) | IGlobalPluginWithRuntimeOptions>;
-
-const readFileAsync = util.promisify(fs.readFile);
-const accessAsync = util.promisify(fs.access);
 
 const defaultKnubParams: IKnubArgs = {
   plugins: {},
@@ -92,21 +90,19 @@ export class Knub extends EventEmitter {
     });
 
     const defaultOptions: IOptions = {
-      logLevel: "info",
-
-      // Default YAML-based config files
+      // Default JSON config files
       async getConfig(id) {
-        const configFile = id ? `${id}.yml` : "global.yml";
-        const configPath = `config/${configFile}`;
+        const configFile = id ? `${id}.json` : "global.json";
+        const configPath = path.join("config", configFile);
 
         try {
-          await accessAsync(configPath);
+          await fs.access(configPath);
         } catch (e) {
           return {};
         }
 
-        const yamlString = await readFileAsync(configPath, { encoding: "utf8" });
-        return yaml.safeLoad(yamlString) || {};
+        const json = await fs.readFile(configPath, { encoding: "utf8" });
+        return JSON.parse(json);
       },
 
       // By default, load all plugins that haven't been explicitly disabled
@@ -122,7 +118,9 @@ export class Knub extends EventEmitter {
 
     this.options = { ...defaultOptions, ...args.options };
 
-    logger.transports.console.level = this.options.logLevel;
+    if (this.options.logFn) {
+      setLoggerFn(this.options.logFn);
+    }
 
     this.guilds = new Map();
   }

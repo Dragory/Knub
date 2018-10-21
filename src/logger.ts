@@ -1,22 +1,30 @@
-import * as winston from "winston";
+export type LoggerFn = (msg: string, level: string) => void;
 
-export const logger = new winston.Logger({
-  transports: [
-    new winston.transports.Console({
-      timestamp() {
-        return new Date().toISOString();
-      },
+const defaultLoggerFn: LoggerFn = (level: string, msg: string) => {
+  console.log(`[${level.toUpperCase()}] ${msg}`); // tslint:disable-line
+};
 
-      formatter(opts) {
-        let meta = opts.meta ? JSON.stringify(opts.meta) : null;
-        if (meta === "{}") {
-          meta = null;
-        }
+let currentLoggerFn: LoggerFn = defaultLoggerFn;
 
-        return `[${opts.timestamp()}] [${opts.level.toUpperCase()}] ${opts.message || ""} ${
-          meta ? "\n\t" + meta : ""
-        }`.trim();
-      }
-    })
-  ]
-});
+export function setLoggerFn(fn: LoggerFn) {
+  currentLoggerFn = fn;
+}
+
+interface ILoggerObj {
+  [key: string]: (msg: string) => void;
+}
+
+/**
+ * The exported logger object's properties can be called to dynamically log with the specified level.
+ * For example, calling logger.warn() would log a message with the level "warn".
+ */
+export const logger: ILoggerObj = new Proxy(
+  {},
+  {
+    get(obj, prop) {
+      return (msg: string) => {
+        currentLoggerFn(prop as string, msg);
+      };
+    }
+  }
+);

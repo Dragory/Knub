@@ -20,7 +20,8 @@
     "outDir": "dist",
     "sourceMap": true,
     "declaration": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "esModuleInterop": true
   },
   "include": [
     "src/**/*"
