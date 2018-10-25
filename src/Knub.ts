@@ -136,7 +136,7 @@ export class Knub extends EventEmitter {
 
     const loadErrorTimeout = setTimeout(() => {
       logger.info("This is taking unusually long. Check the token?");
-    }, 10 * 1000);
+    }, 30 * 1000);
 
     this.bot.on("ready", async () => {
       clearTimeout(loadErrorTimeout);
