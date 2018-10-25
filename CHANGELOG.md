@@ -1,3 +1,10 @@
+# 12.0.0
+* Event handlers in plugins are now run sequentially, waiting for any promises returned to resolve before running the next handler
+  * If you don't need this behaviour, simply don't return a promise from your event/command handler
+  * This also affects commands, though note that commands were already run sequentially before this update - this change just makes it so commands *across different plugins* also run sequentially.
+* Increase startup timeout warning delay from 10sec to 30sec
+  * I.e. the "This is taking unusually long. Check the token?" warning
+
 # 11.1.0
 * Add `Plugin.hasPlugin()` and `Plugin.getPlugin()` for easier and more standardized interoperability between plugins
 
