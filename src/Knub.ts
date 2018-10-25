@@ -10,6 +10,8 @@ import { GlobalPlugin } from "./GlobalPlugin";
 import EventEmitter from "events";
 import { IGlobalConfig, IGuildConfig, IPluginOptions } from "./configInterfaces";
 import { mergeConfig } from "./configUtils";
+import { ArbitraryFunction } from "./utils";
+import { Queue } from "./Queue";
 
 const at = require("lodash.at");
 
@@ -63,13 +65,16 @@ const defaultKnubParams: IKnubArgs = {
 
 export class Knub extends EventEmitter {
   protected bot: Client;
-  protected globalPlugins: IGlobalPluginMap;
-  protected loadedGlobalPlugins: Map<string, GlobalPlugin>;
-  protected plugins: IPluginMap;
+  protected globalPlugins: IGlobalPluginMap = new Map();
+  protected loadedGlobalPlugins: Map<string, GlobalPlugin> = new Map();
+  protected plugins: IPluginMap = new Map();
   protected options: IOptions;
   protected djsOptions: any;
-  protected guilds: Map<string, IGuildData>;
+  protected guilds: Map<string, IGuildData> = new Map();
   protected globalConfig: IGlobalConfig;
+
+  protected discordEventListeners: Map<string, ArbitraryFunction[]> = new Map();
+  protected discordEventListenerQueue: Queue = new Queue();
 
   constructor(client: Client, userArgs: IKnubArgs) {
     super();
@@ -78,13 +83,10 @@ export class Knub extends EventEmitter {
 
     this.bot = client;
 
-    this.globalPlugins = new Map();
-    this.loadedGlobalPlugins = new Map();
     Object.keys(args.globalPlugins).forEach(key => {
       this.globalPlugins.set(key, args.globalPlugins[key]);
     });
 
-    this.plugins = new Map();
     Object.keys(args.plugins).forEach(key => {
       this.plugins.set(key, args.plugins[key]);
     });
@@ -121,8 +123,6 @@ export class Knub extends EventEmitter {
     if (this.options.logFn) {
       setLoggerFn(this.options.logFn);
     }
-
-    this.guilds = new Map();
   }
 
   public async run(): Promise<void> {
@@ -353,5 +353,31 @@ export class Knub extends EventEmitter {
 
   public getGlobalConfig() {
     return this.globalConfig;
+  }
+
+  protected initDiscordEventListener(eventName) {
+    this.discordEventListeners.set(eventName, []);
+    this.bot.on(eventName, (...args) => this.runDiscordEventListeners(eventName, args));
+  }
+
+  protected runDiscordEventListeners(eventName: string, args: any[]) {
+    this.discordEventListeners.get(eventName).forEach(listener => {
+      this.discordEventListenerQueue.add(() => listener(...args));
+    });
+  }
+
+  public addDiscordEventListener(eventName: string, listener: ArbitraryFunction) {
+    if (!this.discordEventListeners.has(eventName)) {
+      this.initDiscordEventListener(eventName);
+    }
+
+    this.discordEventListeners.get(eventName).push(listener);
+  }
+
+  public removeDiscordEventListener(eventName: string, listener: ArbitraryFunction) {
+    if (!this.discordEventListeners.has(eventName)) return;
+
+    const listeners = this.discordEventListeners.get(eventName);
+    listeners.splice(listeners.indexOf(listener), 1);
   }
 }

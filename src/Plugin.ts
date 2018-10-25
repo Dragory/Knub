@@ -3,14 +3,7 @@ const at = require("lodash.at");
 
 import { CommandManager } from "./CommandManager";
 import { IGuildConfig, IPermissionLevelDefinitions, IPluginOptions } from "./configInterfaces";
-import {
-  CallbackFunctionVariadic,
-  errorEmbed,
-  eventToChannel,
-  eventToGuild,
-  eventToMessage,
-  eventToUser
-} from "./utils";
+import { ArbitraryFunction, errorEmbed, eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./utils";
 import { CommandValueTypeError, convertArgumentTypes, getDefaultPrefix, runCommand } from "./commandUtils";
 import { Knub } from "./Knub";
 import { getMatchingPluginOptions, hasPermission, IMatchParams, mergeConfig } from "./configUtils";
@@ -234,7 +227,7 @@ export class Plugin {
    */
   protected on(
     eventName: string,
-    listener: CallbackFunctionVariadic,
+    listener: ArbitraryFunction,
     restrict: string = "guild",
     ignoreSelf: boolean = true,
     requiredPermission: string = null
@@ -282,11 +275,11 @@ export class Plugin {
       }
 
       // Call the original listener
-      listener(...args);
+      await listener(...args);
     };
 
     // The listener is registered on both the DJS client and our own Map that we use to unregister listeners on unload
-    this.bot.on(eventName, wrappedListener);
+    this.knub.addDiscordEventListener(eventName, wrappedListener);
     this.eventHandlers.get(eventName).push(wrappedListener);
 
     // Return a function to clear the listener
@@ -300,8 +293,8 @@ export class Plugin {
   /**
    * Removes the given listener from the event
    */
-  protected off(eventName: string, listener: CallbackFunctionVariadic): void {
-    this.bot.removeListener(eventName, listener);
+  protected off(eventName: string, listener: ArbitraryFunction): void {
+    this.knub.removeDiscordEventListener(eventName, listener);
 
     if (this.eventHandlers.has(eventName)) {
       const thisEventNameHandlers = this.eventHandlers.get(eventName);
@@ -315,7 +308,7 @@ export class Plugin {
   protected clearEventHandlers(): void {
     for (const [eventName, listeners] of this.eventHandlers) {
       listeners.forEach(listener => {
-        this.bot.removeListener(eventName, listener);
+        this.knub.removeDiscordEventListener(eventName, listener);
       });
     }
 

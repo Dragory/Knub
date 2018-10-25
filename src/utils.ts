@@ -1,6 +1,6 @@
 import { Channel, Guild, Message, User } from "eris";
 
-export type CallbackFunctionVariadic = (...args: any[]) => void;
+export type ArbitraryFunction = (...args: any[]) => any;
 
 const userMentionRegex = /^<@!?([0-9]+)>$/;
 const channelMentionRegex = /^<@([0-9]+)>$/;
