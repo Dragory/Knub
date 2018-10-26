@@ -1,4 +1,4 @@
-export type LoggerFn = (msg: string, level: string) => void;
+export type LoggerFn = (level: string, msg: string) => void;
 
 const defaultLoggerFn: LoggerFn = (level: string, msg: string) => {
   console.log(`[${level.toUpperCase()}] ${msg}`); // tslint:disable-line
