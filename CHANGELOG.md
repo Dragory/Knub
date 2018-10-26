@@ -1,3 +1,6 @@
+# 12.1.1
+* Fix type definition for LoggerFn (`msg, level` -> `level, msg`)
+
 # 12.1.0
 * Add `nonBlocking()` decorator (accessible through the same decorator object as `command` and `event`) that makes the event listener/command handler non-blocking (see [12.0.0](#1200) below)
 
