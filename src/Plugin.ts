@@ -75,14 +75,20 @@ export class Plugin {
 
       const requiredPermission = Reflect.getMetadata("requiredPermission", this, prop);
 
+      let blocking = Reflect.getMetadata("blocking", this, prop);
+      blocking = blocking == null ? true : Boolean(blocking);
+
       // Command handlers from decorators
       const metaCommands = Reflect.getMetadata("commands", this, prop);
       if (metaCommands) {
         for (const metaCommand of metaCommands) {
           const opts = metaCommand.options || {};
+
           if (requiredPermission && requiredPermission.permission) {
             opts.requiredPermission = requiredPermission.permission;
           }
+
+          opts.blocking = blocking;
 
           this.commands.add(metaCommand.command, metaCommand.parameters, value.bind(this), opts);
         }
@@ -97,7 +103,8 @@ export class Plugin {
             value.bind(this),
             metaEvent.restrict || undefined,
             metaEvent.ignoreSelf || undefined,
-            requiredPermission && requiredPermission.permission
+            requiredPermission && requiredPermission.permission,
+            blocking
           );
         }
       }
@@ -230,7 +237,8 @@ export class Plugin {
     listener: ArbitraryFunction,
     restrict: string = "guild",
     ignoreSelf: boolean = true,
-    requiredPermission: string = null
+    requiredPermission: string = null,
+    blocking: boolean = true
   ): () => void {
     if (!this.eventHandlers.has(eventName)) {
       this.eventHandlers.set(eventName, []);
@@ -241,7 +249,7 @@ export class Plugin {
     // 2) That we ignore our own events if ignoreSelf is true
     // 3) That the event's guild (if present) matches this plugin's guild
     // 4) If the event has a message, that the message author has the permissions to trigger events
-    const wrappedListener = async (...args: any[]) => {
+    const wrappedListener = (...args: any[]) => {
       const guild = eventToGuild[eventName] ? eventToGuild[eventName](...args) : null;
       const user = eventToUser[eventName] ? eventToUser[eventName](...args) : null;
       const channel = eventToChannel[eventName] ? eventToChannel[eventName](...args) : null;
@@ -275,7 +283,16 @@ export class Plugin {
       }
 
       // Call the original listener
-      await listener(...args);
+      if (blocking) {
+        // BLOCKING: Since the event listener queue waits for the promise to resolve,
+        // return the promise from the listener
+        return listener(...args);
+      } else {
+        // NON-BLOCKING: Return nothing, meaning the queue will just run listener()
+        // and continue to the next listener immediately
+        listener(...args);
+        return;
+      }
     };
 
     // The listener is registered on both the DJS client and our own Map that we use to unregister listeners on unload
@@ -414,15 +431,27 @@ export class Plugin {
       }
 
       // Run the command
-      try {
-        await runCommand(command, msg, this.bot);
-      } catch (e) {
-        if (e instanceof CommandValueTypeError) {
-          msg.channel.createMessage({ embed: errorEmbed(e.message) });
-          continue;
-        } else {
-          throw e;
+      if (command.commandDefinition.options.blocking) {
+        // BLOCKING: Wait for this command handler to finish before continuing to the next one
+        try {
+          await runCommand(command, msg, this.bot);
+        } catch (e) {
+          if (e instanceof CommandValueTypeError) {
+            msg.channel.createMessage({ embed: errorEmbed(e.message) });
+            continue;
+          } else {
+            throw e;
+          }
         }
+      } else {
+        // NON-BLOCKING: Run the command handler and continue to the next one immediately
+        runCommand(command, msg, this.bot).catch(e => {
+          if (e instanceof CommandValueTypeError) {
+            msg.channel.createMessage({ embed: errorEmbed(e.message) });
+          } else {
+            throw e;
+          }
+        });
       }
     }
   }

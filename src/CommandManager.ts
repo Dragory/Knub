@@ -28,6 +28,7 @@ export interface ICommandOptions {
   requiredPermission?: string;
   allowDMs?: boolean;
   filters?: CommandFilter[];
+  blocking?: boolean;
 }
 
 export interface ICommandDefinition {
@@ -143,6 +144,11 @@ export class CommandManager {
         hadCatchAll = true;
       }
     });
+
+    // All commands are blocking by default
+    if (options.blocking == null) {
+      options.blocking = true;
+    }
 
     // Actually add the command to the manager
     const definition: ICommandDefinition = {

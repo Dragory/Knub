@@ -35,8 +35,18 @@ function PermissionDecorator(permission: string) {
   };
 }
 
+/**
+ * PLUGINS: Turns the event listener/command into non-blocking
+ */
+function NonBlockingDecorator() {
+  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+    Reflect.defineMetadata("blocking", false, target, propertyKey);
+  };
+}
+
 export default {
   command: CommandDecorator,
   event: OnEventDecorator,
-  permission: PermissionDecorator
+  permission: PermissionDecorator,
+  nonBlocking: NonBlockingDecorator
 };
