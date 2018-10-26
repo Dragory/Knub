@@ -1,3 +1,6 @@
+# 12.1.0
+* Add `nonBlocking()` decorator (accessible through the same decorator object as `command` and `event`) that makes the event listener/command handler non-blocking (see [12.0.0](#1200) below)
+
 # 12.0.0
 * Event handlers in plugins are now run sequentially, waiting for any promises returned to resolve before running the next handler
   * If you don't need this behaviour, simply don't return a promise from your event/command handler
