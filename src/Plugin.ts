@@ -179,6 +179,20 @@ export class Plugin {
     return typeof value !== "undefined" ? value : def;
   }
 
+  protected configValueForMemberIdAndChannelId(memberId: string, channelId: string, path: string, def: any = null) {
+    const guildId = this.bot.channelGuildMap[channelId];
+    const guild = this.bot.guilds.get(guildId);
+    const member = guild.members.get(memberId);
+    const level = member ? this.getMemberLevel(member) : null;
+
+    return this.configValue(path, def, {
+      level,
+      userId: memberId,
+      channelId,
+      memberRoles: member ? member.roles : []
+    });
+  }
+
   protected configValueForMsg(msg: Message, path: string, def: any = null) {
     const level = msg.member ? this.getMemberLevel(msg.member) : null;
     return this.configValue(path, def, {
