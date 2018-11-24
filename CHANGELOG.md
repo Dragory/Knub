@@ -1,3 +1,6 @@
+# 12.2.1
+* Fix falsy ignoreSelf and restrict params being ignored in `event` decorator
+
 # 12.2.0
 * Add `Plugin.configValueForMemberIdAndChannelId()`
 
