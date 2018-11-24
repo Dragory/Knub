@@ -1,3 +1,6 @@
+# 12.2.2
+* Fix `"messageDeleteBulk"` event being swallowed when restricted to `"guild"`
+
 # 12.2.1
 * Fix falsy ignoreSelf and restrict params being ignored in `event` decorator
 

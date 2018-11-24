@@ -100,7 +100,7 @@ export const eventToGuild: IEventToGuild = {
   guildRoleUpdate: id,
   messageCreate: m => m.channel.guild,
   messageDelete: m => m.channel.guild,
-  messageDeleteBulk: c => c[0] && c[0].channel && c[0].channel.guild_id,
+  messageDeleteBulk: c => c[0] && c[0].channel && c[0].channel.guild,
   messageReactionAdd: m => m.channel.guild,
   messageReactionRemove: m => m.channel.guild,
   messageReactionRemoveAll: m => m.channel.guild,
