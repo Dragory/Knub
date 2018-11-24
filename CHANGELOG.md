@@ -1,3 +1,6 @@
+# 12.2.0
+* Add `Plugin.configValueForMemberIdAndChannelId()`
+
 # 12.1.1
 * Fix type definition for LoggerFn (`msg, level` -> `level, msg`)
 
