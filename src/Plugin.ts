@@ -101,8 +101,8 @@ export class Plugin {
           this.on(
             metaEvent.eventName,
             value.bind(this),
-            metaEvent.restrict || undefined,
-            metaEvent.ignoreSelf || undefined,
+            metaEvent.restrict != null ? metaEvent.restrict : undefined,
+            metaEvent.ignoreSelf != null ? metaEvent.ignoreSelf : undefined,
             requiredPermission && requiredPermission.permission,
             blocking
           );
