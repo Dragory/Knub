@@ -1,3 +1,10 @@
+# 13.1.0
+* Added the following utility functions to resolve Eris/Discord objects from strings that contain IDs, mentions, etc:
+  * utils.resolveUser
+  * utils.resolveMember
+  * utils.resolveChannel
+  * utils.resolveRole
+
 # 13.0.1
 * Fixed channel mention matching. Match snowflakes more strictly.
 
