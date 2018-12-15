@@ -3,13 +3,14 @@ import { Channel, Guild, Message, User } from "eris";
 export type ArbitraryFunction = (...args: any[]) => any;
 
 const userMentionRegex = /^<@!?([0-9]+)>$/;
-const channelMentionRegex = /^<@([0-9]+)>$/;
+const channelMentionRegex = /^<#([0-9]+)>$/;
 const roleMentionRegex = /^<&([0-9]+)>$/;
+const snowflakeRegex = /^[1-9][0-9]{5,19}$/;
 
 export function getUserId(str: string) {
   str = str.trim();
 
-  if (str.match(/^[0-9]+$/)) {
+  if (str.match(snowflakeRegex)) {
     // User ID
     return str;
   } else {
@@ -25,7 +26,7 @@ export function getUserId(str: string) {
 export function getChannelId(str: string) {
   str = str.trim();
 
-  if (str.match(/^[0-9]+$/)) {
+  if (str.match(snowflakeRegex)) {
     // Channel ID
     return str;
   } else {
@@ -41,7 +42,7 @@ export function getChannelId(str: string) {
 export function getRoleId(str: string) {
   str = str.trim();
 
-  if (str.match(/^[0-9]+$/)) {
+  if (str.match(snowflakeRegex)) {
     // Role ID
     return str;
   } else {
