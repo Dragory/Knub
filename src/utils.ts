@@ -1,4 +1,4 @@
-import { Channel, Guild, Message, User } from "eris";
+import { Client, Channel, Guild, Message, User } from "eris";
 
 export type ArbitraryFunction = (...args: any[]) => any;
 
@@ -53,6 +53,26 @@ export function getRoleId(str: string) {
   }
 
   return null;
+}
+
+export function resolveUser(bot: Client, str: string) {
+  const userId = getUserId(str);
+  return userId && bot.users.get(userId);
+}
+
+export function resolveMember(guild: Guild, str: string) {
+  const memberId = getUserId(str);
+  return memberId && guild.members.get(memberId);
+}
+
+export function resolveChannel(guild: Guild, str: string) {
+  const channelId = getChannelId(str);
+  return channelId && guild.channels.get(channelId);
+}
+
+export function resolveRole(guild: Guild, str: string) {
+  const roleId = getRoleId(str);
+  return roleId && guild.roles.get(roleId);
 }
 
 export function errorEmbed(str: string) {
