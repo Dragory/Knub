@@ -1,3 +1,6 @@
+# 13.0.1
+* Fixed channel mention matching. Match snowflakes more strictly.
+
 # 13.0.0
 * Commands no longer match when extra arguments are present. Rest and catch-all parameters can still be used as normal.
 
