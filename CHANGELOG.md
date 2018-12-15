@@ -1,3 +1,6 @@
+# 13.0.0
+* Commands no longer match when extra arguments are present. Rest and catch-all parameters can still be used as normal.
+
 # 12.2.2
 * Fix `"messageDeleteBulk"` event being swallowed when restricted to `"guild"`
 
