@@ -271,42 +271,51 @@ export class CommandManager {
     const parsedArguments = this.parseArguments(argStr);
     const args: IArgumentMap = {};
 
-    for (const [i, param] of command.parameters.entries()) {
-      const parsedArg = parsedArguments[i];
-      let value;
+    const hasRestOrCatchAll = command.parameters.some(p => p.rest || p.catchAll);
+    if (!hasRestOrCatchAll && parsedArguments.length > command.parameters.length) {
+      error = new CommandMatchError(
+        `Too many arguments (found ${parsedArguments.length}, expected ${command.parameters.length})`
+      );
+    }
 
-      if (param.rest) {
-        const restArgs = parsedArguments.slice(i);
-        if (param.required && restArgs.length === 0) {
-          error = new CommandMatchError(`Missing argument: ${param.name}`);
+    if (error == null) {
+      for (const [i, param] of command.parameters.entries()) {
+        const parsedArg = parsedArguments[i];
+        let value;
+
+        if (param.rest) {
+          const restArgs = parsedArguments.slice(i);
+          if (param.required && restArgs.length === 0) {
+            error = new CommandMatchError(`Missing argument: ${param.name}`);
+            break;
+          }
+
+          args[param.name] = {
+            parameter: param,
+            value: restArgs.map(a => a.value)
+          };
+
           break;
+        } else if (parsedArg == null || parsedArg.value === "") {
+          if (param.required) {
+            error = new CommandMatchError(`Missing argument: ${param.name}`);
+            break;
+          } else {
+            value = param.def;
+          }
+        } else {
+          value = parsedArg.value;
+        }
+
+        if (param.catchAll && parsedArg) {
+          value = [...argStr].slice(parsedArg.index).join("");
         }
 
         args[param.name] = {
           parameter: param,
-          value: restArgs.map(a => a.value)
+          value
         };
-
-        break;
-      } else if (parsedArg == null || parsedArg.value === "") {
-        if (param.required) {
-          error = new CommandMatchError(`Missing argument: ${param.name}`);
-          break;
-        } else {
-          value = param.def;
-        }
-      } else {
-        value = parsedArg.value;
       }
-
-      if (param.catchAll && parsedArg) {
-        value = [...argStr].slice(parsedArg.index).join("");
-      }
-
-      args[param.name] = {
-        parameter: param,
-        value
-      };
     }
 
     return {
