@@ -4,7 +4,7 @@ const at = require("lodash.at");
 import { CommandManager } from "./CommandManager";
 import { IGuildConfig, IPermissionLevelDefinitions, IPluginOptions } from "./configInterfaces";
 import { ArbitraryFunction, errorEmbed, eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./utils";
-import { CommandValueTypeError, convertArgumentTypes, getDefaultPrefix, runCommand } from "./commandUtils";
+import { convertArgumentTypes, getDefaultPrefix, runCommand } from "./commandUtils";
 import { Knub } from "./Knub";
 import { getMatchingPluginOptions, hasPermission, IMatchParams, mergeConfig } from "./configUtils";
 
@@ -16,8 +16,11 @@ export class Plugin {
   public guildId: string;
   public guild: Guild;
 
-  // Internal name for the plugin
-  public pluginName: string;
+  // Internal name for the plugin - REQUIRED
+  public static pluginName: string;
+
+  // Actual plugin name when the plugin was loaded. This is the same as pluginName unless overridden elsewhere.
+  public runtimePluginName: string;
 
   // Plugin name and description for e.g. dashboards
   public name: string;
@@ -38,14 +41,14 @@ export class Plugin {
     guildId: string,
     guildConfig: IGuildConfig,
     pluginOptions: IPluginOptions,
-    pluginName: string,
+    runtimePluginName: string,
     knub: Knub
   ) {
     this.bot = bot;
     this.guildId = guildId;
     this.guildConfig = guildConfig;
     this.pluginOptions = pluginOptions;
-    this.pluginName = pluginName;
+    this.runtimePluginName = runtimePluginName;
 
     this.knub = knub;
 
