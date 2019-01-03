@@ -1,3 +1,12 @@
+# 14.0.0
+* Plugins and global plugins are now listed in an array instead of an object in the Knub constructor.
+* Plugins are now expected to specify their own static `pluginName` property.
+  This can be overridden by the user, however, so if your plugin needs to access its own name at runtime for whatever
+  reason, the new `runtimePluginName` property should be used.
+* Only the first matched command that passes all checks is run for any message. This allows e.g. having both a wildcard
+  and hardcoded command parameters simultaneously by putting the hardcoded parameter in the command name itself and
+  declaring it before the wildcard command.
+
 # 13.1.0
 * Added the following utility functions to resolve Eris/Discord objects from strings that contain IDs, mentions, etc:
   * utils.resolveUser
