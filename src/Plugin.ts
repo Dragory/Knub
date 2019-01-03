@@ -375,10 +375,14 @@ export class Plugin {
 
     const prefix = this.guildConfig.prefix || getDefaultPrefix(this.bot);
     const matchedCommands = this.commands.findCommandsInString(msg.content, prefix);
-    let onlyErrors = true;
 
-    // Run each matching command sequentially
-    for (const [i, command] of matchedCommands.entries()) {
+    // NOTE: "Variable initializer is redundant" inspection in WebStorm is incorrect here
+    let onlyErrors = true;
+    let lastError;
+
+    // Attempt to run each matching command.
+    // Only one command - the first one that passes all checks below - is actually run.
+    for (const command of matchedCommands) {
       // Make sure this command is supposed to be run here
       if (msg.channel instanceof PrivateChannel) {
         if (!command.commandDefinition.options.allowDMs) {
@@ -414,20 +418,11 @@ export class Plugin {
         }
       }
 
-      // Check for errors
+      // Keep track of errors
       if (command.error) {
-        // Only post errors if it's the last matched command and there have only been errors so far
-        // in the set of matched commands. This way if there are multiple "overlapping" commands,
-        // an error won't be reported when some of them match, nor will there be tons of spam if
-        // all of them have errors.
-        if (onlyErrors && i === matchedCommands.length - 1) {
-          msg.channel.createMessage({ embed: errorEmbed(command.error.message) });
-        }
-
+        lastError = command.error;
         continue;
       }
-
-      onlyErrors = false;
 
       // Run custom filters, if any
       let filterFailed = false;
@@ -441,32 +436,28 @@ export class Plugin {
       }
 
       if (filterFailed) {
+        lastError = null;
         continue;
       }
 
       // Run the command
       if (command.commandDefinition.options.blocking) {
-        // BLOCKING: Wait for this command handler to finish before continuing to the next one
-        try {
-          await runCommand(command, msg, this.bot);
-        } catch (e) {
-          if (e instanceof CommandValueTypeError) {
-            msg.channel.createMessage({ embed: errorEmbed(e.message) });
-            continue;
-          } else {
-            throw e;
-          }
-        }
+        // BLOCKING: Wait for this command handler to finish before continuing
+        await runCommand(command, msg, this.bot);
       } else {
-        // NON-BLOCKING: Run the command handler and continue to the next one immediately
-        runCommand(command, msg, this.bot).catch(e => {
-          if (e instanceof CommandValueTypeError) {
-            msg.channel.createMessage({ embed: errorEmbed(e.message) });
-          } else {
-            throw e;
-          }
-        });
+        // NON-BLOCKING: Run the command handler and continue other processing immediately
+        runCommand(command, msg, this.bot);
       }
+
+      // A command was run: don't continue trying to run the rest of the matched commands
+      onlyErrors = false;
+      break;
+    }
+
+    // Only post the last error in the matched set of commands. This way if there are multiple "overlapping" commands,
+    // an error won't be reported when some of them match, nor will there be tons of spam if all of them have errors.
+    if (onlyErrors && lastError) {
+      msg.channel.createMessage({ embed: errorEmbed(lastError.message) });
     }
   }
 }
