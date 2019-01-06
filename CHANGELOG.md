@@ -1,3 +1,10 @@
+# 15.0.0
+* Add `Plugin.hasPermission()`  
+  This is also used internally to check for command/event permissions, so it should now be easy to replicate that
+  functionality in custom message/event handlers and similar use cases.
+* Allow overriding all known surrounding/nested config/permission values by specifying a config/permission value with
+  the key `*`. Useful for e.g. setting all permissions at once in an override.
+
 # 14.0.0
 * Plugins and global plugins are now listed in an array instead of an object in the Knub constructor.
 * Plugins are now expected to specify their own static `pluginName` property.
