@@ -8,6 +8,14 @@ import { convertArgumentTypes, getDefaultPrefix, runCommand } from "./commandUti
 import { Knub } from "./Knub";
 import { getMatchingPluginOptions, hasPermission, IMatchParams, mergeConfig } from "./configUtils";
 
+export interface IHasPermissionParams {
+  userId?: string;
+  channelId?: string;
+
+  member?: Member;
+  message?: Message;
+}
+
 /**
  * Base class for Knub plugins
  */
@@ -246,6 +254,24 @@ export class Plugin {
     return 0;
   }
 
+  protected hasPermission(requiredPermission: string, params: IHasPermissionParams) {
+    const message = params.message;
+    const userId = (message && message.author.id) || (params.member && params.member.id) || params.userId;
+    const channelId = (message && message.channel.id) || params.channelId;
+    const member = (message && message.member) || params.member;
+
+    const level = member ? this.getMemberLevel(member) : null;
+    const mergedOptions = this.getMergedOptions();
+    const matchParams: IMatchParams = {
+      level,
+      userId,
+      channelId,
+      memberRoles: member && member.roles
+    };
+
+    return hasPermission(requiredPermission, mergedOptions, matchParams);
+  }
+
   /**
    * Adds a guild-specific event listener for the given event
    */
@@ -285,16 +311,9 @@ export class Plugin {
 
       // Permission check
       if (requiredPermission) {
-        const level = message && message.member ? this.getMemberLevel(message.member) : null;
-        const mergedOptions = this.getMergedOptions();
-        const matchParams: IMatchParams = {
-          level,
-          userId: user && user.id,
-          channelId: channel && channel.id,
-          memberRoles: message.member && message.member.roles
-        };
-
-        if (!hasPermission(requiredPermission, mergedOptions, matchParams)) {
+        const userId = user && user.id;
+        const channelId = channel && channel.id;
+        if (!this.hasPermission(requiredPermission, { message, userId, channelId })) {
           return;
         }
       }
@@ -397,19 +416,8 @@ export class Plugin {
 
       // Check permissions
       const requiredPermission = command.commandDefinition.options.requiredPermission;
-      if (requiredPermission) {
-        const mergedOptions = this.getMergedOptions();
-        const level = msg.member && this.getMemberLevel(msg.member);
-        const matchParams: IMatchParams = {
-          level,
-          userId: msg.author.id,
-          channelId: msg.channel.id,
-          memberRoles: msg.member && msg.member.roles
-        };
-
-        if (!hasPermission(requiredPermission, mergedOptions, matchParams)) {
-          continue;
-        }
+      if (requiredPermission && !this.hasPermission(requiredPermission, { message: msg })) {
+        continue;
       }
 
       // Convert arg types
