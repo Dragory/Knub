@@ -28,10 +28,28 @@ export interface IMatchParams {
   channelId?: string;
 }
 
+function setAllPropsRecursively<T>(target: T, newValue: any): T {
+  for (const [key, value] of Object.entries(target)) {
+    if (key === "*") continue;
+
+    if (typeof value === "object" && value != null && !Array.isArray(value)) {
+      target[key] = setAllPropsRecursively(value, newValue);
+    } else {
+      target[key] = newValue;
+    }
+  }
+
+  return target;
+}
+
 /**
  * Basic deep merge with support for specifying merge "rules" with key prefixes.
  * For example, prefixing the key of a property containing an array with "+" would concat the two arrays, while
- * a prefix of "-" would calculate the difference ("remove items")
+ * a prefix of "-" would calculate the difference ("remove items").
+ *
+ * Using '*' as a key will set that value to all known properties in the config at that time.
+ * This is mostly used for permissions.
+ *
  * @param {T} target
  * @param {T} sources
  * @returns {T}
@@ -41,6 +59,11 @@ export function mergeConfig<T>(target: T, ...sources: T[]): T {
     for (const [rawKey, value] of Object.entries(source)) {
       const defaultMod = Array.isArray(value) ? "=" : "+";
       const [mod, key] = splitMod(rawKey, defaultMod);
+
+      if (key === "*") {
+        setAllPropsRecursively(target, value);
+        continue;
+      }
 
       if (mod === "+") {
         if (Array.isArray(value)) {
