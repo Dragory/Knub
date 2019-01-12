@@ -1,3 +1,7 @@
+# 15.0.1
+* Add safeguard for unknown channel when converting typingStart event to a guild
+* Remove typingStop from utils.eventToGuild (wasn't being used anymore)
+
 # 15.0.0
 * Add `Plugin.hasPermission()`  
   This is also used internally to check for command/event permissions, so it should now be easy to replicate that
