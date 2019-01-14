@@ -26,3 +26,5 @@ export {
 } from "./configInterfaces";
 
 export { waitForReaction, waitForReply, reply } from "./helpers";
+
+export { PluginError } from "./PluginError";

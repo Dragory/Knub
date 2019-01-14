@@ -7,6 +7,7 @@ import { ArbitraryFunction, errorEmbed, eventToChannel, eventToGuild, eventToMes
 import { convertArgumentTypes, getDefaultPrefix, runCommand } from "./commandUtils";
 import { Knub } from "./Knub";
 import { getMatchingPluginOptions, hasPermission, IMatchParams, mergeConfig } from "./configUtils";
+import { PluginError } from "./PluginError";
 
 export interface IHasPermissionParams {
   userId?: string;
@@ -256,9 +257,8 @@ export class Plugin {
 
   protected hasPermission(requiredPermission: string, params: IHasPermissionParams) {
     const message = params.message;
-    const userId = (message && message.author && message.author.id)
-      || (params.member && params.member.id)
-      || params.userId;
+    const userId =
+      (message && message.author && message.author.id) || (params.member && params.member.id) || params.userId;
     const channelId = (message && message.channel && message.channel.id) || params.channelId;
     const member = (message && message.member) || params.member;
 
@@ -294,7 +294,7 @@ export class Plugin {
     // 2) That we ignore our own events if ignoreSelf is true
     // 3) That the event's guild (if present) matches this plugin's guild
     // 4) If the event has a message, that the message author has the permissions to trigger events
-    const wrappedListener = (...args: any[]) => {
+    const wrappedListener = async (...args: any[]): Promise<void> => {
       const guild = eventToGuild[eventName] ? eventToGuild[eventName](...args) : null;
       const user = eventToUser[eventName] ? eventToUser[eventName](...args) : null;
       const channel = eventToChannel[eventName] ? eventToChannel[eventName](...args) : null;
@@ -322,14 +322,21 @@ export class Plugin {
 
       // Call the original listener
       if (blocking) {
-        // BLOCKING: Since the event listener queue waits for the promise to resolve,
-        // return the promise from the listener
-        return listener(...args);
+        // BLOCKING: Wait for the listener to finish
+        try {
+          await listener(...args);
+        } catch (err) {
+          throw new PluginError(err);
+        }
       } else {
-        // NON-BLOCKING: Return nothing, meaning the queue will just run listener()
-        // and continue to the next listener immediately
-        listener(...args);
-        return;
+        // NON-BLOCKING: Run the listener in another async function, returning immediately from here
+        (async () => {
+          try {
+            await listener(...args);
+          } catch (err) {
+            throw new PluginError(err);
+          }
+        })();
       }
     };
 
