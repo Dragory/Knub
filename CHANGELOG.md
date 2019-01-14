@@ -1,3 +1,7 @@
+# 15.1.0
+* Errors in plugin event handlers and commands are now thrown as a `PluginError`
+* Fix error when resolving user id from an unknown message in `Plugin.hasPermission`
+
 # 15.0.1
 * Add safeguard for unknown channel when converting typingStart event to a guild
 * Remove typingStop from utils.eventToGuild (wasn't being used anymore)
