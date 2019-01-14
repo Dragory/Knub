@@ -256,8 +256,10 @@ export class Plugin {
 
   protected hasPermission(requiredPermission: string, params: IHasPermissionParams) {
     const message = params.message;
-    const userId = (message && message.author.id) || (params.member && params.member.id) || params.userId;
-    const channelId = (message && message.channel.id) || params.channelId;
+    const userId = (message && message.author && message.author.id)
+      || (params.member && params.member.id)
+      || params.userId;
+    const channelId = (message && message.channel && message.channel.id) || params.channelId;
     const member = (message && message.member) || params.member;
 
     const level = member ? this.getMemberLevel(member) : null;
