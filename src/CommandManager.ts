@@ -294,7 +294,7 @@ export class CommandManager {
 
     if (command.config.options) {
       // Match --options and -o
-      for (const [i, arg] of parsedArguments.entries()) {
+      for (const arg of Array.from(parsedArguments)) {
         const optMatch = arg.value.match(optMatchRegex);
         if (optMatch) {
           const optName = optMatch[1];
@@ -310,7 +310,7 @@ export class CommandManager {
             option: opt,
             value: optValue
           };
-          parsedArguments.splice(i, 1);
+          parsedArguments.splice(parsedArguments.indexOf(arg), 1);
         }
       }
 

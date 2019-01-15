@@ -180,4 +180,22 @@ describe("CommandManager", () => {
     expect(commands[0].opts.test).to.not.be.an("undefined");
     expect(commands[0].opts.test.value).to.equal("bar");
   });
+
+  it("should match multiple options", () => {
+    const manager = new CommandManager();
+    const noop = () => {
+      /* empty */
+    };
+
+    manager.add("cmd", "", noop, {
+      options: [{ name: "foo", type: "string" }, { name: "bar", type: "string" }]
+    });
+
+    const commands = manager.findCommandsInString('!cmd --foo="a b c" --bar="d e f"', "!");
+    expect(commands.length).to.equal(1);
+    expect(commands[0].error).to.equal(null);
+    expect(Object.keys(commands[0].opts).length).to.equal(2);
+    expect(commands[0].opts.foo.value).to.equal("a b c");
+    expect(commands[0].opts.bar.value).to.equal("d e f");
+  });
 });
