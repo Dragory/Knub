@@ -18,6 +18,7 @@ export class CommandValueTypeError extends Error {}
  */
 export async function convertToType(value: any, type: string, msg: Message, bot: Client): Promise<any> {
   if (value == null) {
+    if (type === "bool" || type === "boolean") return true;
     return null;
   } else if (type === "string") {
     return String(value);
@@ -28,6 +29,8 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
     }
 
     return result;
+  } else if (type === "bool" || type === "boolean") {
+    return value !== "false" && value !== "0";
   } else if (type === "user") {
     const userId = getUserId(value);
     if (!userId) {
@@ -143,11 +146,6 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
 export async function convertOptionTypes(opts: IMatchedOptionMap, msg: Message, bot: Client) {
   for (const optName in opts) {
     const opt = opts[optName];
-
-    if (opt.value == null && !opt.option.required) {
-      continue;
-    }
-
     const type = (opt.option.type || "string").toLowerCase();
 
     try {
