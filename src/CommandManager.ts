@@ -292,31 +292,33 @@ export class CommandManager {
     const args: IArgumentMap = {};
     const opts: IMatchedOptionMap = {};
 
-    // Match --options and -o
-    for (const [i, arg] of parsedArguments.entries()) {
-      const optMatch = arg.value.match(optMatchRegex);
-      if (optMatch) {
-        const optName = optMatch[1];
-        const optValue = optMatch[2];
+    if (command.config.options) {
+      // Match --options and -o
+      for (const [i, arg] of parsedArguments.entries()) {
+        const optMatch = arg.value.match(optMatchRegex);
+        if (optMatch) {
+          const optName = optMatch[1];
+          const optValue = optMatch[2];
 
-        const opt = command.config.options.find(o => o.name === optName || o.shortcut === optName);
+          const opt = command.config.options.find(o => o.name === optName || o.shortcut === optName);
 
-        if (!opt) {
-          continue;
+          if (!opt) {
+            continue;
+          }
+
+          opts[opt.name] = {
+            option: opt,
+            value: optValue
+          };
+          parsedArguments.splice(i, 1);
         }
-
-        opts[opt.name] = {
-          option: opt,
-          value: optValue
-        };
-        parsedArguments.splice(i, 1);
       }
-    }
 
-    for (const opt of command.config.options) {
-      if (opt.required && opts[opt.name] == null) {
-        error = new CommandMatchError(`Missing option: --${opt.name}`);
-        break;
+      for (const opt of command.config.options) {
+        if (opt.required && opts[opt.name] == null) {
+          error = new CommandMatchError(`Missing option: --${opt.name}`);
+          break;
+        }
       }
     }
 
