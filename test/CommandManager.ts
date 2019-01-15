@@ -86,6 +86,7 @@ describe("CommandManager", () => {
     manager.add("addroles", "<roleStr:string>", noop);
 
     const result = manager.matchCommand("!", manager.commands[0], '!addrole 1234 ""');
+    expect(result.error).to.equal(null);
     expect(result.args.user.value).to.equal("1234");
     expect(result.args.arg2.value).to.equal("somedefault");
 
@@ -144,5 +145,39 @@ describe("CommandManager", () => {
     expect(commands[0].error).to.not.equal(null);
     // Second match (for the second command) has no errors since there were no required params
     expect(commands[1].error).to.equal(null);
+  });
+
+  it("should match basic options", () => {
+    const manager = new CommandManager();
+    const noop = () => {
+      /* empty */
+    };
+
+    manager.add("cmd", "<arg:string>", noop, {
+      options: [{ name: "test", type: "string" }]
+    });
+
+    const commands = manager.findCommandsInString("!cmd --test=foo argvalue", "!");
+    expect(commands.length).to.equal(1);
+    expect(commands[0].error).to.equal(null);
+    expect(commands[0].opts.test).to.not.be.an("undefined");
+    expect(commands[0].opts.test.value).to.equal("foo");
+  });
+
+  it("should match option shortcuts", () => {
+    const manager = new CommandManager();
+    const noop = () => {
+      /* empty */
+    };
+
+    manager.add("cmd", "", noop, {
+      options: [{ name: "test", type: "string", shortcut: "t" }]
+    });
+
+    const commands = manager.findCommandsInString("!cmd -t=bar", "!");
+    expect(commands.length).to.equal(1);
+    expect(commands[0].error).to.equal(null);
+    expect(commands[0].opts.test).to.not.be.an("undefined");
+    expect(commands[0].opts.test.value).to.equal("bar");
   });
 });

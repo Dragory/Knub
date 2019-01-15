@@ -4,7 +4,7 @@ const at = require("lodash.at");
 import { CommandManager } from "./CommandManager";
 import { IGuildConfig, IPermissionLevelDefinitions, IPluginOptions } from "./configInterfaces";
 import { ArbitraryFunction, errorEmbed, eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./utils";
-import { convertArgumentTypes, getDefaultPrefix, runCommand } from "./commandUtils";
+import { convertArgumentTypes, convertOptionTypes, getDefaultPrefix, runCommand } from "./commandUtils";
 import { Knub } from "./Knub";
 import { getMatchingPluginOptions, hasPermission, IMatchParams, mergeConfig } from "./configUtils";
 import { PluginError } from "./PluginError";
@@ -416,7 +416,7 @@ export class Plugin {
     for (const command of matchedCommands) {
       // Make sure this command is supposed to be run here
       if (msg.channel instanceof PrivateChannel) {
-        if (!command.commandDefinition.options.allowDMs) {
+        if (!command.commandDefinition.config.allowDMs) {
           return;
         }
       } else if (!(msg.channel instanceof GuildChannel)) {
@@ -424,7 +424,7 @@ export class Plugin {
       }
 
       // Check permissions
-      const requiredPermission = command.commandDefinition.options.requiredPermission;
+      const requiredPermission = command.commandDefinition.config.requiredPermission;
       if (requiredPermission && !this.hasPermission(requiredPermission, { message: msg })) {
         continue;
       }
@@ -438,6 +438,15 @@ export class Plugin {
         }
       }
 
+      // Convert opt types
+      if (!command.error) {
+        try {
+          await convertOptionTypes(command.opts, msg, this.bot);
+        } catch (e) {
+          command.error = e;
+        }
+      }
+
       // Keep track of errors
       if (command.error) {
         lastError = command.error;
@@ -446,8 +455,8 @@ export class Plugin {
 
       // Run custom filters, if any
       let filterFailed = false;
-      if (command.commandDefinition.options.filters) {
-        for (const filterFn of command.commandDefinition.options.filters) {
+      if (command.commandDefinition.config.filters) {
+        for (const filterFn of command.commandDefinition.config.filters) {
           if (!await filterFn(msg, command)) {
             filterFailed = true;
             break;
@@ -461,7 +470,7 @@ export class Plugin {
       }
 
       // Run the command
-      if (command.commandDefinition.options.blocking) {
+      if (command.commandDefinition.config.blocking) {
         // BLOCKING: Wait for this command handler to finish before continuing
         await runCommand(command, msg, this.bot);
       } else {

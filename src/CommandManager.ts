@@ -19,23 +19,40 @@ export interface IArgumentMap {
   [name: string]: IArgument;
 }
 
+export interface IMatchedOption {
+  option: ICommandOption;
+  value: any;
+}
+
+export interface IMatchedOptionMap {
+  [name: string]: IMatchedOption;
+}
+
 export type CommandHandler = (msg?: Message, args?: object, command?: IMatchedCommand) => void | Promise<void>;
 
 export type CommandFilter = (msg: Message, command: IMatchedCommand) => boolean | Promise<boolean>;
 
-export interface ICommandOptions {
+export interface ICommandOption {
+  name: string;
+  type: string;
+  required?: boolean;
+  shortcut?: string;
+}
+
+export interface ICommandConfig {
   description?: string;
   requiredPermission?: string;
   allowDMs?: boolean;
   filters?: CommandFilter[];
   blocking?: boolean;
+  options?: ICommandOption[];
 }
 
 export interface ICommandDefinition {
   trigger: RegExp;
   parameters: IParameter[];
   handler: CommandHandler;
-  options: ICommandOptions;
+  config: ICommandConfig;
 }
 
 export interface IMatchedCommand {
@@ -43,6 +60,7 @@ export interface IMatchedCommand {
   prefix: string;
   name: string;
   args: IArgumentMap;
+  opts: IMatchedOptionMap;
   error: CommandMatchError;
 }
 
@@ -62,6 +80,8 @@ const argDefinitionRegex = new RegExp(
 );
 
 const whitespace = /\s/;
+
+const optMatchRegex = /^--?(\S+?)(?:=(.+))?$/;
 
 const defaultParameter: IParameter = {
   name: null,
@@ -95,7 +115,7 @@ export class CommandManager {
     command: string | RegExp,
     parameters: string | IParameter[],
     handler: CommandHandler,
-    options: ICommandOptions = {}
+    config: ICommandConfig = {}
   ) {
     let trigger: RegExp;
 
@@ -146,8 +166,8 @@ export class CommandManager {
     });
 
     // All commands are blocking by default
-    if (options.blocking == null) {
-      options.blocking = true;
+    if (config.blocking == null) {
+      config.blocking = true;
     }
 
     // Actually add the command to the manager
@@ -155,7 +175,7 @@ export class CommandManager {
       trigger,
       parameters,
       handler,
-      options
+      config
     };
 
     this.commands.push(definition);
@@ -270,6 +290,35 @@ export class CommandManager {
     const argStr = match[3] || "";
     const parsedArguments = this.parseArguments(argStr);
     const args: IArgumentMap = {};
+    const opts: IMatchedOptionMap = {};
+
+    // Match --options and -o
+    for (const [i, arg] of parsedArguments.entries()) {
+      const optMatch = arg.value.match(optMatchRegex);
+      if (optMatch) {
+        const optName = optMatch[1];
+        const optValue = optMatch[2];
+
+        const opt = command.config.options.find(o => o.name === optName || o.shortcut === optName);
+
+        if (!opt) {
+          continue;
+        }
+
+        opts[opt.name] = {
+          option: opt,
+          value: optValue
+        };
+        parsedArguments.splice(i, 1);
+      }
+    }
+
+    for (const opt of command.config.options) {
+      if (opt.required && opts[opt.name] == null) {
+        error = new CommandMatchError(`Missing option: --${opt.name}`);
+        break;
+      }
+    }
 
     const hasRestOrCatchAll = command.parameters.some(p => p.rest || p.catchAll);
     if (!hasRestOrCatchAll && parsedArguments.length > command.parameters.length) {
@@ -323,6 +372,7 @@ export class CommandManager {
       prefix: match[1],
       name: match[2],
       args: error ? {} : args,
+      opts: error ? {} : opts,
       error
     };
   }

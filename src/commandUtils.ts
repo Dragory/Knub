@@ -1,6 +1,6 @@
 import { Client, Guild, GuildChannel, TextChannel, Message, PrivateChannel } from "eris";
 import { getChannelId, getRoleId, getUserId } from "./utils";
-import { IArgumentMap, IMatchedCommand } from "./CommandManager";
+import { IArgumentMap, IMatchedCommand, IMatchedOptionMap } from "./CommandManager";
 
 export function getDefaultPrefix(client: Client) {
   return `/<@!?${client.user.id}> /`;
@@ -111,12 +111,8 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
 
 /**
  * Runs convertToType in-place for each argument in 'args'.
- * @param {IArgumentMap} args
- * @param {Message} msg
- * @param {Client} bot
- * @returns {Promise<void>}
  */
-export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot: Client) {
+export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot: Client): Promise<void> {
   for (const argName in args) {
     const arg = args[argName];
 
@@ -141,10 +137,42 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
   }
 }
 
+/**
+ * Runs convertToType in-place for each option in 'opts'.
+ */
+export async function convertOptionTypes(opts: IMatchedOptionMap, msg: Message, bot: Client) {
+  for (const optName in opts) {
+    const opt = opts[optName];
+
+    if (opt.value == null && !opt.option.required) {
+      continue;
+    }
+
+    const type = (opt.option.type || "string").toLowerCase();
+
+    try {
+      if (Array.isArray(opt.value)) {
+        for (const [i] of opt.value.entries()) {
+          opt.value[i] = await convertToType(opt.value[i], type, msg, bot);
+        }
+      } else {
+        opt.value = await convertToType(opt.value, type, msg, bot);
+      }
+    } catch (e) {
+      throw new CommandValueTypeError(`Could not convert option ${opt.option.name} to ${opt.option.type}`);
+    }
+  }
+}
+
 export async function runCommand(command: IMatchedCommand, msg: Message, bot: Client) {
   const argsToPass: any = {};
+
   for (const name in command.args) {
     argsToPass[name] = command.args[name].value;
+  }
+
+  for (const name in command.opts) {
+    argsToPass[name] = command.opts[name].value;
   }
 
   await command.commandDefinition.handler(msg, argsToPass, command);

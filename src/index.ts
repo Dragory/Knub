@@ -15,7 +15,7 @@ export { logger } from "./logger";
 import * as utils from "./utils";
 export { utils };
 
-export { ICommandOptions } from "./CommandManager";
+export { ICommandConfig } from "./CommandManager";
 export {
   IPermissionLevelDefinitions,
   IPluginConfig,

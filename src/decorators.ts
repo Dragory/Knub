@@ -1,4 +1,4 @@
-import { ICommandOptions, IParameter } from "./CommandManager";
+import { ICommandConfig, IParameter } from "./CommandManager";
 
 /**
  * PLUGINS: Turn a class method into a command handler
@@ -6,7 +6,7 @@ import { ICommandOptions, IParameter } from "./CommandManager";
 function CommandDecorator(
   command: string | RegExp,
   parameters: string | IParameter[] = [],
-  options: ICommandOptions = {}
+  options: ICommandConfig = {}
 ) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const commands = Reflect.getMetadata("commands", target, propertyKey) || [];
