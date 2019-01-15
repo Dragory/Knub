@@ -1,3 +1,9 @@
+# 16.0.0
+* Renamed command definition "options" property to "config"
+* Commands now support options (`--option=value`), defined in `config.options`
+  * For commands in plugins, option values will be placed in the same args object (second argument to command handler)
+    as the matched command arguments
+
 # 15.1.0
 * Errors in plugin event handlers and commands are now thrown as a `PluginError`
 * Fix error when resolving user id from an unknown message in `Plugin.hasPermission`
