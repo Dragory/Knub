@@ -1,3 +1,8 @@
+# 16.1.0
+* Add `bool` / `boolean` type for command options (and arguments)
+  * A command option used as a "switch" (i.e. just `--option`) with the bool type have its value converted to `true`
+  * Otherwise, all values are truthy except "false" and "0"
+
 # 16.0.1
 * Fix error when matching commands without any options
 
