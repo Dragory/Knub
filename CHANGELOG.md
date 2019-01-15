@@ -1,5 +1,8 @@
+# 16.0.1
+* Fix error when matching commands without any options
+
 # 16.0.0
-* Renamed command definition "options" property to "config"
+* Rename command definition "options" property to "config"
 * Commands now support options (`--option=value`), defined in `config.options`
   * For commands in plugins, option values will be placed in the same args object (second argument to command handler)
     as the matched command arguments
