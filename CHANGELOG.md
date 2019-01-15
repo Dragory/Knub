@@ -1,3 +1,6 @@
+# 16.1.1
+* Fix invalid command parsing when using multiple options
+
 # 16.1.0
 * Add `bool` / `boolean` type for command options (and arguments)
   * A command option used as a "switch" (i.e. just `--option`) with the bool type have its value converted to `true`
