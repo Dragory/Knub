@@ -241,6 +241,8 @@ export class Knub extends EventEmitter {
 
     const loadPromises = enabledPlugins.map(async pluginName => {
       const plugin = await this.loadPlugin(guildData.id, pluginName, guildData.config);
+      if (!plugin) return;
+
       guildData.loadedPlugins.set(pluginName, plugin);
     });
 
@@ -289,7 +291,14 @@ export class Knub extends EventEmitter {
 
     const plugin = new PluginClass(this.bot, guildId, guildConfig, mergedPluginOptions, pluginName, this);
 
-    await plugin.runLoad();
+    try {
+      await plugin.runLoad();
+    } catch (e) {
+      if (!(e instanceof Error)) throw e;
+      logger.warn(`Could not load plugin ${pluginName} for guild ${guildId}: ${e.stack}`);
+      return;
+    }
+
     this.emit("guildPluginLoaded", guildId, pluginName, plugin);
 
     return plugin;
@@ -325,7 +334,14 @@ export class Knub extends EventEmitter {
 
     const plugin = new PluginClass(this.bot, null, this.globalConfig, mergedPluginOptions, pluginName, this);
 
-    await plugin.runLoad();
+    try {
+      await plugin.runLoad();
+    } catch (e) {
+      if (!(e instanceof Error)) throw e;
+      logger.warn(`Could not load global plugin ${pluginName}: ${e.stack}`);
+      return;
+    }
+
     this.loadedGlobalPlugins.set(pluginName, plugin);
 
     this.emit("globalPluginLoaded", pluginName);
