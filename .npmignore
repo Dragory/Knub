@@ -5,3 +5,6 @@
 /tslint.json
 /README.md
 /.editorconfig
+/.nvmrc
+/.prettierrc
+/dist/*.js.map
