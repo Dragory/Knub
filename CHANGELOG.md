@@ -6,6 +6,7 @@
   * `getMergedOptions()` (method)
   * `clearMergedOptions()` (method)
   * `runCommandsInMessage()` (method)
+* The installed package should no longer contain certain unneeded files
 
 # 16.1.1
 * Fix invalid command parsing when using multiple options
