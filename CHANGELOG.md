@@ -1,3 +1,12 @@
+# 16.2.0
+* Changed the following properties/methods of `Plugin` from `private` to `protected`:
+  * `guildConfig` (property)
+  * `pluginOptions` (property)
+  * `mergedPluginOptions` (property)
+  * `getMergedOptions()` (method)
+  * `clearMergedOptions()` (method)
+  * `runCommandsInMessage()` (method)
+
 # 16.1.1
 * Fix invalid command parsing when using multiple options
 
