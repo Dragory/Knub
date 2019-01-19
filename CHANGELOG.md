@@ -1,3 +1,6 @@
+# 16.3.0
+* Errors thrown in a Plugin's onLoad() no longer crash the bot, but show a warning in the console (and the plugin won't be marked as loaded)
+
 # 16.2.0
 * Changed the following properties/methods of `Plugin` from `private` to `protected`:
   * `guildConfig` (property)
