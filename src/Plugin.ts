@@ -36,9 +36,9 @@ export class Plugin {
   public description: string;
 
   protected bot: Client;
-  private readonly guildConfig: IGuildConfig;
-  private readonly pluginOptions: IPluginOptions;
-  private mergedPluginOptions: IPluginOptions;
+  protected readonly guildConfig: IGuildConfig;
+  protected readonly pluginOptions: IPluginOptions;
+  protected mergedPluginOptions: IPluginOptions;
 
   protected knub: Knub;
 
@@ -164,7 +164,7 @@ export class Plugin {
   /**
    * Returns the plugin's default configuration merged with its loaded configuration
    */
-  private getMergedOptions(): IPluginOptions {
+  protected getMergedOptions(): IPluginOptions {
     if (!this.mergedPluginOptions) {
       const defaultOptions = this.getDefaultOptions();
       this.mergedPluginOptions = {
@@ -179,7 +179,7 @@ export class Plugin {
     return this.mergedPluginOptions;
   }
 
-  private clearMergedOptions() {
+  protected clearMergedOptions() {
     this.mergedPluginOptions = null;
   }
 
@@ -398,7 +398,7 @@ export class Plugin {
   /**
    * Runs all matching commands in the message
    */
-  private async runCommandsInMessage(msg: Message): Promise<void> {
+  protected async runCommandsInMessage(msg: Message): Promise<void> {
     // Ignore messages without text (e.g. images, embeds, etc.)
     if (msg.content == null || msg.content.trim() === "") {
       return;
