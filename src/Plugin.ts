@@ -320,6 +320,9 @@ export class Plugin {
         }
       }
 
+      const timerDone =
+        listener.name !== "bound runCommandsInMessage" ? this.knub.startPerformanceDebugTimer(listener.name) : null;
+
       // Call the original listener
       if (blocking) {
         // BLOCKING: Wait for the listener to finish
@@ -327,6 +330,8 @@ export class Plugin {
           await listener(...args);
         } catch (err) {
           throw new PluginError(err);
+        } finally {
+          timerDone && timerDone(); // tslint:disable-line
         }
       } else {
         // NON-BLOCKING: Run the listener in another async function, returning immediately from here
@@ -335,6 +340,8 @@ export class Plugin {
             await listener(...args);
           } catch (err) {
             throw new PluginError(err);
+          } finally {
+            timerDone && timerDone(); // tslint:disable-line
           }
         })();
       }
@@ -469,13 +476,19 @@ export class Plugin {
         continue;
       }
 
+      const timerDone = this.knub.startPerformanceDebugTimer(`cmd: ${command.name}`);
+
       // Run the command
       if (command.commandDefinition.config.blocking) {
         // BLOCKING: Wait for this command handler to finish before continuing
         await runCommand(command, msg, this.bot);
+        timerDone();
       } else {
         // NON-BLOCKING: Run the command handler and continue other processing immediately
-        runCommand(command, msg, this.bot);
+        (async () => {
+          await runCommand(command, msg, this.bot);
+          timerDone();
+        })();
       }
 
       // A command was run: don't continue trying to run the rest of the matched commands

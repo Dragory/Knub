@@ -82,6 +82,8 @@ export function errorEmbed(str: string) {
   };
 }
 
+export const noop = () => {}; // tslint:disable-line
+
 const id = v => v;
 
 export interface IEventToGuild {

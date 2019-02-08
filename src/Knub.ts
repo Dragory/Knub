@@ -10,8 +10,9 @@ import { GlobalPlugin } from "./GlobalPlugin";
 import EventEmitter from "events";
 import { IGlobalConfig, IGuildConfig, IPluginOptions } from "./configInterfaces";
 import { mergeConfig } from "./configUtils";
-import { ArbitraryFunction } from "./utils";
+import { ArbitraryFunction, noop } from "./utils";
 import { Queue } from "./Queue";
+import { performance } from "perf_hooks";
 
 const at = require("lodash.at");
 
@@ -36,6 +37,11 @@ export interface IOptions {
   getEnabledPlugins?: (guildId: string, guildConfig: IGuildConfig) => string[] | Promise<string[]>;
   canLoadGuild?: (guildId: string) => boolean | Promise<boolean>;
   logFn?: LoggerFn;
+  performanceDebug?: {
+    enabled?: boolean;
+    size?: number;
+    threshold?: number;
+  };
   [key: string]: any;
 }
 
@@ -73,12 +79,16 @@ export class Knub extends EventEmitter {
   protected discordEventListeners: Map<string, ArbitraryFunction[]> = new Map();
   protected discordEventListenerQueue: Queue = new Queue();
 
+  protected performanceDebugItems: string[];
+
   constructor(client: Client, userArgs: IKnubArgs) {
     super();
 
     const args: IKnubArgs = Object.assign({}, defaultKnubParams, userArgs);
 
     this.bot = client;
+
+    this.performanceDebugItems = [];
 
     args.globalPlugins.forEach(globalPlugin => {
       let pluginClass: typeof GlobalPlugin;
@@ -414,5 +424,40 @@ export class Knub extends EventEmitter {
 
     const listeners = this.discordEventListeners.get(eventName);
     listeners.splice(listeners.indexOf(listener), 1);
+  }
+
+  protected performanceDebugEnabled() {
+    return this.options.performanceDebug && this.options.performanceDebug.enabled;
+  }
+
+  public logPerformanceDebugItem(time: number, description: string) {
+    if (!this.performanceDebugEnabled()) {
+      return;
+    }
+
+    const threshold = this.options.performanceDebug.threshold || 0;
+    if (time < threshold) return;
+
+    const size = this.options.performanceDebug.size || 30;
+    this.performanceDebugItems.push(`[${Math.ceil(time)}ms] ${description}`);
+    if (this.performanceDebugItems.length > size) {
+      this.performanceDebugItems.splice(0, 1);
+    }
+  }
+
+  public startPerformanceDebugTimer(description) {
+    if (!this.performanceDebugEnabled()) {
+      return noop;
+    }
+
+    const startTime = performance.now();
+    return () => {
+      const totalTime = performance.now() - startTime;
+      this.logPerformanceDebugItem(totalTime, description);
+    };
+  }
+
+  public getPerformanceDebugItems() {
+    return Array.from(this.performanceDebugItems);
   }
 }
