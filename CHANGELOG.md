@@ -1,3 +1,6 @@
+# 17.0.1
+* Fix type error that prevented the build from.. building
+
 # 17.0.0
 * Deprecate blocking functionality
 * Add locks. Locks can be acquired in plugins via `this.locks.acquire(string|string[])` or with the new `lock`
