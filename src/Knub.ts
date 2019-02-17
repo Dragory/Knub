@@ -10,9 +10,9 @@ import { GlobalPlugin } from "./GlobalPlugin";
 import EventEmitter from "events";
 import { IGlobalConfig, IGuildConfig, IPluginOptions } from "./configInterfaces";
 import { mergeConfig } from "./configUtils";
-import { ArbitraryFunction, noop } from "./utils";
-import { Queue } from "./Queue";
+import { noop } from "./utils";
 import { performance } from "perf_hooks";
+import { LockManager } from "./LockManager";
 
 const at = require("lodash.at");
 
@@ -49,6 +49,7 @@ export interface IGuildData {
   id: string;
   config: IGuildConfig;
   loadedPlugins: Map<string, Plugin>;
+  locks: LockManager;
 }
 
 export interface IKnubArgs {
@@ -75,9 +76,7 @@ export class Knub extends EventEmitter {
   protected djsOptions: any;
   protected guilds: Map<string, IGuildData> = new Map();
   protected globalConfig: IGlobalConfig;
-
-  protected discordEventListeners: Map<string, ArbitraryFunction[]> = new Map();
-  protected discordEventListenerQueue: Queue = new Queue();
+  protected globalLocks: LockManager;
 
   protected performanceDebugItems: string[];
 
@@ -87,7 +86,7 @@ export class Knub extends EventEmitter {
     const args: IKnubArgs = Object.assign({}, defaultKnubParams, userArgs);
 
     this.bot = client;
-
+    this.globalLocks = new LockManager();
     this.performanceDebugItems = [];
 
     args.globalPlugins.forEach(globalPlugin => {
@@ -232,7 +231,8 @@ export class Knub extends EventEmitter {
     const guildData: IGuildData = {
       config: null,
       id: guildId,
-      loadedPlugins: new Map()
+      loadedPlugins: new Map(),
+      locks: new LockManager()
     };
 
     this.guilds.set(guildId, guildData);
@@ -299,7 +299,8 @@ export class Knub extends EventEmitter {
 
     const mergedPluginOptions: IPluginOptions = mergeConfig({}, pluginOptions, pluginRuntimeOptions || {});
 
-    const plugin = new PluginClass(this.bot, guildId, guildConfig, mergedPluginOptions, pluginName, this);
+    const guildLocks = this.guilds.get(guildId).locks;
+    const plugin = new PluginClass(this.bot, guildId, guildConfig, mergedPluginOptions, pluginName, this, guildLocks);
 
     try {
       await plugin.runLoad();
@@ -342,7 +343,15 @@ export class Knub extends EventEmitter {
 
     const mergedPluginOptions: IPluginOptions = mergeConfig({}, pluginOptions, pluginRuntimeOptions || {});
 
-    const plugin = new PluginClass(this.bot, null, this.globalConfig, mergedPluginOptions, pluginName, this);
+    const plugin = new PluginClass(
+      this.bot,
+      null,
+      this.globalConfig,
+      mergedPluginOptions,
+      pluginName,
+      this,
+      this.globalLocks
+    );
 
     try {
       await plugin.runLoad();
@@ -398,32 +407,6 @@ export class Knub extends EventEmitter {
 
   public getGlobalConfig() {
     return this.globalConfig;
-  }
-
-  protected initDiscordEventListener(eventName) {
-    this.discordEventListeners.set(eventName, []);
-    this.bot.on(eventName, (...args) => this.runDiscordEventListeners(eventName, args));
-  }
-
-  protected runDiscordEventListeners(eventName: string, args: any[]) {
-    this.discordEventListeners.get(eventName).forEach(listener => {
-      this.discordEventListenerQueue.add(() => listener(...args));
-    });
-  }
-
-  public addDiscordEventListener(eventName: string, listener: ArbitraryFunction) {
-    if (!this.discordEventListeners.has(eventName)) {
-      this.initDiscordEventListener(eventName);
-    }
-
-    this.discordEventListeners.get(eventName).push(listener);
-  }
-
-  public removeDiscordEventListener(eventName: string, listener: ArbitraryFunction) {
-    if (!this.discordEventListeners.has(eventName)) return;
-
-    const listeners = this.discordEventListeners.get(eventName);
-    listeners.splice(listeners.indexOf(listener), 1);
   }
 
   protected performanceDebugEnabled() {

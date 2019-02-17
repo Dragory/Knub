@@ -1,5 +1,6 @@
 import escapeStringRegex = require("escape-string-regexp");
 import { Message } from "eris";
+import { Lock } from "./LockManager";
 
 export interface IParameter {
   name: string;
@@ -44,8 +45,8 @@ export interface ICommandConfig {
   requiredPermission?: string;
   allowDMs?: boolean;
   filters?: CommandFilter[];
-  blocking?: boolean;
   options?: ICommandOption[];
+  locks?: string | string[];
 }
 
 export interface ICommandDefinition {
@@ -62,6 +63,7 @@ export interface IMatchedCommand {
   args: IArgumentMap;
   opts: IMatchedOptionMap;
   error: CommandMatchError;
+  lock?: Lock;
 }
 
 export class CommandMatchError extends Error {}
@@ -164,11 +166,6 @@ export class CommandManager {
         hadCatchAll = true;
       }
     });
-
-    // All commands are blocking by default
-    if (config.blocking == null) {
-      config.blocking = true;
-    }
 
     // Actually add the command to the manager
     const definition: ICommandDefinition = {

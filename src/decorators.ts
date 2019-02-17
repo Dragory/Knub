@@ -36,11 +36,11 @@ function PermissionDecorator(permission: string) {
 }
 
 /**
- * PLUGINS: Turns the event listener/command into non-blocking
+ * PLUGINS: Specify which locks the listener should wait for, and lock during its execution
  */
-function NonBlockingDecorator() {
+function LockDecorator(locks: string | string[]) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    Reflect.defineMetadata("blocking", false, target, propertyKey);
+    Reflect.defineMetadata("locks", locks, target, propertyKey);
   };
 }
 
@@ -48,5 +48,5 @@ export default {
   command: CommandDecorator,
   event: OnEventDecorator,
   permission: PermissionDecorator,
-  nonBlocking: NonBlockingDecorator
+  lock: LockDecorator
 };

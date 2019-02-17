@@ -8,6 +8,7 @@ import { convertArgumentTypes, convertOptionTypes, getDefaultPrefix, runCommand 
 import { Knub } from "./Knub";
 import { getMatchingPluginOptions, hasPermission, IMatchParams, mergeConfig } from "./configUtils";
 import { PluginError } from "./PluginError";
+import { Lock, LockManager } from "./LockManager";
 
 export interface IHasPermissionParams {
   userId?: string;
@@ -42,6 +43,8 @@ export class Plugin {
 
   protected knub: Knub;
 
+  protected locks: LockManager;
+
   protected commands: CommandManager;
   protected eventHandlers: Map<string, any[]>;
 
@@ -51,13 +54,15 @@ export class Plugin {
     guildConfig: IGuildConfig,
     pluginOptions: IPluginOptions,
     runtimePluginName: string,
-    knub: Knub
+    knub: Knub,
+    locks: LockManager
   ) {
     this.bot = bot;
     this.guildId = guildId;
     this.guildConfig = guildConfig;
     this.pluginOptions = pluginOptions;
     this.runtimePluginName = runtimePluginName;
+    this.locks = locks;
 
     this.knub = knub;
 
@@ -86,9 +91,7 @@ export class Plugin {
       }
 
       const requiredPermission = Reflect.getMetadata("requiredPermission", this, prop);
-
-      let blocking = Reflect.getMetadata("blocking", this, prop);
-      blocking = blocking == null ? true : Boolean(blocking);
+      const locks = Reflect.getMetadata("locks", this, prop);
 
       // Command handlers from decorators
       const metaCommands = Reflect.getMetadata("commands", this, prop);
@@ -100,7 +103,7 @@ export class Plugin {
             opts.requiredPermission = requiredPermission.permission;
           }
 
-          opts.blocking = blocking;
+          opts.locks = locks || [];
 
           this.commands.add(metaCommand.command, metaCommand.parameters, value.bind(this), opts);
         }
@@ -116,7 +119,7 @@ export class Plugin {
             metaEvent.restrict != null ? metaEvent.restrict : undefined,
             metaEvent.ignoreSelf != null ? metaEvent.ignoreSelf : undefined,
             requiredPermission && requiredPermission.permission,
-            blocking
+            locks || []
           );
         }
       }
@@ -283,7 +286,7 @@ export class Plugin {
     restrict: string = "guild",
     ignoreSelf: boolean = true,
     requiredPermission: string = null,
-    blocking: boolean = true
+    locks: string | string[] = []
   ): () => void {
     if (!this.eventHandlers.has(eventName)) {
       this.eventHandlers.set(eventName, []);
@@ -320,35 +323,31 @@ export class Plugin {
         }
       }
 
+      let lock: Lock;
+      if (locks.length) {
+        lock = await this.locks.acquire(locks);
+        if (lock.interrupted) return;
+
+        // Add the lock as the final argument for the listener
+        args.push(lock);
+      }
+
       const timerDone =
         listener.name !== "bound runCommandsInMessage" ? this.knub.startPerformanceDebugTimer(listener.name) : null;
 
       // Call the original listener
-      if (blocking) {
-        // BLOCKING: Wait for the listener to finish
-        try {
-          await listener(...args);
-        } catch (err) {
-          throw new PluginError(err);
-        } finally {
-          timerDone && timerDone(); // tslint:disable-line
-        }
-      } else {
-        // NON-BLOCKING: Run the listener in another async function, returning immediately from here
-        (async () => {
-          try {
-            await listener(...args);
-          } catch (err) {
-            throw new PluginError(err);
-          } finally {
-            timerDone && timerDone(); // tslint:disable-line
-          }
-        })();
+      try {
+        await listener(...args);
+      } catch (err) {
+        throw new PluginError(err);
+      } finally {
+        if (lock) lock.unlock();
+        timerDone && timerDone(); // tslint:disable-line
       }
     };
 
-    // The listener is registered on both the DJS client and our own Map that we use to unregister listeners on unload
-    this.knub.addDiscordEventListener(eventName, wrappedListener);
+    // The listener is registered on both the Eris client and our own Map that we use to unregister listeners on unload
+    this.bot.on(eventName, wrappedListener);
     this.eventHandlers.get(eventName).push(wrappedListener);
 
     // Return a function to clear the listener
@@ -363,7 +362,7 @@ export class Plugin {
    * Removes the given listener from the event
    */
   protected off(eventName: string, listener: ArbitraryFunction): void {
-    this.knub.removeDiscordEventListener(eventName, listener);
+    this.bot.off(eventName, listener);
 
     if (this.eventHandlers.has(eventName)) {
       const thisEventNameHandlers = this.eventHandlers.get(eventName);
@@ -377,7 +376,7 @@ export class Plugin {
   protected clearEventHandlers(): void {
     for (const [eventName, listeners] of this.eventHandlers) {
       listeners.forEach(listener => {
-        this.knub.removeDiscordEventListener(eventName, listener);
+        this.bot.off(eventName, listener);
       });
     }
 
@@ -476,20 +475,20 @@ export class Plugin {
         continue;
       }
 
+      if (command.commandDefinition.config.locks) {
+        command.lock = await this.locks.acquire(command.commandDefinition.config.locks);
+        if (command.lock.interrupted) {
+          onlyErrors = false;
+          break;
+        }
+      }
+
       const timerDone = this.knub.startPerformanceDebugTimer(`cmd: ${command.name}`);
 
       // Run the command
-      if (command.commandDefinition.config.blocking) {
-        // BLOCKING: Wait for this command handler to finish before continuing
-        await runCommand(command, msg, this.bot);
-        timerDone();
-      } else {
-        // NON-BLOCKING: Run the command handler and continue other processing immediately
-        (async () => {
-          await runCommand(command, msg, this.bot);
-          timerDone();
-        })();
-      }
+      await runCommand(command, msg, this.bot);
+      command.lock.unlock();
+      timerDone();
 
       // A command was run: don't continue trying to run the rest of the matched commands
       onlyErrors = false;
