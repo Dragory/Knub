@@ -1,3 +1,18 @@
+# 17.0.0
+* Deprecate blocking functionality
+* Add locks. Locks can be acquired in plugins via `this.locks.acquire(string|string[])` or with the new `lock`
+  decorator, and then unlocked via `lock.unlock()` (done automatically with the decorator).  
+  When using locks, the promise returned by `acquire()` will wait for the old matching locks to unlock before resolving.
+  This replicates the old blocking functionality, but is opt-in and more flexible by allowing you to be as specific as
+  you want with your locks.
+  * There is, by default, a 10 second timeout after which locks will automatically unlock, similar to the timeout with
+    blocking before. This can be changed by calling `setLockTimeout` on a `LockManager` instance, by passing in the
+    desired lock timeout as the first parameter when creating a `LockManager`, or by giving the lock timeout as the second
+    parameter to `acquire()`. Lock timeouts are always specified in milliseconds.
+  * When using the decorator, the lock object is also passed to the event/command handler:
+    * For events, as an extra argument at the end
+    * For commands, as part of the `command` object that's passed as the last argument
+
 # 16.4.0
 * Add performance debug functionality
 
