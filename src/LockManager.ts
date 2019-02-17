@@ -37,7 +37,7 @@ export class LockManager {
     this.lockTimeout = lockTimeout;
   }
 
-  public acquire(keys: string | string[], lockTimeout) {
+  public acquire(keys: string | string[], lockTimeout: number = null) {
     if (!Array.isArray(keys)) keys = [keys];
     if (lockTimeout == null) lockTimeout = this.lockTimeout;
 
