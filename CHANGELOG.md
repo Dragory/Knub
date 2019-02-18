@@ -1,3 +1,9 @@
+# 17.1.0
+* Added support for cooldowns. Cooldowns can be set on commands via the `cooldown` and `cooldownPermission` command
+  config values, or with the new `cooldown(time, permission)` decorator. If the permission is set, users *with* this
+  permission are exempt from the cooldown. Cooldowns can also be managed manually in plugins via `this.cooldowns`, or by
+  creating your own `CooldownManager` object.
+
 # 17.0.1
 * Fix type error that prevented the build from.. building
 
