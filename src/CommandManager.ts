@@ -47,6 +47,8 @@ export interface ICommandConfig {
   filters?: CommandFilter[];
   options?: ICommandOption[];
   locks?: string | string[];
+  cooldown?: number;
+  cooldownPermission?: string;
 }
 
 export interface ICommandDefinition {

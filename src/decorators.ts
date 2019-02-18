@@ -44,9 +44,19 @@ function LockDecorator(locks: string | string[]) {
   };
 }
 
+/**
+ * PLUGINS: Specify a cooldown
+ */
+function CooldownDecorator(cdTime: number, cdPermission: string = null) {
+  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+    Reflect.defineMetadata("cooldown", { time: cdTime, permission: cdPermission }, target, propertyKey);
+  };
+}
+
 export default {
   command: CommandDecorator,
   event: OnEventDecorator,
   permission: PermissionDecorator,
-  lock: LockDecorator
+  lock: LockDecorator,
+  cooldown: CooldownDecorator
 };

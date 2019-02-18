@@ -1,7 +1,7 @@
 import { Channel, Client, PrivateChannel, GroupChannel, GuildChannel, Guild, Member, Message, User } from "eris";
 const at = require("lodash.at");
 
-import { CommandManager } from "./CommandManager";
+import { CommandManager, ICommandConfig } from "./CommandManager";
 import { IGuildConfig, IPermissionLevelDefinitions, IPluginOptions } from "./configInterfaces";
 import { ArbitraryFunction, errorEmbed, eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./utils";
 import { convertArgumentTypes, convertOptionTypes, getDefaultPrefix, runCommand } from "./commandUtils";
@@ -9,6 +9,7 @@ import { Knub } from "./Knub";
 import { getMatchingPluginOptions, hasPermission, IMatchParams, mergeConfig } from "./configUtils";
 import { PluginError } from "./PluginError";
 import { Lock, LockManager } from "./LockManager";
+import { CooldownManager } from "./CooldownManager";
 
 export interface IHasPermissionParams {
   userId?: string;
@@ -48,6 +49,8 @@ export class Plugin {
   protected commands: CommandManager;
   protected eventHandlers: Map<string, any[]>;
 
+  protected cooldowns: CooldownManager;
+
   constructor(
     bot: Client,
     guildId: string,
@@ -70,6 +73,9 @@ export class Plugin {
 
     this.commands = new CommandManager();
     this.eventHandlers = new Map();
+
+    this.cooldowns = new CooldownManager();
+
     this.registerCommandMessageListener();
   }
 
@@ -92,20 +98,25 @@ export class Plugin {
 
       const requiredPermission = Reflect.getMetadata("requiredPermission", this, prop);
       const locks = Reflect.getMetadata("locks", this, prop);
+      const cooldown: { time: number; permission: string } = Reflect.getMetadata("cooldown", this, prop);
 
       // Command handlers from decorators
       const metaCommands = Reflect.getMetadata("commands", this, prop);
       if (metaCommands) {
         for (const metaCommand of metaCommands) {
-          const opts = metaCommand.options || {};
+          const commandConfig: ICommandConfig = metaCommand.options || {};
 
           if (requiredPermission && requiredPermission.permission) {
-            opts.requiredPermission = requiredPermission.permission;
+            commandConfig.requiredPermission = requiredPermission.permission;
           }
 
-          opts.locks = locks || [];
+          commandConfig.locks = locks || [];
+          if (cooldown) {
+            commandConfig.cooldown = cooldown.time;
+            commandConfig.cooldownPermission = cooldown.permission;
+          }
 
-          this.commands.add(metaCommand.command, metaCommand.parameters, value.bind(this), opts);
+          this.commands.add(metaCommand.command, metaCommand.parameters, value.bind(this), commandConfig);
         }
       }
 
@@ -475,6 +486,24 @@ export class Plugin {
         continue;
       }
 
+      // Check for cooldowns
+      if (command.commandDefinition.config.cooldown) {
+        const cdKey = `${command.name}-${msg.author.id}`;
+        let cdApplies = true;
+        if (command.commandDefinition.config.cooldownPermission) {
+          cdApplies = !this.hasPermission(command.commandDefinition.config.cooldownPermission, { message: msg });
+        }
+
+        if (cdApplies && this.cooldowns.isOnCooldown(cdKey)) {
+          // We're on cooldown, bail out
+          onlyErrors = false;
+          break;
+        }
+
+        this.cooldowns.setCooldown(cdKey, command.commandDefinition.config.cooldown);
+      }
+
+      // Wait for locks, if any, and bail out if the lock has been interrupted
       if (command.commandDefinition.config.locks) {
         command.lock = await this.locks.acquire(command.commandDefinition.config.locks);
         if (command.lock.interrupted) {

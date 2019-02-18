@@ -30,3 +30,5 @@ export { waitForReaction, waitForReply, reply } from "./helpers";
 export { PluginError } from "./PluginError";
 
 export { LockManager, Lock } from "./LockManager";
+
+export { CooldownManager } from "./CooldownManager";
