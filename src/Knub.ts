@@ -286,6 +286,10 @@ export class Knub extends EventEmitter {
     return this.guilds.get(guildId);
   }
 
+  public getLoadedGuilds(): IGuildData[] {
+    return Array.from(this.guilds.values());
+  }
+
   public async loadPlugin(guildId: string, pluginName: string, guildConfig: IGuildConfig): Promise<Plugin> {
     if (!this.plugins.has(pluginName)) {
       throw new Error(`Unknown plugin: ${pluginName}`);
