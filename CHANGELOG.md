@@ -1,5 +1,8 @@
+# 17.2.0
+* Add `Knub.getLoadedGuilds()`
+
 # 17.1.0
-* Added support for cooldowns. Cooldowns can be set on commands via the `cooldown` and `cooldownPermission` command
+* Add support for cooldowns. Cooldowns can be set on commands via the `cooldown` and `cooldownPermission` command
   config values, or with the new `cooldown(time, permission)` decorator. If the permission is set, users *with* this
   permission are exempt from the cooldown. Cooldowns can also be managed manually in plugins via `this.cooldowns`, or by
   creating your own `CooldownManager` object.
