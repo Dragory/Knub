@@ -1,3 +1,7 @@
+# 18.0.3
+* Make Plugin TConfig and TPermissions types less strict (no longer requires an index signature)
+* Add the same generics to GlobalPlugin as Plugin
+
 # 18.0.2
 * Fix overrides with modifiers being marked as invalid when using config/permission types
 
