@@ -1,3 +1,6 @@
+# 18.0.2
+* Fix overrides with modifiers being marked as invalid when using config/permission types
+
 # 18.0.1
 * Fix overrides requiring full plugin config/permissions when using config/permission types
 * Tweak plugin option types to work more reliably
