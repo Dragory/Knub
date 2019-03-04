@@ -9,27 +9,11 @@ import { Plugin } from "./Plugin";
 import { GlobalPlugin } from "./GlobalPlugin";
 import EventEmitter from "events";
 import { IGlobalConfig, IGuildConfig, IPluginOptions } from "./configInterfaces";
-import { mergeConfig } from "./configUtils";
 import { noop } from "./utils";
 import { performance } from "perf_hooks";
 import { LockManager } from "./LockManager";
 
 const at = require("lodash.at");
-
-export interface IPluginWithRuntimeOptions extends Array<any> {
-  0: typeof Plugin;
-  1: IPluginOptions;
-  2?: string;
-}
-
-export interface IGlobalPluginWithRuntimeOptions extends Array<any> {
-  0: typeof GlobalPlugin;
-  1: IPluginOptions;
-  2?: string;
-}
-
-export type IPluginList = Array<typeof Plugin | IPluginWithRuntimeOptions>;
-export type IGlobalPluginList = Array<typeof GlobalPlugin | IGlobalPluginWithRuntimeOptions>;
 
 export interface IOptions {
   autoInitGuilds?: boolean;
@@ -52,14 +36,16 @@ export interface IGuildData {
   locks: LockManager;
 }
 
+class IExtendedPlugin extends Plugin<any, any> {}
+
 export interface IKnubArgs {
-  plugins?: IPluginList;
-  globalPlugins?: IGlobalPluginList;
+  plugins?: Array<typeof IExtendedPlugin>;
+  globalPlugins?: Array<typeof GlobalPlugin>;
   options?: IOptions;
 }
 
-export type IPluginMap = Map<string, IPluginWithRuntimeOptions>;
-export type IGlobalPluginMap = Map<string, IGlobalPluginWithRuntimeOptions>;
+export type IPluginMap = Map<string, typeof IExtendedPlugin>;
+export type IGlobalPluginMap = Map<string, typeof GlobalPlugin>;
 
 const defaultKnubParams: IKnubArgs = {
   plugins: [],
@@ -90,49 +76,27 @@ export class Knub extends EventEmitter {
     this.performanceDebugItems = [];
 
     args.globalPlugins.forEach(globalPlugin => {
-      let pluginClass: typeof GlobalPlugin;
-      let runtimeOpts: IPluginOptions = {};
-      let overrideName: string;
-
-      if (Array.isArray(globalPlugin)) {
-        [pluginClass, runtimeOpts, overrideName] = globalPlugin;
-      } else {
-        pluginClass = globalPlugin as typeof GlobalPlugin;
+      if (globalPlugin.pluginName == null) {
+        throw new Error(`No plugin name specified for global plugin ${globalPlugin.name}`);
       }
 
-      const pluginName = overrideName || pluginClass.pluginName;
-      if (pluginName == null) {
-        throw new Error(`No plugin name specified for global plugin ${pluginClass.name}`);
+      if (this.globalPlugins.has(globalPlugin.pluginName)) {
+        throw new Error(`Duplicate plugin name: ${globalPlugin.pluginName}`);
       }
 
-      if (this.globalPlugins.has(pluginName)) {
-        throw new Error(`Duplicate plugin name: ${pluginName}`);
-      }
-
-      this.globalPlugins.set(pluginName, [pluginClass, runtimeOpts]);
+      this.globalPlugins.set(globalPlugin.pluginName, globalPlugin);
     });
 
     args.plugins.forEach(plugin => {
-      let pluginClass: typeof Plugin;
-      let runtimeOpts: IPluginOptions = {};
-      let overrideName: string;
-
-      if (Array.isArray(plugin)) {
-        [pluginClass, runtimeOpts, overrideName] = plugin;
-      } else {
-        pluginClass = plugin as typeof Plugin;
+      if (plugin.pluginName) {
+        throw new Error(`No plugin name specified for plugin ${plugin.name}`);
       }
 
-      const pluginName = overrideName || pluginClass.pluginName;
-      if (pluginName == null) {
-        throw new Error(`No plugin name specified for plugin ${pluginClass.name}`);
+      if (this.plugins.has(plugin.pluginName)) {
+        throw new Error(`Duplicate plugin name: ${plugin.pluginName}`);
       }
 
-      if (this.plugins.has(pluginName)) {
-        throw new Error(`Duplicate plugin name: ${pluginName}`);
-      }
-
-      this.plugins.set(pluginName, [pluginClass, runtimeOpts]);
+      this.plugins.set(plugin.pluginName, plugin);
     });
 
     const defaultOptions: IOptions = {
@@ -296,15 +260,9 @@ export class Knub extends EventEmitter {
     }
 
     const pluginOptions = at(guildConfig, `plugins.${pluginName}`)[0] || {};
-
-    let PluginClass: typeof Plugin;
-    let pluginRuntimeOptions: IPluginOptions;
-    [PluginClass, pluginRuntimeOptions] = this.plugins.get(pluginName);
-
-    const mergedPluginOptions: IPluginOptions = mergeConfig({}, pluginOptions, pluginRuntimeOptions || {});
-
+    const PluginClass = this.plugins.get(pluginName);
     const guildLocks = this.guilds.get(guildId).locks;
-    const plugin = new PluginClass(this.bot, guildId, guildConfig, mergedPluginOptions, pluginName, this, guildLocks);
+    const plugin = new PluginClass(this.bot, guildId, guildConfig, pluginOptions, pluginName, this, guildLocks);
 
     try {
       await plugin.runLoad();
@@ -340,18 +298,13 @@ export class Knub extends EventEmitter {
     }
 
     const pluginOptions: IPluginOptions = at(this.globalConfig, `plugins.${pluginName}`)[0] || {};
-
-    let PluginClass: typeof GlobalPlugin;
-    let pluginRuntimeOptions: IPluginOptions;
-    [PluginClass, pluginRuntimeOptions] = this.globalPlugins.get(pluginName);
-
-    const mergedPluginOptions: IPluginOptions = mergeConfig({}, pluginOptions, pluginRuntimeOptions || {});
+    const PluginClass = this.globalPlugins.get(pluginName);
 
     const plugin = new PluginClass(
       this.bot,
       null,
       this.globalConfig,
-      mergedPluginOptions,
+      pluginOptions,
       pluginName,
       this,
       this.globalLocks

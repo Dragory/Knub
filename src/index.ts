@@ -18,8 +18,8 @@ export { utils };
 export { ICommandConfig } from "./CommandManager";
 export {
   IPermissionLevelDefinitions,
-  IPluginConfig,
-  IPluginPermissions,
+  IBasePluginConfig,
+  IBasePluginPermissions,
   IGuildConfig,
   IGlobalConfig,
   IPluginOptions

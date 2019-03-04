@@ -89,11 +89,14 @@ export function mergeConfig<T>(target: T, ...sources: T[]): T {
 /**
  * Returns matching plugin options for the specified matchParams based on the overrides of the plugin options
  */
-export function getMatchingPluginOptions(pluginOptions: IPluginOptions, matchParams: IMatchParams): IPluginOptions {
-  const finalOpts: IPluginOptions = {
+export function getMatchingPluginOptions<T extends IPluginOptions = IPluginOptions>(
+  pluginOptions: T,
+  matchParams: IMatchParams
+): T {
+  const finalOpts: T = {
     config: mergeConfig({}, pluginOptions.config || {}),
     permissions: mergeConfig({}, pluginOptions.permissions || {})
-  };
+  } as T;
 
   const overrides = pluginOptions.overrides || [];
   for (const override of overrides) {

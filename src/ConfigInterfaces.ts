@@ -24,28 +24,28 @@ export interface IGlobalConfig {
   [key: string]: any;
 }
 
-export interface IPluginOptions {
+export interface IPluginOptions<TConfig2 = IBasePluginConfig, TPermissions2 = IBasePluginPermissions> {
   enabled?: boolean;
-  permissions?: IPluginPermissions;
-  config?: IPluginConfig;
-  overrides?: IPluginConfigOverride[];
-  "=overrides"?: IPluginConfigOverride[];
+  permissions?: TPermissions2;
+  config?: TConfig2;
+  overrides?: Array<IPluginConfigOverride<TConfig2, TPermissions2>>;
+  "=overrides"?: Array<IPluginConfigOverride<TConfig2, TPermissions2>>;
 }
 
-export interface IPluginConfigOverride {
+export interface IPluginConfigOverride<TConfig3 = IBasePluginConfig, TPermissions3 = IBasePluginPermissions> {
   channel?: string | string[];
   level?: string | string[];
   user?: string | string[];
   role?: string | string[];
   type?: "any" | "all";
-  config?: IPluginConfig;
-  permissions?: IPluginPermissions;
+  config?: TConfig3;
+  permissions?: TPermissions3;
 }
 
-export interface IPluginPermissions {
+export interface IBasePluginPermissions {
   [key: string]: any;
 }
 
-export interface IPluginConfig {
+export interface IBasePluginConfig {
   [key: string]: any;
 }

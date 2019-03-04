@@ -2,7 +2,13 @@ import { Channel, Client, PrivateChannel, GroupChannel, GuildChannel, Guild, Mem
 const at = require("lodash.at");
 
 import { CommandManager, ICommandConfig } from "./CommandManager";
-import { IGuildConfig, IPermissionLevelDefinitions, IPluginOptions } from "./configInterfaces";
+import {
+  IBasePluginConfig,
+  IBasePluginPermissions,
+  IGuildConfig,
+  IPermissionLevelDefinitions,
+  IPluginOptions
+} from "./configInterfaces";
 import { ArbitraryFunction, errorEmbed, eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./utils";
 import { convertArgumentTypes, convertOptionTypes, getDefaultPrefix, runCommand } from "./commandUtils";
 import { Knub } from "./Knub";
@@ -22,7 +28,10 @@ export interface IHasPermissionParams {
 /**
  * Base class for Knub plugins
  */
-export class Plugin {
+export class Plugin<
+  TConfig extends IBasePluginConfig = IBasePluginConfig,
+  TPermissions extends IBasePluginPermissions = IBasePluginPermissions
+> {
   // Guild info - these will be null for global plugins
   public guildId: string;
   public guild: Guild;
@@ -170,15 +179,15 @@ export class Plugin {
   /**
    * Returns this plugin's default configuration
    */
-  protected getDefaultOptions(): IPluginOptions {
+  protected getDefaultOptions(): IPluginOptions<TConfig, TPermissions> {
     // Implemented by plugin
     return {};
   }
 
   /**
-   * Returns the plugin's default configuration merged with its loaded configuration
+   * Returns the plugin's default options merged with its loaded options
    */
-  protected getMergedOptions(): IPluginOptions {
+  protected getMergedOptions(): IPluginOptions<TConfig, TPermissions> {
     if (!this.mergedPluginOptions) {
       const defaultOptions = this.getDefaultOptions();
       this.mergedPluginOptions = {
@@ -190,28 +199,43 @@ export class Plugin {
       };
     }
 
-    return this.mergedPluginOptions;
+    return this.mergedPluginOptions as IPluginOptions<TConfig, TPermissions>;
   }
 
+  /**
+   * Resets the cached mergedPluginOptions object
+   */
   protected clearMergedOptions() {
     this.mergedPluginOptions = null;
   }
 
-  protected configValue(path: string, def: any = null, matchParams: IMatchParams = {}) {
+  /**
+   * Returns the base config from the merged options that's currently being used without applying any overrides
+   */
+  protected getConfig(): TConfig {
     const mergedOptions = this.getMergedOptions();
-    const matchingOptions = getMatchingPluginOptions(mergedOptions, matchParams);
-    const value = at(matchingOptions.config, path)[0];
-
-    return typeof value !== "undefined" ? value : def;
+    return mergedOptions.config;
   }
 
-  protected configValueForMemberIdAndChannelId(memberId: string, channelId: string, path: string, def: any = null) {
+  /**
+   * Returns the plugin's config with overrides matching the given matchParams applied to it
+   */
+  protected getMatchingConfig(matchParams: IMatchParams = {}): TConfig {
+    const mergedOptions = this.getMergedOptions();
+    const matchingOptions = getMatchingPluginOptions<IPluginOptions<TConfig, TPermissions>>(mergedOptions, matchParams);
+    return matchingOptions.config;
+  }
+
+  /**
+   * Returns the plugin's config with overrides matching the given member id and channel id applied to it
+   */
+  protected getConfigForMemberIdAndChannelId(memberId: string, channelId: string): TConfig {
     const guildId = this.bot.channelGuildMap[channelId];
     const guild = this.bot.guilds.get(guildId);
     const member = guild.members.get(memberId);
     const level = member ? this.getMemberLevel(member) : null;
 
-    return this.configValue(path, def, {
+    return this.getMatchingConfig({
       level,
       userId: memberId,
       channelId,
@@ -219,9 +243,12 @@ export class Plugin {
     });
   }
 
-  protected configValueForMsg(msg: Message, path: string, def: any = null) {
+  /**
+   * Returns the plugin's config with overrides matching the given message applied to it
+   */
+  protected getConfigForMsg(msg: Message): TConfig {
     const level = msg.member ? this.getMemberLevel(msg.member) : null;
-    return this.configValue(path, def, {
+    return this.getMatchingConfig({
       level,
       userId: msg.author.id,
       channelId: msg.channel.id,
@@ -229,21 +256,30 @@ export class Plugin {
     });
   }
 
-  protected configValueForChannel(channel: Channel, path: string, def: any = null) {
-    return this.configValue(path, def, {
+  /**
+   * Returns the plugin's config with overrides matching the given channel applied to it
+   */
+  protected getConfigForChannel(channel: Channel): TConfig {
+    return this.getMatchingConfig({
       channelId: channel.id
     });
   }
 
-  protected configValueForUser(user: User, path: string, def: any = null) {
-    return this.configValue(path, def, {
+  /**
+   * Returns the plugin's config with overrides matching the given user applied to it
+   */
+  protected getConfigForUser(user: User): TConfig {
+    return this.getMatchingConfig({
       userId: user.id
     });
   }
 
-  protected configValueForMember(member: Member, path: string, def: any = null) {
+  /**
+   * Returns the plugin's config with overrides matching the given member applied to it
+   */
+  protected getConfigForMember(member: Member): TConfig {
     const level = this.getMemberLevel(member);
-    return this.configValue(path, def, {
+    return this.getMatchingConfig({
       level,
       userId: member.user.id,
       memberRoles: member.roles
@@ -269,7 +305,7 @@ export class Plugin {
     return 0;
   }
 
-  protected hasPermission(requiredPermission: string, params: IHasPermissionParams) {
+  protected hasPermission(requiredPermission: string, params: IHasPermissionParams): boolean {
     const message = params.message;
     const userId =
       (message && message.author && message.author.id) || (params.member && params.member.id) || params.userId;
