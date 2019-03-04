@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { mergeConfig, getMatchingPluginOptions, hasPermission } from "../src/configUtils";
-import { IPluginOptions } from "../src/configInterfaces";
+import { IPartialPluginOptions } from "../src/configInterfaces";
 
 describe("mergeConfig", () => {
   const base = {
@@ -54,7 +54,7 @@ describe("mergeConfig", () => {
 });
 
 describe("getMatchingPluginOptions", () => {
-  const pluginOptions: IPluginOptions = {
+  const pluginOptions: IPartialPluginOptions = {
     config: {
       value: 5
     },
@@ -163,7 +163,7 @@ describe("getMatchingPluginOptions", () => {
 });
 
 describe("hasPermission", () => {
-  const pluginOptions: IPluginOptions = {
+  const pluginOptions: IPartialPluginOptions = {
     permissions: {
       hasAccess: false,
       nested: {

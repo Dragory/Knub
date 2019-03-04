@@ -1,4 +1,4 @@
-import { IPluginOptions } from "./configInterfaces";
+import { IPartialPluginOptions } from "./configInterfaces";
 
 const at = require("lodash.at");
 const diff = require("lodash.difference");
@@ -89,7 +89,7 @@ export function mergeConfig<T>(target: T, ...sources: T[]): T {
 /**
  * Returns matching plugin options for the specified matchParams based on the overrides of the plugin options
  */
-export function getMatchingPluginOptions<T extends IPluginOptions = IPluginOptions>(
+export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPartialPluginOptions>(
   pluginOptions: T,
   matchParams: IMatchParams
 ): T {
@@ -219,7 +219,7 @@ export function getMatchingPluginOptions<T extends IPluginOptions = IPluginOptio
  */
 export function hasPermission(
   requiredPermission: string,
-  pluginOptions: IPluginOptions,
+  pluginOptions: IPartialPluginOptions,
   matchParams: IMatchParams
 ): boolean {
   const matchingPluginOpts = getMatchingPluginOptions(pluginOptions, matchParams);

@@ -1,3 +1,5 @@
+import { DeepPartial } from "ts-essentials";
+
 export interface IPermissionLevelDefinitions {
   [roleOrUserId: string]: number;
 }
@@ -8,7 +10,7 @@ export interface IGuildConfig {
   levels?: IPermissionLevelDefinitions;
 
   plugins?: {
-    [key: string]: IPluginOptions;
+    [key: string]: IPartialPluginOptions;
   };
 
   // Custom config values
@@ -17,33 +19,39 @@ export interface IGuildConfig {
 
 export interface IGlobalConfig {
   plugins?: {
-    [key: string]: IPluginOptions;
+    [key: string]: IPartialPluginOptions;
   };
 
   // Custom config values
   [key: string]: any;
 }
 
-export interface IPluginOptions<TConfig2 = IBasePluginConfig, TPermissions2 = IBasePluginPermissions> {
+export interface IPartialPluginOptions<TConfig = IBasePluginConfig, TPermissions = IBasePluginPermissions> {
   enabled?: boolean;
-  permissions?: TPermissions2;
-  config?: TConfig2;
-  overrides?: Array<IPluginConfigOverride<TConfig2, TPermissions2>>;
-  "=overrides"?: Array<IPluginConfigOverride<TConfig2, TPermissions2>>;
+  permissions?: DeepPartial<TPermissions>;
+  config?: DeepPartial<TConfig>;
+  overrides?: Array<IPluginConfigOverride<TConfig, TPermissions>>;
+  "=overrides"?: Array<IPluginConfigOverride<TConfig, TPermissions>>;
 }
 
-export interface IPluginConfigOverride<TConfig3 = IBasePluginConfig, TPermissions3 = IBasePluginPermissions> {
+export interface IPluginOptions<TConfig = IBasePluginConfig, TPermissions = IBasePluginPermissions>
+  extends IPartialPluginOptions<TConfig, TPermissions> {
+  permissions: TPermissions;
+  config: TConfig;
+}
+
+export interface IPluginConfigOverride<TConfig = IBasePluginConfig, TPermissions = IBasePluginPermissions> {
   channel?: string | string[];
   level?: string | string[];
   user?: string | string[];
   role?: string | string[];
   type?: "any" | "all";
-  config?: TConfig3;
-  permissions?: TPermissions3;
+  config?: DeepPartial<TConfig>;
+  permissions?: DeepPartial<TPermissions>;
 }
 
 export interface IBasePluginPermissions {
-  [key: string]: any;
+  [key: string]: boolean | IBasePluginPermissions;
 }
 
 export interface IBasePluginConfig {

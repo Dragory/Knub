@@ -41,6 +41,7 @@
     "lint-staged": "^4.0.2",
     "mocha": "^5.2.0",
     "prettier": "^1.10.2",
+    "ts-essentials": "^2.0.2",
     "ts-node": "^3.2.1",
     "tslint": "^5.9.1",
     "tslint-config-prettier": "^1.6.0",

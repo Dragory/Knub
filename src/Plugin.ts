@@ -7,6 +7,7 @@ import {
   IBasePluginPermissions,
   IGuildConfig,
   IPermissionLevelDefinitions,
+  IPartialPluginOptions,
   IPluginOptions
 } from "./configInterfaces";
 import { ArbitraryFunction, errorEmbed, eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./utils";
@@ -48,7 +49,7 @@ export class Plugin<
 
   protected bot: Client;
   protected readonly guildConfig: IGuildConfig;
-  protected readonly pluginOptions: IPluginOptions;
+  protected readonly pluginOptions: IPartialPluginOptions;
   protected mergedPluginOptions: IPluginOptions;
 
   protected knub: Knub;
@@ -64,7 +65,7 @@ export class Plugin<
     bot: Client,
     guildId: string,
     guildConfig: IGuildConfig,
-    pluginOptions: IPluginOptions,
+    pluginOptions: IPartialPluginOptions,
     runtimePluginName: string,
     knub: Knub,
     locks: LockManager
@@ -181,7 +182,7 @@ export class Plugin<
    */
   protected getDefaultOptions(): IPluginOptions<TConfig, TPermissions> {
     // Implemented by plugin
-    return {};
+    return {} as IPluginOptions<TConfig, TPermissions>;
   }
 
   /**

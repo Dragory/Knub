@@ -22,6 +22,7 @@ export {
   IBasePluginPermissions,
   IGuildConfig,
   IGlobalConfig,
+  IPartialPluginOptions,
   IPluginOptions
 } from "./configInterfaces";
 
