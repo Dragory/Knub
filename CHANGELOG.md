@@ -1,3 +1,7 @@
+# 18.0.1
+* Fix overrides requiring full plugin config/permissions when using config/permission types
+* Tweak plugin option types to work more reliably
+
 # 18.0.0
 * Remove support for "runtime options" in IKnubArgs
   * If you need to override a plugin's default options, extend that plugin instead!
