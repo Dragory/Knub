@@ -1,3 +1,28 @@
+# 18.0.0
+* Remove support for "runtime options" in IKnubArgs
+  * If you need to override a plugin's default options, extend that plugin instead!
+* Remove support for overriding a plugin's name in IKnubArgs
+  * See above
+* Changes to config value usage in plugins:
+  * Remove the following configValue functions:
+    * `configValue()`
+    * `configValueForMemberIdAndChannelId()`
+    * `configValueForMsg()`
+    * `configValueForChannel()`
+    * `configValueForUser()`
+    * `configValueForMember()`
+  * Add the following new getConfig functions:
+    * `getConfig()`
+    * `getMatchingConfig()`
+    * `getConfigForMemberIdAndChannelId()`
+    * `getConfigForMsg()`
+    * `getConfigForChannel()`
+    * `getConfigForUser()`
+    * `getConfigForMember()`
+  * Add optional generic types to Plugin that define the type of the plugin's config and permissions
+  * These changes were made to allow proper static analysis of config and permission values in plugin code
+* Update to Typescript 3.3(.3333)
+
 # 17.2.0
 * Add `Knub.getLoadedGuilds()`
 
@@ -11,7 +36,7 @@
 * Fix type error that prevented the build from.. building
 
 # 17.0.0
-* Deprecate blocking functionality
+* Remove blocking functionality
 * Add locks. Locks can be acquired in plugins via `this.locks.acquire(string|string[])` or with the new `lock`
   decorator, and then unlocked via `lock.unlock()` (done automatically with the decorator).  
   When using locks, the promise returned by `acquire()` will wait for the old matching locks to unlock before resolving.
