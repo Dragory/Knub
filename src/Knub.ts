@@ -8,7 +8,11 @@ import { logger, LoggerFn, setLoggerFn } from "./logger";
 import { Plugin } from "./Plugin";
 import { GlobalPlugin } from "./GlobalPlugin";
 import EventEmitter from "events";
-import { IGlobalConfig, IGuildConfig, IPartialPluginOptions } from "./configInterfaces";
+import {
+  IGlobalConfig,
+  IGuildConfig,
+  IPartialPluginOptions
+} from "./configInterfaces";
 import { noop } from "./utils";
 import { performance } from "perf_hooks";
 import { LockManager } from "./LockManager";
@@ -18,7 +22,10 @@ const at = require("lodash.at");
 export interface IOptions {
   autoInitGuilds?: boolean;
   getConfig?: (id: string) => any | Promise<any>;
-  getEnabledPlugins?: (guildId: string, guildConfig: IGuildConfig) => string[] | Promise<string[]>;
+  getEnabledPlugins?: (
+    guildId: string,
+    guildConfig: IGuildConfig
+  ) => string[] | Promise<string[]>;
   canLoadGuild?: (guildId: string) => boolean | Promise<boolean>;
   logFn?: LoggerFn;
   performanceDebug?: {
@@ -37,10 +44,11 @@ export interface IGuildData {
 }
 
 class IExtendedPlugin extends Plugin<any, any> {}
+class IExtendedGlobalPlugin extends Plugin<any, any> {}
 
 export interface IKnubArgs {
   plugins?: Array<typeof IExtendedPlugin>;
-  globalPlugins?: Array<typeof GlobalPlugin>;
+  globalPlugins?: Array<typeof IExtendedGlobalPlugin>;
   options?: IOptions;
 }
 
@@ -77,7 +85,9 @@ export class Knub extends EventEmitter {
 
     args.globalPlugins.forEach(globalPlugin => {
       if (globalPlugin.pluginName == null) {
-        throw new Error(`No plugin name specified for global plugin ${globalPlugin.name}`);
+        throw new Error(
+          `No plugin name specified for global plugin ${globalPlugin.name}`
+        );
       }
 
       if (this.globalPlugins.has(globalPlugin.pluginName)) {
@@ -202,7 +212,7 @@ export class Knub extends EventEmitter {
     this.guilds.set(guildId, guildData);
 
     // Can we load this guild?
-    if (!await this.options.canLoadGuild(guildData.id)) {
+    if (!(await this.options.canLoadGuild(guildData.id))) {
       this.guilds.delete(guildId);
       return;
     }
@@ -211,10 +221,18 @@ export class Knub extends EventEmitter {
     guildData.config = await this.options.getConfig(guildData.id);
 
     // Load plugins
-    const enabledPlugins = await this.options.getEnabledPlugins.call(this, guildData.id, guildData.config);
+    const enabledPlugins = await this.options.getEnabledPlugins.call(
+      this,
+      guildData.id,
+      guildData.config
+    );
 
     const loadPromises = enabledPlugins.map(async pluginName => {
-      const plugin = await this.loadPlugin(guildData.id, pluginName, guildData.config);
+      const plugin = await this.loadPlugin(
+        guildData.id,
+        pluginName,
+        guildData.config
+      );
       if (!plugin) return;
 
       guildData.loadedPlugins.set(pluginName, plugin);
@@ -254,7 +272,11 @@ export class Knub extends EventEmitter {
     return Array.from(this.guilds.values());
   }
 
-  public async loadPlugin(guildId: string, pluginName: string, guildConfig: IGuildConfig): Promise<Plugin> {
+  public async loadPlugin(
+    guildId: string,
+    pluginName: string,
+    guildConfig: IGuildConfig
+  ): Promise<Plugin> {
     if (!this.plugins.has(pluginName)) {
       throw new Error(`Unknown plugin: ${pluginName}`);
     }
@@ -262,13 +284,23 @@ export class Knub extends EventEmitter {
     const pluginOptions = at(guildConfig, `plugins.${pluginName}`)[0] || {};
     const PluginClass = this.plugins.get(pluginName);
     const guildLocks = this.guilds.get(guildId).locks;
-    const plugin = new PluginClass(this.bot, guildId, guildConfig, pluginOptions, pluginName, this, guildLocks);
+    const plugin = new PluginClass(
+      this.bot,
+      guildId,
+      guildConfig,
+      pluginOptions,
+      pluginName,
+      this,
+      guildLocks
+    );
 
     try {
       await plugin.runLoad();
     } catch (e) {
       if (!(e instanceof Error)) throw e;
-      logger.warn(`Could not load plugin ${pluginName} for guild ${guildId}: ${e.stack}`);
+      logger.warn(
+        `Could not load plugin ${pluginName} for guild ${guildId}: ${e.stack}`
+      );
       return;
     }
 
@@ -279,7 +311,12 @@ export class Knub extends EventEmitter {
 
   public async unloadPlugin(plugin: Plugin): Promise<void> {
     await plugin.runUnload();
-    this.emit("guildPluginUnloaded", plugin.guildId, plugin.runtimePluginName, plugin);
+    this.emit(
+      "guildPluginUnloaded",
+      plugin.guildId,
+      plugin.runtimePluginName,
+      plugin
+    );
   }
 
   public async reloadPlugin(plugin: Plugin): Promise<void> {
@@ -297,7 +334,8 @@ export class Knub extends EventEmitter {
       throw new Error(`Unknown global plugin: ${pluginName}`);
     }
 
-    const pluginOptions: IPartialPluginOptions = at(this.globalConfig, `plugins.${pluginName}`)[0] || {};
+    const pluginOptions: IPartialPluginOptions =
+      at(this.globalConfig, `plugins.${pluginName}`)[0] || {};
     const PluginClass = this.globalPlugins.get(pluginName);
 
     const plugin = new PluginClass(
@@ -367,7 +405,9 @@ export class Knub extends EventEmitter {
   }
 
   protected performanceDebugEnabled() {
-    return this.options.performanceDebug && this.options.performanceDebug.enabled;
+    return (
+      this.options.performanceDebug && this.options.performanceDebug.enabled
+    );
   }
 
   public logPerformanceDebugItem(time: number, description: string) {

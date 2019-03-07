@@ -1,3 +1,6 @@
+# 18.0.5
+* Fix type error when specifying global plugins to load
+
 # 18.0.4
 * Fix missing `ts-essentials` dependency
 
