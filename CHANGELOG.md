@@ -1,3 +1,6 @@
+# 18.0.6
+* Fix erroneous error message in plugin loading
+
 # 18.0.5
 * Fix type error when specifying global plugins to load
 
