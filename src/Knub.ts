@@ -98,7 +98,7 @@ export class Knub extends EventEmitter {
     });
 
     args.plugins.forEach(plugin => {
-      if (plugin.pluginName) {
+      if (plugin.pluginName == null) {
         throw new Error(`No plugin name specified for plugin ${plugin.name}`);
       }
 
