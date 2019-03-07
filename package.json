@@ -25,7 +25,8 @@
     "lodash.at": "^4.6.0",
     "lodash.difference": "^4.5.0",
     "lodash.merge": "^4.6.1",
-    "reflect-metadata": "^0.1.10"
+    "reflect-metadata": "^0.1.10",
+    "ts-essentials": "^2.0.3"
   },
   "devDependencies": {
     "@types/chai": "^4.0.1",
@@ -41,7 +42,6 @@
     "lint-staged": "^4.0.2",
     "mocha": "^5.2.0",
     "prettier": "^1.16.4",
-    "ts-essentials": "^2.0.2",
     "ts-node": "^3.2.1",
     "tslint": "^5.9.1",
     "tslint-config-prettier": "^1.6.0",
