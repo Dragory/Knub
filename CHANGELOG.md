@@ -1,3 +1,6 @@
+# 18.0.4
+* Fix missing `ts-essentials` dependency
+
 # 18.0.3
 * Make Plugin TConfig and TPermissions types less strict (no longer requires an index signature)
 * Add the same generics to GlobalPlugin as Plugin
