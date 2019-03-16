@@ -1,3 +1,6 @@
+# 18.0.7
+* Old locks are now garbage collected after they haven't been acquired in 120 seconds
+
 # 18.0.6
 * Fix erroneous error message in plugin loading
 
