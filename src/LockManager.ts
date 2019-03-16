@@ -1,4 +1,7 @@
+import Timeout = NodeJS.Timeout;
+
 const DEFAULT_LOCK_TIMEOUT = 10 * 1000;
+const LOCK_GC_TIMEOUT = 120 * 1000;
 
 export class Lock {
   public unlockPromise: Promise<Lock>;
@@ -31,19 +34,29 @@ export class Lock {
 export class LockManager {
   protected locks: Map<string, Promise<Lock>>;
   protected lockTimeout: number;
+  protected lockGCTimeouts: Map<string, Timeout>;
 
   constructor(lockTimeout = DEFAULT_LOCK_TIMEOUT) {
     this.locks = new Map();
     this.lockTimeout = lockTimeout;
+    this.lockGCTimeouts = new Map();
   }
 
   public acquire(keys: string | string[], lockTimeout: number = null) {
     if (!Array.isArray(keys)) keys = [keys];
     if (lockTimeout == null) lockTimeout = this.lockTimeout;
 
+    keys.forEach(key => {
+      clearTimeout(this.lockGCTimeouts.get(key));
+      this.lockGCTimeouts.delete(key);
+    });
+
     // To acquire a lock, we must first wait for all matching old locks to resolve
     const oldLockPromises = keys.reduce(
-      (lockPromises, key) => (this.locks.has(key) ? [...lockPromises, this.locks.get(key)] : lockPromises),
+      (lockPromises, key) =>
+        this.locks.has(key)
+          ? [...lockPromises, this.locks.get(key)]
+          : lockPromises,
       []
     );
     const newLockPromise = Promise.all(oldLockPromises)
@@ -53,6 +66,16 @@ export class LockManager {
       })
       .then(unlockedOldLocks => {
         // And *then* we can return a new lock
+        (keys as string[]).forEach(key => {
+          this.lockGCTimeouts.set(
+            key,
+            setTimeout(() => {
+              this.locks.delete(key);
+              this.lockGCTimeouts.delete(key);
+            }, LOCK_GC_TIMEOUT)
+          );
+        });
+
         return new Lock(unlockedOldLocks, lockTimeout);
       });
 
