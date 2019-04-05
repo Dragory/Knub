@@ -1,3 +1,6 @@
+# 18.1.0
+* Added support for custom command argument types. They can either be specified globally in Knub options, or per-plugin with the customArgumentTypes property.
+
 # 18.0.7
 * Old locks are now garbage collected after they haven't been acquired in 120 seconds
 

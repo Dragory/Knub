@@ -32,6 +32,7 @@ import {
   convertArgumentTypes,
   convertOptionTypes,
   getDefaultPrefix,
+  ICustomArgumentTypes,
   runCommand
 } from "./commandUtils";
 import { Knub } from "./Knub";
@@ -87,6 +88,8 @@ export class Plugin<
   protected eventHandlers: Map<string, any[]>;
 
   protected cooldowns: CooldownManager;
+
+  protected customArgumentTypes: ICustomArgumentTypes = {};
 
   constructor(
     bot: Client,
@@ -568,10 +571,21 @@ export class Plugin<
         continue;
       }
 
+      // Use both global custom argument types + plugin-specific custom argument types
+      const customArgumentTypes: ICustomArgumentTypes = {
+        ...this.knub.getCustomArgumentTypes(),
+        ...this.customArgumentTypes
+      };
+
       // Convert arg types
       if (!command.error) {
         try {
-          await convertArgumentTypes(command.args, msg, this.bot);
+          await convertArgumentTypes(
+            command.args,
+            msg,
+            this.bot,
+            customArgumentTypes
+          );
         } catch (e) {
           command.error = e;
         }
@@ -580,7 +594,12 @@ export class Plugin<
       // Convert opt types
       if (!command.error) {
         try {
-          await convertOptionTypes(command.opts, msg, this.bot);
+          await convertOptionTypes(
+            command.opts,
+            msg,
+            this.bot,
+            customArgumentTypes
+          );
         } catch (e) {
           command.error = e;
         }

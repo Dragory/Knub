@@ -1,6 +1,17 @@
-import { Client, Guild, GuildChannel, TextChannel, Message, PrivateChannel } from "eris";
+import {
+  Client,
+  Guild,
+  GuildChannel,
+  TextChannel,
+  Message,
+  PrivateChannel
+} from "eris";
 import { getChannelId, getRoleId, getUserId } from "./utils";
-import { IArgumentMap, IMatchedCommand, IMatchedOptionMap } from "./CommandManager";
+import {
+  IArgumentMap,
+  IMatchedCommand,
+  IMatchedOptionMap
+} from "./CommandManager";
 
 export function getDefaultPrefix(client: Client) {
   return `/<@!?${client.user.id}> /`;
@@ -8,15 +19,20 @@ export function getDefaultPrefix(client: Client) {
 
 export class CommandValueTypeError extends Error {}
 
+export interface ICustomArgumentTypes {
+  [key: string]: (value: any, msg: Message, bot: Client) => any;
+}
+
 /**
  * Converts `value` to the specified type
- * @param {any} value
- * @param {string} type
- * @param {Message} msg
- * @param {Client} bot
- * @returns {Promise<any>}
  */
-export async function convertToType(value: any, type: string, msg: Message, bot: Client): Promise<any> {
+export async function convertToType(
+  value: any,
+  type: string,
+  msg: Message,
+  bot: Client,
+  customTypes: ICustomArgumentTypes = {}
+): Promise<any> {
   if (value == null) {
     if (type === "bool" || type === "boolean") return true;
     return null;
@@ -34,44 +50,60 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
   } else if (type === "user") {
     const userId = getUserId(value);
     if (!userId) {
-      throw new CommandValueTypeError(`Could not convert ${value} to a user id`);
+      throw new CommandValueTypeError(
+        `Could not convert ${value} to a user id`
+      );
     }
 
     const user = bot.users.get(userId);
     if (!user) {
-      throw new CommandValueTypeError(`Could not convert user id ${userId} to a user`);
+      throw new CommandValueTypeError(
+        `Could not convert user id ${userId} to a user`
+      );
     }
 
     return user;
   } else if (type === "member") {
     if (!(msg.channel instanceof GuildChannel)) {
-      throw new CommandValueTypeError(`Type 'Member' can only be used in guilds`);
+      throw new CommandValueTypeError(
+        `Type 'Member' can only be used in guilds`
+      );
     }
 
     const userId = getUserId(value);
     if (!userId) {
-      throw new CommandValueTypeError(`Could not convert ${value} to a user id`);
+      throw new CommandValueTypeError(
+        `Could not convert ${value} to a user id`
+      );
     }
 
     const user = bot.users.get(userId);
     if (!user) {
-      throw new CommandValueTypeError(`Could not convert user id ${userId} to a user`);
+      throw new CommandValueTypeError(
+        `Could not convert user id ${userId} to a user`
+      );
     }
 
     const member = msg.channel.guild.members.get(user.id);
     if (!member) {
-      throw new CommandValueTypeError(`Could not convert user id ${userId} to a member`);
+      throw new CommandValueTypeError(
+        `Could not convert user id ${userId} to a member`
+      );
     }
 
     return member;
   } else if (type === "channel") {
     const channelId = getChannelId(value);
     if (!channelId) {
-      throw new CommandValueTypeError(`Could not convert ${value} to a channel id`);
+      throw new CommandValueTypeError(
+        `Could not convert ${value} to a channel id`
+      );
     }
 
     const channelGuildId = bot.channelGuildMap[channelId];
-    const channel = channelGuildId ? bot.guilds.get(channelGuildId).channels.get(channelId) : null;
+    const channel = channelGuildId
+      ? bot.guilds.get(channelGuildId).channels.get(channelId)
+      : null;
     if (!channel) {
       throw new CommandValueTypeError(`Channel ${channelId} not found`);
     }
@@ -84,7 +116,9 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
 
     const roleId = getRoleId(value);
     if (!roleId) {
-      throw new CommandValueTypeError(`Could not convert ${value} to a role id`);
+      throw new CommandValueTypeError(
+        `Could not convert ${value} to a role id`
+      );
     }
 
     const role = msg.channel.guild.roles.get(roleId);
@@ -96,17 +130,23 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
   } else if (type === "userid") {
     const userId = getUserId(value);
     if (!userId) {
-      throw new CommandValueTypeError(`Could not convert ${value} to a user id`);
+      throw new CommandValueTypeError(
+        `Could not convert ${value} to a user id`
+      );
     }
 
     return userId;
   } else if (type === "channelid") {
     const channelId = getChannelId(value);
     if (!channelId) {
-      throw new CommandValueTypeError(`Could not convert ${value} to a channel id`);
+      throw new CommandValueTypeError(
+        `Could not convert ${value} to a channel id`
+      );
     }
 
     return channelId;
+  } else if (customTypes[type]) {
+    return customTypes[type](value, msg, bot);
   } else {
     throw new CommandValueTypeError(`Unknown type: ${type}`);
   }
@@ -115,7 +155,12 @@ export async function convertToType(value: any, type: string, msg: Message, bot:
 /**
  * Runs convertToType in-place for each argument in 'args'.
  */
-export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot: Client): Promise<void> {
+export async function convertArgumentTypes(
+  args: IArgumentMap,
+  msg: Message,
+  bot: Client,
+  customTypes: ICustomArgumentTypes = {}
+): Promise<void> {
   for (const argName in args) {
     const arg = args[argName];
 
@@ -128,14 +173,22 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
     try {
       if (Array.isArray(arg.value)) {
         for (const [i] of arg.value.entries()) {
-          arg.value[i] = await convertToType(arg.value[i], type, msg, bot);
+          arg.value[i] = await convertToType(
+            arg.value[i],
+            type,
+            msg,
+            bot,
+            customTypes
+          );
         }
       } else {
-        arg.value = await convertToType(arg.value, type, msg, bot);
+        arg.value = await convertToType(arg.value, type, msg, bot, customTypes);
       }
     } catch (e) {
       const typeName = `${arg.parameter.type}${arg.parameter.rest ? "[]" : ""}`;
-      throw new CommandValueTypeError(`Could not convert argument ${arg.parameter.name} to ${typeName}`);
+      throw new CommandValueTypeError(
+        `Could not convert argument ${arg.parameter.name} to ${typeName}`
+      );
     }
   }
 }
@@ -143,7 +196,12 @@ export async function convertArgumentTypes(args: IArgumentMap, msg: Message, bot
 /**
  * Runs convertToType in-place for each option in 'opts'.
  */
-export async function convertOptionTypes(opts: IMatchedOptionMap, msg: Message, bot: Client) {
+export async function convertOptionTypes(
+  opts: IMatchedOptionMap,
+  msg: Message,
+  bot: Client,
+  customTypes: ICustomArgumentTypes = {}
+) {
   for (const optName in opts) {
     const opt = opts[optName];
     const type = (opt.option.type || "string").toLowerCase();
@@ -151,18 +209,30 @@ export async function convertOptionTypes(opts: IMatchedOptionMap, msg: Message, 
     try {
       if (Array.isArray(opt.value)) {
         for (const [i] of opt.value.entries()) {
-          opt.value[i] = await convertToType(opt.value[i], type, msg, bot);
+          opt.value[i] = await convertToType(
+            opt.value[i],
+            type,
+            msg,
+            bot,
+            customTypes
+          );
         }
       } else {
-        opt.value = await convertToType(opt.value, type, msg, bot);
+        opt.value = await convertToType(opt.value, type, msg, bot, customTypes);
       }
     } catch (e) {
-      throw new CommandValueTypeError(`Could not convert option ${opt.option.name} to ${opt.option.type}`);
+      throw new CommandValueTypeError(
+        `Could not convert option ${opt.option.name} to ${opt.option.type}`
+      );
     }
   }
 }
 
-export async function runCommand(command: IMatchedCommand, msg: Message, bot: Client) {
+export async function runCommand(
+  command: IMatchedCommand,
+  msg: Message,
+  bot: Client
+) {
   const argsToPass: any = {};
 
   for (const name in command.args) {

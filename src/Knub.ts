@@ -16,6 +16,7 @@ import {
 import { noop } from "./utils";
 import { performance } from "perf_hooks";
 import { LockManager } from "./LockManager";
+import { ICustomArgumentTypes } from "./commandUtils";
 
 const at = require("lodash.at");
 
@@ -33,6 +34,7 @@ export interface IOptions {
     size?: number;
     threshold?: number;
   };
+  customArgumentTypes?: ICustomArgumentTypes;
   [key: string]: any;
 }
 
@@ -133,7 +135,9 @@ export class Knub extends EventEmitter {
         });
       },
 
-      canLoadGuild: () => true
+      canLoadGuild: () => true,
+
+      customArgumentTypes: {}
     };
 
     this.options = { ...defaultOptions, ...args.options };
@@ -439,5 +443,9 @@ export class Knub extends EventEmitter {
 
   public getPerformanceDebugItems() {
     return Array.from(this.performanceDebugItems);
+  }
+
+  public getCustomArgumentTypes(): ICustomArgumentTypes {
+    return this.options.customArgumentTypes || {};
   }
 }
