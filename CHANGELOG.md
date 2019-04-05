@@ -1,5 +1,8 @@
+# 18.2.0
+* Add support for argument overloads in command options (could be done with multiple commands with the same name previously)
+
 # 18.1.0
-* Added support for custom command argument types. They can either be specified globally in Knub options, or per-plugin with the customArgumentTypes property.
+* Add support for custom command argument types. They can either be specified globally in Knub options, or per-plugin with the customArgumentTypes property.
 
 # 18.0.7
 * Old locks are now garbage collected after they haven't been acquired in 120 seconds

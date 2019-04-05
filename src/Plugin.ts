@@ -165,12 +165,19 @@ export class Plugin<
             commandConfig.cooldownPermission = cooldown.permission;
           }
 
-          this.commands.add(
-            metaCommand.command,
-            metaCommand.parameters,
-            value.bind(this),
-            commandConfig
-          );
+          // Parameter overloads
+          const overloads = commandConfig.overloads
+            ? [metaCommand.parameters, ...commandConfig.overloads]
+            : [metaCommand.parameters];
+
+          for (const overload of overloads) {
+            this.commands.add(
+              metaCommand.command,
+              overload,
+              value.bind(this),
+              commandConfig
+            );
+          }
         }
       }
 
