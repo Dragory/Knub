@@ -35,14 +35,10 @@ import { PluginError } from "./PluginError";
 import { Lock, LockManager } from "./LockManager";
 import { CooldownManager } from "./CooldownManager";
 
-export interface IHasPermissionParams {
-  userId?: string;
+export interface IExtendedMatchParams extends IMatchParams {
   channelId?: string;
-
   member?: Member;
   message?: Message;
-
-  level?: number;
 }
 
 /**
@@ -246,11 +242,38 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
   }
 
   /**
-   * Returns the plugin's config with overrides matching the given matchParams applied to it
+   * Returns the plugin's config with overrides matching the given match params applied to it
    */
-  protected getMatchingConfig(matchParams: IMatchParams = {}): TConfig {
+  protected getMatchingConfig(matchParams: IExtendedMatchParams = {}): TConfig {
+    const message = matchParams.message;
+
+    // Passed userId -> passed member's id -> passed message's author's id
+    const userId =
+      matchParams.userId ||
+      (matchParams.member && matchParams.member.id) ||
+      (message && message.author && message.author.id);
+
+    // Passed channelId -> passed message's channel id
+    const channelId = matchParams.channelId || (message && message.channel && message.channel.id);
+
+    // Passed member -> passed message's member
+    const member = matchParams.member || (message && message.member);
+
+    // Passed level -> passed member's level
+    const level = matchParams.level != null ? matchParams.level : member ? this.getMemberLevel(member) : null;
+
+    // Passed roles -> passed member's roles
+    const memberRoles = matchParams.memberRoles || (member && member.roles);
+
+    const finalMatchParams: IMatchParams = {
+      level,
+      userId,
+      channelId,
+      memberRoles
+    };
+
     const mergedOptions = this.getMergedOptions();
-    const matchingOptions = getMatchingPluginOptions<IPluginOptions<TConfig>>(mergedOptions, matchParams);
+    const matchingOptions = getMatchingPluginOptions<IPluginOptions<TConfig>>(mergedOptions, finalMatchParams);
     return matchingOptions.config;
   }
 
@@ -334,33 +357,10 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
   }
 
   /**
-   * Wrapper for getting a matching config and checking a permission value
+   * Wrapper for getting a matching config and checking the permission value is true
    */
-  protected hasPermission(requiredPermission: string, params: IHasPermissionParams): boolean {
-    const message = params.message;
-
-    // Passed message author id -> passed member id -> passed userId
-    const userId =
-      (message && message.author && message.author.id) || (params.member && params.member.id) || params.userId;
-
-    // Passed message channel id -> passed channelId
-    const channelId = (message && message.channel && message.channel.id) || params.channelId;
-
-    // Passed message member -> passed member
-    const member = (message && message.member) || params.member;
-
-    // Passed level -> passed member's level
-    const level = params.level != null ? params.level : member ? this.getMemberLevel(member) : null;
-
-    // Get matching config
-    const matchParams: IMatchParams = {
-      level,
-      userId,
-      channelId,
-      memberRoles: member && member.roles
-    };
+  protected hasPermission(requiredPermission: string, matchParams: IExtendedMatchParams): boolean {
     const config = this.getMatchingConfig(matchParams);
-
     return at(config, requiredPermission)[0] === true;
   }
 
