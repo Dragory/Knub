@@ -9,14 +9,7 @@
       "es7",
       "es2017"
     ],
-    "baseUrl": "./",
-    "paths": {
-      "minimist-string": ["minimist-string", "types/minimist-string"]
-    },
-    "typeRoots": [
-      "node_modules/@types",
-      "types"
-    ],
+    "baseUrl": "./src",
     "outDir": "dist",
     "sourceMap": true,
     "declaration": true,
