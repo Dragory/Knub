@@ -12,7 +12,7 @@
     "build": "touch dist && rm -r dist && tsc",
     "prepublishOnly": "npm run build",
     "watch": "touch dist && rm -r dist && tsc --watch",
-    "format": "prettier --write \"./**/*.ts\""
+    "format": "prettier --write \"{src,test}/**/*.ts\""
   },
   "lint-staged": {
     "*.ts": [
