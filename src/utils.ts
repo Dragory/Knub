@@ -75,13 +75,6 @@ export function resolveRole(guild: Guild, str: string) {
   return roleId && guild.roles.get(roleId);
 }
 
-export function errorEmbed(str: string) {
-  return {
-    description: str,
-    color: parseInt("ee4400", 16)
-  };
-}
-
 export const noop = () => {}; // tslint:disable-line
 
 const id = v => v;

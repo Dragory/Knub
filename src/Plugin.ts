@@ -1,5 +1,16 @@
 import "reflect-metadata";
-import { Channel, Client, PrivateChannel, GroupChannel, GuildChannel, Guild, Member, Message, User } from "eris";
+import {
+  Channel,
+  Client,
+  PrivateChannel,
+  GroupChannel,
+  GuildChannel,
+  Guild,
+  Member,
+  Message,
+  User,
+  TextableChannel
+} from "eris";
 const at = require("lodash.at");
 
 import { CommandManager, ICommandConfig } from "./CommandManager";
@@ -10,7 +21,7 @@ import {
   IPartialPluginOptions,
   IPluginOptions
 } from "./configInterfaces";
-import { ArbitraryFunction, errorEmbed, eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./utils";
+import { ArbitraryFunction, eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./utils";
 import {
   convertArgumentTypes,
   convertOptionTypes,
@@ -604,7 +615,15 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     // Only post the last error in the matched set of commands. This way if there are multiple "overlapping" commands,
     // an error won't be reported when some of them match, nor will there be tons of spam if all of them have errors.
     if (onlyErrors && lastError) {
-      msg.channel.createMessage({ embed: errorEmbed(lastError.message) });
+      this.sendErrorMessage(msg.channel, lastError.message);
     }
+  }
+
+  protected sendErrorMessage(channel: TextableChannel, body: string) {
+    this.knub.sendErrorMessage(channel, body);
+  }
+
+  protected sendSuccessMessage(channel: TextableChannel, body: string) {
+    this.knub.sendSuccessMessage(channel, body);
   }
 }

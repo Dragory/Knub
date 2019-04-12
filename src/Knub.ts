@@ -1,4 +1,4 @@
-import { Client, Guild } from "eris";
+import { Client, Guild, TextableChannel } from "eris";
 import path from "path";
 
 import _fs from "fs";
@@ -16,6 +16,8 @@ import { ICustomArgumentTypes } from "./commandUtils";
 
 const at = require("lodash.at");
 
+type StatusMessageFn = (channel: TextableChannel, body: string) => void;
+
 export interface IOptions {
   autoInitGuilds?: boolean;
   getConfig?: (id: string) => any | Promise<any>;
@@ -28,6 +30,8 @@ export interface IOptions {
     threshold?: number;
   };
   customArgumentTypes?: ICustomArgumentTypes;
+  sendErrorMessageFn?: StatusMessageFn;
+  sendSuccessMessageFn?: StatusMessageFn;
   [key: string]: any;
 }
 
@@ -128,7 +132,25 @@ export class Knub extends EventEmitter {
 
       canLoadGuild: () => true,
 
-      customArgumentTypes: {}
+      customArgumentTypes: {},
+
+      sendErrorMessageFn(channel, body) {
+        channel.createMessage({
+          embed: {
+            description: body,
+            color: parseInt("ee4400", 16)
+          }
+        });
+      },
+
+      sendSuccessMessageFn(channel, body) {
+        channel.createMessage({
+          embed: {
+            description: body,
+            color: parseInt("1ac600", 16)
+          }
+        });
+      }
     };
 
     this.options = { ...defaultOptions, ...args.options };
@@ -408,5 +430,13 @@ export class Knub extends EventEmitter {
 
   public getCustomArgumentTypes(): ICustomArgumentTypes {
     return this.options.customArgumentTypes || {};
+  }
+
+  public sendErrorMessage(channel: TextableChannel, body: string) {
+    this.options.sendErrorMessageFn(channel, body);
+  }
+
+  public sendSuccessMessage(channel: TextableChannel, body: string) {
+    this.options.sendSuccessMessageFn(channel, body);
   }
 }
