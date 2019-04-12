@@ -1,3 +1,6 @@
+# 19.1.0
+* `Plugin.getMatchingConfig` now supports the same match params as `Plugin.hasPermission` - that is, you can pass a Message or Member and have the user/channel/level/roles be inferred from those
+
 # 19.0.0
 * Plugin options no longer have a permissions property. Instead, permissions are now part of the plugin's config, and permission checks via `hasPermission()` / `permission` decorator are wrappers around getting a matching config and checking that the value at the permission's path is `true`.
   * This change was made to simplify complex permissions and to unify the two systems that were, more or less, identical
