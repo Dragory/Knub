@@ -5,9 +5,7 @@ describe("CommandManager", () => {
   describe("Argument parsing", () => {
     it("should parse arguments correctly", () => {
       const manager = new CommandManager();
-      const parsed = manager.parseArguments(
-        `arg1 "double-quoted value" 'single-quoted value' something`
-      );
+      const parsed = manager.parseArguments(`arg1 "double-quoted value" 'single-quoted value' something`);
 
       expect(parsed.length).to.equal(4);
       expect(parsed[0].value).to.equal("arg1");
@@ -26,11 +24,7 @@ describe("CommandManager", () => {
 
       manager.add("addrole", "<user:Member> <arg2:string=somedefault>", noop);
       manager.add(/p[io]ng/, null, noop);
-      manager.add(
-        "setgreeting <msg:string$>",
-        [{ name: "msg", def: "something" }],
-        noop
-      );
+      manager.add("setgreeting <msg:string$>", [{ name: "msg", def: "something" }], noop);
       manager.add("8ball", [{ name: "question" }], noop);
       manager.add("addroles", "<user:Member> [roleName:string...]", noop);
 
@@ -44,11 +38,7 @@ describe("CommandManager", () => {
       };
 
       manager.add("addrole", "<user:Member> <arg2:string=somedefault>", noop);
-      manager.add(
-        "setgreeting",
-        [{ name: "msg", type: "string", def: "something" }],
-        noop
-      );
+      manager.add("setgreeting", [{ name: "msg", type: "string", def: "something" }], noop);
       manager.add("addroles", "[roleNames:string...]", noop);
       manager.add("addnote", "<note:string$>", noop);
 
@@ -82,9 +72,7 @@ describe("CommandManager", () => {
       });
 
       expect(manager.commands[2].parameters[0].rest).to.equal(true);
-      expect(JSON.stringify(manager.commands[2].parameters[0].def)).to.equal(
-        "[]"
-      );
+      expect(JSON.stringify(manager.commands[2].parameters[0].def)).to.equal("[]");
       expect(manager.commands[3].parameters[0].catchAll).to.equal(true);
     });
 
@@ -98,11 +86,7 @@ describe("CommandManager", () => {
       manager.add("addroles", "[roleNames:string...]", noop);
       manager.add("addroles", "<roleStr:string>", noop);
 
-      const result = manager.matchCommand(
-        "!",
-        manager.commands[0],
-        '!addrole 1234 ""'
-      );
+      const result = manager.matchCommand("!", manager.commands[0], '!addrole 1234 ""');
       expect(result.error).to.equal(null);
       expect(result.args.user.value).to.equal("1234");
       expect(result.args.arg2.value).to.equal("somedefault");
@@ -119,11 +103,7 @@ describe("CommandManager", () => {
 
       manager.add("addnote", "<num:number> <note:string$>", noop);
 
-      const result = manager.matchCommand(
-        "!",
-        manager.commands[0],
-        "!addnote 1234 Hello how are you doing\nthere"
-      );
+      const result = manager.matchCommand("!", manager.commands[0], "!addnote 1234 Hello how are you doing\nthere");
       expect(result.args.note.value).to.equal("Hello how are you doing\nthere");
     });
 
@@ -178,10 +158,7 @@ describe("CommandManager", () => {
         options: [{ name: "test", type: "string" }]
       });
 
-      const commands = manager.findCommandsInString(
-        "!cmd --test=foo argvalue",
-        "!"
-      );
+      const commands = manager.findCommandsInString("!cmd --test=foo argvalue", "!");
       expect(commands.length).to.equal(1);
       expect(commands[0].error).to.equal(null);
       expect(commands[0].opts.test).to.not.be.an("undefined");
@@ -212,16 +189,10 @@ describe("CommandManager", () => {
       };
 
       manager.add("cmd", "", noop, {
-        options: [
-          { name: "foo", type: "string" },
-          { name: "bar", type: "string" }
-        ]
+        options: [{ name: "foo", type: "string" }, { name: "bar", type: "string" }]
       });
 
-      const commands = manager.findCommandsInString(
-        '!cmd --foo="a b c" --bar="d e f"',
-        "!"
-      );
+      const commands = manager.findCommandsInString('!cmd --foo="a b c" --bar="d e f"', "!");
       expect(commands.length).to.equal(1);
       expect(commands[0].error).to.equal(null);
       expect(Object.keys(commands[0].opts).length).to.equal(2);

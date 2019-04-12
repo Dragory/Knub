@@ -18,9 +18,7 @@ const splitCond = (v, defaultCond): [string, string] => {
 const levelRangeRegex = /^([<>=!]+)(\d+)$/;
 const splitLevelRange = (v, defaultMod): [string, number] => {
   const match = levelRangeRegex.exec(v);
-  return match
-    ? [match[1], parseInt(match[2], 10)]
-    : [defaultMod, parseInt(v, 10)];
+  return match ? [match[1], parseInt(match[2], 10)] : [defaultMod, parseInt(v, 10)];
 };
 
 export interface IMatchParams {
@@ -91,9 +89,10 @@ export function mergeConfig<T>(target: T, ...sources: T[]): T {
 /**
  * Returns matching plugin options for the specified matchParams based on the overrides of the plugin options
  */
-export function getMatchingPluginOptions<
-  T extends IPartialPluginOptions = IPartialPluginOptions
->(pluginOptions: T, matchParams: IMatchParams): T {
+export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPartialPluginOptions>(
+  pluginOptions: T,
+  matchParams: IMatchParams
+): T {
   const finalOpts: T = {
     config: mergeConfig({}, pluginOptions.config || {})
   } as T;
@@ -107,9 +106,7 @@ export function getMatchingPluginOptions<
     if (override.level) {
       const matchLevel = matchParams.level;
       if (matchLevel) {
-        const levels = Array.isArray(override.level)
-          ? override.level
-          : [override.level];
+        const levels = Array.isArray(override.level) ? override.level : [override.level];
         let match = levels.length > 0; // Zero level conditions = assume user error, don't match
 
         for (const level of levels) {
@@ -134,9 +131,7 @@ export function getMatchingPluginOptions<
     if (override.channel) {
       const matchChannel = matchParams.channelId;
       if (matchChannel) {
-        const channels = Array.isArray(override.channel)
-          ? override.channel
-          : [override.channel];
+        const channels = Array.isArray(override.channel) ? override.channel : [override.channel];
         let match = false;
 
         for (const channelId of channels) {
@@ -160,9 +155,7 @@ export function getMatchingPluginOptions<
     if (override.role) {
       const matchRoles = matchParams.memberRoles;
       if (matchRoles) {
-        const roles = Array.isArray(override.role)
-          ? override.role
-          : [override.role];
+        const roles = Array.isArray(override.role) ? override.role : [override.role];
         let match = roles.length > 0;
 
         for (const role of roles) {
@@ -183,9 +176,7 @@ export function getMatchingPluginOptions<
     if (override.user) {
       const matchUser = matchParams.userId;
       if (matchUser) {
-        const users = Array.isArray(override.user)
-          ? override.user
-          : [override.user];
+        const users = Array.isArray(override.user) ? override.user : [override.user];
         let match = false;
 
         for (const user of users) {

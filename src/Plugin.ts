@@ -1,15 +1,5 @@
 import "reflect-metadata";
-import {
-  Channel,
-  Client,
-  PrivateChannel,
-  GroupChannel,
-  GuildChannel,
-  Guild,
-  Member,
-  Message,
-  User
-} from "eris";
+import { Channel, Client, PrivateChannel, GroupChannel, GuildChannel, Guild, Member, Message, User } from "eris";
 const at = require("lodash.at");
 
 import { CommandManager, ICommandConfig } from "./CommandManager";
@@ -20,14 +10,7 @@ import {
   IPartialPluginOptions,
   IPluginOptions
 } from "./configInterfaces";
-import {
-  ArbitraryFunction,
-  errorEmbed,
-  eventToChannel,
-  eventToGuild,
-  eventToMessage,
-  eventToUser
-} from "./utils";
+import { ArbitraryFunction, errorEmbed, eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./utils";
 import {
   convertArgumentTypes,
   convertOptionTypes,
@@ -36,11 +19,7 @@ import {
   runCommand
 } from "./commandUtils";
 import { Knub } from "./Knub";
-import {
-  getMatchingPluginOptions,
-  IMatchParams,
-  mergeConfig
-} from "./configUtils";
+import { getMatchingPluginOptions, IMatchParams, mergeConfig } from "./configUtils";
 import { PluginError } from "./PluginError";
 import { Lock, LockManager } from "./LockManager";
 import { CooldownManager } from "./CooldownManager";
@@ -124,9 +103,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     await Promise.resolve(this.onLoad());
 
     // Have to do this to access class methods
-    const nonEnumerableProps = Object.getOwnPropertyNames(
-      this.constructor.prototype
-    );
+    const nonEnumerableProps = Object.getOwnPropertyNames(this.constructor.prototype);
     const enumerableProps = Object.keys(this);
     const props = [...nonEnumerableProps, ...enumerableProps];
 
@@ -136,11 +113,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
         continue;
       }
 
-      const requiredPermission = Reflect.getMetadata(
-        "requiredPermission",
-        this,
-        prop
-      );
+      const requiredPermission = Reflect.getMetadata("requiredPermission", this, prop);
       const locks = Reflect.getMetadata("locks", this, prop);
       const cooldown: {
         time: number;
@@ -169,12 +142,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
             : [metaCommand.parameters];
 
           for (const overload of overloads) {
-            this.commands.add(
-              metaCommand.command,
-              overload,
-              value.bind(this),
-              commandConfig
-            );
+            this.commands.add(metaCommand.command, overload, value.bind(this), commandConfig);
           }
         }
       }
@@ -241,16 +209,10 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     if (!this.mergedPluginOptions) {
       const defaultOptions = this.getDefaultOptions();
       this.mergedPluginOptions = {
-        config: mergeConfig(
-          {},
-          defaultOptions.config || {},
-          this.pluginOptions.config || {}
-        ),
+        config: mergeConfig({}, defaultOptions.config || {}, this.pluginOptions.config || {}),
         overrides: this.pluginOptions["=overrides"]
           ? this.pluginOptions["=overrides"]
-          : (this.pluginOptions.overrides || []).concat(
-              defaultOptions.overrides || []
-            )
+          : (this.pluginOptions.overrides || []).concat(defaultOptions.overrides || [])
       };
     }
 
@@ -277,20 +239,14 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
    */
   protected getMatchingConfig(matchParams: IMatchParams = {}): TConfig {
     const mergedOptions = this.getMergedOptions();
-    const matchingOptions = getMatchingPluginOptions<IPluginOptions<TConfig>>(
-      mergedOptions,
-      matchParams
-    );
+    const matchingOptions = getMatchingPluginOptions<IPluginOptions<TConfig>>(mergedOptions, matchParams);
     return matchingOptions.config;
   }
 
   /**
    * Returns the plugin's config with overrides matching the given member id and channel id applied to it
    */
-  protected getConfigForMemberIdAndChannelId(
-    memberId: string,
-    channelId: string
-  ): TConfig {
+  protected getConfigForMemberIdAndChannelId(memberId: string, channelId: string): TConfig {
     const guildId = this.bot.channelGuildMap[channelId];
     const guild = this.bot.guilds.get(guildId);
     const member = guild.members.get(memberId);
@@ -369,32 +325,21 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
   /**
    * Wrapper for getting a matching config and checking a permission value
    */
-  protected hasPermission(
-    requiredPermission: string,
-    params: IHasPermissionParams
-  ): boolean {
+  protected hasPermission(requiredPermission: string, params: IHasPermissionParams): boolean {
     const message = params.message;
 
     // Passed message author id -> passed member id -> passed userId
     const userId =
-      (message && message.author && message.author.id) ||
-      (params.member && params.member.id) ||
-      params.userId;
+      (message && message.author && message.author.id) || (params.member && params.member.id) || params.userId;
 
     // Passed message channel id -> passed channelId
-    const channelId =
-      (message && message.channel && message.channel.id) || params.channelId;
+    const channelId = (message && message.channel && message.channel.id) || params.channelId;
 
     // Passed message member -> passed member
     const member = (message && message.member) || params.member;
 
     // Passed level -> passed member's level
-    const level =
-      params.level != null
-        ? params.level
-        : member
-        ? this.getMemberLevel(member)
-        : null;
+    const level = params.level != null ? params.level : member ? this.getMemberLevel(member) : null;
 
     // Get matching config
     const matchParams: IMatchParams = {
@@ -429,18 +374,10 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     // 3) That the event's guild (if present) matches this plugin's guild
     // 4) If the event has a message, that the message author has the permissions to trigger events
     const wrappedListener = async (...args: any[]): Promise<void> => {
-      const guild = eventToGuild[eventName]
-        ? eventToGuild[eventName](...args)
-        : null;
-      const user = eventToUser[eventName]
-        ? eventToUser[eventName](...args)
-        : null;
-      const channel = eventToChannel[eventName]
-        ? eventToChannel[eventName](...args)
-        : null;
-      const message = eventToMessage[eventName]
-        ? eventToMessage[eventName](...args)
-        : null;
+      const guild = eventToGuild[eventName] ? eventToGuild[eventName](...args) : null;
+      const user = eventToUser[eventName] ? eventToUser[eventName](...args) : null;
+      const channel = eventToChannel[eventName] ? eventToChannel[eventName](...args) : null;
+      const message = eventToMessage[eventName] ? eventToMessage[eventName](...args) : null;
 
       // Restrictions
       if (restrict === "dm" && !(channel instanceof PrivateChannel)) return;
@@ -478,9 +415,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       }
 
       const timerDone =
-        listener.name !== "bound runCommandsInMessage"
-          ? this.knub.startPerformanceDebugTimer(listener.name)
-          : null;
+        listener.name !== "bound runCommandsInMessage" ? this.knub.startPerformanceDebugTimer(listener.name) : null;
 
       // Call the original listener
       try {
@@ -558,10 +493,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     }
 
     const prefix = this.guildConfig.prefix || getDefaultPrefix(this.bot);
-    const matchedCommands = this.commands.findCommandsInString(
-      msg.content,
-      prefix
-    );
+    const matchedCommands = this.commands.findCommandsInString(msg.content, prefix);
 
     // NOTE: "Variable initializer is redundant" inspection in WebStorm is incorrect here
     let onlyErrors = true;
@@ -580,12 +512,8 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       }
 
       // Check permissions
-      const requiredPermission =
-        command.commandDefinition.config.requiredPermission;
-      if (
-        requiredPermission &&
-        !this.hasPermission(requiredPermission, { message: msg })
-      ) {
+      const requiredPermission = command.commandDefinition.config.requiredPermission;
+      if (requiredPermission && !this.hasPermission(requiredPermission, { message: msg })) {
         continue;
       }
 
@@ -598,12 +526,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       // Convert arg types
       if (!command.error) {
         try {
-          await convertArgumentTypes(
-            command.args,
-            msg,
-            this.bot,
-            customArgumentTypes
-          );
+          await convertArgumentTypes(command.args, msg, this.bot, customArgumentTypes);
         } catch (e) {
           command.error = e;
         }
@@ -612,12 +535,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       // Convert opt types
       if (!command.error) {
         try {
-          await convertOptionTypes(
-            command.opts,
-            msg,
-            this.bot,
-            customArgumentTypes
-          );
+          await convertOptionTypes(command.opts, msg, this.bot, customArgumentTypes);
         } catch (e) {
           command.error = e;
         }
@@ -650,10 +568,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
         const cdKey = `${command.name}-${msg.author.id}`;
         let cdApplies = true;
         if (command.commandDefinition.config.cooldownPermission) {
-          cdApplies = !this.hasPermission(
-            command.commandDefinition.config.cooldownPermission,
-            { message: msg }
-          );
+          cdApplies = !this.hasPermission(command.commandDefinition.config.cooldownPermission, { message: msg });
         }
 
         if (cdApplies && this.cooldowns.isOnCooldown(cdKey)) {
@@ -662,26 +577,19 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
           break;
         }
 
-        this.cooldowns.setCooldown(
-          cdKey,
-          command.commandDefinition.config.cooldown
-        );
+        this.cooldowns.setCooldown(cdKey, command.commandDefinition.config.cooldown);
       }
 
       // Wait for locks, if any, and bail out if the lock has been interrupted
       if (command.commandDefinition.config.locks) {
-        command.lock = await this.locks.acquire(
-          command.commandDefinition.config.locks
-        );
+        command.lock = await this.locks.acquire(command.commandDefinition.config.locks);
         if (command.lock.interrupted) {
           onlyErrors = false;
           break;
         }
       }
 
-      const timerDone = this.knub.startPerformanceDebugTimer(
-        `cmd: ${command.name}`
-      );
+      const timerDone = this.knub.startPerformanceDebugTimer(`cmd: ${command.name}`);
 
       // Run the command
       await runCommand(command, msg, this.bot);

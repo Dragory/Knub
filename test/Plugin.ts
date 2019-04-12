@@ -43,15 +43,7 @@ describe("Plugin", () => {
       }
     }
 
-    const plugin = new PermissionTestPlugin(
-      dummyBot,
-      null,
-      {},
-      {},
-      "permission_test",
-      null,
-      null
-    );
+    const plugin = new PermissionTestPlugin(dummyBot, null, {}, {}, "permission_test", null, null);
 
     it("should use defaults with empty/non-matching params", () => {
       const result = plugin.testPermissions("can_do", {});

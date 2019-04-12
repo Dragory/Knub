@@ -29,16 +29,9 @@ export interface IMatchedOptionMap {
   [name: string]: IMatchedOption;
 }
 
-export type CommandHandler = (
-  msg?: Message,
-  args?: object,
-  command?: IMatchedCommand
-) => void | Promise<void>;
+export type CommandHandler = (msg?: Message, args?: object, command?: IMatchedCommand) => void | Promise<void>;
 
-export type CommandFilter = (
-  msg: Message,
-  command: IMatchedCommand
-) => boolean | Promise<boolean>;
+export type CommandFilter = (msg: Message, command: IMatchedCommand) => boolean | Promise<boolean>;
 
 export interface ICommandOption {
   name: string;
@@ -146,9 +139,7 @@ export class CommandManager {
       parameters = [];
     }
 
-    parameters = parameters.map(obj =>
-      Object.assign({}, defaultParameter, obj)
-    );
+    parameters = parameters.map(obj => Object.assign({}, defaultParameter, obj));
 
     // Validate arguments to prevent unsupported behaviour
     let hadOptional = false;
@@ -202,15 +193,12 @@ export class CommandManager {
       (parameterDefinition, i): IParameter => {
         const details = parameterDefinition.match(argDefinitionRegex);
         if (!details) {
-          throw new Error(
-            `Invalid argument definition: ${parameterDefinition}`
-          );
+          throw new Error(`Invalid argument definition: ${parameterDefinition}`);
         }
 
         let defaultValue: any = details[3];
         const isRest = details[4] === "...";
-        const isOptional =
-          parameterDefinition[0] === "[" || defaultValue != null;
+        const isOptional = parameterDefinition[0] === "[" || defaultValue != null;
         const isCatchAll = details[5] === "$";
 
         if (isRest) {
@@ -265,11 +253,7 @@ export class CommandManager {
         } else {
           current += char;
         }
-      } else if (
-        !inQuote &&
-        char === "-" &&
-        chars.slice(i - 1, 4).join("") === " -- "
-      ) {
+      } else if (!inQuote && char === "-" && chars.slice(i - 1, 4).join("") === " -- ") {
         current = chars.slice(i + 3).join("");
         break;
       } else {
@@ -284,11 +268,7 @@ export class CommandManager {
     return args;
   }
 
-  public matchCommand(
-    prefix: string | RegExp,
-    command: ICommandDefinition,
-    str: string
-  ): IMatchedCommand {
+  public matchCommand(prefix: string | RegExp, command: ICommandDefinition, str: string): IMatchedCommand {
     let escapedPrefix;
     let error = null;
 
@@ -302,10 +282,7 @@ export class CommandManager {
       escapedPrefix = prefix.source;
     }
 
-    const regex = new RegExp(
-      `^(${escapedPrefix})(${command.trigger.source})(?:\\s([\\s\\S]+))?$`,
-      "i"
-    );
+    const regex = new RegExp(`^(${escapedPrefix})(${command.trigger.source})(?:\\s([\\s\\S]+))?$`, "i");
     const match = str.match(regex);
 
     if (!match) {
@@ -325,9 +302,7 @@ export class CommandManager {
           const optName = optMatch[1];
           const optValue = optMatch[2];
 
-          const opt = command.config.options.find(
-            o => o.name === optName || o.shortcut === optName
-          );
+          const opt = command.config.options.find(o => o.name === optName || o.shortcut === optName);
 
           if (!opt) {
             continue;
@@ -349,17 +324,10 @@ export class CommandManager {
       }
     }
 
-    const hasRestOrCatchAll = command.parameters.some(
-      p => p.rest || p.catchAll
-    );
-    if (
-      !hasRestOrCatchAll &&
-      parsedArguments.length > command.parameters.length
-    ) {
+    const hasRestOrCatchAll = command.parameters.some(p => p.rest || p.catchAll);
+    if (!hasRestOrCatchAll && parsedArguments.length > command.parameters.length) {
       error = new CommandMatchError(
-        `Too many arguments (found ${parsedArguments.length}, expected ${
-          command.parameters.length
-        })`
+        `Too many arguments (found ${parsedArguments.length}, expected ${command.parameters.length})`
       );
     }
 

@@ -53,10 +53,7 @@ export class LockManager {
 
     // To acquire a lock, we must first wait for all matching old locks to resolve
     const oldLockPromises = keys.reduce(
-      (lockPromises, key) =>
-        this.locks.has(key)
-          ? [...lockPromises, this.locks.get(key)]
-          : lockPromises,
+      (lockPromises, key) => (this.locks.has(key) ? [...lockPromises, this.locks.get(key)] : lockPromises),
       []
     );
     const newLockPromise = Promise.all(oldLockPromises)

@@ -19,9 +19,7 @@ export interface IDeepPartialOrUnknownB {
  * Recursive object type where the object can have any properties, but properties from T are type checked
  * while unknown properties can be anything.
  */
-export type DeepPartialOrUnknown<T> =
-  | DeepPartialOrUnknownA<T>
-  | (IDeepPartialOrUnknownB & WithoutProps<T>);
+export type DeepPartialOrUnknown<T> = DeepPartialOrUnknownA<T> | (IDeepPartialOrUnknownB & WithoutProps<T>);
 
 export interface IPermissionLevelDefinitions {
   [roleOrUserId: string]: number;
@@ -56,8 +54,7 @@ export interface IPartialPluginOptions<TConfig = IBasePluginConfig> {
   "=overrides"?: Array<IPluginConfigOverride<TConfig>>;
 }
 
-export interface IPluginOptions<TConfig = IBasePluginConfig>
-  extends IPartialPluginOptions<TConfig> {
+export interface IPluginOptions<TConfig = IBasePluginConfig> extends IPartialPluginOptions<TConfig> {
   config: TConfig;
 }
 
