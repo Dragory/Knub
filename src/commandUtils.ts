@@ -75,8 +75,12 @@ export async function convertToType(
       throw new CommandArgumentTypeError(`Could not convert ${value} to a channel id`);
     }
 
-    const channelGuildId = bot.channelGuildMap[channelId];
-    const channel = channelGuildId ? bot.guilds.get(channelGuildId).channels.get(channelId) : null;
+    if (!(msg.channel instanceof GuildChannel)) {
+      throw new CommandArgumentTypeError(`Type 'Channel' can only be used in guilds`);
+    }
+
+    const guild = msg.channel.guild;
+    const channel = guild.channels.get(channelId);
     if (!channel) {
       throw new CommandArgumentTypeError(`Channel ${channelId} not found`);
     }
