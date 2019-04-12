@@ -147,7 +147,7 @@ export async function convertArgumentTypes(
       }
     } catch (e) {
       const typeName = `${arg.parameter.type}${arg.parameter.rest ? "[]" : ""}`;
-      throw new CommandArgumentTypeError(`Could not convert argument ${arg.parameter.name} to ${typeName}`);
+      throw new CommandArgumentTypeError(`Could not convert argument '${arg.parameter.name}' to type ${typeName}`);
     }
   }
 }
@@ -174,7 +174,7 @@ export async function convertOptionTypes(
         opt.value = await convertToType(opt.value, type, msg, bot, customTypes);
       }
     } catch (e) {
-      throw new CommandArgumentTypeError(`Could not convert option ${opt.option.name} to ${opt.option.type}`);
+      throw new CommandArgumentTypeError(`Could not convert option '${opt.option.name}' to type ${opt.option.type}`);
     }
   }
 }

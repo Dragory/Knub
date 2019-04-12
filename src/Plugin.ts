@@ -615,7 +615,27 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     // Only post the last error in the matched set of commands. This way if there are multiple "overlapping" commands,
     // an error won't be reported when some of them match, nor will there be tons of spam if all of them have errors.
     if (onlyErrors && lastError) {
-      this.sendErrorMessage(msg.channel, lastError.message);
+      const usageLines = matchedCommands.map(cmd => {
+        const paramStrings = (cmd.commandDefinition.parameters || []).map(param => {
+          return param.required ? `<${param.name}>` : `[${param.name}]`;
+        });
+        const optStrings = (cmd.commandDefinition.config.options || []).map(opt => {
+          return opt.required ? `<--${opt.name}>` : `[--${opt.name}]`;
+        });
+
+        const usageLine = `${cmd.prefix}${cmd.name} ${paramStrings.join(" ")} ${optStrings.join(" ")}`
+          .replace(/\s+/g, " ")
+          .trim();
+
+        return `\`${usageLine}\``;
+      });
+
+      const errorMessage =
+        usageLines.length === 1
+          ? `${lastError.message}\nUsage: ${usageLines[0]}`
+          : `${lastError.message}\n\nUsage:\n${usageLines.join("\n")}`;
+
+      this.sendErrorMessage(msg.channel, errorMessage);
     }
   }
 
