@@ -1,3 +1,9 @@
+# 19.0.0
+* Plugin options no longer have a permissions property. Instead, permissions are now part of the plugin's config, and permission checks via `hasPermission()` / `permission` decorator are wrappers around getting a matching config and checking that the value at the permission's path is `true`.
+  * This change was made to simplify complex permissions and to unify the two systems that were, more or less, identical
+* Add `sendErrorMessage()` and `sendSuccessMessage()` to Knub and Plugin. These can be used to send unified (formatting-wise) error messages across plugins. The actual functions to send the message can be specified in Knub options with `sendErrorMessageFn` and `sendSuccessMessageFn`.
+* Command errors have been improved, and they now also send the command's usage/signature on error
+
 # 18.2.0
 * Add support for argument overloads in command options (could be done with multiple commands with the same name previously)
 
