@@ -1,3 +1,7 @@
+# 19.2.0
+* You can now specify aliases for commands
+* Command parameter overloads now also work when using a CommandManager directly, not just with the command decorator
+
 # 19.1.1
 * Channel arguments are now only resolved to the current guild's channels (as it was intended)
 
