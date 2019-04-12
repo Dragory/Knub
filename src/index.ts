@@ -19,7 +19,6 @@ export { ICommandConfig } from "./CommandManager";
 export {
   IPermissionLevelDefinitions,
   IBasePluginConfig,
-  IBasePluginPermissions,
   IGuildConfig,
   IGlobalConfig,
   IPartialPluginOptions,
