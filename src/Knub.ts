@@ -45,8 +45,8 @@ export interface IGuildData {
   locks: LockManager;
 }
 
-class IExtendedPlugin extends Plugin<any, any> {}
-class IExtendedGlobalPlugin extends Plugin<any, any> {}
+class IExtendedPlugin extends Plugin<any> {}
+class IExtendedGlobalPlugin extends Plugin<any> {}
 
 export interface IKnubArgs {
   plugins?: Array<typeof IExtendedPlugin>;

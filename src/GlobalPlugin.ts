@@ -1,7 +1,6 @@
 import { Plugin } from "./Plugin";
-import { IBasePluginConfig, IBasePluginPermissions } from "./configInterfaces";
+import { IBasePluginConfig } from "./configInterfaces";
 
 export class GlobalPlugin<
-  TConfig extends {} = IBasePluginConfig,
-  TPermissions extends {} = IBasePluginPermissions
-> extends Plugin<TConfig, TPermissions> {}
+  TConfig extends {} = IBasePluginConfig
+> extends Plugin<TConfig> {}

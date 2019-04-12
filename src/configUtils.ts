@@ -18,7 +18,9 @@ const splitCond = (v, defaultCond): [string, string] => {
 const levelRangeRegex = /^([<>=!]+)(\d+)$/;
 const splitLevelRange = (v, defaultMod): [string, number] => {
   const match = levelRangeRegex.exec(v);
-  return match ? [match[1], parseInt(match[2], 10)] : [defaultMod, parseInt(v, 10)];
+  return match
+    ? [match[1], parseInt(match[2], 10)]
+    : [defaultMod, parseInt(v, 10)];
 };
 
 export interface IMatchParams {
@@ -89,13 +91,11 @@ export function mergeConfig<T>(target: T, ...sources: T[]): T {
 /**
  * Returns matching plugin options for the specified matchParams based on the overrides of the plugin options
  */
-export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPartialPluginOptions>(
-  pluginOptions: T,
-  matchParams: IMatchParams
-): T {
+export function getMatchingPluginOptions<
+  T extends IPartialPluginOptions = IPartialPluginOptions
+>(pluginOptions: T, matchParams: IMatchParams): T {
   const finalOpts: T = {
-    config: mergeConfig({}, pluginOptions.config || {}),
-    permissions: mergeConfig({}, pluginOptions.permissions || {})
+    config: mergeConfig({}, pluginOptions.config || {})
   } as T;
 
   const overrides = pluginOptions.overrides || [];
@@ -107,7 +107,9 @@ export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPart
     if (override.level) {
       const matchLevel = matchParams.level;
       if (matchLevel) {
-        const levels = Array.isArray(override.level) ? override.level : [override.level];
+        const levels = Array.isArray(override.level)
+          ? override.level
+          : [override.level];
         let match = levels.length > 0; // Zero level conditions = assume user error, don't match
 
         for (const level of levels) {
@@ -132,7 +134,9 @@ export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPart
     if (override.channel) {
       const matchChannel = matchParams.channelId;
       if (matchChannel) {
-        const channels = Array.isArray(override.channel) ? override.channel : [override.channel];
+        const channels = Array.isArray(override.channel)
+          ? override.channel
+          : [override.channel];
         let match = false;
 
         for (const channelId of channels) {
@@ -156,7 +160,9 @@ export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPart
     if (override.role) {
       const matchRoles = matchParams.memberRoles;
       if (matchRoles) {
-        const roles = Array.isArray(override.role) ? override.role : [override.role];
+        const roles = Array.isArray(override.role)
+          ? override.role
+          : [override.role];
         let match = roles.length > 0;
 
         for (const role of roles) {
@@ -177,7 +183,9 @@ export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPart
     if (override.user) {
       const matchUser = matchParams.userId;
       if (matchUser) {
-        const users = Array.isArray(override.user) ? override.user : [override.user];
+        const users = Array.isArray(override.user)
+          ? override.user
+          : [override.user];
         let match = false;
 
         for (const user of users) {
@@ -206,22 +214,8 @@ export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPart
 
     if (acceptMatches) {
       if (override.config) mergeConfig(finalOpts.config, override.config);
-      if (override.permissions) mergeConfig(finalOpts.permissions, override.permissions);
     }
   }
 
   return finalOpts;
-}
-
-/**
- * Resolves permissions in pluginOptions based on matching matchParams and overrides,
- * and then checks for the specified permission
- */
-export function hasPermission(
-  requiredPermission: string,
-  pluginOptions: IPartialPluginOptions,
-  matchParams: IMatchParams
-): boolean {
-  const matchingPluginOpts = getMatchingPluginOptions(pluginOptions, matchParams);
-  return !!at(matchingPluginOpts.permissions, requiredPermission)[0];
 }

@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import {
   Channel,
   Client,
@@ -14,7 +15,6 @@ const at = require("lodash.at");
 import { CommandManager, ICommandConfig } from "./CommandManager";
 import {
   IBasePluginConfig,
-  IBasePluginPermissions,
   IGuildConfig,
   IPermissionLevelDefinitions,
   IPartialPluginOptions,
@@ -38,7 +38,6 @@ import {
 import { Knub } from "./Knub";
 import {
   getMatchingPluginOptions,
-  hasPermission,
   IMatchParams,
   mergeConfig
 } from "./configUtils";
@@ -52,15 +51,14 @@ export interface IHasPermissionParams {
 
   member?: Member;
   message?: Message;
+
+  level?: number;
 }
 
 /**
  * Base class for Knub plugins
  */
-export class Plugin<
-  TConfig extends {} = IBasePluginConfig,
-  TPermissions extends {} = IBasePluginPermissions
-> {
+export class Plugin<TConfig extends {} = IBasePluginConfig> {
   // Guild info - these will be null for global plugins
   public guildId: string;
   public guild: Guild;
@@ -231,15 +229,15 @@ export class Plugin<
   /**
    * Returns this plugin's default configuration
    */
-  protected getDefaultOptions(): IPluginOptions<TConfig, TPermissions> {
+  protected getDefaultOptions(): IPluginOptions<TConfig> {
     // Implemented by plugin
-    return {} as IPluginOptions<TConfig, TPermissions>;
+    return {} as IPluginOptions<TConfig>;
   }
 
   /**
    * Returns the plugin's default options merged with its loaded options
    */
-  protected getMergedOptions(): IPluginOptions<TConfig, TPermissions> {
+  protected getMergedOptions(): IPluginOptions<TConfig> {
     if (!this.mergedPluginOptions) {
       const defaultOptions = this.getDefaultOptions();
       this.mergedPluginOptions = {
@@ -247,11 +245,6 @@ export class Plugin<
           {},
           defaultOptions.config || {},
           this.pluginOptions.config || {}
-        ),
-        permissions: mergeConfig(
-          {},
-          defaultOptions.permissions || {},
-          this.pluginOptions.permissions || {}
         ),
         overrides: this.pluginOptions["=overrides"]
           ? this.pluginOptions["=overrides"]
@@ -261,7 +254,7 @@ export class Plugin<
       };
     }
 
-    return this.mergedPluginOptions as IPluginOptions<TConfig, TPermissions>;
+    return this.mergedPluginOptions as IPluginOptions<TConfig>;
   }
 
   /**
@@ -284,9 +277,10 @@ export class Plugin<
    */
   protected getMatchingConfig(matchParams: IMatchParams = {}): TConfig {
     const mergedOptions = this.getMergedOptions();
-    const matchingOptions = getMatchingPluginOptions<
-      IPluginOptions<TConfig, TPermissions>
-    >(mergedOptions, matchParams);
+    const matchingOptions = getMatchingPluginOptions<IPluginOptions<TConfig>>(
+      mergedOptions,
+      matchParams
+    );
     return matchingOptions.config;
   }
 
@@ -372,29 +366,46 @@ export class Plugin<
     return 0;
   }
 
+  /**
+   * Wrapper for getting a matching config and checking a permission value
+   */
   protected hasPermission(
     requiredPermission: string,
     params: IHasPermissionParams
   ): boolean {
     const message = params.message;
+
+    // Passed message author id -> passed member id -> passed userId
     const userId =
       (message && message.author && message.author.id) ||
       (params.member && params.member.id) ||
       params.userId;
+
+    // Passed message channel id -> passed channelId
     const channelId =
       (message && message.channel && message.channel.id) || params.channelId;
+
+    // Passed message member -> passed member
     const member = (message && message.member) || params.member;
 
-    const level = member ? this.getMemberLevel(member) : null;
-    const mergedOptions = this.getMergedOptions();
+    // Passed level -> passed member's level
+    const level =
+      params.level != null
+        ? params.level
+        : member
+        ? this.getMemberLevel(member)
+        : null;
+
+    // Get matching config
     const matchParams: IMatchParams = {
       level,
       userId,
       channelId,
       memberRoles: member && member.roles
     };
+    const config = this.getMatchingConfig(matchParams);
 
-    return hasPermission(requiredPermission, mergedOptions, matchParams);
+    return at(config, requiredPermission)[0] === true;
   }
 
   /**

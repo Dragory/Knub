@@ -49,29 +49,19 @@ export interface IGlobalConfig {
   [key: string]: any;
 }
 
-export interface IPartialPluginOptions<
-  TConfig = IBasePluginConfig,
-  TPermissions = IBasePluginPermissions
-> {
+export interface IPartialPluginOptions<TConfig = IBasePluginConfig> {
   enabled?: boolean;
-  permissions?: DeepPartial<TPermissions>;
   config?: DeepPartial<TConfig>;
-  overrides?: Array<IPluginConfigOverride<TConfig, TPermissions>>;
-  "=overrides"?: Array<IPluginConfigOverride<TConfig, TPermissions>>;
+  overrides?: Array<IPluginConfigOverride<TConfig>>;
+  "=overrides"?: Array<IPluginConfigOverride<TConfig>>;
 }
 
-export interface IPluginOptions<
-  TConfig = IBasePluginConfig,
-  TPermissions = IBasePluginPermissions
-> extends IPartialPluginOptions<TConfig, TPermissions> {
-  permissions: TPermissions;
+export interface IPluginOptions<TConfig = IBasePluginConfig>
+  extends IPartialPluginOptions<TConfig> {
   config: TConfig;
 }
 
-export interface IPluginConfigOverride<
-  TConfig = IBasePluginConfig,
-  TPermissions = IBasePluginPermissions
-> {
+export interface IPluginConfigOverride<TConfig = IBasePluginConfig> {
   channel?: string | string[];
   level?: string | string[];
   user?: string | string[];
@@ -83,11 +73,6 @@ export interface IPluginConfigOverride<
   // these properties with modifiers are not type checked (statically), but it's a decent compromise for now.
   // Can hopefully eventually be solved by this issue: https://github.com/Microsoft/TypeScript/issues/12754
   config?: DeepPartialOrUnknown<TConfig>;
-  permissions?: DeepPartialOrUnknown<TPermissions>;
-}
-
-export interface IBasePluginPermissions {
-  [key: string]: boolean | IBasePluginPermissions;
 }
 
 export interface IBasePluginConfig {
