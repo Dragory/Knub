@@ -199,5 +199,53 @@ describe("CommandManager", () => {
       expect(commands[0].opts.foo.value).to.equal("a b c");
       expect(commands[0].opts.bar.value).to.equal("d e f");
     });
+
+    it("should support aliases", () => {
+      const manager = new CommandManager();
+      const noop = () => {
+        /* empty */
+      };
+
+      manager.add("cmd", "", noop, {
+        aliases: ["foo", "bar"]
+      });
+
+      expect(manager.commands.length).to.equal(3);
+      expect(manager.commands[0].trigger.source).to.equal("cmd");
+      expect(manager.commands[1].trigger.source).to.equal("foo");
+      expect(manager.commands[2].trigger.source).to.equal("bar");
+    });
+
+    it("should support overloads", () => {
+      const manager = new CommandManager();
+      const noop = () => {
+        /* empty */
+      };
+
+      manager.add("cmd", "", noop, {
+        overloads: ["<foo:string>", "<bar:string>"]
+      });
+
+      expect(manager.commands.length).to.equal(3);
+      expect(manager.commands[0].parameters.length).to.equal(0);
+      expect(manager.commands[1].parameters[0].name).to.equal("foo");
+      expect(manager.commands[2].parameters[0].name).to.equal("bar");
+    });
+
+    it("should support aliases with overloads", () => {
+      const manager = new CommandManager();
+      const noop = () => {
+        /* empty */
+      };
+
+      manager.add("cmd", "", noop, {
+        aliases: ["foo", "bar"],
+        overloads: ["<foo:string>", "<bar:string>"]
+      });
+
+      expect(manager.commands.length).to.equal(9);
+      expect(manager.commands[5].trigger.source).to.equal("foo");
+      expect(manager.commands[5].parameters[0].name).to.equal("bar");
+    });
   });
 });

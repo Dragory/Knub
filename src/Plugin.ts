@@ -143,14 +143,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
             commandConfig.cooldownPermission = cooldown.permission;
           }
 
-          // Parameter overloads
-          const overloads = commandConfig.overloads
-            ? [metaCommand.parameters, ...commandConfig.overloads]
-            : [metaCommand.parameters];
-
-          for (const overload of overloads) {
-            this.commands.add(metaCommand.command, overload, value.bind(this), commandConfig);
-          }
+          this.commands.add(metaCommand.command, metaCommand.parameters, value.bind(this), commandConfig);
         }
       }
 

@@ -49,7 +49,8 @@ export interface ICommandConfig {
   locks?: string | string[];
   cooldown?: number;
   cooldownPermission?: string;
-  overloads?: Array<string | IParameter>;
+  aliases?: string[];
+  overloads?: Array<string | IParameter[]>;
 }
 
 export interface ICommandDefinition {
@@ -122,10 +123,32 @@ export class CommandManager {
     handler: CommandHandler,
     config: ICommandConfig = {}
   ) {
-    let trigger: RegExp;
+    // First check if this command has aliases and/or parameter overloads
+    // If it does, add each combination of those as its own command
+    const aliases = [command];
+    if (config.aliases) aliases.push(...config.aliases);
+
+    const overloads = [parameters];
+    if (config.overloads) overloads.push(...config.overloads);
+
+    if (aliases.length > 1 || overloads.length > 1) {
+      const strippedConfig = { ...config };
+      delete strippedConfig.aliases;
+      delete strippedConfig.overloads;
+
+      for (const alias of aliases) {
+        for (const overload of overloads) {
+          this.add(alias, overload, handler, strippedConfig);
+        }
+      }
+
+      return;
+    }
 
     // Command can either be a plain string or a regex
     // If string, escape it and turn it into regex
+    let trigger: RegExp;
+
     if (typeof command === "string") {
       trigger = new RegExp(escapeStringRegex(command), "i");
     } else {
