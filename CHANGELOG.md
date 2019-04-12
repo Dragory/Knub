@@ -1,3 +1,6 @@
+# 19.1.1
+* Channel arguments are now only resolved to the current guild's channels (as it was intended)
+
 # 19.1.0
 * `Plugin.getMatchingConfig` now supports the same match params as `Plugin.hasPermission` - that is, you can pass a Message or Member and have the user/channel/level/roles be inferred from those
 
