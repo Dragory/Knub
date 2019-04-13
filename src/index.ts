@@ -25,7 +25,7 @@ export {
   IPluginOptions
 } from "./configInterfaces";
 
-export { CommandArgumentTypeError } from "./commandUtils";
+export { CommandArgumentTypeError, getCommandSignature } from "./commandUtils";
 
 export { waitForReaction, waitForReply, reply } from "./helpers";
 

@@ -1,6 +1,13 @@
 import { Client, Guild, GuildChannel, TextChannel, Message, PrivateChannel } from "eris";
 import { getChannelId, getRoleId, getUserId } from "./utils";
-import { IArgumentMap, IMatchedCommand, IMatchedOptionMap } from "./CommandManager";
+import {
+  IArgumentMap,
+  ICommandDefinition,
+  ICommandOption,
+  IMatchedCommand,
+  IMatchedOptionMap,
+  IParameter
+} from "./CommandManager";
 
 export function getDefaultPrefix(client: Client) {
   return `/<@!?${client.user.id}> /`;
@@ -195,4 +202,22 @@ export async function runCommand(command: IMatchedCommand, msg: Message, bot: Cl
   }
 
   await command.commandDefinition.handler(msg, argsToPass, command);
+}
+
+export function getCommandSignature(
+  prefix: string,
+  trigger: string,
+  parameters: IParameter[] = [],
+  options: ICommandOption[] = []
+) {
+  const paramStrings = (parameters || []).map(param => {
+    return param.required ? `<${param.name}>` : `[${param.name}]`;
+  });
+  const optStrings = (options || []).map(opt => {
+    return opt.required ? `<--${opt.name}>` : `[--${opt.name}]`;
+  });
+
+  const usageLine = `${prefix}${trigger} ${paramStrings.join(" ")} ${optStrings.join(" ")}`.replace(/\s+/g, " ").trim();
+
+  return usageLine;
 }
