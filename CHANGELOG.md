@@ -1,3 +1,6 @@
+# 19.3.0
+* There is a new exported function, `getCommandSignature`, that can be used to get a human-readable description of a command/its signature
+
 # 19.2.0
 * You can now specify aliases for commands
 * Command parameter overloads now also work when using a CommandManager directly, not just with the command decorator
