@@ -1,3 +1,6 @@
+# 19.3.2
+* Fix error when adding reactions in `waitForReaction()` if the message is deleted before the reactions are all added
+
 # 19.3.1
 * The `waitForReaction()` helper function no longer waits for all reactions to be added before accepting reaction events
 
