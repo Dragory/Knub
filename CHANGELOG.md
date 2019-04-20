@@ -1,3 +1,6 @@
+# 20.0.0
+* Argument type names are no longer case-insensitive
+
 # 19.4.0
 * Add new helper functions:
   * `disableLinkPreviews()`
