@@ -15,7 +15,7 @@ export { logger } from "./logger";
 import * as utils from "./utils";
 export { utils };
 
-export { ICommandConfig } from "./CommandManager";
+export { ICommandConfig, ICommandDefinition, IMatchedCommand } from "./CommandManager";
 export {
   IPermissionLevelDefinitions,
   IBasePluginConfig,
@@ -27,7 +27,14 @@ export {
 
 export { CommandArgumentTypeError, getCommandSignature } from "./commandUtils";
 
-export { waitForReaction, waitForReply, reply } from "./helpers";
+export {
+  waitForReaction,
+  waitForReply,
+  reply,
+  disableLinkPreviews,
+  disableCodeBlocks,
+  deactivateMentions
+} from "./helpers";
 
 export { PluginError } from "./PluginError";
 

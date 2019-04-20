@@ -55,3 +55,15 @@ export function waitForReply(
 export function reply(msg: Message, content, file) {
   msg.channel.createMessage(content, file);
 }
+
+export function disableLinkPreviews(str: string): string {
+  return str.replace(/(?<!<)(https?:\/\/\S+)/gi, "<$1>");
+}
+
+export function deactivateMentions(content: string): string {
+  return content.replace(/@/g, "@\u200b");
+}
+
+export function disableCodeBlocks(content: string): string {
+  return content.replace(/`/g, "`\u200b");
+}
