@@ -148,7 +148,7 @@ export async function convertArgumentTypes(
       continue;
     }
 
-    const type = arg.parameter.type.toLowerCase();
+    const type = arg.parameter.type;
 
     try {
       if (Array.isArray(arg.value)) {
@@ -181,7 +181,7 @@ export async function convertOptionTypes(
 ) {
   for (const optName in opts) {
     const opt = opts[optName];
-    const type = (opt.option.type || "string").toLowerCase();
+    const type = opt.option.type || "string";
 
     try {
       if (Array.isArray(opt.value)) {
