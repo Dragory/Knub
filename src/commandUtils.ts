@@ -8,6 +8,8 @@ import {
   IMatchedOptionMap,
   IParameter
 } from "./CommandManager";
+import { disableCodeBlocks } from "./helpers";
+import { logger } from "./logger";
 
 export function getDefaultPrefix(client: Client) {
   return `/<@!?${client.user.id}> /`;
@@ -37,7 +39,7 @@ export async function convertToType(
   } else if (type === "number") {
     const result = parseFloat(value);
     if (Number.isNaN(result)) {
-      throw new CommandArgumentTypeError(`Could not convert ${value} to a number`);
+      throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid number`);
     }
 
     return result;
@@ -46,12 +48,12 @@ export async function convertToType(
   } else if (type === "user") {
     const userId = getUserId(value);
     if (!userId) {
-      throw new CommandArgumentTypeError(`Could not convert ${value} to a user id`);
+      throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid user`);
     }
 
     const user = bot.users.get(userId);
     if (!user) {
-      throw new CommandArgumentTypeError(`Could not convert user id ${userId} to a user`);
+      throw new CommandArgumentTypeError(`Could not find user for user id \`${userId}\``);
     }
 
     return user;
@@ -62,24 +64,24 @@ export async function convertToType(
 
     const userId = getUserId(value);
     if (!userId) {
-      throw new CommandArgumentTypeError(`Could not convert ${value} to a user id`);
+      throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid user id`);
     }
 
     const user = bot.users.get(userId);
     if (!user) {
-      throw new CommandArgumentTypeError(`Could not convert user id ${userId} to a user`);
+      throw new CommandArgumentTypeError(`Could not find user for user id \`${userId}\``);
     }
 
     const member = msg.channel.guild.members.get(user.id);
     if (!member) {
-      throw new CommandArgumentTypeError(`Could not convert user id ${userId} to a member`);
+      throw new CommandArgumentTypeError(`Could not find guild member for user id \`${userId}\``);
     }
 
     return member;
   } else if (type === "channel") {
     const channelId = getChannelId(value);
     if (!channelId) {
-      throw new CommandArgumentTypeError(`Could not convert ${value} to a channel id`);
+      throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
     }
 
     if (!(msg.channel instanceof GuildChannel)) {
@@ -89,7 +91,7 @@ export async function convertToType(
     const guild = msg.channel.guild;
     const channel = guild.channels.get(channelId);
     if (!channel) {
-      throw new CommandArgumentTypeError(`Channel ${channelId} not found`);
+      throw new CommandArgumentTypeError(`Could not find channel for channel id \`${channelId}\``);
     }
 
     return channel;
@@ -100,26 +102,26 @@ export async function convertToType(
 
     const roleId = getRoleId(value);
     if (!roleId) {
-      throw new CommandArgumentTypeError(`Could not convert ${value} to a role id`);
+      throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid role`);
     }
 
     const role = msg.channel.guild.roles.get(roleId);
     if (!role) {
-      throw new CommandArgumentTypeError(`Could not convert ${roleId} to a Role`);
+      throw new CommandArgumentTypeError(`Could not find role for role id \`${roleId}\``);
     }
 
     return role;
   } else if (type === "userid") {
     const userId = getUserId(value);
     if (!userId) {
-      throw new CommandArgumentTypeError(`Could not convert ${value} to a user id`);
+      throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid user`);
     }
 
     return userId;
   } else if (type === "channelid") {
     const channelId = getChannelId(value);
     if (!channelId) {
-      throw new CommandArgumentTypeError(`Could not convert ${value} to a channel id`);
+      throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
     }
 
     return channelId;
@@ -157,8 +159,13 @@ export async function convertArgumentTypes(
         arg.value = await convertToType(arg.value, type, msg, bot, customTypes);
       }
     } catch (e) {
-      const typeName = `${arg.parameter.type}${arg.parameter.rest ? "[]" : ""}`;
-      throw new CommandArgumentTypeError(`Could not convert argument '${arg.parameter.name}' to type ${typeName}`);
+      if (e instanceof CommandArgumentTypeError) {
+        throw e;
+      } else {
+        logger.warn(`Error when converting argument type: ${e.stack}`);
+        const typeName = `${arg.parameter.type}${arg.parameter.rest ? "[]" : ""}`;
+        throw new CommandArgumentTypeError(`Could not convert argument '${arg.parameter.name}' to type ${typeName}`);
+      }
     }
   }
 }
@@ -185,7 +192,12 @@ export async function convertOptionTypes(
         opt.value = await convertToType(opt.value, type, msg, bot, customTypes);
       }
     } catch (e) {
-      throw new CommandArgumentTypeError(`Could not convert option '${opt.option.name}' to type ${opt.option.type}`);
+      if (e instanceof CommandArgumentTypeError) {
+        throw e;
+      } else {
+        logger.warn(`Error when converting option type: ${e.stack}`);
+        throw new CommandArgumentTypeError(`Could not convert option '${opt.option.name}' to type ${opt.option.type}`);
+      }
     }
   }
 }
