@@ -1,3 +1,12 @@
+# 19.4.0
+* Add new helper functions:
+  * `disableLinkPreviews()`
+  * `disableCodeBlocks()`
+  * `deactivateMentions()`
+* When showing command argument type conversion errors, the original error messages thrown from the conversion function are now used. Also applies to errors thrown from custom type functions.
+* Make error messages for default command argument types more descriptive
+* Export `ICommandDefinition` and `IMatchedCommand` from `CommandManager` in `index.ts`
+
 # 19.3.2
 * Fix error when adding reactions in `waitForReaction()` if the message is deleted before the reactions are all added
 
