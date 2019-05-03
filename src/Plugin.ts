@@ -335,7 +335,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
    * Returns the member's permission level
    */
   protected getMemberLevel(member: Member): number {
-    if (member.guild.ownerID === member.id) {
+    if (this.guild.ownerID === member.id) {
       return 99999;
     }
 
