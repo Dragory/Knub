@@ -1,3 +1,6 @@
+# 20.0.2
+* Fix not being able to use `null` for the restrict param of the event decorator
+
 # 20.0.1
 * Allow partial members in `Plugin.getMemberLevel`
 
