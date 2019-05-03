@@ -1,5 +1,5 @@
 # 20.0.1
-* Fix level checks for members that don't have a guild property
+* Allow partial members in `Plugin.getMemberLevel`
 
 # 20.0.0
 * Argument type names are no longer case-insensitive

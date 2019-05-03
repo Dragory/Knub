@@ -334,7 +334,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
   /**
    * Returns the member's permission level
    */
-  protected getMemberLevel(member: Member): number {
+  protected getMemberLevel(member: Partial<Member>): number {
     if (this.guild.ownerID === member.id) {
       return 99999;
     }
@@ -342,7 +342,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     const levels: IPermissionLevelDefinitions = this.guildConfig.levels;
 
     for (const id in levels) {
-      if (member.id === id || member.roles.includes(id)) {
+      if (member.id === id || (member.roles && member.roles.includes(id))) {
         return levels[id];
       }
     }
