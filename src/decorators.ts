@@ -18,7 +18,7 @@ function CommandDecorator(
 /**
  * PLUGINS: Turn a class method into an event listener
  */
-function OnEventDecorator(eventName: string, restrict: string = null, ignoreSelf: boolean = null) {
+function OnEventDecorator(eventName: string, restrict?: string, ignoreSelf?: boolean) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const events = Reflect.getMetadata("events", target, propertyKey) || [];
     events.push({ eventName, restrict, ignoreSelf, _prop: propertyKey });

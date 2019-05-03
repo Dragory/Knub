@@ -155,8 +155,8 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
           this.on(
             metaEvent.eventName,
             value.bind(this),
-            metaEvent.restrict != null ? metaEvent.restrict : undefined,
-            metaEvent.ignoreSelf != null ? metaEvent.ignoreSelf : undefined,
+            metaEvent.restrict,
+            metaEvent.ignoreSelf,
             requiredPermission && requiredPermission.permission,
             locks || []
           );
