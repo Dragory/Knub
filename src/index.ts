@@ -33,7 +33,8 @@ export {
   reply,
   disableLinkPreviews,
   disableCodeBlocks,
-  deactivateMentions
+  deactivateMentions,
+  getInviteLink
 } from "./helpers";
 
 export { PluginError } from "./PluginError";

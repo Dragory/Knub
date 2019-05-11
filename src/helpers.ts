@@ -1,4 +1,4 @@
-import { Client, Message, Emoji, TextChannel } from "eris";
+import { Client, Message, Emoji, TextChannel, Invite } from "eris";
 
 export function waitForReaction(
   bot: Client,
@@ -66,4 +66,8 @@ export function deactivateMentions(content: string): string {
 
 export function disableCodeBlocks(content: string): string {
   return content.replace(/`/g, "`\u200b");
+}
+
+export function getInviteLink(inv: Invite) {
+  return `discord.gg/${inv.code}`;
 }
