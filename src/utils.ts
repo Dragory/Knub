@@ -1,4 +1,4 @@
-import { Client, Channel, Guild, Message, User, Invite } from "eris";
+import { Client, Channel, Guild, Message, User } from "eris";
 
 export type ArbitraryFunction = (...args: any[]) => any;
 
@@ -53,10 +53,6 @@ export function getRoleId(str: string) {
   }
 
   return null;
-}
-
-export function getInviteLink(inv: Invite) {
-  return `discord.gg/${inv.code}`;
 }
 
 export function resolveUser(bot: Client, str: string) {
