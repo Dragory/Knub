@@ -69,5 +69,5 @@ export function disableCodeBlocks(content: string): string {
 }
 
 export function getInviteLink(inv: Invite) {
-  return `discord.gg/${inv.code}`;
+  return `https://discord.gg/${inv.code}`;
 }
