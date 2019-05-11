@@ -1,3 +1,6 @@
+# 20.1.0
+* Add getInviteLink helper function ([#1](https://github.com/Dragory/Knub/pull/1))
+
 # 20.0.2
 * Fix not being able to use `null` for the restrict param of the event decorator
 
