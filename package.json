@@ -24,7 +24,7 @@
     "escape-string-regexp": "^1.0.5",
     "lodash.at": "^4.6.0",
     "lodash.difference": "^4.5.0",
-    "lodash.merge": "^4.6.1",
+    "lodash.merge": "^4.6.2",
     "reflect-metadata": "^0.1.10",
     "ts-essentials": "^2.0.3"
   },
