@@ -1,3 +1,6 @@
+# 20.2.0
+* Add support for category overrides. The override property is called `category` and, like channel overrides, matches if any of the specified categories matches.
+
 # 20.1.0
 * Add getInviteLink helper function ([#1](https://github.com/Dragory/Knub/pull/1))
 
