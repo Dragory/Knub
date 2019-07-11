@@ -1,3 +1,6 @@
+# 20.2.1
+* Security patches to some dependencies
+
 # 20.2.0
 * Add support for category overrides. The override property is called `category` and, like channel overrides, matches if any of the specified categories matches.
 
