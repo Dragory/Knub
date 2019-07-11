@@ -250,6 +250,10 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     // Passed channelId -> passed message's channel id
     const channelId = matchParams.channelId || (message && message.channel && message.channel.id);
 
+    // Passed category id -> passed message's channel's category id
+    const categoryId =
+      matchParams.categoryId || (message && message.channel && (message.channel as GuildChannel).parentID);
+
     // Passed member -> passed message's member
     const member = matchParams.member || (message && message.member);
 
@@ -263,6 +267,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       level,
       userId,
       channelId,
+      categoryId,
       memberRoles
     };
 
@@ -279,11 +284,13 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     const guild = this.bot.guilds.get(guildId);
     const member = guild.members.get(memberId);
     const level = member ? this.getMemberLevel(member) : null;
+    const categoryId = guild.channels.has(channelId) ? guild.channels.get(channelId).parentID : null;
 
     return this.getMatchingConfig({
       level,
       userId: memberId,
       channelId,
+      categoryId,
       memberRoles: member ? member.roles : []
     });
   }
@@ -297,6 +304,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       level,
       userId: msg.author.id,
       channelId: msg.channel.id,
+      categoryId: (msg.channel as GuildChannel).parentID,
       memberRoles: msg.member ? msg.member.roles : []
     });
   }
@@ -306,7 +314,8 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
    */
   protected getConfigForChannel(channel: Channel): TConfig {
     return this.getMatchingConfig({
-      channelId: channel.id
+      channelId: channel.id,
+      categoryId: (channel as GuildChannel).parentID
     });
   }
 
@@ -399,11 +408,13 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       if (requiredPermission) {
         const userId = user && user.id;
         const channelId = channel && channel.id;
+        const categoryId = channel && (channel as GuildChannel).parentID;
         if (
           !this.hasPermission(requiredPermission, {
             message,
             userId,
-            channelId
+            channelId,
+            categoryId
           })
         ) {
           return;

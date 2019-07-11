@@ -26,6 +26,7 @@ export interface IMatchParams {
   userId?: string;
   memberRoles?: string[];
   channelId?: string;
+  categoryId?: string;
 }
 
 function setAllPropsRecursively<T>(target: T, newValue: any): T {
@@ -139,6 +140,30 @@ export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPart
 
           if (mode === "=") match = match || matchChannel === theChannelId;
           else if (mode === "!" && matchChannel === theChannelId) {
+            match = false;
+            break;
+          }
+        }
+
+        matches.push(match);
+      } else {
+        matches.push(false);
+      }
+    }
+
+    // Match on category
+    // For a successful match, requires ANY of the specified categories to match, WITHOUT exclusions
+    if (override.category) {
+      const matchCategory = matchParams.categoryId;
+      if (matchCategory) {
+        const categories = Array.isArray(override.category) ? override.category : [override.category];
+        let match = false;
+
+        for (const categoryId of categories) {
+          const [mode, theCategoryId] = splitCond(categoryId, "=");
+
+          if (mode === "=") match = match || matchCategory === theCategoryId;
+          else if (mode === "!" && matchCategory === theCategoryId) {
             match = false;
             break;
           }

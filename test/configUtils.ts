@@ -124,6 +124,12 @@ describe("configUtils", () => {
           config: {
             value: 100
           }
+        },
+        {
+          category: ["9100", "9200"],
+          config: {
+            value: 120
+          }
         }
       ]
     };
@@ -157,6 +163,17 @@ describe("configUtils", () => {
       });
       expect(matchedOpts1.config.value).to.equal(10);
       expect(matchedOpts2.config.value).to.equal(10);
+    });
+
+    it("should match categories and accept any specified category", () => {
+      const matchedOpts1 = getMatchingPluginOptions(pluginOptions, {
+        categoryId: "9100"
+      });
+      const matchedOpts2 = getMatchingPluginOptions(pluginOptions, {
+        categoryId: "9200"
+      });
+      expect(matchedOpts1.config.value).to.equal(120);
+      expect(matchedOpts2.config.value).to.equal(120);
     });
 
     it("should match users", () => {

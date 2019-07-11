@@ -60,6 +60,7 @@ export interface IPluginOptions<TConfig = IBasePluginConfig> extends IPartialPlu
 
 export interface IPluginConfigOverride<TConfig = IBasePluginConfig> {
   channel?: string | string[];
+  category?: string | string[];
   level?: string | string[];
   user?: string | string[];
   role?: string | string[];
