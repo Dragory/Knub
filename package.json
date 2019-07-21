@@ -48,6 +48,6 @@
     "typescript": "^3.3.3333"
   },
   "peerDependencies": {
-    "eris": "^0.9.0"
+    "eris": "^0.10.1"
   }
 }
