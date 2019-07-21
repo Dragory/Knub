@@ -1,3 +1,6 @@
+# 20.3.0
+* Export `configUtils`
+
 # 20.2.2
 * Update Eris peer dependency to `^0.10.1`
 
