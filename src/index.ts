@@ -15,6 +15,9 @@ export { logger } from "./logger";
 import * as utils from "./utils";
 export { utils };
 
+import * as configUtils from "./configUtils";
+export { configUtils };
+
 export { ICommandConfig, ICommandDefinition, IMatchedCommand } from "./CommandManager";
 export {
   IPermissionLevelDefinitions,
