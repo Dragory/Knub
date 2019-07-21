@@ -219,6 +219,11 @@ export class Knub extends EventEmitter {
       return;
     }
 
+    if (!this.bot.guilds.has(guildId)) {
+      // Only load the guild if we're actually in the guild
+      return;
+    }
+
     const guildData: IGuildData = {
       config: null,
       id: guildId,
