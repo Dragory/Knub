@@ -1,3 +1,6 @@
+# 20.2.2
+* Update Eris peer dependency to `^0.10.1`
+
 # 20.2.1
 * Security patches to some dependencies
 
