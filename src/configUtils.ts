@@ -70,7 +70,7 @@ export function mergeConfig<T>(target: T, ...sources: T[]): T {
         if (Array.isArray(value)) {
           target[key] = (target[key] || []).concat(value);
         } else if (typeof value === "object" && value != null) {
-          target[key] = mergeConfig(target[key] || {}, value);
+          target[key] = mergeConfig({}, target[key] || {}, value);
         } else {
           target[key] = value;
         }
