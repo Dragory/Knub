@@ -1,3 +1,6 @@
+# 20.3.2
+* Fix bug where mergeConfig could cause unintended deep modifications to the source objects
+
 # 20.3.1
 * Abort `loadGuild()` if the bot is not in the guild. This could happen with reloads prior to the fix.
 
