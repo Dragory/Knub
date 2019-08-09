@@ -1,3 +1,6 @@
+# 20.5.0
+* Command filter functions are now also passed the plugin instance as a third parameter (plays nicer with typings than just binding in this case)
+
 # 20.4.0
 * Command filter functions now have their context (`this`) bound to the plugin instance
 
