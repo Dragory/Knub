@@ -1,3 +1,6 @@
+# 20.4.0
+* Command filter functions now have their context (`this`) bound to the plugin instance
+
 # 20.3.2
 * Fix bug where mergeConfig could cause unintended deep modifications to the source objects
 
