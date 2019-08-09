@@ -567,7 +567,8 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       let filterFailed = false;
       if (command.commandDefinition.config.filters) {
         for (const filterFn of command.commandDefinition.config.filters) {
-          if (!(await filterFn(msg, command))) {
+          const boundFilterFn = filterFn.bind(this);
+          if (!(await boundFilterFn(msg, command))) {
             filterFailed = true;
             break;
           }
