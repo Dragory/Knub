@@ -1,3 +1,7 @@
+# 20.6.0
+* Commands can now have `preFilters` in addition to regular filters. These are run right after permission checks, before
+any command argument types or command errors are handled. This makes them ideal for custom permission checks.
+
 # 20.5.0
 * Command filter functions are now also passed the plugin instance as a third parameter (plays nicer with typings than just binding in this case)
 
