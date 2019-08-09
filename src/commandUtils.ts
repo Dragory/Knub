@@ -1,4 +1,4 @@
-import { Client, Guild, GuildChannel, TextChannel, Message, PrivateChannel } from "eris";
+import { Client, Guild, GuildChannel, TextChannel, Message, PrivateChannel, VoiceChannel } from "eris";
 import { getChannelId, getRoleId, getUserId } from "./utils";
 import {
   IArgumentMap,
@@ -95,6 +95,48 @@ export async function convertToType(
     }
 
     return channel;
+  } else if (type === "textChannel") {
+    const channelId = getChannelId(value);
+    if (!channelId) {
+      throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
+    }
+
+    if (!(msg.channel instanceof GuildChannel)) {
+      throw new CommandArgumentTypeError(`Type 'Channel' can only be used in guilds`);
+    }
+
+    const guild = msg.channel.guild;
+    const channel = guild.channels.get(channelId);
+    if (!channel) {
+      throw new CommandArgumentTypeError(`Could not find channel for channel id \`${channelId}\``);
+    }
+
+    if (!(channel instanceof TextChannel)) {
+      throw new CommandArgumentTypeError(`Channel \`${channel.name}\` is not a text channel`);
+    }
+
+    return channel;
+  } else if (type === "voiceChannel") {
+    const channelId = getChannelId(value);
+    if (!channelId) {
+      throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
+    }
+
+    if (!(msg.channel instanceof GuildChannel)) {
+      throw new CommandArgumentTypeError(`Type 'Channel' can only be used in guilds`);
+    }
+
+    const guild = msg.channel.guild;
+    const channel = guild.channels.get(channelId);
+    if (!channel) {
+      throw new CommandArgumentTypeError(`Could not find channel for channel id \`${channelId}\``);
+    }
+
+    if (!(channel instanceof VoiceChannel)) {
+      throw new CommandArgumentTypeError(`Channel \`${channel.name}\` is not a voice channel`);
+    }
+
+    return channel;
   } else if (type === "role") {
     if (!(msg.channel instanceof GuildChannel)) {
       throw new CommandArgumentTypeError(`Type 'Role' can only be used in guilds`);
@@ -111,14 +153,14 @@ export async function convertToType(
     }
 
     return role;
-  } else if (type === "userid") {
+  } else if (type === "userId") {
     const userId = getUserId(value);
     if (!userId) {
       throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid user`);
     }
 
     return userId;
-  } else if (type === "channelid") {
+  } else if (type === "channelId") {
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new CommandArgumentTypeError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
