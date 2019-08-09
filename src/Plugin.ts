@@ -535,7 +535,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
 
       // Run custom pre-filters, if any
       let preFilterFailed = false;
-      if (command.commandDefinition.config.filters) {
+      if (command.commandDefinition.config.preFilters) {
         for (const filterFn of command.commandDefinition.config.preFilters) {
           const boundFilterFn = filterFn.bind(this);
           if (!(await boundFilterFn(msg, command, this))) {
