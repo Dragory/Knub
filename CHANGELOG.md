@@ -1,3 +1,6 @@
+# 20.6.1
+* Fix bug where command pre-filters were never run if the command didn't also have regular filters
+
 # 20.6.0
 * Commands can now have `preFilters` in addition to regular filters. These are run right after permission checks, before
 any command argument types or command errors are handled. This makes them ideal for custom permission checks.
