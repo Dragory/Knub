@@ -1,3 +1,12 @@
+# 21.0.0
+* **Breaking change:** changed capitalization on some command parameter types (which are no longer case-insensitive since v20.0.0):
+  * `userid` → `userId`
+  * `channelid` → `channelId`
+* Added new command parameter types:
+  * `textChannel`
+  * `voiceChannel`
+  * As with the regular `channel` type, these types are only usable in guilds
+
 # 20.6.1
 * Fix bug where command pre-filters were never run if the command didn't also have regular filters
 
