@@ -31,7 +31,7 @@ export interface IMatchedOptionMap {
 
 export type CommandHandler = (msg?: Message, args?: object, command?: IMatchedCommand) => void | Promise<void>;
 
-export type CommandFilter = (msg: Message, command: IMatchedCommand) => boolean | Promise<boolean>;
+export type CommandFilter = (msg: Message, command: IMatchedCommand, context?: any) => boolean | Promise<boolean>;
 
 export interface ICommandOption {
   name: string;
