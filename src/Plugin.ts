@@ -533,6 +533,22 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
         continue;
       }
 
+      // Run custom pre-filters, if any
+      let preFilterFailed = false;
+      if (command.commandDefinition.config.filters) {
+        for (const filterFn of command.commandDefinition.config.preFilters) {
+          const boundFilterFn = filterFn.bind(this);
+          if (!(await boundFilterFn(msg, command, this))) {
+            preFilterFailed = true;
+            break;
+          }
+        }
+      }
+
+      if (preFilterFailed) {
+        continue;
+      }
+
       // Use both global custom argument types + plugin-specific custom argument types
       const customArgumentTypes: ICustomArgumentTypes = {
         ...this.knub.getCustomArgumentTypes(),

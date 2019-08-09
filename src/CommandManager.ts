@@ -44,6 +44,7 @@ export interface ICommandConfig {
   description?: string;
   requiredPermission?: string;
   allowDMs?: boolean;
+  preFilters?: CommandFilter[];
   filters?: CommandFilter[];
   options?: ICommandOption[];
   locks?: string | string[];
