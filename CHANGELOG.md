@@ -1,3 +1,8 @@
+# 22.0.0
+* Deprecate `description` property from `ICommandConfig` in favor of new, arbitrary type `info` property
+* Deprecate `name` and `description` properties from `Plugin` in favor of new, arbitrary type `pluginInfo` property
+  * Note that the `pluginName` property for the plugin's internal name still exists and is still required
+
 # 21.0.0
 * **Breaking change:** changed capitalization on some command parameter types (which are no longer case-insensitive since v20.0.0):
   * `userid` → `userId`
