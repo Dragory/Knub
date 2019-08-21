@@ -41,7 +41,6 @@ export interface ICommandOption {
 }
 
 export interface ICommandConfig {
-  description?: string;
   requiredPermission?: string;
   allowDMs?: boolean;
   preFilters?: CommandFilter[];
@@ -52,6 +51,7 @@ export interface ICommandConfig {
   cooldownPermission?: string;
   aliases?: string[];
   overloads?: Array<string | IParameter[]>;
+  info?: any;
 }
 
 export interface ICommandDefinition {

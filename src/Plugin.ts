@@ -53,12 +53,12 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
   // Internal name for the plugin - REQUIRED
   public static pluginName: string;
 
+  // Arbitrary info about the plugin, e.g. description
+  // This property is mainly here to set a convention, as it's not actually used in Knub itself
+  public static pluginInfo: any;
+
   // Actual plugin name when the plugin was loaded. This is the same as pluginName unless overridden elsewhere.
   public runtimePluginName: string;
-
-  // Plugin name and description for e.g. dashboards
-  public name: string;
-  public description: string;
 
   protected bot: Client;
   protected readonly guildConfig: IGuildConfig;
