@@ -2,6 +2,17 @@ import { Client, Channel, Guild, Message, User } from "eris";
 
 export type ArbitraryFunction = (...args: any[]) => any;
 
+export function get(obj, path, def?): any {
+  let cursor = obj;
+  const pathParts = path.split(".");
+  for (const part of pathParts) {
+    cursor = cursor[part];
+    if (cursor === undefined) return def;
+    if (cursor == null) return null;
+  }
+  return cursor;
+}
+
 const userMentionRegex = /^<@!?([0-9]+)>$/;
 const channelMentionRegex = /^<#([0-9]+)>$/;
 const roleMentionRegex = /^<&([0-9]+)>$/;

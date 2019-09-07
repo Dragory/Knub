@@ -11,7 +11,6 @@ import {
   User,
   TextableChannel
 } from "eris";
-const at = require("lodash.at");
 
 import { CommandManager, ICommandConfig } from "./CommandManager";
 import {
@@ -21,7 +20,7 @@ import {
   IPartialPluginOptions,
   IPluginOptions
 } from "./configInterfaces";
-import { ArbitraryFunction, eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./utils";
+import { ArbitraryFunction, eventToChannel, eventToGuild, eventToMessage, eventToUser, get } from "./utils";
 import {
   convertArgumentTypes,
   convertOptionTypes,
@@ -35,6 +34,7 @@ import { getMatchingPluginOptions, IMatchParams, mergeConfig } from "./configUti
 import { PluginError } from "./PluginError";
 import { Lock, LockManager } from "./LockManager";
 import { CooldownManager } from "./CooldownManager";
+import { ICommandDecoratorData, IEventDecoratorData } from "./decorators";
 
 export interface IExtendedMatchParams extends IMatchParams {
   channelId?: string;
@@ -46,16 +46,16 @@ export interface IExtendedMatchParams extends IMatchParams {
  * Base class for Knub plugins
  */
 export class Plugin<TConfig extends {} = IBasePluginConfig> {
-  // Guild info - these will be null for global plugins
-  public guildId: string;
-  public guild: Guild;
-
   // Internal name for the plugin - REQUIRED
   public static pluginName: string;
 
   // Arbitrary info about the plugin, e.g. description
   // This property is mainly here to set a convention, as it's not actually used in Knub itself
   public static pluginInfo: any;
+
+  // Guild info - these will be null for global plugins
+  public guildId: string;
+  public guild: Guild;
 
   // Actual plugin name when the plugin was loaded. This is the same as pluginName unless overridden elsewhere.
   public runtimePluginName: string;
@@ -108,7 +108,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
    * Run plugin-defined onLoad() function and load commands/event listeners registered with decorators
    */
   public async runLoad(): Promise<any> {
-    await Promise.resolve(this.onLoad());
+    await this.onLoad();
 
     // Have to do this to access class methods
     const nonEnumerableProps = Object.getOwnPropertyNames(this.constructor.prototype);
@@ -121,44 +121,23 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
         continue;
       }
 
-      const requiredPermission = Reflect.getMetadata("requiredPermission", this, prop);
-      const locks = Reflect.getMetadata("locks", this, prop);
-      const cooldown: {
-        time: number;
-        permission: string;
-      } = Reflect.getMetadata("cooldown", this, prop);
-
       // Command handlers from decorators
-      const metaCommands = Reflect.getMetadata("commands", this, prop);
-      if (metaCommands) {
-        for (const metaCommand of metaCommands) {
-          const commandConfig: ICommandConfig = metaCommand.options || {};
-
-          if (requiredPermission && requiredPermission.permission) {
-            commandConfig.requiredPermission = requiredPermission.permission;
-          }
-
-          commandConfig.locks = locks || [];
-          if (cooldown) {
-            commandConfig.cooldown = cooldown.time;
-            commandConfig.cooldownPermission = cooldown.permission;
-          }
-
-          this.commands.add(metaCommand.command, metaCommand.parameters, value.bind(this), commandConfig);
-        }
+      const decoratorCommands: ICommandDecoratorData[] = Reflect.getMetadata("commands", this, prop) || [];
+      for (const command of decoratorCommands) {
+        this.commands.add(command.trigger, command.parameters, value.bind(this), command.config);
       }
 
       // Event listener from decorator
-      const metaEvents = Reflect.getMetadata("events", this, prop);
-      if (metaEvents) {
-        for (const metaEvent of metaEvents) {
+      const decoratorEvents: IEventDecoratorData[] = Reflect.getMetadata("events", this, prop);
+      if (decoratorEvents) {
+        for (const metaEvent of decoratorEvents) {
           this.on(
             metaEvent.eventName,
             value.bind(this),
             metaEvent.restrict,
             metaEvent.ignoreSelf,
-            requiredPermission && requiredPermission.permission,
-            locks || []
+            metaEvent.requiredPermission,
+            metaEvent.locks
           );
         }
       }
@@ -364,7 +343,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
    */
   protected hasPermission(requiredPermission: string, matchParams: IExtendedMatchParams): boolean {
     const config = this.getMatchingConfig(matchParams);
-    return at(config, requiredPermission)[0] === true;
+    return get(config, requiredPermission) === true;
   }
 
   /**

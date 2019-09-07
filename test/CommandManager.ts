@@ -1,11 +1,11 @@
 import { expect } from "chai";
-import { CommandManager } from "../src/CommandManager";
+import { CommandManager, matchCommand, parseArguments } from "../src/CommandManager";
 
 describe("CommandManager", () => {
   describe("Argument parsing", () => {
     it("should parse arguments correctly", () => {
       const manager = new CommandManager();
-      const parsed = manager.parseArguments(`arg1 "double-quoted value" 'single-quoted value' something`);
+      const parsed = parseArguments(`arg1 "double-quoted value" 'single-quoted value' something`);
 
       expect(parsed.length).to.equal(4);
       expect(parsed[0].value).to.equal("arg1");
@@ -86,7 +86,7 @@ describe("CommandManager", () => {
       manager.add("addroles", "[roleNames:string...]", noop);
       manager.add("addroles", "<roleStr:string>", noop);
 
-      const result = manager.matchCommand("!", manager.commands[0], '!addrole 1234 ""');
+      const result = matchCommand("!", manager.commands[0], '!addrole 1234 ""');
       expect(result.error).to.equal(null);
       expect(result.args.user.value).to.equal("1234");
       expect(result.args.arg2.value).to.equal("somedefault");
@@ -103,7 +103,7 @@ describe("CommandManager", () => {
 
       manager.add("addnote", "<num:number> <note:string$>", noop);
 
-      const result = manager.matchCommand("!", manager.commands[0], "!addnote 1234 Hello how are you doing\nthere");
+      const result = matchCommand("!", manager.commands[0], "!addnote 1234 Hello how are you doing\nthere");
       expect(result.args.note.value).to.equal("Hello how are you doing\nthere");
     });
 
@@ -117,11 +117,11 @@ describe("CommandManager", () => {
 
       const prefix = "/(?:!|\\.\\.)/";
 
-      const test1 = manager.matchCommand(prefix, manager.commands[0], "!cmd");
+      const test1 = matchCommand(prefix, manager.commands[0], "!cmd");
 
-      const test2 = manager.matchCommand(prefix, manager.commands[0], "..cmd");
+      const test2 = matchCommand(prefix, manager.commands[0], "..cmd");
 
-      const test3 = manager.matchCommand(prefix, manager.commands[0], ";;cmd");
+      const test3 = matchCommand(prefix, manager.commands[0], ";;cmd");
 
       expect(test1).to.not.equal(null);
       expect(test2).to.not.equal(null);

@@ -9,12 +9,10 @@ import { Plugin } from "./Plugin";
 import { GlobalPlugin } from "./GlobalPlugin";
 import EventEmitter from "events";
 import { IGlobalConfig, IGuildConfig, IPartialPluginOptions } from "./configInterfaces";
-import { noop } from "./utils";
+import { get, noop } from "./utils";
 import { performance } from "perf_hooks";
 import { LockManager } from "./LockManager";
 import { ICustomArgumentTypes } from "./commandUtils";
-
-const at = require("lodash.at");
 
 type StatusMessageFn = (channel: TextableChannel, body: string) => void;
 
@@ -291,7 +289,7 @@ export class Knub extends EventEmitter {
       throw new Error(`Unknown plugin: ${pluginName}`);
     }
 
-    const pluginOptions = at(guildConfig, `plugins.${pluginName}`)[0] || {};
+    const pluginOptions = get(guildConfig, `plugins.${pluginName}`) || {};
     const PluginClass = this.plugins.get(pluginName);
     const guildLocks = this.guilds.get(guildId).locks;
     const plugin = new PluginClass(this.bot, guildId, guildConfig, pluginOptions, pluginName, this, guildLocks);
@@ -329,7 +327,7 @@ export class Knub extends EventEmitter {
       throw new Error(`Unknown global plugin: ${pluginName}`);
     }
 
-    const pluginOptions: IPartialPluginOptions = at(this.globalConfig, `plugins.${pluginName}`)[0] || {};
+    const pluginOptions: IPartialPluginOptions = get(this.globalConfig, `plugins.${pluginName}`) || {};
     const PluginClass = this.globalPlugins.get(pluginName);
 
     const plugin = new PluginClass(
