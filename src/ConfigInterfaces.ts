@@ -51,7 +51,7 @@ export interface IPartialPluginOptions<TConfig = IBasePluginConfig> {
   enabled?: boolean;
   config?: DeepPartial<TConfig>;
   overrides?: Array<IPluginConfigOverride<TConfig>>;
-  "=overrides"?: Array<IPluginConfigOverride<TConfig>>;
+  replaceDefaultOverrides?: boolean;
 }
 
 export interface IPluginOptions<TConfig = IBasePluginConfig> extends IPartialPluginOptions<TConfig> {

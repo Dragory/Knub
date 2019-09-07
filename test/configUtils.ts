@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { mergeConfig, getMatchingPluginOptions } from "../src/configUtils";
-import { IPartialPluginOptions } from "../src/configInterfaces";
+import { IPartialPluginOptions } from "../src";
 
 describe("configUtils", () => {
   describe("mergeConfig", () => {
@@ -23,16 +23,16 @@ describe("configUtils", () => {
       },
       simpleArr: ["a", "b"],
       "+addArr": [3],
-      "-subArr": [2]
+      "-subArr": [1]
     };
 
-    const result: any = mergeConfig({}, base, override);
+    const result: any = mergeConfig<any>(base, override);
 
-    it("should merge scalar values", () => {
+    it("should overwrite scalar values", () => {
       expect(result.foo).to.equal(2);
     });
 
-    it("should merge nested scalar values", () => {
+    it("should overwrite nested scalar values", () => {
       expect(result.bar.baz).to.equal(5);
     });
 
@@ -41,16 +41,16 @@ describe("configUtils", () => {
       expect(result.bar.quux).to.equal(10);
     });
 
-    it("should overwrite arrays by default", () => {
+    it("should overwrite arrays", () => {
       expect(result.simpleArr).to.eql(["a", "b"]);
     });
 
-    it("should support adding values to arrays", () => {
-      expect(result.addArr).to.eql([1, 2, 3]);
+    it("should not support adding to arrays anymore", () => {
+      expect(result.addArr).to.eql([1, 2]);
     });
 
-    it("should support removing values from arrays", () => {
-      expect(result.subArr).to.eql([1]);
+    it("should not support removing from arrays anymore", () => {
+      expect(result.addArr).to.eql([1, 2]);
     });
   });
 

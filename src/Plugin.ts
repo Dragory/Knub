@@ -210,9 +210,9 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     if (!this.mergedPluginOptions) {
       const defaultOptions = this.getDefaultOptions();
       this.mergedPluginOptions = {
-        config: mergeConfig({}, defaultOptions.config || {}, this.pluginOptions.config || {}),
-        overrides: this.pluginOptions["=overrides"]
-          ? this.pluginOptions["=overrides"]
+        config: mergeConfig(defaultOptions.config || {}, this.pluginOptions.config || {}),
+        overrides: this.pluginOptions.replaceDefaultOverrides
+          ? this.pluginOptions.overrides || []
           : (this.pluginOptions.overrides || []).concat(defaultOptions.overrides || [])
       };
     }

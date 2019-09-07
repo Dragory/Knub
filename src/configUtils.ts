@@ -1,14 +1,5 @@
 import { IPartialPluginOptions } from "./configInterfaces";
 
-const at = require("lodash.at");
-const diff = require("lodash.difference");
-
-const modRegex = /^[+\-=]/;
-const splitMod = (v, defaultMod): [string, string] => {
-  const res = modRegex.exec(v);
-  return res ? [res[0], v.slice(1)] : [defaultMod, v];
-};
-
 const condRegex = /^(\D+)(\d+)$/;
 const splitCond = (v, defaultCond): [string, string] => {
   const match = condRegex.exec(v);
@@ -29,20 +20,6 @@ export interface IMatchParams {
   categoryId?: string;
 }
 
-function setAllPropsRecursively<T>(target: T, newValue: any): T {
-  for (const [key, value] of Object.entries(target)) {
-    if (key === "*") continue;
-
-    if (typeof value === "object" && value != null && !Array.isArray(value)) {
-      target[key] = setAllPropsRecursively(value, newValue);
-    } else {
-      target[key] = newValue;
-    }
-  }
-
-  return target;
-}
-
 /**
  * Basic deep merge with support for specifying merge "rules" with key prefixes.
  * For example, prefixing the key of a property containing an array with "+" would concat the two arrays, while
@@ -55,32 +32,26 @@ function setAllPropsRecursively<T>(target: T, newValue: any): T {
  * @param {T} sources
  * @returns {T}
  */
-export function mergeConfig<T>(target: T, ...sources: T[]): T {
-  for (const source of sources) {
-    for (const [rawKey, value] of Object.entries(source)) {
-      const defaultMod = Array.isArray(value) ? "=" : "+";
-      const [mod, key] = splitMod(rawKey, defaultMod);
+export function mergeConfig<T>(...sources: T[]): T {
+  const target = {} as T;
 
-      if (key === "*") {
-        setAllPropsRecursively(target, value);
+  for (const source of sources) {
+    for (const [key, value] of Object.entries(source)) {
+      // Merge objects
+      if (typeof value === "object" && value != null && !Array.isArray(value)) {
+        if (typeof target[key] === "object" && target[key] != null) {
+          // Both source and target are objects, merge
+          target[key] = mergeConfig(target[key], value);
+        } else {
+          // Only source is an object, overwrite
+          target[key] = { ...value };
+        }
+
         continue;
       }
 
-      if (mod === "+") {
-        if (Array.isArray(value)) {
-          target[key] = (target[key] || []).concat(value);
-        } else if (typeof value === "object" && value != null) {
-          target[key] = mergeConfig({}, target[key] || {}, value);
-        } else {
-          target[key] = value;
-        }
-      } else if (mod === "-") {
-        if (Array.isArray(value)) {
-          target[key] = diff(target[key] || [], value);
-        }
-      } else if (mod === "=") {
-        target[key] = value;
-      }
+      // Otherwise replace
+      target[key] = value;
     }
   }
 
@@ -95,7 +66,7 @@ export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPart
   matchParams: IMatchParams
 ): T {
   const finalOpts: T = {
-    config: mergeConfig({}, pluginOptions.config || {})
+    config: mergeConfig(pluginOptions.config || {})
   } as T;
 
   const overrides = pluginOptions.overrides || [];
@@ -228,8 +199,8 @@ export function getMatchingPluginOptions<T extends IPartialPluginOptions = IPart
       acceptMatches = matches.some(v => v);
     }
 
-    if (acceptMatches) {
-      if (override.config) mergeConfig(finalOpts.config, override.config);
+    if (acceptMatches && override.config) {
+      finalOpts.config = mergeConfig(finalOpts.config, override.config);
     }
   }
 
