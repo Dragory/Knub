@@ -8,11 +8,15 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "mocha --exit -r ts-node/register test/**/*.ts -- --trace-warnings",
-    "precommit": "lint-staged",
     "build": "touch dist && rm -r dist && tsc",
     "prepublishOnly": "npm run build",
     "watch": "touch dist && rm -r dist && tsc --watch",
     "format": "prettier --write \"{src,test}/**/*.ts\""
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   },
   "lint-staged": {
     "*.ts": [
@@ -22,9 +26,6 @@
   },
   "dependencies": {
     "escape-string-regexp": "^1.0.5",
-    "lodash.at": "^4.6.0",
-    "lodash.difference": "^4.5.0",
-    "lodash.merge": "^4.6.2",
     "reflect-metadata": "^0.1.10",
     "ts-essentials": "^2.0.3"
   },
@@ -38,8 +39,8 @@
     "@types/node": "^10.12.0",
     "@types/winston": "^2.3.4",
     "chai": "^4.1.0",
-    "husky": "^0.14.3",
-    "lint-staged": "^4.0.2",
+    "husky": "^3.0.5",
+    "lint-staged": "^9.2.5",
     "mocha": "^5.2.0",
     "prettier": "^1.16.4",
     "ts-node": "^3.2.1",
