@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "escape-string-regexp": "^2.0.0",
+    "knub-command-manager": "^4.3.0",
     "reflect-metadata": "^0.1.13",
     "ts-essentials": "^2.0.12"
   },

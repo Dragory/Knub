@@ -12,7 +12,7 @@ import {
   TextableChannel
 } from "eris";
 
-import { CommandManager, ICommandConfig } from "./CommandManager";
+import { CommandManager, CommandConfig, Parameter, CommandDefinition } from "knub-command-manager";
 import {
   IBasePluginConfig,
   IGuildConfig,
@@ -22,12 +22,14 @@ import {
 } from "./configInterfaces";
 import { ArbitraryFunction, eventToChannel, eventToGuild, eventToMessage, eventToUser, get } from "./utils";
 import {
-  convertArgumentTypes,
-  convertOptionTypes,
   getCommandSignature,
   getDefaultPrefix,
-  ICustomArgumentTypes,
-  runCommand
+  ICommandContext,
+  ICommandExtraData,
+  ICustomArgumentTypesMap,
+  IKnubPluginCommandDefinition,
+  isCommandMatchError,
+  TCommandHandler
 } from "./commandUtils";
 import { Knub } from "./Knub";
 import { getMatchingPluginOptions, IMatchParams, mergeConfig } from "./configUtils";
@@ -35,11 +37,17 @@ import { PluginError } from "./PluginError";
 import { Lock, LockManager } from "./LockManager";
 import { CooldownManager } from "./CooldownManager";
 import { ICommandDecoratorData, IEventDecoratorData } from "./decorators";
+import { baseParameterTypes } from "./baseParameterTypes";
 
 export interface IExtendedMatchParams extends IMatchParams {
   channelId?: string;
   member?: Member;
   message?: Message;
+}
+
+export interface IRegisteredCommand {
+  command: CommandDefinition<ICommandContext, ICommandExtraData>;
+  handler: TCommandHandler;
 }
 
 /**
@@ -53,28 +61,29 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
   // This property is mainly here to set a convention, as it's not actually used in Knub itself
   public static pluginInfo: any;
 
+  protected static customArgumentTypes: ICustomArgumentTypesMap = {};
+
   // Guild info - these will be null for global plugins
-  public guildId: string;
+  public readonly guildId: string;
   public guild: Guild;
 
   // Actual plugin name when the plugin was loaded. This is the same as pluginName unless overridden elsewhere.
   public runtimePluginName: string;
 
-  protected bot: Client;
+  protected readonly bot: Client;
   protected readonly guildConfig: IGuildConfig;
   protected readonly pluginOptions: IPartialPluginOptions;
   protected mergedPluginOptions: IPluginOptions;
 
-  protected knub: Knub;
+  protected readonly knub: Knub;
 
   protected locks: LockManager;
 
-  protected commands: CommandManager;
+  private commandManager: CommandManager<ICommandContext, ICommandExtraData>;
+  private commandHandlers: Map<number, TCommandHandler>;
   protected eventHandlers: Map<string, any[]>;
 
   protected cooldowns: CooldownManager;
-
-  protected customArgumentTypes: ICustomArgumentTypes = {};
 
   constructor(
     bot: Client,
@@ -90,26 +99,35 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     this.guildConfig = guildConfig;
     this.pluginOptions = pluginOptions;
     this.runtimePluginName = runtimePluginName;
-    this.locks = locks;
-
     this.knub = knub;
+    this.locks = locks;
+  }
 
+  /**
+   * Run basic initialization and the plugin-defined onLoad() function
+   */
+  public async runLoad(): Promise<any> {
+    // Basic initialization
     this.guild = this.guildId ? this.bot.guilds.get(this.guildId) : null;
 
-    this.commands = new CommandManager();
+    this.commandManager = new CommandManager<ICommandContext, ICommandExtraData>({
+      prefix: this.guildConfig.prefix || getDefaultPrefix(this.bot),
+      types: {
+        ...baseParameterTypes,
+        ...this.knub.getCustomArgumentTypes(),
+        ...(this.constructor as typeof Plugin).customArgumentTypes
+      }
+    });
+    this.commandHandlers = new Map();
+
     this.eventHandlers = new Map();
 
     this.cooldowns = new CooldownManager();
 
-    this.registerCommandMessageListener();
-  }
-
-  /**
-   * Run plugin-defined onLoad() function and load commands/event listeners registered with decorators
-   */
-  public async runLoad(): Promise<any> {
+    // Run plugin-defined onLoad() function
     await this.onLoad();
 
+    // Add commands and event listeners from decorators
     // Have to do this to access class methods
     const nonEnumerableProps = Object.getOwnPropertyNames(this.constructor.prototype);
     const enumerableProps = Object.keys(this);
@@ -121,13 +139,13 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
         continue;
       }
 
-      // Command handlers from decorators
+      // Add commands from decorators
       const decoratorCommands: ICommandDecoratorData[] = Reflect.getMetadata("commands", this, prop) || [];
       for (const command of decoratorCommands) {
-        this.commands.add(command.trigger, command.parameters, value.bind(this), command.config);
+        this.addCommand(command.trigger, command.parameters, value.bind(this), command.config);
       }
 
-      // Event listener from decorator
+      // Add event listeners from decorator
       const decoratorEvents: IEventDecoratorData[] = Reflect.getMetadata("events", this, prop);
       if (decoratorEvents) {
         for (const metaEvent of decoratorEvents) {
@@ -142,6 +160,8 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
         }
       }
     }
+
+    this.registerCommandMessageListener();
   }
 
   /**
@@ -171,7 +191,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
    * Registers the message listener for commands
    */
   protected registerCommandMessageListener(): void {
-    this.on("messageCreate", this.runCommandsInMessage.bind(this));
+    this.on("messageCreate", this.runCommandFromMessage.bind(this));
   }
 
   /**
@@ -346,6 +366,87 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     return get(config, requiredPermission) === true;
   }
 
+  protected addCommand(
+    trigger: string | RegExp,
+    parameters: string | Parameter[],
+    handler: TCommandHandler,
+    config: CommandConfig<ICommandContext, ICommandExtraData>
+  ) {
+    config.preFilters = config.preFilters || [];
+    config.preFilters.unshift(
+      // Make sure the command is in a guild channel unless explicitly allowed for DMs
+      (cmd: IKnubPluginCommandDefinition, context: ICommandContext) => {
+        if (context.message.channel instanceof PrivateChannel) {
+          if (!cmd.config.extra.allowDMs) {
+            return false;
+          }
+        } else if (!(context.message.channel instanceof GuildChannel)) {
+          return false;
+        }
+
+        return true;
+      },
+
+      // Check required permissions
+      (cmd: IKnubPluginCommandDefinition, context: ICommandContext) => {
+        const requiredPermission = cmd.config.extra.requiredPermission;
+        if (requiredPermission && !this.hasPermission(requiredPermission, { message: context.message })) {
+          return false;
+        }
+
+        return true;
+      }
+    );
+
+    config.postFilters = config.postFilters || [];
+    config.postFilters.unshift(
+      // Check for cooldowns
+      (cmd: IKnubPluginCommandDefinition, context: ICommandContext) => {
+        if (cmd.config.extra.cooldown) {
+          const cdKey = `${cmd.id}-${context.message.author.id}`;
+          let cdApplies = true;
+          if (cmd.config.extra.cooldownPermission) {
+            cdApplies = !this.hasPermission(cmd.config.extra.cooldownPermission, { message: context.message });
+          }
+
+          if (cdApplies && this.cooldowns.isOnCooldown(cdKey)) {
+            // We're on cooldown
+            return false;
+          }
+
+          this.cooldowns.setCooldown(cdKey, cmd.config.extra.cooldown);
+        }
+
+        return true;
+      },
+
+      // Wait for locks, if any, and bail out if the lock has been interrupted
+      async (cmd: IKnubPluginCommandDefinition, context: ICommandContext) => {
+        if (cmd.config.extra.locks) {
+          cmd.config.extra._lock = await this.locks.acquire(cmd.config.extra.locks);
+          if (cmd.config.extra._lock.interrupted) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+    );
+
+    const command = this.commandManager.add(trigger, parameters, config);
+    this.commandHandlers.set(command.id, handler);
+  }
+
+  protected removeCommand(id: number) {
+    this.commandManager.remove(id);
+    this.commandHandlers.delete(id);
+  }
+
+  public getRegisteredCommands(): IRegisteredCommand[] {
+    const commands = this.commandManager.getAll();
+    return commands.map(command => ({ command, handler: this.commandHandlers.get(command.id) }));
+  }
+
   /**
    * Adds a guild-specific event listener for the given event
    */
@@ -478,161 +579,43 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     return guildData.loadedPlugins.get(name) as T;
   }
 
-  /**
-   * Runs all matching commands in the message
-   */
-  protected async runCommandsInMessage(msg: Message): Promise<void> {
+  protected async runCommandFromMessage(msg: Message): Promise<void> {
     // Ignore messages without text (e.g. images, embeds, etc.)
     if (msg.content == null || msg.content.trim() === "") {
       return;
     }
 
-    const prefix = this.guildConfig.prefix || getDefaultPrefix(this.bot);
-    const matchedCommands = this.commands.findCommandsInString(msg.content, prefix);
+    const matchedCommand = await this.commandManager.findMatchingCommand(msg.content, {
+      message: msg,
+      bot: this.bot,
+      plugin: this
+    });
 
-    // NOTE: "Variable initializer is redundant" inspection in WebStorm is incorrect here
-    let onlyErrors = true;
-    let lastError;
-
-    // Attempt to run each matching command.
-    // Only one command - the first one that passes all checks below - is actually run.
-    for (const command of matchedCommands) {
-      // Make sure this command is supposed to be run here
-      if (msg.channel instanceof PrivateChannel) {
-        if (!command.commandDefinition.config.allowDMs) {
-          return;
-        }
-      } else if (!(msg.channel instanceof GuildChannel)) {
-        return;
-      }
-
-      // Check permissions
-      const requiredPermission = command.commandDefinition.config.requiredPermission;
-      if (requiredPermission && !this.hasPermission(requiredPermission, { message: msg })) {
-        continue;
-      }
-
-      // Run custom pre-filters, if any
-      let preFilterFailed = false;
-      if (command.commandDefinition.config.preFilters) {
-        for (const filterFn of command.commandDefinition.config.preFilters) {
-          const boundFilterFn = filterFn.bind(this);
-          if (!(await boundFilterFn(msg, command, this))) {
-            preFilterFailed = true;
-            break;
-          }
-        }
-      }
-
-      if (preFilterFailed) {
-        continue;
-      }
-
-      // Use both global custom argument types + plugin-specific custom argument types
-      const customArgumentTypes: ICustomArgumentTypes = {
-        ...this.knub.getCustomArgumentTypes(),
-        ...this.customArgumentTypes
-      };
-
-      // Convert arg types
-      if (!command.error) {
-        try {
-          await convertArgumentTypes(command.args, msg, this.bot, customArgumentTypes);
-        } catch (e) {
-          command.error = e;
-        }
-      }
-
-      // Convert opt types
-      if (!command.error) {
-        try {
-          await convertOptionTypes(command.opts, msg, this.bot, customArgumentTypes);
-        } catch (e) {
-          command.error = e;
-        }
-      }
-
-      // Keep track of errors
-      if (command.error) {
-        lastError = command.error;
-        continue;
-      }
-
-      // Run custom filters, if any
-      let filterFailed = false;
-      if (command.commandDefinition.config.filters) {
-        for (const filterFn of command.commandDefinition.config.filters) {
-          const boundFilterFn = filterFn.bind(this);
-          if (!(await boundFilterFn(msg, command, this))) {
-            filterFailed = true;
-            break;
-          }
-        }
-      }
-
-      if (filterFailed) {
-        lastError = null;
-        continue;
-      }
-
-      // Check for cooldowns
-      if (command.commandDefinition.config.cooldown) {
-        const cdKey = `${command.name}-${msg.author.id}`;
-        let cdApplies = true;
-        if (command.commandDefinition.config.cooldownPermission) {
-          cdApplies = !this.hasPermission(command.commandDefinition.config.cooldownPermission, { message: msg });
-        }
-
-        if (cdApplies && this.cooldowns.isOnCooldown(cdKey)) {
-          // We're on cooldown, bail out
-          onlyErrors = false;
-          break;
-        }
-
-        this.cooldowns.setCooldown(cdKey, command.commandDefinition.config.cooldown);
-      }
-
-      // Wait for locks, if any, and bail out if the lock has been interrupted
-      if (command.commandDefinition.config.locks) {
-        command.lock = await this.locks.acquire(command.commandDefinition.config.locks);
-        if (command.lock.interrupted) {
-          onlyErrors = false;
-          break;
-        }
-      }
-
-      const timerDone = this.knub.startPerformanceDebugTimer(`cmd: ${command.name}`);
-
-      // Run the command
-      await runCommand(command, msg, this.bot);
-      command.lock.unlock();
-      timerDone();
-
-      // A command was run: don't continue trying to run the rest of the matched commands
-      onlyErrors = false;
-      break;
+    if (matchedCommand == null) {
+      // No command matched the message
+      return;
     }
 
-    // Only post the last error in the matched set of commands. This way if there are multiple "overlapping" commands,
-    // an error won't be reported when some of them match, nor will there be tons of spam if all of them have errors.
-    if (onlyErrors && lastError) {
-      const usageLines = matchedCommands.map(cmd => {
-        const usageLine = getCommandSignature(
-          cmd.prefix,
-          cmd.name,
-          cmd.commandDefinition.parameters,
-          cmd.commandDefinition.config.options
-        );
-        return `\`${usageLine}\``;
-      });
+    if (isCommandMatchError(matchedCommand)) {
+      // There was a matching command, but we encountered an error
+      const usageLine = getCommandSignature(
+        this.guildConfig.prefix,
+        matchedCommand.command.triggers[0].source,
+        matchedCommand.command
+      );
 
-      const errorMessage =
-        usageLines.length === 1
-          ? `${lastError.message}\nUsage: ${usageLines[0]}`
-          : `${lastError.message}\n\nUsage:\n${usageLines.join("\n")}`;
-
-      this.sendErrorMessage(msg.channel, errorMessage);
+      this.sendErrorMessage(msg.channel, `${matchedCommand.error}\nUsage: ${usageLine}`);
+      return;
     }
+
+    const timerDone = this.knub.startPerformanceDebugTimer(
+      `cmd: ${matchedCommand.triggers[0].source} (${matchedCommand.id})`
+    );
+
+    // Run the command
+    const handler = this.commandHandlers.get(matchedCommand.id);
+    await handler(msg, { ...matchedCommand.args, ...matchedCommand.opts }, matchedCommand);
+    timerDone();
   }
 
   protected sendErrorMessage(channel: TextableChannel, body: string) {

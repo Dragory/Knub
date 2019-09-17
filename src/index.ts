@@ -18,7 +18,6 @@ export { utils };
 import * as configUtils from "./configUtils";
 export { configUtils };
 
-export { ICommandConfig, ICommandDefinition, IMatchedCommand } from "./CommandManager";
 export {
   IPermissionLevelDefinitions,
   IBasePluginConfig,
@@ -28,7 +27,9 @@ export {
   IPluginOptions
 } from "./configInterfaces";
 
-export { CommandArgumentTypeError, getCommandSignature } from "./commandUtils";
+export { CommandConfig, CommandDefinition, TypeConverterFn, TypeConversionError } from "knub-command-manager";
+
+export { getCommandSignature } from "./commandUtils";
 
 export {
   waitForReaction,

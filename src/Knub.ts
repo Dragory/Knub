@@ -12,7 +12,7 @@ import { IGlobalConfig, IGuildConfig, IPartialPluginOptions } from "./configInte
 import { get, noop } from "./utils";
 import { performance } from "perf_hooks";
 import { LockManager } from "./LockManager";
-import { ICustomArgumentTypes } from "./commandUtils";
+import { ICustomArgumentTypesMap } from "./commandUtils";
 
 type StatusMessageFn = (channel: TextableChannel, body: string) => void;
 
@@ -27,7 +27,7 @@ export interface IOptions {
     size?: number;
     threshold?: number;
   };
-  customArgumentTypes?: ICustomArgumentTypes;
+  customArgumentTypes?: ICustomArgumentTypesMap;
   sendErrorMessageFn?: StatusMessageFn;
   sendSuccessMessageFn?: StatusMessageFn;
   [key: string]: any;
@@ -431,7 +431,7 @@ export class Knub extends EventEmitter {
     return Array.from(this.performanceDebugItems);
   }
 
-  public getCustomArgumentTypes(): ICustomArgumentTypes {
+  public getCustomArgumentTypes(): ICustomArgumentTypesMap {
     return this.options.customArgumentTypes || {};
   }
 

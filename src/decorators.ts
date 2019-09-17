@@ -1,11 +1,11 @@
-import { createCommandTriggerRegexp, ICommandConfig, IParameter, parseParameterString } from "./CommandManager";
 import { logger } from "./logger";
+import { CommandConfig, Parameter, parseParameters } from "knub-command-manager";
+import { createCommandTriggerRegexp, ICommandContext, ICommandExtraData } from "./commandUtils";
 
 export interface ICommandDecoratorData {
   trigger: RegExp;
-  parameters: IParameter[];
-  config: ICommandConfig;
-  _prop: string;
+  parameters: Parameter[];
+  config: CommandConfig<any, ICommandExtraData>;
 }
 
 export interface IEventDecoratorData {
@@ -14,7 +14,43 @@ export interface IEventDecoratorData {
   ignoreSelf: boolean;
   requiredPermission: string;
   locks: string | string[];
-  _prop: string;
+}
+
+export interface IPermissionDecoratorData {
+  permission: string;
+}
+
+export interface ILockDecoratorData {
+  locks: string | string[];
+}
+
+export interface ICooldownDecoratorData {
+  time: number;
+  permission: string;
+}
+
+function applyCooldownToCommand(commandData: ICommandDecoratorData, cooldown: ICooldownDecoratorData) {
+  commandData.config.extra.cooldown = cooldown.time;
+  commandData.config.extra.cooldownPermission = cooldown.permission;
+}
+
+function applyRequiredPermissionToCommand(
+  commandData: ICommandDecoratorData,
+  permissionData: IPermissionDecoratorData
+) {
+  commandData.config.extra.requiredPermission = permissionData.permission;
+}
+
+function applyRequiredPermissionToEvent(eventData: IEventDecoratorData, permissionData: IPermissionDecoratorData) {
+  eventData.requiredPermission = permissionData.permission;
+}
+
+function applyLockToCommand(commandData: ICommandDecoratorData, lockData: ILockDecoratorData) {
+  commandData.config.extra.locks = lockData.locks;
+}
+
+function applyLockToEvent(eventData: IEventDecoratorData, lockData: ILockDecoratorData) {
+  eventData.locks = lockData.locks;
 }
 
 /**
@@ -22,8 +58,8 @@ export interface IEventDecoratorData {
  */
 function CommandDecorator(
   trigger: string | RegExp,
-  parameters: string | IParameter[] = [],
-  config: ICommandConfig = {}
+  parameters: string | Parameter[] = [],
+  config: CommandConfig<ICommandContext, ICommandExtraData> = {}
 ) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     if (!Reflect.hasMetadata("commands", target, propertyKey)) {
@@ -33,14 +69,29 @@ function CommandDecorator(
     const commands: ICommandDecoratorData[] = Reflect.getMetadata("commands", target, propertyKey);
 
     const finalTrigger = createCommandTriggerRegexp(trigger);
-    const finalParameters = typeof parameters === "string" ? parseParameterString(parameters) : parameters;
+    const finalParameters = typeof parameters === "string" ? parseParameters(parameters) : parameters;
 
-    commands.push({
+    config.extra = config.extra || {};
+
+    const commandData: ICommandDecoratorData = {
       trigger: finalTrigger,
       parameters: finalParameters,
-      config,
-      _prop: propertyKey
-    });
+      config
+    };
+
+    // Apply existing cooldowns
+    const cooldownData: ICooldownDecoratorData = Reflect.getMetadata("cooldown", target, propertyKey);
+    if (cooldownData) applyCooldownToCommand(commandData, cooldownData);
+
+    // Apply existing permission requirements
+    const permissionData: IPermissionDecoratorData = Reflect.getMetadata("requiredPermission", target, propertyKey);
+    if (permissionData) applyRequiredPermissionToCommand(commandData, permissionData);
+
+    // Apply existing locks
+    const lockData: ILockDecoratorData = Reflect.getMetadata("locks", target, propertyKey);
+    if (lockData) applyLockToCommand(commandData, lockData);
+
+    commands.push(commandData);
   };
 }
 
@@ -60,100 +111,78 @@ function OnEventDecorator(
     }
 
     const events: IEventDecoratorData[] = Reflect.getMetadata("events", target, propertyKey) || [];
-    events.push({
+    const eventData: IEventDecoratorData = {
       eventName,
       restrict,
       ignoreSelf,
       requiredPermission,
-      locks,
-      _prop: propertyKey
-    });
+      locks
+    };
+
+    // Apply existing permission requirements
+    const permissionData: IPermissionDecoratorData = Reflect.getMetadata("requiredPermission", target, propertyKey);
+    if (permissionData) applyRequiredPermissionToEvent(eventData, permissionData);
+
+    // Apply existing locks
+    const lockData: ILockDecoratorData = Reflect.getMetadata("locks", target, propertyKey);
+    if (lockData) applyLockToEvent(eventData, lockData);
+
+    events.push(eventData);
   };
 }
 
 /**
- * PLUGINS: Augments command handlers and event listeners by adding a permission requirement.
- * Must be used after the command or event decorator!
+ * PLUGINS: Augments command handlers and event listeners by adding a permission requirement
  */
-function PermissionDecorator(permission: string, suppressWarnings = false) {
+function PermissionDecorator(permission: string) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    if (Reflect.hasMetadata("commands", target, propertyKey)) {
-      const commands: ICommandDecoratorData[] = Reflect.getMetadata("commands", target, propertyKey);
-      for (const command of commands) {
-        command.config.requiredPermission = permission;
-      }
-    }
+    const permissionData: IPermissionDecoratorData = {
+      permission
+    };
+    Reflect.defineMetadata("requiredPermission", permissionData, target, propertyKey);
 
-    if (Reflect.hasMetadata("events", target, propertyKey)) {
-      const events: IEventDecoratorData[] = Reflect.getMetadata("events", target, propertyKey);
-      for (const event of events) {
-        event.requiredPermission = permission;
-      }
-    }
+    // Apply to existing commands
+    const commands: ICommandDecoratorData[] = Reflect.getMetadata("commands", target, propertyKey) || [];
+    commands.forEach(cmd => applyRequiredPermissionToCommand(cmd, permissionData));
 
-    if (
-      !suppressWarnings &&
-      (!Reflect.hasMetadata("commands", target, propertyKey) || !Reflect.hasMetadata("events", target, propertyKey))
-    ) {
-      logger.warn(
-        "PermissionDecorator used without prior CommandDecorator or EventDecorator (you can suppress this warning with the second argument to PermissionDecorator)"
-      );
-    }
-
-    Reflect.defineMetadata("requiredPermission", { permission, _prop: propertyKey }, target, propertyKey);
+    // Apply to existing events
+    const events: IEventDecoratorData[] = Reflect.getMetadata("events", target, propertyKey) || [];
+    events.forEach(ev => applyRequiredPermissionToEvent(ev, permissionData));
   };
 }
 
 /**
- * PLUGINS: Specify which locks the listener should wait for, and lock during its execution
+ * PLUGINS: Specify which locks the command handler or event listener should wait for and lock during its execution
  */
-function LockDecorator(locks: string | string[], suppressWarnings = false) {
+function LockDecorator(locks: string | string[]) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    if (Reflect.hasMetadata("commands", target, propertyKey)) {
-      const commands: ICommandDecoratorData[] = Reflect.getMetadata("commands", target, propertyKey);
-      for (const command of commands) {
-        command.config.locks = locks;
-      }
-    }
+    const lockData: ILockDecoratorData = { locks };
+    Reflect.defineMetadata("locks", lockData, target, propertyKey);
 
-    if (Reflect.hasMetadata("events", target, propertyKey)) {
-      const events: IEventDecoratorData[] = Reflect.getMetadata("events", target, propertyKey);
-      for (const event of events) {
-        event.locks = locks;
-      }
-    }
+    // Apply to existing commands
+    const commands: ICommandDecoratorData[] = Reflect.getMetadata("commands", target, propertyKey) || [];
+    commands.forEach(cmd => applyLockToCommand(cmd, lockData));
 
-    if (
-      !suppressWarnings &&
-      (!Reflect.hasMetadata("commands", target, propertyKey) || !Reflect.hasMetadata("events", target, propertyKey))
-    ) {
-      logger.warn(
-        "LockDecorator used without prior CommandDecorator or EventDecorator (you can suppress this warning with the second argument to LockDecorator)"
-      );
-    }
-
-    Reflect.defineMetadata("locks", locks, target, propertyKey);
+    // Apply to existing events
+    const events: IEventDecoratorData[] = Reflect.getMetadata("events", target, propertyKey) || [];
+    events.forEach(ev => applyLockToEvent(ev, lockData));
   };
 }
 
 /**
- * PLUGINS: Specify a cooldown
+ * PLUGINS: Specify a cooldown for a command
  */
-function CooldownDecorator(cdTime: number, cdPermission: string = null, suppressWarnings = false) {
+function CooldownDecorator(time: number, permission: string = null) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    if (Reflect.hasMetadata("commands", target, propertyKey)) {
-      const commands: ICommandDecoratorData[] = Reflect.getMetadata("commands", target, propertyKey);
-      for (const command of commands) {
-        command.config.cooldown = cdTime;
-        command.config.cooldownPermission = cdPermission;
-      }
-    } else if (!suppressWarnings) {
-      logger.warn(
-        "CooldownDecorator used without prior CommandDecorator (you can suppress this warning with the third argument to CooldownDecorator)"
-      );
-    }
+    const cooldownData: ICooldownDecoratorData = {
+      time,
+      permission
+    };
+    Reflect.defineMetadata("cooldown", cooldownData, target, propertyKey);
 
-    Reflect.defineMetadata("cooldown", { time: cdTime, permission: cdPermission }, target, propertyKey);
+    // Apply to existing commands
+    const commands: ICommandDecoratorData[] = Reflect.getMetadata("commands", target, propertyKey) || [];
+    commands.forEach(cmd => applyCooldownToCommand(cmd, cooldownData));
   };
 }
 
