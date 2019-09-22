@@ -3,7 +3,9 @@ import { getChannelId, getRoleId, getUserId } from "./utils";
 import { disableCodeBlocks } from "./helpers";
 import { logger } from "./logger";
 import {
+  CommandConfig,
   CommandDefinition,
+  CommandManager,
   CommandOption,
   FindMatchingCommandError,
   MatchedCommand,
@@ -35,6 +37,8 @@ export interface ICommandContext {
 }
 
 export interface IKnubPluginCommandDefinition extends CommandDefinition<ICommandContext, ICommandExtraData> {}
+export interface IKnubPluginCommandConfig extends CommandConfig<ICommandContext, ICommandExtraData> {}
+export interface IKnubPluginCommandManager extends CommandManager<ICommandContext, ICommandExtraData> {}
 
 export interface ICustomArgumentTypesMap {
   [key: string]: TypeConverterFn<ICommandContext>;

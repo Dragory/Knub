@@ -26,7 +26,9 @@ import {
   ICommandContext,
   ICommandExtraData,
   ICustomArgumentTypesMap,
+  IKnubPluginCommandConfig,
   IKnubPluginCommandDefinition,
+  IKnubPluginCommandManager,
   isCommandMatchError,
   TCommandHandler
 } from "./commandUtils";
@@ -46,7 +48,7 @@ export interface IExtendedMatchParams extends IMatchParams {
 }
 
 export interface IRegisteredCommand {
-  command: CommandDefinition<ICommandContext, ICommandExtraData>;
+  command: IKnubPluginCommandDefinition;
   handler: TCommandHandler;
 }
 
@@ -79,7 +81,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
 
   protected locks: LockManager;
 
-  private commandManager: CommandManager<ICommandContext, ICommandExtraData>;
+  private commandManager: IKnubPluginCommandManager;
   private commandHandlers: Map<number, TCommandHandler>;
   protected eventHandlers: Map<string, any[]>;
 
@@ -355,7 +357,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     trigger: string | RegExp,
     parameters: string | Parameter[],
     handler: TCommandHandler,
-    config: CommandConfig<ICommandContext, ICommandExtraData>
+    config: IKnubPluginCommandConfig
   ) {
     config.preFilters = config.preFilters || [];
     config.preFilters.unshift(

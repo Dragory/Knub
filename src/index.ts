@@ -32,7 +32,14 @@ export {
 
 export { CommandConfig, CommandDefinition, TypeConverterFn, TypeConversionError } from "knub-command-manager";
 
-export { getCommandSignature, ICommandContext, ICommandExtraData } from "./commandUtils";
+export {
+  getCommandSignature,
+  IKnubPluginCommandDefinition,
+  IKnubPluginCommandConfig,
+  IKnubPluginCommandManager,
+  ICommandContext,
+  ICommandExtraData
+} from "./commandUtils";
 
 export {
   waitForReaction,
