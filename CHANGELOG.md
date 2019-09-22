@@ -1,3 +1,11 @@
+# 23.2.0
+* Export extra types:
+  * `ICommandContext`
+  * `ICommandExtraData`
+  * `IKnubPluginCommandDefinition`
+  * `IKnubPluginCommandConfig`
+  * `IKnubPluginCommandManager`
+
 # 23.1.0
 * Update `knub-command-manager` to `4.4.0`. This allows accessing the original sources of command triggers via
   `command.originalTriggers`.
