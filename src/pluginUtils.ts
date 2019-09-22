@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { ICommandDecoratorData, IEventDecoratorData } from "./decorators";
 import { Plugin } from "./Plugin";
 
@@ -10,11 +11,11 @@ export function getPluginIterableProps(plugin: typeof Plugin) {
 
 export function getPluginDecoratorCommands(plugin: typeof Plugin): ICommandDecoratorData[] {
   return Array.from(getPluginIterableProps(plugin)).reduce((arr: ICommandDecoratorData[], prop) => {
-    if (typeof plugin[prop] !== "function") {
+    if (typeof plugin.prototype[prop] !== "function") {
       return arr;
     }
 
-    const decoratorCommands: ICommandDecoratorData[] = Reflect.getMetadata("commands", plugin, prop) || [];
+    const decoratorCommands: ICommandDecoratorData[] = Reflect.getMetadata("commands", plugin.prototype, prop) || [];
     if (decoratorCommands) arr.push(...decoratorCommands);
 
     return arr;
@@ -23,11 +24,11 @@ export function getPluginDecoratorCommands(plugin: typeof Plugin): ICommandDecor
 
 export function getPluginDecoratorEventListeners(plugin: typeof Plugin): IEventDecoratorData[] {
   return Array.from(getPluginIterableProps(plugin)).reduce((arr: IEventDecoratorData[], prop) => {
-    if (typeof plugin[prop] !== "function") {
+    if (typeof plugin.prototype[prop] !== "function") {
       return arr;
     }
 
-    const decoratorEvents: IEventDecoratorData[] = Reflect.getMetadata("events", plugin, prop);
+    const decoratorEvents: IEventDecoratorData[] = Reflect.getMetadata("events", plugin.prototype, prop);
     if (decoratorEvents) arr.push(...decoratorEvents);
 
     return arr;
