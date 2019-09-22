@@ -1,3 +1,7 @@
+# 23.1.0
+* Update `knub-command-manager` to `4.4.0`. This allows accessing the original sources of command triggers via
+  `command.originalTriggers`.
+
 # 23.0.0
 This release contains lots of **BREAKING CHANGES**. You have been warned!
 
