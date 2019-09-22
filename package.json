@@ -48,5 +48,8 @@
   },
   "peerDependencies": {
     "eris": "^0.10.1"
-  }
+  },
+  "files": [
+    "/dist"
+  ]
 }
