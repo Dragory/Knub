@@ -31,18 +31,18 @@
     "ts-essentials": "^2.0.12"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.1",
+    "@types/chai": "^4.2.3",
     "@types/mocha": "^5.2.7",
-    "@types/node": "^12.7.4",
+    "@types/node": "^12.7.5",
     "chai": "^4.2.0",
     "husky": "^3.0.5",
-    "lint-staged": "^9.2.5",
+    "lint-staged": "^9.3.0",
     "mocha": "^5.2.0",
     "prettier": "^1.18.2",
     "ts-node": "^3.2.1",
-    "tslint": "^5.19.0",
+    "tslint": "^5.20.0",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.6.2"
+    "typescript": "^3.6.3"
   },
   "peerDependencies": {
     "eris": "^0.10.1"
