@@ -3,6 +3,8 @@
   To use them in your project, add `knub-command-manager` as a dependency to the project instead.
 * Update `knub-command-manager` to v5, returning support for command signature overloads (though without doing it the
   hacky way - adding a new command for each overload/signature - this time)
+* Update the signature of `getCommandSignature()` to no longer require passing the prefix/trigger.
+  Trigger and signature can now be overwritten with 2 new optional arguments.
 
 # 23.2.0
 * Export extra types:
