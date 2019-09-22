@@ -9,7 +9,8 @@
   "scripts": {
     "test": "mocha --exit -r ts-node/register test/**/*.ts -- --trace-warnings",
     "build": "touch dist && rm -r dist && tsc",
-    "prepublishOnly": "npm run build",
+    "preversion": "npm run test",
+    "prepublishOnly": "npm run test && npm run build",
     "watch": "touch dist && rm -r dist && tsc --watch",
     "format": "prettier --write \"{src,test}/**/*.ts\""
   },
