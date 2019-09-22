@@ -265,8 +265,9 @@ export class Knub extends EventEmitter {
 
     for (const plugin of guildData.loadedPlugins.values()) {
       await this.unloadPlugin(plugin);
-      this.guilds.delete(guildId);
     }
+
+    this.guilds.delete(guildId);
 
     this.emit("guildUnloaded", guildId);
   }
