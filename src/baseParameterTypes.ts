@@ -1,11 +1,11 @@
-import { defaultParameterTypes, TypeConversionError, TypeConverterFn } from "knub-command-manager";
+import { defaultParameterTypes, TypeConversionError, TTypeConverterFn } from "knub-command-manager";
 import { disableCodeBlocks } from "./helpers";
 import { getChannelId, getRoleId, getUserId } from "./utils";
 import { Channel, GuildChannel, Member, Role, TextChannel, User, VoiceChannel } from "eris";
 import { ICommandContext } from "./commandUtils";
 
 export interface IParameterTypeMap {
-  [key: string]: TypeConverterFn<ICommandContext>;
+  [key: string]: TTypeConverterFn<ICommandContext>;
 }
 
 export const baseParameterTypes: IParameterTypeMap = {

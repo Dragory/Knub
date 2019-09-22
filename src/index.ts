@@ -30,13 +30,11 @@ export {
   IPluginOptions
 } from "./configInterfaces";
 
-export { CommandConfig, CommandDefinition, TypeConverterFn, TypeConversionError } from "knub-command-manager";
-
 export {
   getCommandSignature,
-  IKnubPluginCommandDefinition,
-  IKnubPluginCommandConfig,
-  IKnubPluginCommandManager,
+  IPluginCommandDefinition,
+  IPluginCommandConfig,
+  IPluginCommandManager,
   ICommandContext,
   ICommandExtraData
 } from "./commandUtils";

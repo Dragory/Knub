@@ -11,7 +11,13 @@ import {
   TextableChannel
 } from "eris";
 
-import { CommandManager, CommandConfig, Parameter, CommandDefinition } from "knub-command-manager";
+import {
+  CommandManager,
+  ICommandConfig,
+  IParameter,
+  ICommandDefinition,
+  findMatchingCommandResultHasError
+} from "knub-command-manager";
 import {
   IBasePluginConfig,
   IGuildConfig,
@@ -26,10 +32,9 @@ import {
   ICommandContext,
   ICommandExtraData,
   ICustomArgumentTypesMap,
-  IKnubPluginCommandConfig,
-  IKnubPluginCommandDefinition,
-  IKnubPluginCommandManager,
-  isCommandMatchError,
+  IPluginCommandConfig,
+  IPluginCommandDefinition,
+  IPluginCommandManager,
   TCommandHandler
 } from "./commandUtils";
 import { Knub } from "./Knub";
@@ -48,7 +53,7 @@ export interface IExtendedMatchParams extends IMatchParams {
 }
 
 export interface IRegisteredCommand {
-  command: IKnubPluginCommandDefinition;
+  command: IPluginCommandDefinition;
   handler: TCommandHandler;
 }
 
@@ -81,7 +86,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
 
   protected locks: LockManager;
 
-  private commandManager: IKnubPluginCommandManager;
+  private commandManager: IPluginCommandManager;
   private commandHandlers: Map<number, TCommandHandler>;
   protected eventHandlers: Map<string, any[]>;
 
@@ -355,14 +360,14 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
 
   protected addCommand(
     trigger: string | RegExp,
-    parameters: string | Parameter[],
+    parameters: string | IParameter[],
     handler: TCommandHandler,
-    config: IKnubPluginCommandConfig
+    config: IPluginCommandConfig
   ) {
     config.preFilters = config.preFilters || [];
     config.preFilters.unshift(
       // Make sure the command is in a guild channel unless explicitly allowed for DMs
-      (cmd: IKnubPluginCommandDefinition, context: ICommandContext) => {
+      (cmd: IPluginCommandDefinition, context: ICommandContext) => {
         if (context.message.channel instanceof PrivateChannel) {
           if (!cmd.config.extra.allowDMs) {
             return false;
@@ -375,7 +380,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       },
 
       // Check required permissions
-      (cmd: IKnubPluginCommandDefinition, context: ICommandContext) => {
+      (cmd: IPluginCommandDefinition, context: ICommandContext) => {
         const requiredPermission = cmd.config.extra.requiredPermission;
         if (requiredPermission && !this.hasPermission(requiredPermission, { message: context.message })) {
           return false;
@@ -388,7 +393,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     config.postFilters = config.postFilters || [];
     config.postFilters.unshift(
       // Check for cooldowns
-      (cmd: IKnubPluginCommandDefinition, context: ICommandContext) => {
+      (cmd: IPluginCommandDefinition, context: ICommandContext) => {
         if (cmd.config.extra.cooldown) {
           const cdKey = `${cmd.id}-${context.message.author.id}`;
           let cdApplies = true;
@@ -408,7 +413,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       },
 
       // Wait for locks, if any, and bail out if the lock has been interrupted
-      async (cmd: IKnubPluginCommandDefinition, context: ICommandContext) => {
+      async (cmd: IPluginCommandDefinition, context: ICommandContext) => {
         if (cmd.config.extra.locks) {
           cmd.config.extra._lock = await this.locks.acquire(cmd.config.extra.locks);
           if (cmd.config.extra._lock.interrupted) {
@@ -583,14 +588,9 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       return;
     }
 
-    if (isCommandMatchError(matchedCommand)) {
+    if (findMatchingCommandResultHasError(matchedCommand)) {
       // There was a matching command, but we encountered an error
-      const usageLine = getCommandSignature(
-        this.guildConfig.prefix,
-        matchedCommand.command.triggers[0].source,
-        matchedCommand.command
-      );
-
+      const usageLine = getCommandSignature(matchedCommand.command);
       this.sendErrorMessage(msg.channel, `${matchedCommand.error}\nUsage: ${usageLine}`);
       return;
     }

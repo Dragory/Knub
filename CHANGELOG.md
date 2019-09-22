@@ -1,3 +1,9 @@
+# 24.0.0
+* **BREAKING CHANGE:** Interfaces/types from `knub-command-manager` are no longer exported from Knub.
+  To use them in your project, add `knub-command-manager` as a dependency to the project instead.
+* Update `knub-command-manager` to v5, returning support for command signature overloads (though without doing it the
+  hacky way - adding a new command for each overload/signature - this time)
+
 # 23.2.0
 * Export extra types:
   * `ICommandContext`
@@ -18,7 +24,6 @@ This release contains lots of **BREAKING CHANGES**. You have been warned!
     `this.getRegisteredCommands()` instead)
   * Command config types have changed somewhat: several values are now under `config.extra` instead
   * Custom argument type functions now get a context object as the second parameter
-  * Options can no longer be marked as required
   * Potentially other changes. TypeScript should warn about most of them as long as they are type-related.
 * Remove modifier support from `configUtils.mergeConfig` (e.g. "+arrayProp" or "-arrayProp")
   * Modifiers made static analysis harder and were generally not very well documented.

@@ -1,11 +1,11 @@
 import { logger } from "./logger";
-import { CommandConfig, Parameter, parseParameters } from "knub-command-manager";
+import { ICommandConfig, IParameter, parseParameters, TParseableSignature } from "knub-command-manager";
 import { createCommandTriggerRegexp, ICommandContext, ICommandExtraData } from "./commandUtils";
 
 export interface ICommandDecoratorData {
   trigger: RegExp;
-  parameters: Parameter[];
-  config: CommandConfig<any, ICommandExtraData>;
+  parameters: TParseableSignature;
+  config: ICommandConfig<any, ICommandExtraData>;
   _prop: string;
 }
 
@@ -63,8 +63,8 @@ function applyLockToEvent(eventData: IEventDecoratorData, lockData: ILockDecorat
  */
 function CommandDecorator(
   trigger: string | RegExp,
-  parameters: string | Parameter[] = [],
-  config: CommandConfig<ICommandContext, ICommandExtraData> = {}
+  parameters: string | IParameter[] = [],
+  config: ICommandConfig<ICommandContext, ICommandExtraData> = {}
 ) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     if (!Reflect.hasMetadata("commands", target, propertyKey)) {
