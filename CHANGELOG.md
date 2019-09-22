@@ -1,13 +1,38 @@
+# 23.0.0
+This release contains lots of **BREAKING CHANGES**. You have been warned!
+
+* Commands are now managed through `knub-command-manager`.
+  * Accessing `this.commands` in plugins is no longer supported (use `this.addCommand()`, `this.removeCommand()`, and
+    `this.getRegisteredCommands()` instead)
+  * Command config types have changed somewhat: several values are now under `config.extra` instead
+  * Custom argument type functions now get a context object as the second parameter
+  * Options can no longer be marked as required
+  * Potentially other changes. TypeScript should warn about most of them as long as they are type-related.
+* Remove modifier support from `configUtils.mergeConfig` (e.g. "+arrayProp" or "-arrayProp")
+  * Modifiers made static analysis harder and were generally not very well documented.
+    Most of their functionality can be replaced with a different plugin config structure instead (e.g. named groups).
+* Remove "target" param from `configUtils.mergeConfig` (now always returns a new object)
+* Replace usages of lodash.at with a custom function, remove all lodash dependencies
+* Instead of "=overrides" to replace overrides, add a new replaceDefaultOverrides property to plugin config
+* PermissionDecorator, CooldownDecorator, and LockDecorator now modify the commands/events decorator metadata directly
+  instead of being applied in `Plugin.runLoad()`
+  * This improves static access to plugin commands/event handlers
+  * Decorators can still be used in any order
+* Add exported `pluginUtils` object with the following functions:
+  * `getPluginDecoratorCommands()` - returns command decorator metadata of the plugin statically
+  * `getPluginDecoratorEventListeners()` - returns event listener decorator metadata of the plugin statically
+* Fix bug where a guild was not properly unloaded if it had 0 plugins loaded
+
 # 22.0.0
-* Deprecate `description` property from `ICommandConfig` in favor of new, arbitrary type `info` property
-* Deprecate `name` and `description` properties from `Plugin` in favor of new, arbitrary type `pluginInfo` property
+* **BREAKING CHANGE:** Deprecate `description` property from `ICommandConfig` in favor of new, arbitrary type `info` property
+* **BREAKING CHANGE:** Deprecate `name` and `description` properties from `Plugin` in favor of new, arbitrary type `pluginInfo` property
   * Note that the `pluginName` property for the plugin's internal name still exists and is still required
 
 # 21.0.0
-* **Breaking change:** changed capitalization on some command parameter types (which are no longer case-insensitive since v20.0.0):
+* **BREAKING CHANGE:** change capitalization on certain command parameter types (which are no longer case-insensitive since v20.0.0):
   * `userid` → `userId`
   * `channelid` → `channelId`
-* Added new command parameter types:
+* Add new command parameter types:
   * `textChannel`
   * `voiceChannel`
   * As with the regular `channel` type, these types are only usable in guilds
@@ -53,14 +78,15 @@ any command argument types or command errors are handled. This makes them ideal 
 * Allow partial members in `Plugin.getMemberLevel`
 
 # 20.0.0
-* Argument type names are no longer case-insensitive
+* **BREAKING CHANGE:** Argument type names are no longer case-insensitive
 
 # 19.4.0
 * Add new helper functions:
   * `disableLinkPreviews()`
   * `disableCodeBlocks()`
   * `deactivateMentions()`
-* When showing command argument type conversion errors, the original error messages thrown from the conversion function are now used. Also applies to errors thrown from custom type functions.
+* When showing command argument type conversion errors, the original error messages thrown from the conversion function
+  are now used. Also applies to errors thrown from custom type functions.
 * Make error messages for default command argument types more descriptive
 * Export `ICommandDefinition` and `IMatchedCommand` from `CommandManager` in `index.ts`
 
@@ -84,7 +110,8 @@ any command argument types or command errors are handled. This makes them ideal 
 * `Plugin.getMatchingConfig` now supports the same match params as `Plugin.hasPermission` - that is, you can pass a Message or Member and have the user/channel/level/roles be inferred from those
 
 # 19.0.0
-* Plugin options no longer have a permissions property. Instead, permissions are now part of the plugin's config, and permission checks via `hasPermission()` / `permission` decorator are wrappers around getting a matching config and checking that the value at the permission's path is `true`.
+* **BREAKING CHANGE:** Plugin options no longer have a permissions property. Instead, permissions are now part of the plugin's config,
+  and permission checks via `hasPermission()` / `permission` decorator are wrappers around getting a matching config and checking that the value at the permission's path is `true`.
   * This change was made to simplify complex permissions and to unify the two systems that were, more or less, identical
 * Add `sendErrorMessage()` and `sendSuccessMessage()` to Knub and Plugin. These can be used to send unified (formatting-wise) error messages across plugins. The actual functions to send the message can be specified in Knub options with `sendErrorMessageFn` and `sendSuccessMessageFn`.
 * Command errors have been improved, and they now also send the command's usage/signature on error
