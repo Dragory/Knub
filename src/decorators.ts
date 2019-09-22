@@ -6,6 +6,7 @@ export interface ICommandDecoratorData {
   trigger: RegExp;
   parameters: Parameter[];
   config: CommandConfig<any, ICommandExtraData>;
+  _prop: string;
 }
 
 export interface IEventDecoratorData {
@@ -14,19 +15,23 @@ export interface IEventDecoratorData {
   ignoreSelf: boolean;
   requiredPermission: string;
   locks: string | string[];
+  _prop: string;
 }
 
 export interface IPermissionDecoratorData {
   permission: string;
+  _prop: string;
 }
 
 export interface ILockDecoratorData {
   locks: string | string[];
+  _prop: string;
 }
 
 export interface ICooldownDecoratorData {
   time: number;
   permission: string;
+  _prop: string;
 }
 
 function applyCooldownToCommand(commandData: ICommandDecoratorData, cooldown: ICooldownDecoratorData) {
@@ -76,7 +81,8 @@ function CommandDecorator(
     const commandData: ICommandDecoratorData = {
       trigger: finalTrigger,
       parameters: finalParameters,
-      config
+      config,
+      _prop: propertyKey
     };
 
     // Apply existing cooldowns
@@ -116,7 +122,8 @@ function OnEventDecorator(
       restrict,
       ignoreSelf,
       requiredPermission,
-      locks
+      locks,
+      _prop: propertyKey
     };
 
     // Apply existing permission requirements
@@ -137,7 +144,8 @@ function OnEventDecorator(
 function PermissionDecorator(permission: string) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const permissionData: IPermissionDecoratorData = {
-      permission
+      permission,
+      _prop: propertyKey
     };
     Reflect.defineMetadata("requiredPermission", permissionData, target, propertyKey);
 
@@ -156,7 +164,10 @@ function PermissionDecorator(permission: string) {
  */
 function LockDecorator(locks: string | string[]) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    const lockData: ILockDecoratorData = { locks };
+    const lockData: ILockDecoratorData = {
+      locks,
+      _prop: propertyKey
+    };
     Reflect.defineMetadata("locks", lockData, target, propertyKey);
 
     // Apply to existing commands
@@ -176,7 +187,8 @@ function CooldownDecorator(time: number, permission: string = null) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const cooldownData: ICooldownDecoratorData = {
       time,
-      permission
+      permission,
+      _prop: propertyKey
     };
     Reflect.defineMetadata("cooldown", cooldownData, target, propertyKey);
 

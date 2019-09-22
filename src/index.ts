@@ -18,6 +18,9 @@ export { utils };
 import * as configUtils from "./configUtils";
 export { configUtils };
 
+import * as pluginUtils from "./pluginUtils";
+export { pluginUtils };
+
 export {
   IPermissionLevelDefinitions,
   IBasePluginConfig,

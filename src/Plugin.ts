@@ -38,6 +38,7 @@ import { Lock, LockManager } from "./LockManager";
 import { CooldownManager } from "./CooldownManager";
 import { ICommandDecoratorData, IEventDecoratorData } from "./decorators";
 import { baseParameterTypes } from "./baseParameterTypes";
+import { getPluginDecoratorCommands, getPluginDecoratorEventListeners } from "./pluginUtils";
 
 export interface IExtendedMatchParams extends IMatchParams {
   channelId?: string;
@@ -127,38 +128,23 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     // Run plugin-defined onLoad() function
     await this.onLoad();
 
-    // Add commands and event listeners from decorators
-    // Have to do this to access class methods
-    const nonEnumerableProps = Object.getOwnPropertyNames(this.constructor.prototype);
-    const enumerableProps = Object.keys(this);
-    const props = [...nonEnumerableProps, ...enumerableProps];
+    // Register decorator-defined commands
+    const decoratorCommands = getPluginDecoratorCommands(this.constructor as typeof Plugin);
+    for (const command of decoratorCommands) {
+      this.addCommand(command.trigger, command.parameters, this[command._prop].bind(this), command.config);
+    }
 
-    for (const prop of props) {
-      const value = this[prop];
-      if (typeof value !== "function") {
-        continue;
-      }
-
-      // Add commands from decorators
-      const decoratorCommands: ICommandDecoratorData[] = Reflect.getMetadata("commands", this, prop) || [];
-      for (const command of decoratorCommands) {
-        this.addCommand(command.trigger, command.parameters, value.bind(this), command.config);
-      }
-
-      // Add event listeners from decorator
-      const decoratorEvents: IEventDecoratorData[] = Reflect.getMetadata("events", this, prop);
-      if (decoratorEvents) {
-        for (const metaEvent of decoratorEvents) {
-          this.on(
-            metaEvent.eventName,
-            value.bind(this),
-            metaEvent.restrict,
-            metaEvent.ignoreSelf,
-            metaEvent.requiredPermission,
-            metaEvent.locks
-          );
-        }
-      }
+    // Register decorator-defined event listeners
+    const decoratorEventListeners = getPluginDecoratorEventListeners(this.constructor as typeof Plugin);
+    for (const eventListener of decoratorEventListeners) {
+      this.on(
+        eventListener.eventName,
+        this[eventListener._prop].bind(this),
+        eventListener.restrict,
+        eventListener.ignoreSelf,
+        eventListener.requiredPermission,
+        eventListener.locks
+      );
     }
 
     this.registerCommandMessageListener();
@@ -169,7 +155,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
    */
   public async runUnload(): Promise<any> {
     this.clearEventHandlers();
-    await Promise.resolve(this.onUnload());
+    await this.onUnload();
     this.clearMergedOptions();
   }
 
