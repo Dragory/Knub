@@ -1,3 +1,6 @@
+# 24.1.0
+* Update `knub-command-manager` to v5.2.0, restoring support for async type conversion functions
+
 # 24.0.1
 * Fix regression where command arguments were no longer being passed to the command handler as the argument value, but
   the full argument object instead. Arguments are now passed as values again, as intended.
