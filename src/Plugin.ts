@@ -601,7 +601,18 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
 
     // Run the command
     const handler = this.commandHandlers.get(matchedCommand.id);
-    await handler(msg, { ...matchedCommand.args, ...matchedCommand.opts }, matchedCommand);
+
+    const argValueMap = Object.entries(matchedCommand.args).reduce((map, [key, arg]) => {
+      map[key] = arg.value;
+      return map;
+    }, {});
+
+    const optValueMap = Object.entries(matchedCommand.opts).reduce((map, [key, opt]) => {
+      map[key] = opt.value;
+      return map;
+    }, {});
+
+    await handler(msg, { ...argValueMap, ...optValueMap }, matchedCommand);
     timerDone();
   }
 

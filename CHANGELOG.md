@@ -1,3 +1,7 @@
+# 24.0.1
+* Fix regression where command arguments were no longer being passed to the command handler as the argument value, but
+  the full argument object instead. Arguments are now passed as values again, as intended.
+
 # 24.0.0
 * **BREAKING CHANGE:** Interfaces/types from `knub-command-manager` are no longer exported from Knub.
   To use them in your project, add `knub-command-manager` as a dependency to the project instead.
