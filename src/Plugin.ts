@@ -45,6 +45,7 @@ import { CooldownManager } from "./CooldownManager";
 import { ICommandDecoratorData, IEventDecoratorData } from "./decorators";
 import { baseParameterTypes } from "./baseParameterTypes";
 import { getPluginDecoratorCommands, getPluginDecoratorEventListeners } from "./pluginUtils";
+import cloneDeep from "lodash.clonedeep";
 
 export interface IExtendedMatchParams extends IMatchParams {
   channelId?: string;
@@ -136,13 +137,15 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
 
     // Register decorator-defined commands
     const decoratorCommands = getPluginDecoratorCommands(this.constructor as typeof Plugin);
-    for (const command of decoratorCommands) {
+    for (let command of decoratorCommands) {
+      command = cloneDeep(command);
       this.addCommand(command.trigger, command.parameters, this[command._prop].bind(this), command.config);
     }
 
     // Register decorator-defined event listeners
     const decoratorEventListeners = getPluginDecoratorEventListeners(this.constructor as typeof Plugin);
-    for (const eventListener of decoratorEventListeners) {
+    for (let eventListener of decoratorEventListeners) {
+      eventListener = cloneDeep(eventListener);
       this.on(
         eventListener.eventName,
         this[eventListener._prop].bind(this),

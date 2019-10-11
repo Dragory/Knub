@@ -1,3 +1,9 @@
+# 24.1.2
+* Fix decorator command pre-filters (e.g. permission checks) being run on *all* loaded servers, not just the current one
+
+# 24.1.1
+* Fix error when compiling the project on a case-sensitive file system
+
 # 24.1.0
 * Update `knub-command-manager` to v5.2.0, restoring support for async type conversion functions
 
@@ -211,7 +217,7 @@ any command argument types or command errors are handled. This makes them ideal 
 # 17.0.0
 * Remove blocking functionality
 * Add locks. Locks can be acquired in plugins via `this.locks.acquire(string|string[])` or with the new `lock`
-  decorator, and then unlocked via `lock.unlock()` (done automatically with the decorator).  
+  decorator, and then unlocked via `lock.unlock()` (done automatically with the decorator).
   When using locks, the promise returned by `acquire()` will wait for the old matching locks to unlock before resolving.
   This replicates the old blocking functionality, but is opt-in and more flexible by allowing you to be as specific as
   you want with your locks.
@@ -265,7 +271,7 @@ any command argument types or command errors are handled. This makes them ideal 
 * Remove typingStop from utils.eventToGuild (wasn't being used anymore)
 
 # 15.0.0
-* Add `Plugin.hasPermission()`  
+* Add `Plugin.hasPermission()`
   This is also used internally to check for command/event permissions, so it should now be easy to replicate that
   functionality in custom message/event handlers and similar use cases.
 * Allow overriding all known surrounding/nested config/permission values by specifying a config/permission value with
