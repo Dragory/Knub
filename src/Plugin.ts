@@ -606,7 +606,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
     if (findMatchingCommandResultHasError(matchedCommand)) {
       // There was a matching command, but we encountered an error
       const usageLine = getCommandSignature(matchedCommand.command);
-      this.sendErrorMessage(msg.channel, `${matchedCommand.error}\nUsage: ${usageLine}`);
+      this.sendErrorMessage(msg.channel, `${matchedCommand.error}\nUsage: \`${usageLine}\``);
       return;
     }
 
