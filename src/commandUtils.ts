@@ -81,7 +81,7 @@ export function getCommandSignature(
       ? command.originalTriggers[0]
       : command.originalTriggers[0].source;
 
-  const usageLine = `${command.prefix}${trigger} ${paramStrings.join(" ")} ${optStrings.join(" ")}`
+  const usageLine = `${command.prefix.source}${trigger} ${paramStrings.join(" ")} ${optStrings.join(" ")}`
     .replace(/\s+/g, " ")
     .trim();
 
