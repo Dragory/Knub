@@ -1,3 +1,7 @@
+# 25.0.1
+* `getCommandSignature()`: fix prefix showing as a full regex toString() instead of just the pattern
+* Wrap command usage info in an inline code block when encountering an error when matching a command
+
 # 25.0.0
 * **BREAKING CHANGE:** `configUtils.getMatchingPluginOptions` is now `configUtils.getMatchingPluginConfig`, returning
   only the config part of the passed options instead of the whole options object
