@@ -38,7 +38,7 @@ import {
   TCommandHandler
 } from "./commandUtils";
 import { Knub } from "./Knub";
-import { getMatchingPluginOptions, IMatchParams, mergeConfig } from "./configUtils";
+import { getMatchingPluginConfig, IMatchParams, mergeConfig } from "./configUtils";
 import { PluginError } from "./PluginError";
 import { Lock, LockManager } from "./LockManager";
 import { CooldownManager } from "./CooldownManager";
@@ -61,7 +61,7 @@ export interface IRegisteredCommand {
 /**
  * Base class for Knub plugins
  */
-export class Plugin<TConfig extends {} = IBasePluginConfig> {
+export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCriteria extends {} = {}> {
   // Internal name for the plugin - REQUIRED
   public static pluginName: string;
 
@@ -183,6 +183,15 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
   }
 
   /**
+   * Function to resolve custom override criteria in the plugin's config.
+   * Remember to also set TCustomOverrideCriteria appropriately.
+   */
+  protected matchCustomOverrideCriteria(criteria: TCustomOverrideCriteria, matchParams: IMatchParams): boolean {
+    // Implemented by plugin
+    return true;
+  }
+
+  /**
    * Registers the message listener for commands
    */
   protected registerCommandMessageListener(): void {
@@ -192,15 +201,15 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
   /**
    * Returns this plugin's default configuration
    */
-  protected getDefaultOptions(): IPluginOptions<TConfig> {
+  protected getDefaultOptions(): IPluginOptions<TConfig, TCustomOverrideCriteria> {
     // Implemented by plugin
-    return {} as IPluginOptions<TConfig>;
+    return {} as IPluginOptions<TConfig, TCustomOverrideCriteria>;
   }
 
   /**
    * Returns the plugin's default options merged with its loaded options
    */
-  protected getMergedOptions(): IPluginOptions<TConfig> {
+  protected getMergedOptions(): IPluginOptions<TConfig, TCustomOverrideCriteria> {
     if (!this.mergedPluginOptions) {
       const defaultOptions = this.getDefaultOptions();
       this.mergedPluginOptions = {
@@ -211,7 +220,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
       };
     }
 
-    return this.mergedPluginOptions as IPluginOptions<TConfig>;
+    return this.mergedPluginOptions as IPluginOptions<TConfig, TCustomOverrideCriteria>;
   }
 
   /**
@@ -266,8 +275,11 @@ export class Plugin<TConfig extends {} = IBasePluginConfig> {
     };
 
     const mergedOptions = this.getMergedOptions();
-    const matchingOptions = getMatchingPluginOptions<IPluginOptions<TConfig>>(mergedOptions, finalMatchParams);
-    return matchingOptions.config;
+    return getMatchingPluginConfig<TConfig, TCustomOverrideCriteria>(
+      mergedOptions,
+      finalMatchParams,
+      this.matchCustomOverrideCriteria.bind(this)
+    );
   }
 
   /**

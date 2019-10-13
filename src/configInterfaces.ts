@@ -26,25 +26,35 @@ export interface IGlobalConfig {
   [key: string]: any;
 }
 
-export interface IPartialPluginOptions<TConfig = IBasePluginConfig> {
+export interface IPartialPluginOptions<TConfig = IBasePluginConfig, TCustomOverrideCriteria = unknown> {
   enabled?: boolean;
   config?: DeepPartial<TConfig>;
-  overrides?: Array<IPluginConfigOverride<TConfig>>;
+  overrides?: Array<TPluginOverride<TConfig, TCustomOverrideCriteria>>;
   replaceDefaultOverrides?: boolean;
 }
 
-export interface IPluginOptions<TConfig = IBasePluginConfig> extends IPartialPluginOptions<TConfig> {
+export interface IPluginOptions<TConfig = IBasePluginConfig, TCustomOverrideCriteria = unknown>
+  extends IPartialPluginOptions<TConfig, TCustomOverrideCriteria> {
   config: TConfig;
+  overrides?: Array<TPluginOverride<TConfig, TCustomOverrideCriteria>>;
 }
 
-export interface IPluginConfigOverride<TConfig = IBasePluginConfig> {
+export type TPluginOverride<TConfig, TCustomOverrideCriteria> = IPluginOverrideCriteria<TCustomOverrideCriteria> & {
+  config?: DeepPartial<TConfig>;
+};
+
+export interface IPluginOverrideCriteria<TCustomOverrideCriteria> {
   channel?: string | string[];
   category?: string | string[];
   level?: string | string[];
   user?: string | string[];
   role?: string | string[];
-  type?: "any" | "all";
-  config?: DeepPartial<TConfig>;
+
+  all?: Array<IPluginOverrideCriteria<TCustomOverrideCriteria>>;
+  any?: Array<IPluginOverrideCriteria<TCustomOverrideCriteria>>;
+  not?: IPluginOverrideCriteria<TCustomOverrideCriteria>;
+
+  extra?: TCustomOverrideCriteria;
 }
 
 export interface IBasePluginConfig {

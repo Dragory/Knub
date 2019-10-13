@@ -1,3 +1,23 @@
+# 25.0.0
+* **BREAKING CHANGE:** `configUtils.getMatchingPluginOptions` is now `configUtils.getMatchingPluginConfig`, returning
+  only the config part of the passed options instead of the whole options object
+* **BREAKING CHANGE:** Overrides no longer support the `type` option ("all"/"any"). All criteria are now required to
+  match for the override to apply, except when using the new `all` and `any` criteria, which are described in the next
+  bullet point.
+* Add support for chaining override criteria with new `all` and `any` special criteria. The value for either of these
+  should be an array of further sets of criteria to evaluate.
+  * `all` only evaluates to `true` if *every* set of criteria within it also evaluate to `true`
+  * `any` evaluates to `true` if *any* set of criteria within it evaluates to `true`
+  * An empty array as the value for either of these evaluates to `false`
+* Add `not` special override criterion. Its value should be a set of criteria to evaluate. If the set of criteria
+  matches, `not` evaluates to `false` and vice versa.
+* Add support for custom override criteria
+  * `Plugin` now has a second generic type that defines the type of an optional `extra` key in overrides
+  * `Plugin.matchCustomOverrideCriteria` can be defined by plugins to resolve these custom override criteria
+* Empty override criteria now always evaluate to `false`, i.e. don't match
+  * I.e. an override with just the `config` property or none at all
+  * Plugins can naturally choose to treat their *custom* criteria however they want, e.g. evaluate to `true` by default
+
 # 24.1.2
 * Fix decorator command pre-filters (e.g. permission checks) being run on *all* loaded servers, not just the current one
 

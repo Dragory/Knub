@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { mergeConfig, getMatchingPluginOptions } from "../src/configUtils";
-import { IPartialPluginOptions } from "../src";
+import { mergeConfig, getMatchingPluginConfig, IMatchParams } from "../src/configUtils";
+import { IPartialPluginOptions, IPluginOptions } from "../src";
 
 describe("configUtils", () => {
   describe("mergeConfig", () => {
@@ -54,11 +54,13 @@ describe("configUtils", () => {
     });
   });
 
-  describe("getMatchingPluginOptions", () => {
-    const pluginOptions: IPartialPluginOptions<{
+  describe("getMatchingPluginConfig", () => {
+    interface ISharedPluginConfig {
       value: number;
       hasAccess: boolean;
-    }> = {
+    }
+
+    const sharedPluginOptions: IPluginOptions<ISharedPluginConfig> = {
       config: {
         value: 5,
         hasAccess: false
@@ -103,26 +105,8 @@ describe("configUtils", () => {
         {
           channel: "1100",
           role: "3100",
-          // Implicit type: 'all'
           config: {
             value: 25
-          }
-        },
-        {
-          channel: "1300",
-          role: "3300",
-          type: "any",
-          config: {
-            value: 30
-          }
-        },
-        {
-          channel: "1400",
-          role: "3100",
-          user: "!2100",
-          type: "all",
-          config: {
-            value: 100
           }
         },
         {
@@ -135,63 +119,381 @@ describe("configUtils", () => {
     };
 
     it("should use defaults with empty match params", () => {
-      const matchedOpts = getMatchingPluginOptions(pluginOptions, {});
-      expect(matchedOpts.config.value).to.equal(5);
-      expect(matchedOpts.config.hasAccess).to.equal(false);
+      const matchedConfig = getMatchingPluginConfig<ISharedPluginConfig>(sharedPluginOptions, {});
+      expect(matchedConfig.value).to.equal(5);
+      expect(matchedConfig.hasAccess).to.equal(false);
     });
 
     it("should match levels", () => {
-      const matchedOpts = getMatchingPluginOptions(pluginOptions, {
+      const matchedConfig = getMatchingPluginConfig<ISharedPluginConfig>(sharedPluginOptions, {
         level: 60
       });
-      expect(matchedOpts.config.hasAccess).to.equal(true);
+      expect(matchedConfig.hasAccess).to.equal(true);
     });
 
     it("should require all level conditions to apply", () => {
-      const matchedOpts = getMatchingPluginOptions(pluginOptions, {
+      const matchedConfig = getMatchingPluginConfig<ISharedPluginConfig>(sharedPluginOptions, {
         level: 35
       });
-      expect(matchedOpts.config.hasAccess).to.equal(false);
+      expect(matchedConfig.hasAccess).to.equal(false);
     });
 
     it("should match channels and accept any specified channel", () => {
-      const matchedOpts1 = getMatchingPluginOptions(pluginOptions, {
+      const matchedConfig1 = getMatchingPluginConfig<ISharedPluginConfig>(sharedPluginOptions, {
         channelId: "1100"
       });
-      const matchedOpts2 = getMatchingPluginOptions(pluginOptions, {
+      const matchedConfig2 = getMatchingPluginConfig<ISharedPluginConfig>(sharedPluginOptions, {
         channelId: "1200"
       });
-      expect(matchedOpts1.config.value).to.equal(10);
-      expect(matchedOpts2.config.value).to.equal(10);
+      expect(matchedConfig1.value).to.equal(10);
+      expect(matchedConfig2.value).to.equal(10);
     });
 
     it("should match categories and accept any specified category", () => {
-      const matchedOpts1 = getMatchingPluginOptions(pluginOptions, {
+      const matchedConfig1 = getMatchingPluginConfig<ISharedPluginConfig>(sharedPluginOptions, {
         categoryId: "9100"
       });
-      const matchedOpts2 = getMatchingPluginOptions(pluginOptions, {
+      const matchedConfig2 = getMatchingPluginConfig<ISharedPluginConfig>(sharedPluginOptions, {
         categoryId: "9200"
       });
-      expect(matchedOpts1.config.value).to.equal(120);
-      expect(matchedOpts2.config.value).to.equal(120);
+      expect(matchedConfig1.value).to.equal(120);
+      expect(matchedConfig2.value).to.equal(120);
     });
 
     it("should match users", () => {
-      const matchedOpts = getMatchingPluginOptions(pluginOptions, {
+      const matchedConfig = getMatchingPluginConfig<ISharedPluginConfig>(sharedPluginOptions, {
         userId: "2100"
       });
-      expect(matchedOpts.config.value).to.equal(15);
+      expect(matchedConfig.value).to.equal(15);
     });
 
     it("should match roles", () => {
-      const matchedOpts1 = getMatchingPluginOptions(pluginOptions, {
+      const matchedConfig1 = getMatchingPluginConfig<ISharedPluginConfig>(sharedPluginOptions, {
         memberRoles: ["3100"]
       });
-      const matchedOpts2 = getMatchingPluginOptions(pluginOptions, {
+      const matchedConfig2 = getMatchingPluginConfig<ISharedPluginConfig>(sharedPluginOptions, {
         memberRoles: ["3100", "3200"]
       });
-      expect(matchedOpts1.config.value).to.equal(20); // has 3100, and no 3200 -> match
-      expect(matchedOpts2.config.value).to.equal(5); // has 3100, and excluded 3200 -> no match
+      expect(matchedConfig1.value).to.equal(20); // has 3100, and no 3200 -> match
+      expect(matchedConfig2.value).to.equal(5); // has 3100, and excluded 3200 -> no match
+    });
+
+    it("custom resolver", () => {
+      interface ICustomPluginConfig {
+        value: number;
+      }
+
+      interface ICustomOverrideCriteria {
+        targetUserId?: string;
+        targetChannelId?: string;
+      }
+
+      const customPluginOptions: IPluginOptions<ICustomPluginConfig, ICustomOverrideCriteria> = {
+        config: {
+          value: 5
+        },
+        overrides: [
+          {
+            extra: {
+              targetUserId: "1234"
+            },
+            config: {
+              value: 10
+            }
+          },
+          {
+            extra: {
+              targetUserId: "5678"
+            },
+            config: {
+              value: 20
+            }
+          },
+          {
+            extra: {
+              targetUserId: "5678",
+              targetChannelId: "9000"
+            },
+            config: {
+              value: 30
+            }
+          }
+        ]
+      };
+
+      const customResolver = (criteria: ICustomOverrideCriteria, matchParams: IMatchParams): boolean => {
+        if (criteria.targetUserId && matchParams.extra.targetUserId !== criteria.targetUserId) return false;
+        if (criteria.targetChannelId && matchParams.extra.targetChannelId !== criteria.targetChannelId) return false;
+        return true;
+      };
+
+      const matchedConfig1 = getMatchingPluginConfig<ICustomPluginConfig>(
+        customPluginOptions,
+        {
+          extra: {
+            targetUserId: "1234"
+          }
+        },
+        customResolver
+      );
+      const matchedConfig2 = getMatchingPluginConfig<ICustomPluginConfig>(
+        customPluginOptions,
+        {
+          extra: {
+            targetUserId: "5678"
+          }
+        },
+        customResolver
+      );
+      const matchedConfig3 = getMatchingPluginConfig<ICustomPluginConfig>(
+        customPluginOptions,
+        {
+          extra: {
+            targetUserId: "0001"
+          }
+        },
+        customResolver
+      );
+      const matchedConfig4 = getMatchingPluginConfig<ICustomPluginConfig>(
+        customPluginOptions,
+        {
+          extra: {
+            targetUserId: "5678",
+            targetChannelId: "9000"
+          }
+        },
+        customResolver
+      );
+
+      expect(matchedConfig1.value).to.equal(10);
+      expect(matchedConfig2.value).to.equal(20);
+      expect(matchedConfig3.value).to.equal(5);
+      expect(matchedConfig4.value).to.equal(30);
+    });
+
+    it("false by default", () => {
+      const pluginOpts: IPluginOptions = {
+        config: {
+          value: 5
+        },
+        overrides: [
+          {
+            config: {
+              value: 10
+            }
+          },
+          {
+            user: "500",
+            all: [],
+            config: {
+              value: 20
+            }
+          },
+          {
+            user: "1000",
+            any: [],
+            config: {
+              value: 30
+            }
+          }
+        ]
+      };
+
+      const matchedConfig1 = getMatchingPluginConfig(pluginOpts, {});
+      const matchedConfig2 = getMatchingPluginConfig(pluginOpts, {
+        userId: "500"
+      });
+      const matchedConfig3 = getMatchingPluginConfig(pluginOpts, {
+        userId: "1000"
+      });
+
+      expect((matchedConfig1 as any).value).to.equal(5);
+      expect((matchedConfig2 as any).value).to.equal(5);
+      expect((matchedConfig3 as any).value).to.equal(5);
+    });
+
+    it("'all' special criterion", () => {
+      interface IThisOptions {
+        value: number;
+      }
+      const pluginOpts: IPluginOptions<IThisOptions> = {
+        config: {
+          value: 5
+        },
+        overrides: [
+          {
+            user: "1000",
+            all: [
+              {
+                level: ">=50"
+              },
+              {
+                level: "<100"
+              }
+            ],
+            config: {
+              value: 10
+            }
+          }
+        ]
+      };
+
+      const matchedConfig1 = getMatchingPluginConfig<IThisOptions>(pluginOpts, {
+        userId: "1000",
+        level: 75
+      });
+      const matchedConfig2 = getMatchingPluginConfig<IThisOptions>(pluginOpts, {
+        userId: "1000",
+        level: 120
+      });
+      const matchedConfig3 = getMatchingPluginConfig<IThisOptions>(pluginOpts, {
+        userId: "1000",
+        level: 25
+      });
+
+      expect(matchedConfig1.value).to.equal(10);
+      expect(matchedConfig2.value).to.equal(5);
+      expect(matchedConfig3.value).to.equal(5);
+    });
+
+    it("'any' special criterion", () => {
+      interface IThisOptions {
+        value: number;
+      }
+      const pluginOpts: IPluginOptions<IThisOptions> = {
+        config: {
+          value: 5
+        },
+        overrides: [
+          {
+            any: [
+              {
+                level: "<25"
+              },
+              {
+                level: ">75"
+              }
+            ],
+            config: {
+              value: 10
+            }
+          }
+        ]
+      };
+
+      const matchedConfig1 = getMatchingPluginConfig<IThisOptions>(pluginOpts, {
+        level: 15
+      });
+      const matchedConfig2 = getMatchingPluginConfig<IThisOptions>(pluginOpts, {
+        level: 95
+      });
+      const matchedConfig3 = getMatchingPluginConfig<IThisOptions>(pluginOpts, {
+        level: 50
+      });
+
+      expect(matchedConfig1.value).to.equal(10);
+      expect(matchedConfig2.value).to.equal(10);
+      expect(matchedConfig3.value).to.equal(5);
+    });
+
+    it("'not' special criterion", () => {
+      interface IThisOptions {
+        value: number;
+      }
+
+      const pluginOpts1: IPluginOptions<IThisOptions> = {
+        config: {
+          value: 5
+        },
+        overrides: [
+          // Matches as long as the user isn't 1234
+          {
+            not: {
+              user: "1234"
+            },
+            config: {
+              value: 10
+            }
+          }
+        ]
+      };
+
+      const pluginOpts2: IPluginOptions<IThisOptions> = {
+        config: {
+          value: 5
+        },
+        overrides: [
+          // Matches if your level is greater than or equal to 50, as long as the user isn't 1234
+          {
+            all: [
+              {
+                level: ">=50"
+              },
+              {
+                not: {
+                  user: "1234"
+                }
+              }
+            ],
+            config: {
+              value: 20
+            }
+          }
+        ]
+      };
+
+      const pluginOpts3: IPluginOptions<IThisOptions> = {
+        config: {
+          value: 5
+        },
+        overrides: [
+          // Matches if your level is greater than or equal to 50 (via negation)
+          {
+            not: {
+              level: "<50"
+            },
+            config: {
+              value: 30
+            }
+          }
+        ]
+      };
+
+      const matchedConfig1 = getMatchingPluginConfig<IThisOptions>(pluginOpts1, {
+        userId: "1234"
+      });
+      const matchedConfig2 = getMatchingPluginConfig<IThisOptions>(pluginOpts1, {
+        userId: "5678"
+      });
+
+      expect(matchedConfig1.value).to.equal(5);
+      expect(matchedConfig2.value).to.equal(10);
+
+      const matchedConfig3 = getMatchingPluginConfig<IThisOptions>(pluginOpts2, {
+        level: 95,
+        userId: "1234"
+      });
+      const matchedConfig4 = getMatchingPluginConfig<IThisOptions>(pluginOpts2, {
+        level: 95,
+        userId: "5678"
+      });
+
+      expect(matchedConfig3.value).to.equal(5);
+      expect(matchedConfig4.value).to.equal(20);
+
+      const matchedConfig5 = getMatchingPluginConfig<IThisOptions>(pluginOpts3, {
+        level: 49
+      });
+      const matchedConfig6 = getMatchingPluginConfig<IThisOptions>(pluginOpts3, {
+        level: 50
+      });
+      const matchedConfig7 = getMatchingPluginConfig<IThisOptions>(pluginOpts3, {
+        level: 51
+      });
+
+      expect(matchedConfig5.value).to.equal(5);
+      expect(matchedConfig6.value).to.equal(30);
+      expect(matchedConfig7.value).to.equal(30);
     });
   });
 });
