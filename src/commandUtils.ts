@@ -11,7 +11,7 @@ import {
   IParameter,
   TTypeConverterFn,
   TSignature,
-  isFlagOption
+  isSwitchOption
 } from "knub-command-manager";
 import escapeStringRegex from "escape-string-regexp";
 import { Plugin } from "./Plugin";
@@ -70,8 +70,8 @@ export function getCommandSignature(
     return param.required ? `<${param.name}>` : `[${param.name}]`;
   });
   const optStrings = (command.options || []).map(opt => {
-    const required = isFlagOption(opt) ? false : opt.required;
-    return required ? `<--${opt.name}>` : `[--${opt.name}]`;
+    const required = isSwitchOption(opt) ? false : opt.required;
+    return required ? `<-${opt.name}>` : `[-${opt.name}]`;
   });
 
   const trigger =
