@@ -1,3 +1,13 @@
+# 26.0.0
+* Update `knub-command-manager` to v6.0.0.
+  [See full changelog here.](https://github.com/Dragory/knub-command-manager/blob/master/CHANGELOG.md#600)
+  The main backwards compatibility breaking change here is that both `--option` and `-option` are now valid, as well as
+  both `-o` and `--o`.
+* Update Eris peer dependency to v0.11.0.
+  [See full changelog here.](https://github.com/abalabahaha/eris/releases/tag/0.11.0)
+* Export `TypeConversionError` from knub-command-manager so that bots built on Knub can use `instanceof` against it even
+  if they have a different version of knub-command-manager required locally (and thus not deduped in node dependencies).
+
 # 25.0.1
 * `getCommandSignature()`: fix prefix showing as a full regex toString() instead of just the pattern
 * Wrap command usage info in an inline code block when encountering an error when matching a command
