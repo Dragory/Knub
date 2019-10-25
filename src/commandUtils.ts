@@ -74,6 +74,13 @@ export function getCommandSignature(
     return required ? `<-${opt.name}>` : `[-${opt.name}]`;
   });
 
+  const prefix =
+    command.originalPrefix != null
+      ? typeof command.originalPrefix === "string"
+        ? command.originalPrefix
+        : command.originalPrefix.source
+      : null;
+
   const trigger =
     overrideTrigger != null
       ? overrideTrigger
@@ -81,9 +88,7 @@ export function getCommandSignature(
       ? command.originalTriggers[0]
       : command.originalTriggers[0].source;
 
-  const usageLine = `${command.prefix.source}${trigger} ${paramStrings.join(" ")} ${optStrings.join(" ")}`
-    .replace(/\s+/g, " ")
-    .trim();
+  const usageLine = `${prefix}${trigger} ${paramStrings.join(" ")} ${optStrings.join(" ")}`.replace(/\s+/g, " ").trim();
 
   return usageLine;
 }
