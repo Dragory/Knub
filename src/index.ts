@@ -50,6 +50,7 @@ export {
 } from "./helpers";
 
 export { PluginError } from "./PluginError";
+export { TypeConversionError } from "knub-command-manager";
 
 export { LockManager, Lock } from "./LockManager";
 
