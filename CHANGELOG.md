@@ -1,3 +1,6 @@
+# 26.0.1
+* Fix messy triggers in `getCommandSignature()` when using regular, non-regex triggers
+
 # 26.0.0
 * Update `knub-command-manager` to v6.0.0.
   [See full changelog here.](https://github.com/Dragory/knub-command-manager/blob/master/CHANGELOG.md#600)
