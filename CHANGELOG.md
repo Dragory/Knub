@@ -1,3 +1,6 @@
+# 26.0.2
+* More `getCommandSignature()` clean-up
+
 # 26.0.1
 * Fix messy triggers in `getCommandSignature()` when using regular, non-regex triggers
 
