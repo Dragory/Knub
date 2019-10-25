@@ -3,7 +3,7 @@ import { ICommandConfig, IParameter, parseParameters, TParseableSignature } from
 import { createCommandTriggerRegexp, ICommandContext, ICommandExtraData } from "./commandUtils";
 
 export interface ICommandDecoratorData {
-  trigger: RegExp;
+  trigger: string | RegExp;
   parameters: TParseableSignature;
   config: ICommandConfig<any, ICommandExtraData>;
   _prop: string;
@@ -73,13 +73,12 @@ function CommandDecorator(
 
     const commands: ICommandDecoratorData[] = Reflect.getMetadata("commands", target, propertyKey);
 
-    const finalTrigger = createCommandTriggerRegexp(trigger);
     const finalParameters = typeof parameters === "string" ? parseParameters(parameters) : parameters;
 
     config.extra = config.extra || {};
 
     const commandData: ICommandDecoratorData = {
-      trigger: finalTrigger,
+      trigger,
       parameters: finalParameters,
       config,
       _prop: propertyKey
