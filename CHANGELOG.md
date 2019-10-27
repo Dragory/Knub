@@ -1,3 +1,15 @@
+# 26.1.0
+* Add `Plugin.runCommand()`
+  * This function is used internally to run matching commands from messages and can also be used to manually trigger
+    a specific command
+* New helper functions:
+  * `splitIntoCleanChunks()` - Splits a string into chunks of the specified length, preferring to split at newlines
+  * `splitMessageIntoChunks()` - Building on the above, splits a message's content into smaller chunks if the content is
+    longer than Discord's message limit (2000). Retains leading and trailing line breaks, open code blocks, etc.
+  * `createChunkedMessage()` - Building on the above, sends a chunked message to the specified channel
+* Fix role id detection from role mentions in the `role` parameter type and `resolveRole` utility function
+* Add the proper type for the `command` parameter in `TCommandHandler`
+
 # 26.0.2
 * More `getCommandSignature()` clean-up
 
