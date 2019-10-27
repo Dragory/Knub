@@ -22,7 +22,7 @@ export function get(obj, path, def?): any {
 
 const userMentionRegex = /^<@!?([0-9]+)>$/;
 const channelMentionRegex = /^<#([0-9]+)>$/;
-const roleMentionRegex = /^<&([0-9]+)>$/;
+const roleMentionRegex = /^<@&([0-9]+)>$/;
 const snowflakeRegex = /^[1-9][0-9]{5,19}$/;
 
 export function getUserId(str: string) {
