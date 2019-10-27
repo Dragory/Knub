@@ -46,7 +46,10 @@ export {
   disableLinkPreviews,
   disableCodeBlocks,
   deactivateMentions,
-  getInviteLink
+  getInviteLink,
+  splitIntoCleanChunks,
+  splitMessageIntoChunks,
+  createChunkedMessage
 } from "./helpers";
 
 export { PluginError } from "./PluginError";

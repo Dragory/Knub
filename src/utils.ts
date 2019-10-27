@@ -2,6 +2,13 @@ import { Client, Channel, Guild, Message, User } from "eris";
 
 export type ArbitraryFunction = (...args: any[]) => any;
 
+/**
+ * For unicode emoji, the unicode char/string itself.
+ * For custom emoji, a string in the format `"emojiName:emojiID"`.
+ * @see https://abal.moe/Eris/docs/Message#function-addReaction
+ */
+export type TReaction = string;
+
 export function get(obj, path, def?): any {
   let cursor = obj;
   const pathParts = path.split(".");
