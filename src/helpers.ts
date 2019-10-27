@@ -1,5 +1,5 @@
 import { Client, Message, Emoji, TextChannel, Invite, TextableChannel, MessageContent, MessageFile } from "eris";
-import { noop } from "./utils";
+import { noop, TReaction } from "./utils";
 
 /**
  * Splits a string into chunks, preferring to split at newlines if possible
