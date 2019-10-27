@@ -49,7 +49,11 @@ export interface ICommandHandlerArgsArg {
   [key: string]: any;
 }
 
-export type TCommandHandler = (msg: Message, argsToPass: ICommandHandlerArgsArg, command) => void | Promise<void>;
+export type TCommandHandler = (
+  msg: Message,
+  argsToPass: ICommandHandlerArgsArg,
+  command: ICommandDefinition<ICommandContext, ICommandExtraData>
+) => void | Promise<void>;
 
 export function createCommandTriggerRegexp(src: string | RegExp): RegExp {
   return typeof src === "string" ? new RegExp(escapeStringRegex(src), "i") : src;
