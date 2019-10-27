@@ -16,7 +16,10 @@ import {
   ICommandConfig,
   IParameter,
   ICommandDefinition,
-  findMatchingCommandResultHasError
+  findMatchingCommandResultHasError,
+  IMatchedCommand,
+  IArgumentMap,
+  IMatchedOptionMap
 } from "knub-command-manager";
 import {
   IBasePluginConfig,
@@ -586,6 +589,10 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
     return guildData.loadedPlugins.get(name) as T;
   }
 
+  /**
+   * Finds the first matching command in the message and runs it.
+   * Replies with command usage info if there are errors.
+   */
   protected async runCommandFromMessage(msg: Message): Promise<void> {
     // Ignore messages without text (e.g. images, embeds, etc.)
     if (msg.content == null || msg.content.trim() === "") {
@@ -614,21 +621,32 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
       `cmd: ${matchedCommand.triggers[0].source} (${matchedCommand.id})`
     );
 
-    // Run the command
-    const handler = this.commandHandlers.get(matchedCommand.id);
+    await this.runCommand(msg, matchedCommand, matchedCommand.args, matchedCommand.opts);
+    timerDone();
+  }
 
-    const argValueMap = Object.entries(matchedCommand.args).reduce((map, [key, arg]) => {
+  /**
+   * Runs the specified command
+   */
+  protected async runCommand(
+    msg: Message,
+    cmd: ICommandDefinition<ICommandContext, ICommandExtraData>,
+    args: IArgumentMap = {},
+    opts: IMatchedOptionMap = {}
+  ): Promise<void> {
+    const handler = this.commandHandlers.get(cmd.id);
+
+    const argValueMap = Object.entries(args).reduce((map, [key, arg]) => {
       map[key] = arg.value;
       return map;
     }, {});
 
-    const optValueMap = Object.entries(matchedCommand.opts).reduce((map, [key, opt]) => {
+    const optValueMap = Object.entries(opts).reduce((map, [key, opt]) => {
       map[key] = opt.value;
       return map;
     }, {});
 
-    await handler(msg, { ...argValueMap, ...optValueMap }, matchedCommand);
-    timerDone();
+    await handler(msg, { ...argValueMap, ...optValueMap }, cmd);
   }
 
   protected sendErrorMessage(channel: TextableChannel, body: string) {
