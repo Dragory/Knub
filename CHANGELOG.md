@@ -7,6 +7,7 @@
   * `splitMessageIntoChunks()` - Building on the above, splits a message's content into smaller chunks if the content is
     longer than Discord's message limit (2000). Retains leading and trailing line breaks, open code blocks, etc.
   * `createChunkedMessage()` - Building on the above, sends a chunked message to the specified channel
+* `getInviteLink()` helper now includes `https://` at the start
 * Fix role id detection from role mentions in the `role` parameter type and `resolveRole` utility function
 * Add the proper type for the `command` parameter in `TCommandHandler`
 
