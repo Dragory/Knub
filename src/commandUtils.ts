@@ -17,8 +17,8 @@ import escapeStringRegex from "escape-string-regexp";
 import { Plugin } from "./Plugin";
 import { Lock } from "./LockManager";
 
-export function getDefaultPrefix(client: Client) {
-  return `/<@!?${client.user.id}> /`;
+export function getDefaultPrefix(client: Client): RegExp {
+  return new RegExp(`<@!?${client.user.id}> `);
 }
 
 export interface ICommandExtraData {
