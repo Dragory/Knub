@@ -1,3 +1,9 @@
+# 27.0.0
+* **BREAKING CHANGE:** Update `knub-command-manager` to v7.0.0
+  * This update adds support for escaping characters in commands with a
+    backslash. This means that backslashes are effectively ignored in argument
+    parsing unless also escaped.
+
 # 26.1.0
 * Add `Plugin.runCommand()`
   * This function is used internally to run matching commands from messages and can also be used to manually trigger
