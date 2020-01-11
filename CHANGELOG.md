@@ -1,3 +1,12 @@
+# 28.0.0
+* **BREAKING CHANGE:** Errors in plugins are now only re-thrown as `PluginError` in
+  **production mode** (i.e. NODE_ENV=production). Before, this happened
+  regardless of NODE_ENV.
+  * This change was made because catching and then re-throwing the error caused
+    issues with debuggers. Specifically, the call stack when pausing on the
+    re-thrown error would not match that of the original error, presumably
+    because Promise.catch() is handled separately.
+
 # 27.0.0
 * **BREAKING CHANGE:** Update `knub-command-manager` to v7.0.0
   * This update adds support for escaping characters in commands with a

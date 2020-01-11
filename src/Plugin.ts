@@ -524,13 +524,16 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
         listener.name !== "bound runCommandsInMessage" ? this.knub.startPerformanceDebugTimer(listener.name) : null;
 
       // Call the original listener
-      try {
-        await listener(...args);
-      } catch (err) {
-        throw new PluginError(err);
-      } finally {
+      const promise = Promise.resolve(listener(...args)).finally(() => {
         if (lock) lock.unlock();
         timerDone && timerDone(); // tslint:disable-line
+      });
+
+      // In production mode, rethrow plugin errors as PluginError so they can be handled gracefully
+      if (process.env.NODE_ENV === "production") {
+        promise.catch(err => {
+          throw new PluginError(err);
+        });
       }
     };
 
