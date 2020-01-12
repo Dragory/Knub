@@ -1,3 +1,19 @@
+# 29.0.0
+* **BREAKING CHANGE:** Knub's constructor now takes an *optional* `TGuildConfig`
+  type argument that specifies the type of guild configuration (must extend
+  `IGuildConfig`). Defaults to `IGuildConfig`. This type argument is also used
+  in `IGuildData` and `IOptions`, where it is *required*. These two types were
+  not exported from `index.ts`, but were still accessible if importing from
+  `Knub.ts` directly, so I'm marking this as a breaking change.
+* Knub's constructor now takes an *optional* `TGlobalConfig` type argument that
+  specifies the type of the global configuration (must extend `IGlobalConfig`).
+  Defaults to `IGlobalConfig`.
+* **BREAKING CHANGE:** `IGuildConfig` and `IGlobalConfig` no longer allow
+  arbitrary extra properties. You should specify your own types in Knub's
+  constructor instead (where you can also add back support for arbitrary
+  properties if you want).
+* `IGuildData` and `IOptions` are now exported from `index.ts`
+
 # 28.0.0
 * **BREAKING CHANGE:** Errors in plugins are now only re-thrown as `PluginError` in
   **production mode** (i.e. NODE_ENV=production). Before, this happened
