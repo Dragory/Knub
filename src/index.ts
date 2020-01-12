@@ -21,6 +21,8 @@ export { configUtils };
 import * as pluginUtils from "./pluginUtils";
 export { pluginUtils };
 
+export { IGuildData, IOptions } from "./Knub";
+
 export {
   IPermissionLevelDefinitions,
   IBasePluginConfig,
