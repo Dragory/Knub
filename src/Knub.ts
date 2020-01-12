@@ -16,10 +16,10 @@ import { ICustomArgumentTypesMap } from "./commandUtils";
 
 type StatusMessageFn = (channel: TextableChannel, body: string) => void;
 
-export interface IOptions {
+export interface IOptions<TGuildConfig extends IGuildConfig> {
   autoInitGuilds?: boolean;
   getConfig?: (id: string) => any | Promise<any>;
-  getEnabledPlugins?: (guildId: string, guildConfig: IGuildConfig) => string[] | Promise<string[]>;
+  getEnabledPlugins?: (guildId: string, guildConfig: TGuildConfig) => string[] | Promise<string[]>;
   canLoadGuild?: (guildId: string) => boolean | Promise<boolean>;
   logFn?: LoggerFn;
   performanceDebug?: {
@@ -33,9 +33,9 @@ export interface IOptions {
   [key: string]: any;
 }
 
-export interface IGuildData {
+export interface IGuildData<TGuildConfig extends IGuildConfig> {
   id: string;
-  config: IGuildConfig;
+  config: TGuildConfig;
   loadedPlugins: Map<string, Plugin>;
   locks: LockManager;
 }
@@ -43,38 +43,41 @@ export interface IGuildData {
 class IExtendedPlugin extends Plugin<any> {}
 class IExtendedGlobalPlugin extends Plugin<any> {}
 
-export interface IKnubArgs {
+export interface IKnubArgs<TGuildConfig extends IGuildConfig> {
   plugins?: Array<typeof IExtendedPlugin>;
   globalPlugins?: Array<typeof IExtendedGlobalPlugin>;
-  options?: IOptions;
+  options?: IOptions<TGuildConfig>;
 }
 
 export type IPluginMap = Map<string, typeof IExtendedPlugin>;
 export type IGlobalPluginMap = Map<string, typeof GlobalPlugin>;
 
-const defaultKnubParams: IKnubArgs = {
+const defaultKnubParams: IKnubArgs<IGuildConfig> = {
   plugins: [],
   globalPlugins: [],
   options: {}
 };
 
-export class Knub extends EventEmitter {
+export class Knub<
+  TGuildConfig extends IGuildConfig = IGuildConfig,
+  TGlobalConfig extends IGlobalConfig = IGlobalConfig
+> extends EventEmitter {
   protected bot: Client;
   protected globalPlugins: IGlobalPluginMap = new Map();
   protected loadedGlobalPlugins: Map<string, GlobalPlugin> = new Map();
   protected plugins: IPluginMap = new Map();
-  protected options: IOptions;
+  protected options: IOptions<TGuildConfig>;
   protected djsOptions: any;
-  protected guilds: Map<string, IGuildData> = new Map();
-  protected globalConfig: IGlobalConfig;
+  protected guilds: Map<string, IGuildData<TGuildConfig>> = new Map();
+  protected globalConfig: TGlobalConfig;
   protected globalLocks: LockManager;
 
   protected performanceDebugItems: string[];
 
-  constructor(client: Client, userArgs: IKnubArgs) {
+  constructor(client: Client, userArgs: IKnubArgs<TGuildConfig>) {
     super();
 
-    const args: IKnubArgs = Object.assign({}, defaultKnubParams, userArgs);
+    const args: IKnubArgs<TGuildConfig> = Object.assign({}, defaultKnubParams, userArgs);
 
     this.bot = client;
     this.globalLocks = new LockManager();
@@ -104,7 +107,7 @@ export class Knub extends EventEmitter {
       this.plugins.set(plugin.pluginName, plugin);
     });
 
-    const defaultOptions: IOptions = {
+    const defaultOptions: IOptions<TGuildConfig> = {
       // Default JSON config files
       async getConfig(id) {
         const configFile = id ? `${id}.json` : "global.json";
@@ -222,7 +225,7 @@ export class Knub extends EventEmitter {
       return;
     }
 
-    const guildData: IGuildData = {
+    const guildData: IGuildData<TGuildConfig> = {
       config: null,
       id: guildId,
       loadedPlugins: new Map(),
@@ -277,15 +280,15 @@ export class Knub extends EventEmitter {
     await this.loadGuild(guildId);
   }
 
-  public getGuildData(guildId: string): IGuildData {
+  public getGuildData(guildId: string): IGuildData<TGuildConfig> {
     return this.guilds.get(guildId);
   }
 
-  public getLoadedGuilds(): IGuildData[] {
+  public getLoadedGuilds(): Array<IGuildData<TGuildConfig>> {
     return Array.from(this.guilds.values());
   }
 
-  public async loadPlugin(guildId: string, pluginName: string, guildConfig: IGuildConfig): Promise<Plugin> {
+  public async loadPlugin(guildId: string, pluginName: string, guildConfig: TGuildConfig): Promise<Plugin> {
     if (!this.plugins.has(pluginName)) {
       throw new Error(`Unknown plugin: ${pluginName}`);
     }
@@ -393,7 +396,7 @@ export class Knub extends EventEmitter {
     this.globalConfig = await this.options.getConfig("global");
   }
 
-  public getGlobalConfig() {
+  public getGlobalConfig(): TGlobalConfig {
     return this.globalConfig;
   }
 
