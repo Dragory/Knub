@@ -12,18 +12,12 @@ export interface IGuildConfig {
   plugins?: {
     [key: string]: IPartialPluginOptions;
   };
-
-  // Custom config values
-  [key: string]: any;
 }
 
 export interface IGlobalConfig {
   plugins?: {
     [key: string]: IPartialPluginOptions;
   };
-
-  // Custom config values
-  [key: string]: any;
 }
 
 export interface IPartialPluginOptions<TConfig = IBasePluginConfig, TCustomOverrideCriteria = unknown> {
