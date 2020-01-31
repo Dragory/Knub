@@ -51,6 +51,6 @@
     "eris": "^0.11.0"
   },
   "files": [
-    "/dist"
+    "/dist/**/!(*.test.js)"
   ]
 }
