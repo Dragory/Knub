@@ -8,7 +8,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "mocha --exit -r ts-node/register src/**/*.test.ts -- --trace-warnings",
-    "build": "touch dist && rm -r dist && tsc",
+    "build": "touch dist && rm -r dist && tsc --sourceMap false",
     "preversion": "npm run test",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "touch dist && rm -r dist && tsc --watch",
