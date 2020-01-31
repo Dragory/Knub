@@ -7,12 +7,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "mocha --exit -r ts-node/register test/**/*.ts -- --trace-warnings",
+    "test": "mocha --exit -r ts-node/register src/**/*.test.ts -- --trace-warnings",
     "build": "touch dist && rm -r dist && tsc",
     "preversion": "npm run test",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "touch dist && rm -r dist && tsc --watch",
-    "format": "prettier --write \"{src,test}/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\""
   },
   "husky": {
     "hooks": {

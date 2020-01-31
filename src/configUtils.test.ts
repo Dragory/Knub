@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { mergeConfig, getMatchingPluginConfig, IMatchParams } from "../src/configUtils";
-import { IPartialPluginOptions, IPluginOptions } from "../src";
+import { mergeConfig, getMatchingPluginConfig, IMatchParams } from "./configUtils";
+import { IPartialPluginOptions, IPluginOptions } from "./index";
 
 describe("configUtils", () => {
   describe("mergeConfig", () => {

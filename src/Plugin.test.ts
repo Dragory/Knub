@@ -1,5 +1,5 @@
-import { IPluginOptions, Plugin } from "../src";
-import { IMatchParams } from "../src/configUtils";
+import { IPluginOptions, Plugin } from "./index";
+import { IMatchParams } from "./configUtils";
 import { expect } from "chai";
 import { Client } from "eris";
 
