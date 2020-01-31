@@ -271,7 +271,7 @@ describe("configUtils", () => {
       expect(matchedConfig4.value).to.equal(30);
     });
 
-    it("false by default", () => {
+    it("false when no conditions are present", () => {
       const pluginOpts: IPluginOptions = {
         config: {
           value: 5
@@ -279,45 +279,80 @@ describe("configUtils", () => {
         overrides: [
           {
             config: {
-              value: 10
+              value: 20
             }
-          },
+          }
+        ]
+      };
+
+      const matchedConfig = getMatchingPluginConfig(pluginOpts, {});
+      expect((matchedConfig as any).value).to.equal(5);
+    });
+
+    it("false when an empty 'all' condition is present", () => {
+      const pluginOpts: IPluginOptions = {
+        config: {
+          value: 5
+        },
+        overrides: [
           {
             user: "500",
             all: [],
             config: {
               value: 20
             }
-          },
+          }
+        ]
+      };
+
+      const matchedConfig = getMatchingPluginConfig(pluginOpts, {
+        userId: "500"
+      });
+      expect((matchedConfig as any).value).to.equal(5);
+    });
+
+    it("false when an empty 'any' condition is present", () => {
+      const pluginOpts: IPluginOptions = {
+        config: {
+          value: 5
+        },
+        overrides: [
           {
-            user: "1000",
+            user: "500",
             any: [],
             config: {
-              value: 30
+              value: 20
             }
-          },
+          }
+        ]
+      };
 
-          // Even with a nonexistent/unknown condition
+      const matchedConfig = getMatchingPluginConfig(pluginOpts, {
+        userId: "500"
+      });
+      expect((matchedConfig as any).value).to.equal(5);
+    });
+
+    it("false when an unknown condition is present", () => {
+      const pluginOpts: IPluginOptions = {
+        config: {
+          value: 5
+        },
+        overrides: [
           {
-            nonexistent: "20",
+            user: "500",
+            unknown: "foo",
             config: {
-              value: 7
+              value: 20
             }
           } as any
         ]
       };
 
-      const matchedConfig1 = getMatchingPluginConfig(pluginOpts, {});
-      const matchedConfig2 = getMatchingPluginConfig(pluginOpts, {
+      const matchedConfig = getMatchingPluginConfig(pluginOpts, {
         userId: "500"
       });
-      const matchedConfig3 = getMatchingPluginConfig(pluginOpts, {
-        userId: "1000"
-      });
-
-      expect((matchedConfig1 as any).value).to.equal(5);
-      expect((matchedConfig2 as any).value).to.equal(5);
-      expect((matchedConfig3 as any).value).to.equal(5);
+      expect((matchedConfig as any).value).to.equal(5);
     });
 
     it("'all' special criterion", () => {

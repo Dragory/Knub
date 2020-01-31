@@ -102,171 +102,187 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
 ): boolean {
   let matchedOne = false;
 
-  // Match on level
-  // For a successful match, requires ALL of the specified level conditions to match
-  if (criteria.level) {
-    const matchLevel = matchParams.level;
-    if (matchLevel) {
-      const levels = Array.isArray(criteria.level) ? criteria.level : [criteria.level];
-      let match = levels.length > 0; // Zero level conditions = assume user error, don't match
+  for (const [key, value] of Object.entries(criteria)) {
+    if (key === "config") continue;
 
-      for (const level of levels) {
-        const [mode, theLevel] = splitLevelRange(level, ">=");
+    // Match on level
+    // For a successful match, requires ALL of the specified level conditions to match
+    if (key === "level") {
+      const matchLevel = matchParams.level;
+      if (matchLevel) {
+        const levels = Array.isArray(value) ? value : [value];
+        let match = levels.length > 0; // Zero level conditions = assume user error, don't match
 
-        if (mode === "<" && !(matchLevel < theLevel)) match = false;
-        else if (mode === "<=" && !(matchLevel <= theLevel)) match = false;
-        else if (mode === ">" && !(matchLevel > theLevel)) match = false;
-        else if (mode === ">=" && !(matchLevel >= theLevel)) match = false;
-        else if (mode === "=" && !(matchLevel === theLevel)) match = false;
-        else if (mode === "!" && !(matchLevel !== theLevel)) match = false;
-      }
+        for (const level of levels) {
+          const [mode, theLevel] = splitLevelRange(level, ">=");
 
-      if (!match) return false;
-    } else {
-      return false;
-    }
-
-    matchedOne = true;
-  }
-
-  // Match on channel
-  // For a successful match, requires ANY of the specified channels to match, WITHOUT exclusions
-  if (criteria.channel) {
-    const matchChannel = matchParams.channelId;
-    if (matchChannel) {
-      const channels = Array.isArray(criteria.channel) ? criteria.channel : [criteria.channel];
-      let match = false;
-
-      for (const channelId of channels) {
-        const [mode, theChannelId] = splitCond(channelId, "=");
-
-        if (mode === "=") match = match || matchChannel === theChannelId;
-        else if (mode === "!" && matchChannel === theChannelId) {
-          match = false;
-          break;
+          if (mode === "<" && !(matchLevel < theLevel)) match = false;
+          else if (mode === "<=" && !(matchLevel <= theLevel)) match = false;
+          else if (mode === ">" && !(matchLevel > theLevel)) match = false;
+          else if (mode === ">=" && !(matchLevel >= theLevel)) match = false;
+          else if (mode === "=" && !(matchLevel === theLevel)) match = false;
+          else if (mode === "!" && !(matchLevel !== theLevel)) match = false;
         }
+
+        if (!match) return false;
+      } else {
+        return false;
       }
 
-      if (!match) return false;
-    } else {
-      return false;
+      matchedOne = true;
+      continue;
     }
 
-    matchedOne = true;
-  }
+    // Match on channel
+    // For a successful match, requires ANY of the specified channels to match, WITHOUT exclusions
+    if (key === "channel") {
+      const matchChannel = matchParams.channelId;
+      if (matchChannel) {
+        const channels = Array.isArray(value) ? value : [value];
+        let match = false;
 
-  // Match on category
-  // For a successful match, requires ANY of the specified categories to match, WITHOUT exclusions
-  if (criteria.category) {
-    const matchCategory = matchParams.categoryId;
-    if (matchCategory) {
-      const categories = Array.isArray(criteria.category) ? criteria.category : [criteria.category];
-      let match = false;
+        for (const channelId of channels) {
+          const [mode, theChannelId] = splitCond(channelId, "=");
 
-      for (const categoryId of categories) {
-        const [mode, theCategoryId] = splitCond(categoryId, "=");
-
-        if (mode === "=") match = match || matchCategory === theCategoryId;
-        else if (mode === "!" && matchCategory === theCategoryId) {
-          match = false;
-          break;
+          if (mode === "=") match = match || matchChannel === theChannelId;
+          else if (mode === "!" && matchChannel === theChannelId) {
+            match = false;
+            break;
+          }
         }
+
+        if (!match) return false;
+      } else {
+        return false;
       }
 
-      if (!match) return false;
-    } else {
-      return false;
+      matchedOne = true;
+      continue;
     }
 
-    matchedOne = true;
-  }
+    // Match on category
+    // For a successful match, requires ANY of the specified categories to match, WITHOUT exclusions
+    if (key === "category") {
+      const matchCategory = matchParams.categoryId;
+      if (matchCategory) {
+        const categories = Array.isArray(value) ? value : [value];
+        let match = false;
 
-  // Match on role
-  // For a successful match, requires ALL specified roles and exclusions to match
-  if (criteria.role) {
-    const matchRoles = matchParams.memberRoles;
-    if (matchRoles) {
-      const roles = Array.isArray(criteria.role) ? criteria.role : [criteria.role];
-      let match = roles.length > 0;
+        for (const categoryId of categories) {
+          const [mode, theCategoryId] = splitCond(categoryId, "=");
 
-      for (const role of roles) {
-        const [mode, theRole] = splitCond(role, "=");
-
-        if (mode === "=") match = match && matchRoles.includes(theRole);
-        else if (mode === "!") match = match && !matchRoles.includes(theRole);
-      }
-
-      if (!match) return false;
-    } else {
-      return false;
-    }
-
-    matchedOne = true;
-  }
-
-  // Match on user ID
-  // For a successful match, requires ANY of the specified user IDs to match, WITHOUT exclusions
-  if (criteria.user) {
-    const matchUser = matchParams.userId;
-    if (matchUser) {
-      const users = Array.isArray(criteria.user) ? criteria.user : [criteria.user];
-      let match = false;
-
-      for (const user of users) {
-        const [mode, userId] = splitCond(user, "=");
-
-        if (mode === "=") match = match || matchUser === userId;
-        else if (mode === "!" && matchUser === userId) {
-          match = false;
-          break;
+          if (mode === "=") match = match || matchCategory === theCategoryId;
+          else if (mode === "!" && matchCategory === theCategoryId) {
+            match = false;
+            break;
+          }
         }
+
+        if (!match) return false;
+      } else {
+        return false;
       }
 
+      matchedOne = true;
+      continue;
+    }
+
+    // Match on role
+    // For a successful match, requires ALL specified roles and exclusions to match
+    if (key === "role") {
+      const matchRoles = matchParams.memberRoles;
+      if (matchRoles) {
+        const roles = Array.isArray(value) ? value : [value];
+        let match = roles.length > 0;
+
+        for (const role of roles) {
+          const [mode, theRole] = splitCond(role, "=");
+
+          if (mode === "=") match = match && matchRoles.includes(theRole);
+          else if (mode === "!") match = match && !matchRoles.includes(theRole);
+        }
+
+        if (!match) return false;
+      } else {
+        return false;
+      }
+
+      matchedOne = true;
+      continue;
+    }
+
+    // Match on user ID
+    // For a successful match, requires ANY of the specified user IDs to match, WITHOUT exclusions
+    if (key === "user") {
+      const matchUser = matchParams.userId;
+      if (matchUser) {
+        const users = Array.isArray(value) ? value : [value];
+        let match = false;
+
+        for (const user of users) {
+          const [mode, userId] = splitCond(user, "=");
+
+          if (mode === "=") match = match || matchUser === userId;
+          else if (mode === "!" && matchUser === userId) {
+            match = false;
+            break;
+          }
+        }
+
+        if (!match) return false;
+      } else {
+        return false;
+      }
+
+      matchedOne = true;
+      continue;
+    }
+
+    // Custom override criteria
+    if (key === "extra" && customOverrideCriteriaResolver) {
+      if (!customOverrideCriteriaResolver(value, matchParams)) return false;
+      matchedOne = true;
+      continue;
+    }
+
+    if (key === "all") {
+      // Empty set of criteria -> false
+      if (value.length === 0) return false;
+
+      let match = true;
+      for (const subCriteria of value) {
+        match = match && evaluateOverrideCriteria<TCustomOverrideCriteria>(subCriteria, matchParams);
+      }
       if (!match) return false;
-    } else {
-      return false;
+
+      matchedOne = true;
+      continue;
     }
 
-    matchedOne = true;
-  }
+    if (key === "any") {
+      // Empty set of criteria -> false
+      if (value.length === 0) return false;
 
-  // Custom override criteria
-  if (criteria.extra && customOverrideCriteriaResolver) {
-    if (!customOverrideCriteriaResolver(criteria.extra, matchParams)) return false;
-    matchedOne = true;
-  }
+      let match = false;
+      for (const subCriteria of value) {
+        match = match || evaluateOverrideCriteria<TCustomOverrideCriteria>(subCriteria, matchParams);
+      }
+      if (match === false) return false;
 
-  if (criteria.all) {
-    // Empty set of criteria -> false
-    if (criteria.all.length === 0) return false;
-
-    let match = true;
-    for (const subCriteria of criteria.all) {
-      match = match && evaluateOverrideCriteria<TCustomOverrideCriteria>(subCriteria, matchParams);
+      matchedOne = true;
+      continue;
     }
-    if (!match) return false;
 
-    matchedOne = true;
-  }
+    if (key === "not") {
+      const match = evaluateOverrideCriteria<TCustomOverrideCriteria>(value, matchParams);
+      if (match) return false;
 
-  if (criteria.any) {
-    // Empty set of criteria -> false
-    if (criteria.any.length === 0) return false;
-
-    let match = false;
-    for (const subCriteria of criteria.any) {
-      match = match || evaluateOverrideCriteria<TCustomOverrideCriteria>(subCriteria, matchParams);
+      matchedOne = true;
+      continue;
     }
-    if (match === false) return false;
 
-    matchedOne = true;
-  }
-
-  if (criteria.not) {
-    const match = evaluateOverrideCriteria<TCustomOverrideCriteria>(criteria.not, matchParams);
-    if (match) return false;
-
-    matchedOne = true;
+    // Unknown condition -> never match
+    return false;
   }
 
   return matchedOne;
