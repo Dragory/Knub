@@ -1,3 +1,7 @@
+# 29.0.1
+* Fix override conditions resolving to `true` even when unknown conditions were
+  present. Such overrides will now always resolve to `false`.
+
 # 29.0.0
 * **BREAKING CHANGE:** Knub's constructor now takes an *optional* `TGuildConfig`
   type argument that specifies the type of guild configuration (must extend
