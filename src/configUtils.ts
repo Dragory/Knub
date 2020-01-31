@@ -100,10 +100,7 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
   matchParams: IMatchParams,
   customOverrideCriteriaResolver?: CustomOverrideResolver<TCustomOverrideCriteria>
 ): boolean {
-  if (Object.keys(criteria).length === 0 || (Object.keys(criteria).length === 1 && (criteria as any).config)) {
-    // No criteria -> false by default
-    return false;
-  }
+  let matchedOne = false;
 
   // Match on level
   // For a successful match, requires ALL of the specified level conditions to match
@@ -128,6 +125,8 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
     } else {
       return false;
     }
+
+    matchedOne = true;
   }
 
   // Match on channel
@@ -152,6 +151,8 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
     } else {
       return false;
     }
+
+    matchedOne = true;
   }
 
   // Match on category
@@ -176,6 +177,8 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
     } else {
       return false;
     }
+
+    matchedOne = true;
   }
 
   // Match on role
@@ -197,6 +200,8 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
     } else {
       return false;
     }
+
+    matchedOne = true;
   }
 
   // Match on user ID
@@ -221,11 +226,14 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
     } else {
       return false;
     }
+
+    matchedOne = true;
   }
 
   // Custom override criteria
   if (criteria.extra && customOverrideCriteriaResolver) {
     if (!customOverrideCriteriaResolver(criteria.extra, matchParams)) return false;
+    matchedOne = true;
   }
 
   if (criteria.all) {
@@ -237,6 +245,8 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
       match = match && evaluateOverrideCriteria<TCustomOverrideCriteria>(subCriteria, matchParams);
     }
     if (!match) return false;
+
+    matchedOne = true;
   }
 
   if (criteria.any) {
@@ -248,12 +258,16 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
       match = match || evaluateOverrideCriteria<TCustomOverrideCriteria>(subCriteria, matchParams);
     }
     if (match === false) return false;
+
+    matchedOne = true;
   }
 
   if (criteria.not) {
     const match = evaluateOverrideCriteria<TCustomOverrideCriteria>(criteria.not, matchParams);
     if (match) return false;
+
+    matchedOne = true;
   }
 
-  return true;
+  return matchedOne;
 }

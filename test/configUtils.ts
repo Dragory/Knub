@@ -295,7 +295,15 @@ describe("configUtils", () => {
             config: {
               value: 30
             }
-          }
+          },
+
+          // Even with a nonexistent/unknown condition
+          {
+            nonexistent: "20",
+            config: {
+              value: 7
+            }
+          } as any
         ]
       };
 
