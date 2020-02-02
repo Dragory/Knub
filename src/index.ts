@@ -34,10 +34,10 @@ export {
 
 export {
   getCommandSignature,
-  IPluginCommandDefinition,
-  IPluginCommandConfig,
+  PluginCommandInfo,
+  PluginCommandConfig,
   IPluginCommandManager,
-  ICommandContext,
+  CommandContext,
   ICommandExtraData
 } from "./commandUtils";
 

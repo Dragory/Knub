@@ -4,7 +4,7 @@ import { disableCodeBlocks } from "./helpers";
 import { logger } from "./logger";
 import {
   ICommandConfig,
-  ICommandDefinition,
+  ICommandDefinition as CommandInfo,
   CommandManager,
   TOption,
   IMatchedCommand,
@@ -16,9 +16,25 @@ import {
 import escapeStringRegex from "escape-string-regexp";
 import { Plugin } from "./Plugin";
 import { Lock } from "./LockManager";
+import { PluginData } from "./PluginData";
+import { hasPermission } from "./pluginUtils";
 
 export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);
+}
+
+export type CommandFn = (pluginData: PluginData, msg: Message, ...args: any[]) => void | Promise<void>;
+
+export interface CommandDefinition {
+  trigger: string;
+  parameters?: IParameter[];
+  run: CommandFn;
+  config?: PluginCommandConfig;
+}
+
+export interface CommandContext {
+  message: Message;
+  pluginData: PluginData;
 }
 
 export interface ICommandExtraData {
@@ -31,29 +47,12 @@ export interface ICommandExtraData {
   _lock?: Lock;
 }
 
-export interface ICommandContext {
-  message: Message;
-  bot: Client;
-  plugin: Plugin<any>;
-}
-
-export interface IPluginCommandDefinition extends ICommandDefinition<ICommandContext, ICommandExtraData> {}
-export interface IPluginCommandConfig extends ICommandConfig<ICommandContext, ICommandExtraData> {}
-export interface IPluginCommandManager extends CommandManager<ICommandContext, ICommandExtraData> {}
+export interface PluginCommandInfo extends CommandInfo<CommandContext, ICommandExtraData> {}
+export interface PluginCommandConfig extends ICommandConfig<CommandContext, ICommandExtraData> {}
 
 export interface ICustomArgumentTypesMap {
-  [key: string]: TTypeConverterFn<ICommandContext>;
+  [key: string]: TTypeConverterFn<CommandContext>;
 }
-
-export interface ICommandHandlerArgsArg {
-  [key: string]: any;
-}
-
-export type TCommandHandler = (
-  msg: Message,
-  argsToPass: ICommandHandlerArgsArg,
-  command: ICommandDefinition<ICommandContext, ICommandExtraData>
-) => void | Promise<void>;
 
 export function createCommandTriggerRegexp(src: string | RegExp): RegExp {
   return typeof src === "string" ? new RegExp(escapeStringRegex(src), "i") : src;
@@ -65,7 +64,7 @@ export function createCommandTriggerRegexp(src: string | RegExp): RegExp {
  * trigger of potentially multiple ones to show and in what format.
  */
 export function getCommandSignature(
-  command: ICommandDefinition<ICommandContext, ICommandExtraData>,
+  command: PluginCommandInfo,
   overrideTrigger?: string,
   overrideSignature?: TSignature
 ) {
@@ -95,4 +94,75 @@ export function getCommandSignature(
   const usageLine = `${prefix}${trigger} ${paramStrings.join(" ")} ${optStrings.join(" ")}`.replace(/\s+/g, " ").trim();
 
   return usageLine;
+}
+
+/**
+ * Command pre-filter to restrict the command to the plugin's guilds, unless
+ * allowed for DMs
+ */
+export function restrictCommandSource(cmd: PluginCommandInfo, context: CommandContext): boolean {
+  if (context.message.channel instanceof PrivateChannel) {
+    if (!cmd.config.extra.allowDMs) {
+      return false;
+    }
+  } else if (!(context.message.channel instanceof GuildChannel)) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Command pre-filter to restrict the command by specifying a required
+ * permission
+ */
+export function checkCommandPermission(cmd: PluginCommandInfo, context: CommandContext): boolean {
+  const permission = cmd.config.extra.requiredPermission;
+  if (permission) {
+    const config = context.pluginData.config.getForMessage(context.message);
+    if (!hasPermission(config, permission)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Command post-filter to check if the command's on cooldown and, if not, to put
+ * it on cooldown
+ */
+export function checkCommandCooldown(cmd: PluginCommandInfo, context: CommandContext): boolean {
+  if (cmd.config.extra.cooldown) {
+    const cdKey = `${cmd.id}-${context.message.author.id}`;
+
+    let cdApplies = true;
+    if (cmd.config.extra.cooldownPermission) {
+      const config = context.pluginData.config.getForMessage(context.message);
+      cdApplies = hasPermission(config, cmd.config.extra.cooldownPermission);
+    }
+
+    if (cdApplies && this.cooldowns.isOnCooldown(cdKey)) {
+      // We're on cooldown
+      return false;
+    }
+
+    this.cooldowns.setCooldown(cdKey, cmd.config.extra.cooldown);
+  }
+
+  return true;
+}
+
+/**
+ * Command post-filter to wait for and trigger any locks the command has, and to
+ * interrupt command execution if the lock gets interrupted before it
+ */
+export async function checkCommandLocks(cmd: PluginCommandInfo, context: CommandContext): Promise<boolean> {
+  if (!cmd.config.extra.locks) {
+    return true;
+  }
+
+  const lock = (cmd.config.extra._lock = await context.pluginData.locks.acquire(cmd.config.extra.locks));
+
+  return !lock.interrupted;
 }

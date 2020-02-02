@@ -16,6 +16,7 @@
     "ordered-imports": false,
     "member-ordering": false,
     "no-implicit-dependencies": false,
-    "no-object-literal-type-assertion": false
+    "no-object-literal-type-assertion": false,
+    "interface-name": false
   }
 }

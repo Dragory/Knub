@@ -2,10 +2,10 @@ import { defaultParameterTypes, TypeConversionError, TTypeConverterFn } from "kn
 import { disableCodeBlocks } from "./helpers";
 import { getChannelId, getRoleId, getUserId } from "./utils";
 import { Channel, GuildChannel, Member, Role, TextChannel, User, VoiceChannel } from "eris";
-import { ICommandContext } from "./commandUtils";
+import { CommandContext } from "./commandUtils";
 
 export interface IParameterTypeMap {
-  [key: string]: TTypeConverterFn<ICommandContext>;
+  [key: string]: TTypeConverterFn<CommandContext>;
 }
 
 export const baseParameterTypes: IParameterTypeMap = {
@@ -22,13 +22,13 @@ export const baseParameterTypes: IParameterTypeMap = {
     return result;
   },
 
-  user(value, { bot }): User {
+  user(value, { pluginData: { client } }): User {
     const userId = getUserId(value);
     if (!userId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid user`);
     }
 
-    const user = bot.users.get(userId);
+    const user = client.users.get(userId);
     if (!user) {
       throw new TypeConversionError(`Could not find user for user id \`${userId}\``);
     }
@@ -36,7 +36,7 @@ export const baseParameterTypes: IParameterTypeMap = {
     return user;
   },
 
-  member(value, { message, bot }): Member {
+  member(value, { message, pluginData: { client } }): Member {
     if (!(message.channel instanceof GuildChannel)) {
       throw new TypeConversionError(`Type 'Member' can only be used in guilds`);
     }
@@ -46,7 +46,7 @@ export const baseParameterTypes: IParameterTypeMap = {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid user id`);
     }
 
-    const user = bot.users.get(userId);
+    const user = client.users.get(userId);
     if (!user) {
       throw new TypeConversionError(`Could not find user for user id \`${userId}\``);
     }
@@ -59,7 +59,7 @@ export const baseParameterTypes: IParameterTypeMap = {
     return member;
   },
 
-  channel(value, { message, bot }): Channel {
+  channel(value, { message }): Channel {
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
@@ -78,7 +78,7 @@ export const baseParameterTypes: IParameterTypeMap = {
     return channel;
   },
 
-  textChannel(value, { message, bot }): TextChannel {
+  textChannel(value, { message }): TextChannel {
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
@@ -101,7 +101,7 @@ export const baseParameterTypes: IParameterTypeMap = {
     return channel;
   },
 
-  voiceChannel(value, { message, bot }): VoiceChannel {
+  voiceChannel(value, { message }): VoiceChannel {
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
@@ -124,7 +124,7 @@ export const baseParameterTypes: IParameterTypeMap = {
     return channel;
   },
 
-  role(value, { message, bot }): Role {
+  role(value, { message }): Role {
     if (!(message.channel instanceof GuildChannel)) {
       throw new TypeConversionError(`Type 'Role' can only be used in guilds`);
     }

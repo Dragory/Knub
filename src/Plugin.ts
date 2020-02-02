@@ -32,11 +32,11 @@ import { ArbitraryFunction, eventToChannel, eventToGuild, eventToMessage, eventT
 import {
   getCommandSignature,
   getDefaultPrefix,
-  ICommandContext,
+  CommandContext,
   ICommandExtraData,
   ICustomArgumentTypesMap,
-  IPluginCommandConfig,
-  IPluginCommandDefinition,
+  PluginCommandConfig,
+  PluginCommandInfo,
   IPluginCommandManager,
   TCommandHandler
 } from "./commandUtils";
@@ -49,17 +49,23 @@ import { ICommandDecoratorData, IEventDecoratorData } from "./decorators";
 import { baseParameterTypes } from "./baseParameterTypes";
 import { getPluginDecoratorCommands, getPluginDecoratorEventListeners } from "./pluginUtils";
 import cloneDeep from "lodash.clonedeep";
-
-export interface IExtendedMatchParams extends IMatchParams {
-  channelId?: string;
-  member?: Member;
-  message?: Message;
-}
+import { IExtendedMatchParams } from "./PluginConfigManager";
+import { PluginData } from "./PluginData";
 
 export interface IRegisteredCommand {
-  command: IPluginCommandDefinition;
+  command: PluginCommandInfo;
   handler: TCommandHandler;
 }
+
+export interface ICommandHandlerArgsArg {
+  [key: string]: any;
+}
+
+export type TCommandHandler = (
+  msg: Message,
+  argsToPass: ICommandHandlerArgsArg,
+  command: ICommandDefinition<CommandContext, ICommandExtraData>
+) => void | Promise<void>;
 
 /**
  * Base class for Knub plugins
@@ -97,6 +103,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
   protected cooldowns: CooldownManager;
 
   constructor(
+    pluginData: PluginData,
     bot: Client,
     guildId: string,
     guildConfig: IGuildConfig,
@@ -105,6 +112,10 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
     knub: Knub,
     locks: LockManager
   ) {
+    this.bot = pluginData.client;
+    this.guildId = pluginData.guilds[0]?.id;
+    this.guild = pluginData.guilds[0];
+
     this.bot = bot;
     this.guildId = guildId;
     this.guildConfig = guildConfig;
@@ -121,7 +132,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
     // Basic initialization
     this.guild = this.guildId ? this.bot.guilds.get(this.guildId) : null;
 
-    this.commandManager = new CommandManager<ICommandContext, ICommandExtraData>({
+    this.commandManager = new CommandManager<CommandContext, ICommandExtraData>({
       prefix: this.guildConfig.prefix || getDefaultPrefix(this.bot),
       types: {
         ...baseParameterTypes,
@@ -380,12 +391,12 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
     trigger: string | RegExp,
     parameters: string | IParameter[],
     handler: TCommandHandler,
-    config: IPluginCommandConfig
+    config: PluginCommandConfig
   ) {
     config.preFilters = config.preFilters || [];
     config.preFilters.unshift(
       // Make sure the command is in a guild channel unless explicitly allowed for DMs
-      (cmd: IPluginCommandDefinition, context: ICommandContext) => {
+      (cmd: PluginCommandInfo, context: CommandContext) => {
         if (context.message.channel instanceof PrivateChannel) {
           if (!cmd.config.extra.allowDMs) {
             return false;
@@ -398,7 +409,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
       },
 
       // Check required permissions
-      (cmd: IPluginCommandDefinition, context: ICommandContext) => {
+      (cmd: PluginCommandInfo, context: CommandContext) => {
         const requiredPermission = cmd.config.extra.requiredPermission;
         if (requiredPermission && !this.hasPermission(requiredPermission, { message: context.message })) {
           return false;
@@ -411,7 +422,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
     config.postFilters = config.postFilters || [];
     config.postFilters.unshift(
       // Check for cooldowns
-      (cmd: IPluginCommandDefinition, context: ICommandContext) => {
+      (cmd: PluginCommandInfo, context: CommandContext) => {
         if (cmd.config.extra.cooldown) {
           const cdKey = `${cmd.id}-${context.message.author.id}`;
           let cdApplies = true;
@@ -431,7 +442,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
       },
 
       // Wait for locks, if any, and bail out if the lock has been interrupted
-      async (cmd: IPluginCommandDefinition, context: ICommandContext) => {
+      async (cmd: PluginCommandInfo, context: CommandContext) => {
         if (cmd.config.extra.locks) {
           cmd.config.extra._lock = await this.locks.acquire(cmd.config.extra.locks);
           if (cmd.config.extra._lock.interrupted) {
@@ -633,7 +644,7 @@ export class Plugin<TConfig extends {} = IBasePluginConfig, TCustomOverrideCrite
    */
   protected async runCommand(
     msg: Message,
-    cmd: ICommandDefinition<ICommandContext, ICommandExtraData>,
+    cmd: ICommandDefinition<CommandContext, ICommandExtraData>,
     args: IArgumentMap = {},
     opts: IMatchedOptionMap = {}
   ): Promise<void> {
