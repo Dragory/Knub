@@ -7,7 +7,7 @@ const fs = _fs.promises;
 import { logger, LoggerFn, setLoggerFn } from "./logger";
 import { Plugin } from "./Plugin";
 import { GlobalPlugin } from "./GlobalPlugin";
-import EventEmitter from "events";
+import { EventEmitter } from "events";
 import { IGlobalConfig, IGuildConfig, IPartialPluginOptions } from "./configInterfaces";
 import { get, noop } from "./utils";
 import { performance } from "perf_hooks";
