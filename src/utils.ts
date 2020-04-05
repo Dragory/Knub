@@ -2,6 +2,8 @@ import { Client, Channel, Guild, Message, User } from "eris";
 
 export type ArbitraryFunction = (...args: any[]) => any;
 
+export type Awaitable<T = unknown> = T | Promise<T>;
+
 /**
  * For unicode emoji, the unicode char/string itself.
  * For custom emoji, a string in the format `"emojiName:emojiID"`.

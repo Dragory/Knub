@@ -2,6 +2,7 @@ import { IPluginOptions, Plugin } from "./index";
 import { IMatchParams } from "./configUtils";
 import { expect } from "chai";
 import { Client } from "eris";
+import { PluginConfigManager } from "./PluginConfigManager";
 
 describe("Plugin", () => {
   describe("hasPermission", () => {
@@ -43,7 +44,20 @@ describe("Plugin", () => {
       }
     }
 
-    const plugin = new PermissionTestPlugin(dummyBot, null, {}, {}, "permission_test", null, null);
+    const plugin = new PermissionTestPlugin({
+      client: dummyBot,
+      commands: undefined,
+      config: new PluginConfigManager({ config: {} }, {}),
+      cooldowns: undefined,
+      events: undefined,
+      getPlugin(foo: undefined): undefined {
+        return undefined;
+      },
+      guild: undefined,
+      guildConfig: undefined,
+      knub: undefined,
+      locks: undefined
+    });
 
     it("should use defaults with empty/non-matching params", () => {
       const result = plugin.testPermissions("can_do", {});

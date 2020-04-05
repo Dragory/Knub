@@ -28,3 +28,10 @@ export const logger: ILoggerObj = new Proxy(
     }
   }
 );
+
+export function deprecationWarning(context: string, suggestion: string = null) {
+  logger.warn(
+    `${context} is deprecated and will be removed in a future release.${suggestion &&
+      ` ${suggestion}`} See GitHub changelog for more information.`
+  );
+}

@@ -9,7 +9,8 @@ export { Knub };
 export { Plugin } from "./Plugin";
 export { GlobalPlugin } from "./GlobalPlugin";
 
-export { default as decorators } from "./decorators";
+import * as decorators from "./decorators";
+export { decorators };
 
 export { logger } from "./logger";
 import * as utils from "./utils";
@@ -32,14 +33,7 @@ export {
   IPluginOptions
 } from "./configInterfaces";
 
-export {
-  getCommandSignature,
-  PluginCommandInfo,
-  PluginCommandConfig,
-  IPluginCommandManager,
-  CommandContext,
-  ICommandExtraData
-} from "./commandUtils";
+export { getCommandSignature, PluginCommandDefinition, PluginCommandConfig, CommandContext } from "./commandUtils";
 
 export {
   waitForReaction,

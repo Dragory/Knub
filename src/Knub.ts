@@ -400,41 +400,6 @@ export class Knub<
     return this.globalConfig;
   }
 
-  protected performanceDebugEnabled() {
-    return this.options.performanceDebug && this.options.performanceDebug.enabled;
-  }
-
-  public logPerformanceDebugItem(time: number, description: string) {
-    if (!this.performanceDebugEnabled()) {
-      return;
-    }
-
-    const threshold = this.options.performanceDebug.threshold || 0;
-    if (time < threshold) return;
-
-    const size = this.options.performanceDebug.size || 30;
-    this.performanceDebugItems.push(`[${Math.ceil(time)}ms] ${description}`);
-    if (this.performanceDebugItems.length > size) {
-      this.performanceDebugItems.splice(0, 1);
-    }
-  }
-
-  public startPerformanceDebugTimer(description) {
-    if (!this.performanceDebugEnabled()) {
-      return noop;
-    }
-
-    const startTime = performance.now();
-    return () => {
-      const totalTime = performance.now() - startTime;
-      this.logPerformanceDebugItem(totalTime, description);
-    };
-  }
-
-  public getPerformanceDebugItems() {
-    return Array.from(this.performanceDebugItems);
-  }
-
   public getCustomArgumentTypes(): ICustomArgumentTypesMap {
     return this.options.customArgumentTypes || {};
   }

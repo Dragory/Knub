@@ -7,7 +7,7 @@
   "rules": {
     "no-var-requires": false,
     "object-literal-sort-keys": false,
-    "max-classes-per-file": [false],
+    "max-classes-per-file": false,
     "prefer-conditional-expression": false,
     "prefer-object-spread": false,
     "forin": false,
@@ -17,6 +17,14 @@
     "member-ordering": false,
     "no-implicit-dependencies": false,
     "no-object-literal-type-assertion": false,
-    "interface-name": false
+    "interface-name": false,
+    "only-arrow-functions": false,
+    "variable-name": {
+      "options": [
+        "ban-keywords",
+        "allow-pascal-case",
+        "allow-leading-underscore"
+      ]
+    }
   }
 }

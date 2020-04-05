@@ -1,5 +1,13 @@
 import "reflect-metadata";
-import { ICommandDecoratorData, IEventDecoratorData } from "./decorators";
+import {
+  ILegacyCommandDecoratorData,
+  IEventDecoratorData,
+  ILegacyEventDecoratorData,
+  KEY_COMMANDS,
+  KEY_LEGACY_COMMANDS,
+  KEY_LEGACY_EVENTS,
+  ICommandDecoratorData
+} from "./decorators";
 import { Plugin } from "./Plugin";
 import { IPermissionLevelDefinitions } from "./configInterfaces";
 import { Member } from "eris";
@@ -40,7 +48,21 @@ export function getPluginDecoratorCommands(plugin: typeof Plugin): ICommandDecor
       return arr;
     }
 
-    const decoratorCommands: ICommandDecoratorData[] = Reflect.getMetadata("commands", plugin.prototype, prop) || [];
+    const decoratorCommands: ICommandDecoratorData[] = Reflect.getMetadata(KEY_COMMANDS, plugin.prototype, prop) || [];
+    if (decoratorCommands) arr.push(...decoratorCommands);
+
+    return arr;
+  }, []);
+}
+
+export function getPluginLegacyDecoratorCommands(plugin: typeof Plugin): ILegacyCommandDecoratorData[] {
+  return Array.from(getPluginIterableProps(plugin)).reduce((arr: ILegacyCommandDecoratorData[], prop) => {
+    if (typeof plugin.prototype[prop] !== "function") {
+      return arr;
+    }
+
+    const decoratorCommands: ILegacyCommandDecoratorData[] =
+      Reflect.getMetadata(KEY_LEGACY_COMMANDS, plugin.prototype, prop) || [];
     if (decoratorCommands) arr.push(...decoratorCommands);
 
     return arr;
@@ -53,7 +75,20 @@ export function getPluginDecoratorEventListeners(plugin: typeof Plugin): IEventD
       return arr;
     }
 
-    const decoratorEvents: IEventDecoratorData[] = Reflect.getMetadata("events", plugin.prototype, prop);
+    const decoratorEvents: IEventDecoratorData[] = Reflect.getMetadata(KEY_LEGACY_EVENTS, plugin.prototype, prop);
+    if (decoratorEvents) arr.push(...decoratorEvents);
+
+    return arr;
+  }, []);
+}
+
+export function getPluginLegacyDecoratorEventListeners(plugin: typeof Plugin): ILegacyEventDecoratorData[] {
+  return Array.from(getPluginIterableProps(plugin)).reduce((arr: ILegacyEventDecoratorData[], prop) => {
+    if (typeof plugin.prototype[prop] !== "function") {
+      return arr;
+    }
+
+    const decoratorEvents: ILegacyEventDecoratorData[] = Reflect.getMetadata(KEY_LEGACY_EVENTS, plugin.prototype, prop);
     if (decoratorEvents) arr.push(...decoratorEvents);
 
     return arr;
