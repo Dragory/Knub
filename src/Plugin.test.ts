@@ -6,17 +6,17 @@ import {
   createMockMessage,
   createMockTextChannel,
   createMockUser,
-  sleep
+  sleep,
 } from "./testUtils";
 import * as assert from "assert";
 import { noop } from "./utils";
 
-process.on("unhandledRejection", err => {
+process.on("unhandledRejection", (err) => {
   throw err;
 });
 
 describe("Plugin", () => {
-  it("runs plugin-supplied onLoad() function", done => {
+  it("runs plugin-supplied onLoad() function", (done) => {
     (async () => {
       class PluginToLoad extends Plugin {
         public static pluginName = "plugin-to-load";
@@ -33,13 +33,13 @@ describe("Plugin", () => {
           getEnabledPlugins() {
             return ["plugin-to-load"];
           },
-          logFn: noop
-        }
+          logFn: noop,
+        },
       });
 
       knub.run();
       client.emit("ready");
-      await sleep(1);
+      await sleep(30);
 
       const guild = new Guild({ id: "0" }, client);
       client.guilds.set("0", guild);
@@ -47,7 +47,7 @@ describe("Plugin", () => {
     })();
   });
 
-  it("runs plugin-supplied onUnload() function", done => {
+  it("runs plugin-supplied onUnload() function", (done) => {
     (async () => {
       class PluginToUnload extends Plugin {
         public static pluginName = "plugin-to-unload";
@@ -64,23 +64,23 @@ describe("Plugin", () => {
           getEnabledPlugins() {
             return ["plugin-to-unload"];
           },
-          logFn: noop
-        }
+          logFn: noop,
+        },
       });
 
       knub.run();
       client.emit("ready");
-      await sleep(1);
+      await sleep(30);
 
       const guild = createMockGuild(client);
       client.emit("guildAvailable", guild);
 
-      await sleep(1);
+      await sleep(30);
       client.emit("guildUnavailable", guild);
     })();
   });
 
-  it("loads and runs decorator-defined commands", done => {
+  it("loads and runs decorator-defined commands", (done) => {
     (async () => {
       class CommandPlugin extends Plugin {
         public static pluginName = "commands";
@@ -100,20 +100,20 @@ describe("Plugin", () => {
           },
           getConfig() {
             return {
-              prefix: "!"
+              prefix: "!",
             };
           },
-          logFn: noop
-        }
+          logFn: noop,
+        },
       });
 
       knub.run();
       client.emit("ready");
-      await sleep(1);
+      await sleep(30);
 
       const guild = createMockGuild(client);
       client.emit("guildAvailable", guild);
-      await sleep(1);
+      await sleep(30);
 
       const author = createMockUser(client);
       const textChannel = createMockTextChannel(client, guild.id);
@@ -137,16 +137,16 @@ describe("Plugin", () => {
 
         public static defaultOptions = {
           config: {
-            can_use: false
+            can_use: false,
           },
           overrides: [
             {
               user: author2.id,
               config: {
-                can_use: true
-              }
-            }
-          ]
+                can_use: true,
+              },
+            },
+          ],
         };
 
         @d.command("foo")
@@ -175,42 +175,42 @@ describe("Plugin", () => {
           },
           getConfig() {
             return {
-              prefix: "!"
+              prefix: "!",
             };
           },
-          logFn: noop
-        }
+          logFn: noop,
+        },
       });
 
       knub.run();
       client.emit("ready");
-      await sleep(1);
+      await sleep(30);
 
       const guild = createMockGuild(client);
       client.emit("guildAvailable", guild);
-      await sleep(1);
+      await sleep(30);
 
       // Just a regular command
       const textChannel = createMockTextChannel(client, guild.id);
       const msg = createMockMessage(client, textChannel.id, author, { content: "!foo" });
       client.emit("messageCreate", msg);
-      await sleep(1);
+      await sleep(30);
 
       // Permissions
       const msg2NotAllowed = createMockMessage(client, textChannel.id, author, { content: "!bar" });
       const msg2Allowed = createMockMessage(client, textChannel.id, author2, { content: "!bar" });
       client.emit("messageCreate", msg2NotAllowed);
-      await sleep(1);
+      await sleep(30);
       client.emit("messageCreate", msg2Allowed);
-      await sleep(1);
+      await sleep(30);
 
       // Cooldowns
       const msg3 = createMockMessage(client, textChannel.id, author, { content: "!baz" });
       const msg4 = createMockMessage(client, textChannel.id, author, { content: "!baz" });
       client.emit("messageCreate", msg3);
-      await sleep(1);
+      await sleep(30);
       client.emit("messageCreate", msg4);
-      await sleep(1);
+      await sleep(30);
 
       assert.strictEqual(fooCallNum, 1);
       assert.strictEqual(barCallNum, 1);
@@ -218,7 +218,7 @@ describe("Plugin", () => {
     })();
   });
 
-  it("loads and runs decorator-defined event handlers", done => {
+  it("loads and runs decorator-defined event handlers", (done) => {
     (async () => {
       class EventPlugin extends Plugin {
         public static pluginName = "events";
@@ -238,17 +238,17 @@ describe("Plugin", () => {
           getEnabledPlugins() {
             return ["events"];
           },
-          logFn: noop
-        }
+          logFn: noop,
+        },
       });
 
       knub.run();
       client.emit("ready");
-      await sleep(1);
+      await sleep(30);
 
       const guild = createMockGuild(client);
       client.emit("guildAvailable", guild);
-      await sleep(1);
+      await sleep(30);
 
       const author = createMockUser(client);
       const textChannel = createMockTextChannel(client, guild.id);
@@ -271,16 +271,16 @@ describe("Plugin", () => {
 
         public static defaultOptions = {
           config: {
-            can_trigger_ev: false
+            can_trigger_ev: false,
           },
           overrides: [
             {
               user: author2.id,
               config: {
-                can_trigger_ev: true
-              }
-            }
-          ]
+                can_trigger_ev: true,
+              },
+            },
+          ],
         };
 
         @d.event("messageCreate")
@@ -301,34 +301,34 @@ describe("Plugin", () => {
           getEnabledPlugins() {
             return ["events"];
           },
-          logFn: noop
-        }
+          logFn: noop,
+        },
       });
 
       knub.run();
       client.emit("ready");
-      await sleep(1);
+      await sleep(30);
 
       const guild = createMockGuild(client);
       client.emit("guildAvailable", guild);
-      await sleep(1);
+      await sleep(30);
 
       const textChannel = createMockTextChannel(client, guild.id);
 
       const msg = createMockMessage(client, textChannel.id, author, { content: "hi!" });
       client.emit("messageCreate", msg);
-      await sleep(1);
+      await sleep(30);
 
       const msg2 = createMockMessage(client, textChannel.id, author2, { content: "hi!" });
       client.emit("messageCreate", msg2);
-      await sleep(1);
+      await sleep(30);
 
       assert.strictEqual(msgEvCallNum, 2);
-      assert.strictEqual(msgEv2CallNum, 2);
+      assert.strictEqual(msgEv2CallNum, 1);
     })();
   });
 
-  it("event handlers are unloaded on plugin unload", done => {
+  it("event handlers are unloaded on plugin unload", (done) => {
     (async () => {
       let msgEvFnCallNum = 0;
 
@@ -348,31 +348,31 @@ describe("Plugin", () => {
           getEnabledPlugins() {
             return ["plugin-to-unload"];
           },
-          logFn: noop
-        }
+          logFn: noop,
+        },
       });
 
       knub.run();
       client.emit("ready");
-      await sleep(1);
+      await sleep(30);
 
       const guild = createMockGuild(client);
       client.emit("guildAvailable", guild);
-      await sleep(1);
+      await sleep(30);
 
       const textChannel = createMockTextChannel(client, guild.id);
       const author = createMockUser(client);
 
       const msg = createMockMessage(client, textChannel.id, author, { content: "hi!" });
       client.emit("messageCreate", msg);
-      await sleep(1);
+      await sleep(30);
 
       client.emit("guildUnavailable", guild);
-      await sleep(1);
+      await sleep(30);
 
       const msg2 = createMockMessage(client, textChannel.id, author, { content: "hi!" });
       client.emit("messageCreate", msg2);
-      await sleep(1);
+      await sleep(30);
 
       assert.strictEqual(msgEvFnCallNum, 1);
 

@@ -9,12 +9,13 @@ import { EventEmitter } from "events";
 import { GlobalConfig, GuildConfig } from "./configInterfaces";
 import { get } from "./utils";
 import { LockManager } from "./LockManager";
-import { CustomArgumentTypes } from "./commandUtils";
+import { CommandBlueprint, CustomArgumentTypes } from "./commandUtils";
 import { PluginData } from "./PluginData";
 import { PluginConfigManager } from "./PluginConfigManager";
-import { PluginEventManager } from "./PluginEventManager";
+import { EventListenerBlueprint, PluginEventManager } from "./PluginEventManager";
 import { PluginCommandManager } from "./PluginCommandManager";
 import { CooldownManager } from "./CooldownManager";
+import { getMetadataFromAllProperties } from "./decoratorUtils";
 
 const fs = _fs.promises;
 
@@ -94,28 +95,32 @@ export class Knub<
     this.globalLocks = new LockManager();
     this.performanceDebugItems = [];
 
-    args.globalPlugins.forEach((globalPlugin) => {
-      if (globalPlugin.pluginName == null) {
-        throw new Error(`No plugin name specified for global plugin ${globalPlugin.name}`);
+    args.globalPlugins.forEach((PluginClass) => {
+      if (PluginClass.pluginName == null) {
+        throw new Error(`No plugin name specified for global plugin ${PluginClass.name}`);
       }
 
-      if (this.globalPlugins.has(globalPlugin.pluginName)) {
-        throw new Error(`Duplicate plugin name: ${globalPlugin.pluginName}`);
+      if (this.globalPlugins.has(PluginClass.pluginName)) {
+        throw new Error(`Duplicate plugin name: ${PluginClass.pluginName}`);
       }
 
-      this.globalPlugins.set(globalPlugin.pluginName, globalPlugin);
+      this.transferPluginDecoratorValues(PluginClass);
+
+      this.globalPlugins.set(PluginClass.pluginName, PluginClass);
     });
 
-    args.plugins.forEach((plugin) => {
-      if (plugin.pluginName == null) {
-        throw new Error(`No plugin name specified for plugin ${plugin.name}`);
+    args.plugins.forEach((PluginClass) => {
+      if (PluginClass.pluginName == null) {
+        throw new Error(`No plugin name specified for plugin ${PluginClass.name}`);
       }
 
-      if (this.plugins.has(plugin.pluginName)) {
-        throw new Error(`Duplicate plugin name: ${plugin.pluginName}`);
+      if (this.plugins.has(PluginClass.pluginName)) {
+        throw new Error(`Duplicate plugin name: ${PluginClass.pluginName}`);
       }
 
-      this.plugins.set(plugin.pluginName, plugin);
+      this.transferPluginDecoratorValues(PluginClass);
+
+      this.plugins.set(PluginClass.pluginName, PluginClass);
     });
 
     const defaultOptions: KnubOptions<TGuildConfig> = {
@@ -221,6 +226,28 @@ export class Knub<
     await this.bot.disconnect({ reconnect: false });
   }
 
+  public transferPluginDecoratorValues(PluginClass: typeof AnyExtendedPlugin) {
+    if (PluginClass._decoratorValuesTransferred) {
+      return;
+    }
+
+    const events = Array.from(
+      Object.values(getMetadataFromAllProperties<EventListenerBlueprint>(PluginClass, "decoratorEvents"))
+    ).flat();
+
+    PluginClass.events = PluginClass.events || [];
+    PluginClass.events.push(...Object.values(events));
+
+    const commands = Array.from(
+      Object.values(getMetadataFromAllProperties<CommandBlueprint>(PluginClass, "decoratorCommands"))
+    ).flat();
+
+    PluginClass.commands = PluginClass.commands || [];
+    PluginClass.commands.push(...Object.values(commands));
+
+    PluginClass._decoratorValuesTransferred = true;
+  }
+
   protected async loadAllGuilds(): Promise<void> {
     const guilds: Guild[] = Array.from(this.bot.guilds.values());
     const loadPromises = guilds.map((guild) => this.loadGuild(guild.id));
@@ -321,7 +348,7 @@ export class Knub<
       client: this.bot,
       guild: this.bot.guilds.get(guildData.id),
       config: new PluginConfigManager(
-        PluginClass.prototype.defaultOptions ?? { config: {} },
+        PluginClass.defaultOptions ?? { config: {} },
         get(guildData.config, `plugins.${pluginName}`) || {},
         null,
         guildData.config.levels || {}
@@ -352,9 +379,8 @@ export class Knub<
     }
 
     // Register initial event listeners
-    const events = PluginClass.prototype.events;
-    if (events) {
-      for (const blueprint of events) {
+    if (PluginClass.events) {
+      for (const blueprint of PluginClass.events) {
         pluginData.events.registerEventListener({
           ...blueprint,
           listener: blueprint.listener.bind(instance),
@@ -363,9 +389,8 @@ export class Knub<
     }
 
     // Register initial commands
-    const commands = PluginClass.prototype.commands;
-    if (commands) {
-      for (const blueprint of commands) {
+    if (PluginClass.commands) {
+      for (const blueprint of PluginClass.commands) {
         pluginData.commands.add({
           ...blueprint,
           run: blueprint.run.bind(instance),
@@ -418,7 +443,7 @@ export class Knub<
       client: this.bot,
       guild: null,
       config: new PluginConfigManager(
-        PluginClass.prototype.defaultOptions,
+        PluginClass.defaultOptions ?? { config: {} },
         get(this.globalConfig, `plugins.${pluginName}`) || {},
         null,
         this.globalConfig.levels || {}
@@ -446,9 +471,8 @@ export class Knub<
     }
 
     // Register initial event listeners
-    const events = PluginClass.prototype.events;
-    if (events) {
-      for (const blueprint of events) {
+    if (PluginClass.events) {
+      for (const blueprint of PluginClass.events) {
         pluginData.events.registerEventListener({
           ...blueprint,
           listener: blueprint.listener.bind(instance),
@@ -457,9 +481,8 @@ export class Knub<
     }
 
     // Register initial commands
-    const commands = PluginClass.prototype.commands;
-    if (commands) {
-      for (const blueprint of commands) {
+    if (PluginClass.commands) {
+      for (const blueprint of PluginClass.commands) {
         pluginData.commands.add({
           ...blueprint,
           run: blueprint.run.bind(instance),

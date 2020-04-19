@@ -22,23 +22,17 @@ export abstract class Plugin<TConfig extends {} = BasePluginConfig, TCustomOverr
   // This property is mainly here to set a convention, as it's not actually used in Knub itself.
   public static pluginInfo: any;
 
-  // PSEUDO-STATIC: The plugin's default options, including overrides.
-  // Should be set directly as a property in the plugin class definition.
-  // This property is not static to allow it to play nice with generics, but treat it as if it was.
-  public defaultOptions: PluginOptions<TConfig, TCustomOverrideCriteria>;
+  // The plugin's default options, including overrides
+  public static defaultOptions: PluginOptions<any, any>;
 
-  // PSEUDO-STATIC: Commands that are automatically registered on plugin load.
-  // Should be set directly as a property in the plugin class definition or through decorators.
-  // This property is not static to allow it to play nice with decorators, but treat it as if it was.
-  public commands: CommandBlueprint[];
+  // Commands that are automatically registered on plugin load
+  public static commands: CommandBlueprint[];
 
-  // PSEUDO-STATIC: Event listeners that are automatically registered on plugin load.
-  // Should be set directly as a property in the plugin class definition or through decorators.
-  // This property is not static to allow it to play nice with decorators, but treat it as if it was.
-  public events: EventListenerBlueprint[];
+  // Event listeners that are automatically registered on plugin load
+  public static events: EventListenerBlueprint[];
 
   // Custom argument types for commands
-  public static customArgumentTypes: CustomArgumentTypes = {};
+  public static customArgumentTypes: CustomArgumentTypes;
 
   // Guild info - these will be null for global plugins
   public readonly guildId: string;
@@ -59,18 +53,9 @@ export abstract class Plugin<TConfig extends {} = BasePluginConfig, TCustomOverr
    */
   protected knub: Knub;
 
-  /**
-   * Actual plugin name when the plugin was loaded. This is the same as pluginName unless overridden elsewhere.
-   * @deprecated Always the same as pluginName
-   */
-  public runtimePluginName: string;
+  public static _decoratorValuesTransferred = false;
 
   constructor(pluginData: PluginClassData<TConfig, TCustomOverrideCriteria>) {
-    // Freeze pseudo-static properties
-    Object.freeze(this.defaultOptions);
-    Object.freeze(this.commands);
-    Object.freeze(this.events);
-
     this.pluginData = pluginData;
 
     this.client = pluginData.client;

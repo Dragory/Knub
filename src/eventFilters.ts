@@ -77,9 +77,12 @@ export function requirePermission(permission: string): EventFilter {
   return (event, args, meta) => {
     const user = eventToUser[event]?.(...args) ?? null;
     const member = user ? resolveMember(meta.pluginData.guild, user.id) : null;
-    if (!member) return false;
+    const config = member
+      ? meta.pluginData.config.getForMember(member)
+      : user
+      ? meta.pluginData.config.getForUser(user)
+      : meta.pluginData.config.get();
 
-    const config = meta.pluginData.config.getForMember(member);
     return hasPermission(config, permission);
   };
 }
