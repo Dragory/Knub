@@ -124,7 +124,7 @@ export abstract class Plugin<TConfig extends {} = BasePluginConfig, TCustomOverr
       userId: memberId,
       channelId,
       categoryId,
-      memberRoles: member ? member.roles : []
+      memberRoles: member ? member.roles : [],
     });
   }
 
@@ -163,4 +163,3 @@ export abstract class Plugin<TConfig extends {} = BasePluginConfig, TCustomOverr
 }
 
 export class AnyExtendedPlugin extends Plugin<any> {}
-export class AnyExtendedGlobalPlugin extends Plugin<any> {}

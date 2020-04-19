@@ -1,6 +1,6 @@
 import { noop } from "./utils";
+import { Client, Collection, Guild, Message, Shard, TextChannel, User } from "eris";
 import EventEmitter = require("events");
-import { Channel, Client, Collection, Guild, Message, Shard, TextChannel, User } from "eris";
 
 function persist(that, prop, initial) {
   if (!that[prop]) {
@@ -12,7 +12,7 @@ function persist(that, prop, initial) {
 
 export function createMockClient(): Client {
   return new Proxy<Client>(new EventEmitter() as Client, {
-    get(target, p: string, receiver: any) {
+    get(target, p: string) {
       if (target[p]) {
         return target[p];
       }
@@ -34,18 +34,18 @@ export function createMockClient(): Client {
       }
 
       if (p === "getChannel") {
-        return function(channelId) {
+        return function (channelId) {
           return this.guilds.get(this.channelGuildMap[channelId])?.channels.get(channelId);
         };
       }
 
       return noop;
-    }
+    },
   });
 }
 
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 let mockGuildId = 10000;
@@ -55,7 +55,7 @@ export function createMockGuild(client, data = {}): Guild {
     {
       id,
       name: `Mock Guild #${id}`,
-      ...data
+      ...data,
     },
     client
   );
@@ -73,7 +73,7 @@ export function createMockUser(client, data = {}): User {
       id,
       username: `mockuser_${id}`,
       discriminator: "0001",
-      ...data
+      ...data,
     },
     client
   );
@@ -92,7 +92,7 @@ export function createMockTextChannel(client, guildId, data = {}): TextChannel {
       type: 0,
       guild_id: guildId,
       name: `mock-channel-${id}`,
-      ...data
+      ...data,
     },
     client,
     0
@@ -112,7 +112,7 @@ export function createMockMessage(client: Client, channelId: string, author: Use
       channel_id: channelId,
       mentions: [],
       author,
-      ...data
+      ...data,
     },
     client
   );

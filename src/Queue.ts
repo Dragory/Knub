@@ -1,12 +1,12 @@
 import { ArbitraryFunction } from "./utils";
 
 export class Queue {
-  protected running: boolean = false;
+  protected running = false;
   protected queue: ArbitraryFunction[] = [];
-  protected timeout: number = 10 * 1000;
+  protected timeout = 10 * 1000;
 
   public add(fn) {
-    const promise = new Promise(resolve => {
+    const promise = new Promise((resolve) => {
       this.queue.push(async () => {
         await fn();
         resolve();
@@ -27,7 +27,7 @@ export class Queue {
     }
 
     const fn = this.queue.shift();
-    new Promise(resolve => {
+    new Promise((resolve) => {
       // Either fn() completes or the timeout is reached
       fn().then(resolve);
       setTimeout(resolve, this.timeout);

@@ -3,8 +3,8 @@ import path from "path";
 
 import _fs from "fs";
 import { logger, LoggerFn, setLoggerFn } from "./logger";
-import { AnyExtendedGlobalPlugin, AnyExtendedPlugin, Plugin } from "./Plugin";
-import { GlobalPlugin } from "./GlobalPlugin";
+import { AnyExtendedPlugin, Plugin } from "./Plugin";
+import { AnyExtendedGlobalPlugin, GlobalPlugin } from "./GlobalPlugin";
 import EventEmitter from "events";
 import { GlobalConfig, GuildConfig } from "./configInterfaces";
 import { get } from "./utils";
@@ -66,7 +66,7 @@ export type GlobalPluginMap = Map<string, typeof AnyExtendedGlobalPlugin>;
 const defaultKnubParams: KnubArgs<GuildConfig> = {
   plugins: [],
   globalPlugins: [],
-  options: {}
+  options: {},
 };
 
 export class Knub<
@@ -94,7 +94,7 @@ export class Knub<
     this.globalLocks = new LockManager();
     this.performanceDebugItems = [];
 
-    args.globalPlugins.forEach(globalPlugin => {
+    args.globalPlugins.forEach((globalPlugin) => {
       if (globalPlugin.pluginName == null) {
         throw new Error(`No plugin name specified for global plugin ${globalPlugin.name}`);
       }
@@ -106,7 +106,7 @@ export class Knub<
       this.globalPlugins.set(globalPlugin.pluginName, globalPlugin);
     });
 
-    args.plugins.forEach(plugin => {
+    args.plugins.forEach((plugin) => {
       if (plugin.pluginName == null) {
         throw new Error(`No plugin name specified for plugin ${plugin.name}`);
       }
@@ -137,7 +137,7 @@ export class Knub<
       // By default, load all plugins that haven't been explicitly disabled
       getEnabledPlugins: async (guildId, guildConfig) => {
         const plugins = guildConfig.plugins || {};
-        return Array.from(this.plugins.keys()).filter(pluginName => {
+        return Array.from(this.plugins.keys()).filter((pluginName) => {
           return !plugins[pluginName] || plugins[pluginName].enabled !== false;
         });
       },
@@ -150,8 +150,8 @@ export class Knub<
         channel.createMessage({
           embed: {
             description: body,
-            color: parseInt("ee4400", 16)
-          }
+            color: parseInt("ee4400", 16),
+          },
         });
       },
 
@@ -159,10 +159,10 @@ export class Knub<
         channel.createMessage({
           embed: {
             description: body,
-            color: parseInt("1ac600", 16)
-          }
+            color: parseInt("1ac600", 16),
+          },
         });
-      }
+      },
     };
 
     this.options = { ...defaultOptions, ...args.options };
@@ -173,7 +173,7 @@ export class Knub<
   }
 
   public async run(): Promise<void> {
-    this.bot.on("debug", async str => {
+    this.bot.on("debug", async (str) => {
       logger.debug(`[ERIS] ${str}`);
     });
 
@@ -223,14 +223,14 @@ export class Knub<
 
   protected async loadAllGuilds(): Promise<void> {
     const guilds: Guild[] = Array.from(this.bot.guilds.values());
-    const loadPromises = guilds.map(guild => this.loadGuild(guild.id));
+    const loadPromises = guilds.map((guild) => this.loadGuild(guild.id));
 
     await Promise.all(loadPromises);
   }
 
   protected async unloadAllGuilds(): Promise<void> {
     const loadedGuilds = this.getLoadedGuilds();
-    const unloadPromises = loadedGuilds.map(loadedGuild => this.unloadGuild(loadedGuild.id));
+    const unloadPromises = loadedGuilds.map((loadedGuild) => this.unloadGuild(loadedGuild.id));
 
     await Promise.all(unloadPromises);
   }
@@ -253,7 +253,7 @@ export class Knub<
       config: null,
       id: guildId,
       loadedPlugins: new Map(),
-      locks: new LockManager()
+      locks: new LockManager(),
     };
 
     this.loadedGuilds.set(guildId, guildData);
@@ -270,7 +270,7 @@ export class Knub<
     // Load plugins
     const enabledPlugins = await this.options.getEnabledPlugins.call(this, guildData.id, guildData.config);
 
-    const loadPromises = enabledPlugins.map(pluginName => this.loadPlugin(guildData, pluginName));
+    const loadPromises = enabledPlugins.map((pluginName) => this.loadPlugin(guildData, pluginName));
     await Promise.all(loadPromises);
 
     this.emit("guildLoaded", guildId);
@@ -328,11 +328,11 @@ export class Knub<
       ),
       events: new PluginEventManager(),
       commands: new PluginCommandManager(this.bot, {
-        prefix: guildData.config.prefix
+        prefix: guildData.config.prefix,
       }),
       locks: guildData.locks,
       cooldowns: new CooldownManager(),
-      guildConfig: guildData.config
+      guildConfig: guildData.config,
     };
 
     pluginData.events.setPluginData(pluginData);
@@ -340,7 +340,7 @@ export class Knub<
 
     const instance = new PluginClass({
       ...pluginData,
-      knub: this
+      knub: this,
     });
 
     try {
@@ -357,7 +357,7 @@ export class Knub<
       for (const blueprint of events) {
         pluginData.events.registerEventListener({
           ...blueprint,
-          listener: blueprint.listener.bind(instance)
+          listener: blueprint.listener.bind(instance),
         });
       }
     }
@@ -368,7 +368,7 @@ export class Knub<
       for (const blueprint of commands) {
         pluginData.commands.add({
           ...blueprint,
-          run: blueprint.run.bind(instance)
+          run: blueprint.run.bind(instance),
         });
       }
     }
@@ -380,7 +380,7 @@ export class Knub<
 
     guildData.loadedPlugins.set(pluginName, {
       instance,
-      pluginData
+      pluginData,
     });
 
     this.emit("guildPluginLoaded", guildData, pluginName);
@@ -425,16 +425,16 @@ export class Knub<
       ),
       events: new PluginEventManager({ implicitGuildRestriction: false }),
       commands: new PluginCommandManager(this.bot, {
-        prefix: this.globalConfig.prefix
+        prefix: this.globalConfig.prefix,
       }),
       locks: this.globalLocks,
       cooldowns: new CooldownManager(),
-      guildConfig: this.globalConfig
+      guildConfig: this.globalConfig,
     };
 
     const instance = new PluginClass({
       ...pluginData,
-      knub: this
+      knub: this,
     });
 
     try {
@@ -451,7 +451,7 @@ export class Knub<
       for (const blueprint of events) {
         pluginData.events.registerEventListener({
           ...blueprint,
-          listener: blueprint.listener.bind(instance)
+          listener: blueprint.listener.bind(instance),
         });
       }
     }
@@ -462,7 +462,7 @@ export class Knub<
       for (const blueprint of commands) {
         pluginData.commands.add({
           ...blueprint,
-          run: blueprint.run.bind(instance)
+          run: blueprint.run.bind(instance),
         });
       }
     }
@@ -474,7 +474,7 @@ export class Knub<
 
     this.loadedGlobalPlugins.set(pluginName, {
       instance,
-      pluginData
+      pluginData,
     });
 
     this.emit("globalPluginLoaded", pluginName);
