@@ -8,7 +8,6 @@ import {
   TSignature,
   TTypeConverterFn
 } from "knub-command-manager";
-import escapeStringRegex from "escape-string-regexp";
 import { Lock } from "./LockManager";
 import { PluginData } from "./PluginData";
 import { hasPermission } from "./pluginUtils";
@@ -52,10 +51,6 @@ export type PluginCommandConfig = ICommandConfig<CommandContext, ICommandExtraDa
 
 export interface CustomArgumentTypes {
   [key: string]: TTypeConverterFn<CommandContext>;
-}
-
-export function createCommandTriggerRegexp(src: string | RegExp): RegExp {
-  return typeof src === "string" ? new RegExp(escapeStringRegex(src), "i") : src;
 }
 
 /**
