@@ -28,6 +28,7 @@
 * Re-implement support for custom argument types
 * Re-implement support for custom overrides
 * More tests!
+* PluginData.getPlugin()
 
 # 29.0.1
 * Fix override conditions resolving to `true` even when unknown conditions were
