@@ -103,6 +103,7 @@ export abstract class Plugin<TConfig extends {} = BasePluginConfig, TCustomOverr
    * Function to resolve custom override criteria in the plugin's config.
    * Remember to also set TCustomOverrideCriteria appropriately.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected matchCustomOverrideCriteria(criteria: TCustomOverrideCriteria, matchParams: MatchParams): boolean {
     // Implemented by plugin
     return true;

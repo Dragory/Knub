@@ -22,12 +22,10 @@
   "lint-staged": {
     "*.ts": [
       "eslint",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "dependencies": {
-    "eris": "^0.11.2",
     "knub-command-manager": "^7.1.0",
     "reflect-metadata": "^0.1.13",
     "ts-essentials": "^2.0.12"
@@ -40,8 +38,8 @@
     "@typescript-eslint/parser": "^2.28.0",
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
-    "husky": "^3.0.5",
-    "lint-staged": "^9.3.0",
+    "husky": "^4.2.5",
+    "lint-staged": "^10.1.6",
     "mocha": "^7.1.1",
     "prettier": "^1.19.1",
     "shx": "^0.3.2",
