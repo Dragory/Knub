@@ -1,3 +1,34 @@
+# NEXT
+* New Plugin constructor signature
+* Most plugin functionality has been moved to separate "manager" objects, e.g. PluginCommandManager, PluginEventManager, etc.
+* New concept of a "pluginData" object — a container with several plugin instance specific tools and values (including the manager objects above). This is passed as the only constructor argument to Plugin, and is also passed to event filters, command filters, event listeners, and command handlers.
+* Deprecated:
+	* Plugin.getDefaultOptions() — now a static property "defaultOptions"
+	* Plugin.getConfig() — Use this.config.get() instead
+	* Plugin.getMatchingConfig() — Use this.config.getMatchingConfig() instead
+	* Plugin.getConfigForMsg() — Use this.config.getForMsg() instead
+	* Plugin.getConfigForChannel() — Use this.config.getForChannel() instead
+	* Plugin.getConfigForUser() — Use this.config.getForUser() instead
+	* Plugin.getConfigForMember() — Use this.config.getForMember() instead
+	* Plugin.hasPermission() — Use pluginUtils.hasPermission() instead
+	* Plugin.addCommand() — Use this.commands.add() instead
+	* Plugin.removeCommand() — Use this.commands.remove() instead
+	* Plugin.on() — Use this.events.on() instead
+	* Plugin.off() — Use this.events.off() instead
+	* Plugin.clearEventHandlers() — Use this.events.clearAllListeners() instead
+	* Plugin.runtimePluginName — Always the same as pluginName now
+	* Plugin.bot — now called Plugin.client
+* New static plugin fields:
+	* commands — array of command blueprints to register when the plugin is loaded
+	* events — array of event listener blueprints to register when the plugin is loaded
+	* defaultOptions — default options (config + overrides) for the plugin
+* command() and event() decorators no longer save their data in class metadata, but in the static commands/events arrays instead
+
+**TODO:**
+* Re-implement support for custom argument types
+* Re-implement support for custom overrides
+* More tests!
+
 # 29.0.1
 * Fix override conditions resolving to `true` even when unknown conditions were
   present. Such overrides will now always resolve to `false`.
