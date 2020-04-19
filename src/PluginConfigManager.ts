@@ -1,14 +1,9 @@
-import {
-  IBasePluginConfig,
-  IPartialPluginOptions,
-  IPermissionLevelDefinitions,
-  IPluginOptions
-} from "./configInterfaces";
-import { getMatchingPluginConfig, IMatchParams, mergeConfig } from "./configUtils";
+import { PartialPluginOptions, PermissionLevels, PluginOptions } from "./configInterfaces";
+import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { Channel, GuildChannel, Member, Message, User } from "eris";
 import { getMemberLevel } from "./pluginUtils";
 
-export interface IExtendedMatchParams extends IMatchParams {
+export interface ExtendedMatchParams extends MatchParams {
   channelId?: string;
   member?: Member;
   message?: Message;
@@ -16,19 +11,19 @@ export interface IExtendedMatchParams extends IMatchParams {
 
 export type CustomOverrideMatcher<TCustomOverrideCriteria> = (
   criteria: TCustomOverrideCriteria,
-  matchParams: IMatchParams
+  matchParams: MatchParams
 ) => boolean;
 
 export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
-  private readonly levels: IPermissionLevelDefinitions;
-  private readonly options: IPluginOptions<TConfig, TCustomOverrideCriteria>;
+  private readonly levels: PermissionLevels;
+  private readonly options: PluginOptions<TConfig, TCustomOverrideCriteria>;
   private readonly customOverrideMatcher: CustomOverrideMatcher<TCustomOverrideCriteria>;
 
   constructor(
-    defaultOptions: IPluginOptions<TConfig, TCustomOverrideCriteria>,
-    userOptions: IPartialPluginOptions<TConfig, TCustomOverrideCriteria>,
+    defaultOptions: PluginOptions<TConfig, TCustomOverrideCriteria>,
+    userOptions: PartialPluginOptions<TConfig, TCustomOverrideCriteria>,
     customOverrideMatcher?: CustomOverrideMatcher<TCustomOverrideCriteria>,
-    levels: IPermissionLevelDefinitions = {}
+    levels: PermissionLevels = {}
   ) {
     this.options = this.mergeOptions(defaultOptions, userOptions);
     this.customOverrideMatcher = customOverrideMatcher;
@@ -36,9 +31,9 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
   }
 
   private mergeOptions(
-    defaultOptions: IPluginOptions<TConfig, TCustomOverrideCriteria>,
-    userOptions: IPartialPluginOptions<TConfig, TCustomOverrideCriteria>
-  ): IPluginOptions<TConfig, TCustomOverrideCriteria> {
+    defaultOptions: PluginOptions<TConfig, TCustomOverrideCriteria>,
+    userOptions: PartialPluginOptions<TConfig, TCustomOverrideCriteria>
+  ): PluginOptions<TConfig, TCustomOverrideCriteria> {
     return {
       config: mergeConfig(defaultOptions.config ?? {}, userOptions.config ?? {}),
       overrides: userOptions.replaceDefaultOverrides
@@ -51,7 +46,7 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
     return this.options.config;
   }
 
-  public getMatchingConfig(matchParams: IExtendedMatchParams): TConfig {
+  public getMatchingConfig(matchParams: ExtendedMatchParams): TConfig {
     const message = matchParams.message;
 
     // Passed userId -> passed member's id -> passed message's author's id
@@ -76,7 +71,7 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
     // Passed roles -> passed member's roles
     const memberRoles = matchParams.memberRoles || (member && member.roles);
 
-    const finalMatchParams: IMatchParams = {
+    const finalMatchParams: MatchParams = {
       level,
       userId,
       channelId,

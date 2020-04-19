@@ -1,4 +1,4 @@
-import { IBasePluginConfig, IPartialPluginOptions, IPluginOptions, IPluginOverrideCriteria } from "./configInterfaces";
+import { PluginOptions, PluginOverrideCriteria } from "./configInterfaces";
 
 const condRegex = /^(\D+)(\d+)$/;
 const splitCond = (v, defaultCond): [string, string] => {
@@ -12,7 +12,7 @@ const splitLevelRange = (v, defaultMod): [string, number] => {
   return match ? [match[1], parseInt(match[2], 10)] : [defaultMod, parseInt(v, 10)];
 };
 
-export interface IMatchParams {
+export interface MatchParams {
   level?: number;
   userId?: string;
   memberRoles?: string[];
@@ -59,7 +59,7 @@ export function mergeConfig<T extends {}>(...sources: any[]): T {
   return target;
 }
 
-type CustomOverrideResolver<T> = (criteria: T, matchParams: IMatchParams) => boolean | Promise<boolean>;
+type CustomOverrideResolver<T> = (criteria: T, matchParams: MatchParams) => boolean | Promise<boolean>;
 
 /**
  * Returns matching plugin options for the specified matchParams based on overrides
@@ -68,13 +68,13 @@ export function getMatchingPluginConfig<
   TConfig,
   TCustomOverrideCriteria = unknown,
   // Inferred type, should not be overridden
-  TPluginOptions extends IPluginOptions<TConfig, TCustomOverrideCriteria> = IPluginOptions<
+  TPluginOptions extends PluginOptions<TConfig, TCustomOverrideCriteria> = PluginOptions<
     TConfig,
     TCustomOverrideCriteria
   >
 >(
   pluginOptions: TPluginOptions,
-  matchParams: IMatchParams,
+  matchParams: MatchParams,
   customOverrideCriteriaResolver?: CustomOverrideResolver<TCustomOverrideCriteria>
 ): TConfig {
   let result: TConfig = mergeConfig(pluginOptions.config || {});
@@ -96,8 +96,8 @@ export function getMatchingPluginConfig<
 }
 
 export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
-  criteria: IPluginOverrideCriteria<TCustomOverrideCriteria>,
-  matchParams: IMatchParams,
+  criteria: PluginOverrideCriteria<TCustomOverrideCriteria>,
+  matchParams: MatchParams,
   customOverrideCriteriaResolver?: CustomOverrideResolver<TCustomOverrideCriteria>
 ): boolean {
   let matchedOne = false;

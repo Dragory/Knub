@@ -1,4 +1,4 @@
 import { Plugin } from "./Plugin";
-import { IBasePluginConfig } from "./configInterfaces";
+import { BasePluginConfig } from "./configInterfaces";
 
-export class GlobalPlugin<TConfig extends {} = IBasePluginConfig> extends Plugin<TConfig> {}
+export class GlobalPlugin<TConfig extends {} = BasePluginConfig> extends Plugin<TConfig> {}

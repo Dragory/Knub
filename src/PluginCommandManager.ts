@@ -4,58 +4,34 @@ import {
   IArgumentMap,
   ICommandConfig,
   ICommandDefinition,
-  IMatchedCommand,
   IMatchedOptionMap,
-  IParameter,
-  isError,
-  TFindMatchingCommandResult
+  IParameter
 } from "knub-command-manager";
 import {
   getCommandSignature,
   getDefaultPrefix,
+  ICommandExtraData,
   CommandContext,
   CommandFn,
   CommandBlueprint,
+  restrictCommandSource,
+  checkCommandPermission,
+  checkCommandCooldown,
+  checkCommandLocks,
   PluginCommandDefinition,
-  CommandEventMiddleware
+  CommandMeta
 } from "./commandUtils";
 // tslint:disable-next-line:no-submodule-imports
 import { TTypeConverterFn } from "knub-command-manager/dist/types";
 import { baseParameterTypes } from "./baseParameterTypes";
 import { Client, Message } from "eris";
 import { PluginData } from "./PluginData";
-import { OnOpts } from "./PluginEventManager";
-import {
-  chainMiddleware,
-  EventHandlerMeta,
-  EventHandlerProps,
-  EventMiddleware,
-  ignoreBots,
-  ignoreSelf,
-  onlyPluginGuild
-} from "./pluginEventMiddleware";
-import cloneDeep from "lodash.clonedeep";
-import { noop } from "./utils";
 
 export interface PluginCommandManagerOpts<TContext> {
-  prefix: string | RegExp;
-  customArgumentTypes: {
+  prefix?: string | RegExp;
+  customArgumentTypes?: {
     [key: string]: TTypeConverterFn<CommandContext>;
   };
-}
-
-function extractCommandArgValues(command: IMatchedCommand<any, any>) {
-  const argValueMap = Object.entries(command.args).reduce((map, [key, arg]) => {
-    map[key] = arg.value;
-    return map;
-  }, {});
-
-  const optValueMap = Object.entries(command.opts).reduce((map, [key, opt]) => {
-    map[key] = opt.value;
-    return map;
-  }, {});
-
-  return { ...argValueMap, ...optValueMap };
 }
 
 /**
@@ -63,16 +39,19 @@ function extractCommandArgValues(command: IMatchedCommand<any, any>) {
  */
 export class PluginCommandManager {
   private pluginData: PluginData;
-  private manager: CommandManager<CommandContext, unknown>;
+  private manager: CommandManager<CommandContext, ICommandExtraData>;
+  private handlers: Map<number, CommandFn>;
 
-  constructor(client: Client, opts: PluginCommandManagerOpts<CommandContext>) {
-    this.manager = new CommandManager<CommandContext, unknown>({
+  constructor(client: Client, opts: PluginCommandManagerOpts<CommandContext> = {}) {
+    this.manager = new CommandManager<CommandContext, ICommandExtraData>({
       prefix: opts.prefix ?? getDefaultPrefix(client),
       types: {
         ...baseParameterTypes,
         ...opts.customArgumentTypes
       }
     });
+
+    this.handlers = new Map();
   }
 
   public setPluginData(pluginData: PluginData) {
@@ -83,47 +62,75 @@ export class PluginCommandManager {
     this.pluginData = pluginData;
   }
 
-  public create(definition: CommandBlueprint, opts?: OnOpts): { id: number; middleware: CommandEventMiddleware } {
-    const command = this.manager.add(definition.trigger, definition.parameters, definition.config);
-    const matcherMiddleware: CommandEventMiddleware = async ([msg], props) => {
-      // If the command no longer exists in the manager, don't continue
-      if (!this.manager.get(command.id)) {
-        return;
-      }
+  public add(blueprint: CommandBlueprint) {
+    const preFilters = Array.from(blueprint.config?.preFilters ?? []);
+    preFilters.unshift(restrictCommandSource, checkCommandPermission);
 
-      // Empty messages can't trigger commands
-      if (msg.content == null || msg.content.trim() === "") {
-        return;
-      }
+    const postFilters = Array.from(blueprint.config?.postFilters ?? []);
+    postFilters.unshift(checkCommandCooldown, checkCommandLocks);
 
-      const result = await this.manager.tryMatchingCommand(command, msg.content, {
-        message: msg,
-        pluginData: this.pluginData
-      });
-
-      if (isError(result)) {
-        const usageLine = getCommandSignature(command);
-        msg.channel.createMessage(`${result.error}\nUsage: \`${usageLine}\``);
-        return;
-      }
-
-      props.command = result.command;
-      props.args = extractCommandArgValues(result.command);
-
-      return props.next();
-    };
-
-    return {
-      id: command.id,
-      middleware: matcherMiddleware
-    };
+    const config = { ...blueprint.config, preFilters, postFilters };
+    const command = this.manager.add(blueprint.trigger, blueprint.parameters, config);
+    this.handlers.set(command.id, blueprint.run);
   }
 
   public remove(id: number) {
     this.manager.remove(id);
+    this.handlers.delete(id);
   }
 
   public getAll(): PluginCommandDefinition[] {
     return this.manager.getAll();
+  }
+
+  public async runFromMessage(msg: Message): Promise<void> {
+    if (msg.content == null || msg.content.trim() === "") {
+      return;
+    }
+
+    const command = await this.manager.findMatchingCommand(msg.content, {
+      message: msg,
+      pluginData: this.pluginData
+    });
+
+    if (!command) {
+      return;
+    }
+
+    if (findMatchingCommandResultHasError(command)) {
+      const usageLine = getCommandSignature(command.command);
+      msg.channel.createMessage(`${command.error}\nUsage: \`${usageLine}\``);
+      return;
+    }
+
+    await this.runCommand(msg, command, command.args, command.opts);
+  }
+
+  private async runCommand(
+    msg: Message,
+    command: ICommandDefinition<CommandContext, ICommandExtraData>,
+    args: IArgumentMap = {},
+    opts: IMatchedOptionMap = {}
+  ): Promise<void> {
+    const handler = this.handlers.get(command.id);
+
+    const argValueMap = Object.entries(args).reduce((map, [key, arg]) => {
+      map[key] = arg.value;
+      return map;
+    }, {});
+
+    const optValueMap = Object.entries(opts).reduce((map, [key, opt]) => {
+      map[key] = opt.value;
+      return map;
+    }, {});
+
+    const finalArgs = { ...argValueMap, ...optValueMap };
+    const meta: CommandMeta = {
+      message: msg,
+      pluginData: this.pluginData,
+      command
+    };
+
+    await handler(finalArgs, meta);
   }
 }

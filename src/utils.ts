@@ -9,7 +9,7 @@ export type Awaitable<T = unknown> = T | Promise<T>;
  * For custom emoji, a string in the format `"emojiName:emojiID"`.
  * @see https://abal.moe/Eris/docs/Message#function-addReaction
  */
-export type TReaction = string;
+export type Reaction = string;
 
 export function get(obj, path, def?): any {
   let cursor = obj;
@@ -95,27 +95,27 @@ export function resolveRole(guild: Guild, str: string) {
   return roleId && guild.roles.get(roleId);
 }
 
-export const noop = () => {}; // tslint:disable-line
+export const noop = () => {}; // eslint-disable-line @typescript-eslint/no-empty-function
 
 const id = v => v;
 
-export interface IEventToGuild {
+export interface EventToGuild {
   [key: string]: (...args: any[]) => Guild | undefined;
 }
 
-export interface IEventToUser {
+export interface EventToUser {
   [key: string]: (...args: any[]) => User | undefined;
 }
 
-export interface IEventToChannel {
+export interface EventToChannel {
   [key: string]: (...args: any[]) => Channel | undefined;
 }
 
-export interface IEventToMessage {
+export interface EventToMessage {
   [key: string]: (...args: any[]) => Message | undefined;
 }
 
-export const eventToGuild: IEventToGuild = {
+export const eventToGuild: EventToGuild = {
   channelCreate: c => c.guild,
   channelDelete: c => c.guild,
   channelPinUpdate: c => c.guild,
@@ -150,7 +150,7 @@ export const eventToGuild: IEventToGuild = {
   unavailableGuildCreate: id
 };
 
-export const eventToUser: IEventToUser = {
+export const eventToUser: EventToUser = {
   guildBanAdd: (_, u) => u,
   guildBanRemove: (_, u) => u,
   guildMemberAdd: (_, m) => m.user,
@@ -175,7 +175,7 @@ export const eventToUser: IEventToUser = {
   voiceStateUpdate: m => m.user
 };
 
-export const eventToChannel: IEventToChannel = {
+export const eventToChannel: EventToChannel = {
   messageCreate: m => m.channel,
   messageDelete: m => m.channel,
   messageDeleteBulk: m => m[0] && m.channel,
@@ -194,7 +194,7 @@ export const eventToChannel: IEventToChannel = {
   voiceChannelSwitch: (_, c) => c
 };
 
-export const eventToMessage: IEventToMessage = {
+export const eventToMessage: EventToMessage = {
   messageCreate: id,
   messageDelete: id,
   messageDeleteBulk: m => m[0],

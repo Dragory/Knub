@@ -22,18 +22,18 @@ export { configUtils };
 import * as pluginUtils from "./pluginUtils";
 export { pluginUtils };
 
-export { IGuildData, IOptions } from "./Knub";
+export { LoadedGuild, KnubOptions } from "./Knub";
 
 export {
-  IPermissionLevelDefinitions,
-  IBasePluginConfig,
-  IGuildConfig,
-  IGlobalConfig,
-  IPartialPluginOptions,
-  IPluginOptions
+  PermissionLevels,
+  BasePluginConfig,
+  GuildConfig,
+  GlobalConfig,
+  PartialPluginOptions,
+  PluginOptions
 } from "./configInterfaces";
 
-export { getCommandSignature, PluginCommandDefinition, PluginCommandConfig, CommandContext } from "./commandUtils";
+export { getCommandSignature, PluginCommandConfig, CommandContext } from "./commandUtils";
 
 export {
   waitForReaction,

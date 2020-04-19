@@ -1,54 +1,45 @@
 import EventEmitter = NodeJS.EventEmitter;
 import { PluginData } from "./PluginData";
 import { Guild } from "eris";
-import {
-  chainMiddleware,
-  EventHandlerMeta,
-  EventMiddleware,
-  ignoreBots,
-  ignoreSelf,
-  onlyPluginGuild
-} from "./pluginEventMiddleware";
-import { noop } from "./utils";
-import { PluginError } from "./PluginError";
+import { EventFilter, ignoreBots, ignoreSelf, onlyGuild, withFilters } from "./eventFilters";
+import { Awaitable } from "./utils";
+
+export interface EventMeta {
+  pluginData: PluginData;
+}
+
+export type Listener = (args: any[], meta: EventMeta) => Awaitable<void>;
+export type WrappedListener = (args: any[]) => Awaitable<void>;
 
 export interface PluginEventManagerOpts {
   implicitGuildRestriction?: boolean;
-  implicitIgnoreSelf?: boolean;
-  implicitIgnoreBots?: boolean;
 }
 
 export interface OnOpts {
-  respectImplicitGuildRestriction?: boolean;
-  respectImplicitIgnoreSelf?: boolean;
-  respectImplicitIgnoreBots?: boolean;
+  allowOutsideOfGuild?: boolean;
+  allowBots?: boolean;
+  allowSelf?: boolean;
+  filters?: EventFilter[];
 }
 
-const rethrowPluginErrors: EventMiddleware = async (_, { next }) => {
-  try {
-    await next();
-  } catch (e) {
-    throw new PluginError(e);
-  }
-};
+export interface EventListenerBlueprint {
+  event: string;
+  listener: Listener;
+  opts?: OnOpts;
+}
 
 /**
  * A wrapper for the Eris event emitter that passes plugin data to the listener
  * functions and, by default, restricts events to the plugin's guilds.
  */
 export class PluginEventManager {
-  private listeners: Map<string, Set<EventMiddleware>>;
+  private listeners: Map<string, Set<WrappedListener>>;
   private pluginData: PluginData;
-
   private readonly implicitGuildRestriction: boolean;
-  private readonly implicitIgnoreSelf: boolean;
-  private readonly implicitIgnoreBots: boolean;
 
   constructor(opts?: PluginEventManagerOpts) {
     this.listeners = new Map();
     this.implicitGuildRestriction = opts?.implicitGuildRestriction !== false;
-    this.implicitIgnoreSelf = opts?.implicitIgnoreSelf !== false;
-    this.implicitIgnoreBots = opts?.implicitIgnoreBots !== false;
   }
 
   public setPluginData(pluginData: PluginData) {
@@ -59,63 +50,73 @@ export class PluginEventManager {
     this.pluginData = pluginData;
   }
 
-  public on(event: string, listener: EventMiddleware, opts?: OnOpts): EventMiddleware {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, new Set());
+  public registerEventListener(blueprint: EventListenerBlueprint): WrappedListener {
+    if (!this.listeners.has(blueprint.event)) {
+      this.listeners.set(blueprint.event, new Set());
     }
 
-    if (this.implicitGuildRestriction && opts?.respectImplicitGuildRestriction !== false) {
-      listener = chainMiddleware([onlyPluginGuild(), listener]);
+    const filters = blueprint.opts?.filters || [];
+
+    if (this.implicitGuildRestriction && !blueprint.opts?.allowOutsideOfGuild) {
+      filters.unshift(onlyGuild());
     }
 
-    if (this.implicitIgnoreSelf && opts?.respectImplicitIgnoreSelf !== false) {
-      listener = chainMiddleware([ignoreSelf(), listener]);
+    if (!blueprint.opts?.allowSelf) {
+      filters.unshift(ignoreSelf());
     }
 
-    if (this.implicitIgnoreBots && opts?.respectImplicitIgnoreBots !== false) {
-      listener = chainMiddleware([ignoreBots(), listener]);
+    if (!blueprint.opts?.allowBots) {
+      filters.unshift(ignoreBots());
     }
 
-    // In production mode, rethrow plugin errors as PluginError so they can be handled gracefully
-    if (process.env.NODE_ENV === "production") {
-      listener = chainMiddleware([rethrowPluginErrors, listener]);
-    }
+    const filteredListener = withFilters(blueprint.event, blueprint.listener, filters);
 
-    this.listeners.get(event).add(listener);
-    this.pluginData.client.on(event, listener);
-
-    return listener;
-  }
-
-  public off(event: string, listener: EventMiddleware): void {
-    if (this.listeners.has(event)) {
-      this.pluginData.client.off(event, listener);
-      this.listeners.get(event).delete(listener);
-    }
-  }
-
-  public clearAllListeners(event?: string) {
-    if (event) {
-      this.listeners.delete(event);
-    } else {
-      this.listeners = new Map();
-    }
-  }
-
-  public async emit(event: string, args: any): Promise<boolean> {
-    if (this.listeners.has(event)) {
-      const meta: EventHandlerMeta = {
-        eventName: event,
+    const wrappedListener: WrappedListener = (...args: any[]) => {
+      return filteredListener(args, {
         pluginData: this.pluginData
-      };
+      });
+    };
 
+    this.listeners.get(blueprint.event).add(wrappedListener);
+    this.pluginData.client.on(blueprint.event, wrappedListener);
+
+    return wrappedListener;
+  }
+
+  public on(event: string, listener: Listener, opts?: OnOpts): WrappedListener {
+    return this.registerEventListener({
+      event,
+      listener,
+      opts
+    });
+  }
+
+  public off(event: string, listener: WrappedListener): void {
+    if (this.listeners.has(event)) {
+      this.listeners.get(event).delete(listener);
+      this.pluginData.client.off(event, listener);
+    }
+
+    return;
+  }
+
+  public async emit(event: string, args: any[]): Promise<boolean> {
+    if (this.listeners.has(event)) {
       for (const listener of this.listeners.get(event)) {
-        await listener(args, { meta, next: noop });
+        await listener(args);
       }
 
       return true;
     }
 
     return false;
+  }
+
+  public clearAllListeners() {
+    for (const [event, listeners] of this.listeners.entries()) {
+      for (const listener of listeners) {
+        this.off(event, listener);
+      }
+    }
   }
 }

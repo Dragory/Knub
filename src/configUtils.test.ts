@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { mergeConfig, getMatchingPluginConfig, IMatchParams } from "./configUtils";
-import { IPartialPluginOptions, IPluginOptions } from "./index";
+import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
+import { PluginOptions } from "./index";
 
 describe("configUtils", () => {
   describe("mergeConfig", () => {
@@ -60,7 +60,7 @@ describe("configUtils", () => {
       hasAccess: boolean;
     }
 
-    const sharedPluginOptions: IPluginOptions<ISharedPluginConfig> = {
+    const sharedPluginOptions: PluginOptions<ISharedPluginConfig> = {
       config: {
         value: 5,
         hasAccess: false
@@ -188,7 +188,7 @@ describe("configUtils", () => {
         targetChannelId?: string;
       }
 
-      const customPluginOptions: IPluginOptions<ICustomPluginConfig, ICustomOverrideCriteria> = {
+      const customPluginOptions: PluginOptions<ICustomPluginConfig, ICustomOverrideCriteria> = {
         config: {
           value: 5
         },
@@ -221,7 +221,7 @@ describe("configUtils", () => {
         ]
       };
 
-      const customResolver = (criteria: ICustomOverrideCriteria, matchParams: IMatchParams): boolean => {
+      const customResolver = (criteria: ICustomOverrideCriteria, matchParams: MatchParams): boolean => {
         if (criteria.targetUserId && matchParams.extra.targetUserId !== criteria.targetUserId) return false;
         if (criteria.targetChannelId && matchParams.extra.targetChannelId !== criteria.targetChannelId) return false;
         return true;
@@ -272,7 +272,7 @@ describe("configUtils", () => {
     });
 
     it("false when no conditions are present", () => {
-      const pluginOpts: IPluginOptions = {
+      const pluginOpts: PluginOptions = {
         config: {
           value: 5
         },
@@ -290,7 +290,7 @@ describe("configUtils", () => {
     });
 
     it("false when an empty 'all' condition is present", () => {
-      const pluginOpts: IPluginOptions = {
+      const pluginOpts: PluginOptions = {
         config: {
           value: 5
         },
@@ -312,7 +312,7 @@ describe("configUtils", () => {
     });
 
     it("false when an empty 'any' condition is present", () => {
-      const pluginOpts: IPluginOptions = {
+      const pluginOpts: PluginOptions = {
         config: {
           value: 5
         },
@@ -334,7 +334,7 @@ describe("configUtils", () => {
     });
 
     it("false when an unknown condition is present", () => {
-      const pluginOpts: IPluginOptions = {
+      const pluginOpts: PluginOptions = {
         config: {
           value: 5
         },
@@ -359,7 +359,7 @@ describe("configUtils", () => {
       interface IThisOptions {
         value: number;
       }
-      const pluginOpts: IPluginOptions<IThisOptions> = {
+      const pluginOpts: PluginOptions<IThisOptions> = {
         config: {
           value: 5
         },
@@ -403,7 +403,7 @@ describe("configUtils", () => {
       interface IThisOptions {
         value: number;
       }
-      const pluginOpts: IPluginOptions<IThisOptions> = {
+      const pluginOpts: PluginOptions<IThisOptions> = {
         config: {
           value: 5
         },
@@ -444,7 +444,7 @@ describe("configUtils", () => {
         value: number;
       }
 
-      const pluginOpts1: IPluginOptions<IThisOptions> = {
+      const pluginOpts1: PluginOptions<IThisOptions> = {
         config: {
           value: 5
         },
@@ -461,7 +461,7 @@ describe("configUtils", () => {
         ]
       };
 
-      const pluginOpts2: IPluginOptions<IThisOptions> = {
+      const pluginOpts2: PluginOptions<IThisOptions> = {
         config: {
           value: 5
         },
@@ -485,7 +485,7 @@ describe("configUtils", () => {
         ]
       };
 
-      const pluginOpts3: IPluginOptions<IThisOptions> = {
+      const pluginOpts3: PluginOptions<IThisOptions> = {
         config: {
           value: 5
         },

@@ -1,5 +1,5 @@
 import { Client, Message, Emoji, TextChannel, Invite, TextableChannel, MessageContent, MessageFile } from "eris";
-import { noop, TReaction } from "./utils";
+import { noop, Reaction } from "./utils";
 
 /**
  * Splits a string into chunks, preferring to split at newlines if possible
@@ -91,11 +91,11 @@ export async function createChunkedMessage(channel: TextableChannel, messageText
 export function waitForReaction(
   bot: Client,
   msg: Message,
-  availableReactions: TReaction[],
+  availableReactions: Reaction[],
   restrictToUserId: string = null,
   timeout = 15000
 ): Promise<Emoji> {
-  return new Promise(async resolve => {
+  return new Promise(resolve => {
     availableReactions.forEach(reaction => msg.addReaction(reaction).catch(noop));
 
     const timeoutTimer = setTimeout(() => {
@@ -127,7 +127,7 @@ export function waitForReply(
   restrictToUserId: string = null,
   timeout = 15000
 ): Promise<Message> {
-  return new Promise(async resolve => {
+  return new Promise(resolve => {
     const timeoutTimer = setTimeout(() => {
       resolve(null);
     }, timeout);

@@ -1,56 +1,60 @@
 import { DeepPartial } from "ts-essentials";
 
-export interface IPermissionLevelDefinitions {
+export interface PermissionLevels {
   [roleOrUserId: string]: number;
 }
 
-export interface IGuildConfig {
+export interface GuildConfig {
   prefix?: string;
 
-  levels?: IPermissionLevelDefinitions;
+  levels?: PermissionLevels;
 
   plugins?: {
-    [key: string]: IPartialPluginOptions;
+    [key: string]: PartialPluginOptions;
   };
 }
 
-export interface IGlobalConfig {
+export interface GlobalConfig {
+  prefix?: string;
+
+  levels?: PermissionLevels;
+
   plugins?: {
-    [key: string]: IPartialPluginOptions;
+    [key: string]: PartialPluginOptions;
   };
 }
 
-export interface IPartialPluginOptions<TConfig = IBasePluginConfig, TCustomOverrideCriteria = unknown> {
+export interface PartialPluginOptions<TConfig = BasePluginConfig, TCustomOverrideCriteria = unknown> {
   enabled?: boolean;
   config?: DeepPartial<TConfig>;
-  overrides?: Array<TPluginOverride<TConfig, TCustomOverrideCriteria>>;
+  overrides?: Array<PluginOverride<TConfig, TCustomOverrideCriteria>>;
   replaceDefaultOverrides?: boolean;
 }
 
-export interface IPluginOptions<TConfig = IBasePluginConfig, TCustomOverrideCriteria = unknown>
-  extends IPartialPluginOptions<TConfig, TCustomOverrideCriteria> {
+export interface PluginOptions<TConfig = BasePluginConfig, TCustomOverrideCriteria = unknown>
+  extends PartialPluginOptions<TConfig, TCustomOverrideCriteria> {
   config: TConfig;
-  overrides?: Array<TPluginOverride<TConfig, TCustomOverrideCriteria>>;
+  overrides?: Array<PluginOverride<TConfig, TCustomOverrideCriteria>>;
 }
 
-export type TPluginOverride<TConfig, TCustomOverrideCriteria> = IPluginOverrideCriteria<TCustomOverrideCriteria> & {
+export type PluginOverride<TConfig, TCustomOverrideCriteria> = PluginOverrideCriteria<TCustomOverrideCriteria> & {
   config?: DeepPartial<TConfig>;
 };
 
-export interface IPluginOverrideCriteria<TCustomOverrideCriteria> {
+export interface PluginOverrideCriteria<TCustomOverrideCriteria> {
   channel?: string | string[];
   category?: string | string[];
   level?: string | string[];
   user?: string | string[];
   role?: string | string[];
 
-  all?: Array<IPluginOverrideCriteria<TCustomOverrideCriteria>>;
-  any?: Array<IPluginOverrideCriteria<TCustomOverrideCriteria>>;
-  not?: IPluginOverrideCriteria<TCustomOverrideCriteria>;
+  all?: Array<PluginOverrideCriteria<TCustomOverrideCriteria>>;
+  any?: Array<PluginOverrideCriteria<TCustomOverrideCriteria>>;
+  not?: PluginOverrideCriteria<TCustomOverrideCriteria>;
 
   extra?: TCustomOverrideCriteria;
 }
 
-export interface IBasePluginConfig {
+export interface BasePluginConfig {
   [key: string]: any;
 }

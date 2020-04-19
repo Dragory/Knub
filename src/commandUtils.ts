@@ -1,28 +1,35 @@
-import { Client, Guild, GuildChannel, TextChannel, Message, PrivateChannel, VoiceChannel } from "eris";
-import { Awaitable, getChannelId, getRoleId, getUserId, noop } from "./utils";
-import { disableCodeBlocks } from "./helpers";
-import { logger } from "./logger";
+import { Client, GuildChannel, Message, PrivateChannel } from "eris";
+import { Awaitable } from "./utils";
 import {
   ICommandConfig,
   ICommandDefinition,
-  CommandManager,
-  TOption,
-  IMatchedCommand,
   IParameter,
-  TTypeConverterFn,
-  TSignature,
   isSwitchOption,
-  TFindMatchingCommandResult
+  TSignature,
+  TTypeConverterFn
 } from "knub-command-manager";
 import escapeStringRegex from "escape-string-regexp";
-import { Plugin } from "./Plugin";
 import { Lock } from "./LockManager";
 import { PluginData } from "./PluginData";
 import { hasPermission } from "./pluginUtils";
-import { EventHandlerProps, EventMiddleware } from "./pluginEventMiddleware";
 
 export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);
+}
+
+export interface CommandMeta {
+  message: Message;
+  command: ICommandDefinition<any, any>;
+  pluginData: PluginData;
+}
+
+export type CommandFn = (args: any, meta: CommandMeta) => Awaitable<void>;
+
+export interface CommandBlueprint {
+  trigger: string;
+  parameters?: IParameter[];
+  run: CommandFn;
+  config?: PluginCommandConfig;
 }
 
 export interface CommandContext {
@@ -30,42 +37,25 @@ export interface CommandContext {
   pluginData: PluginData;
 }
 
-export type PluginCommandConfig = ICommandConfig<CommandContext, unknown>;
-export type PluginCommandDefinition = ICommandDefinition<CommandContext, unknown>;
-
-export type CommandFn = (msg: Message, args: any, props: EventHandlerProps) => Awaitable<void>;
-
-export interface CommandBlueprint {
-  trigger: string;
-  parameters?: IParameter[];
-  config?: PluginCommandConfig;
+export interface ICommandExtraData {
+  requiredPermission?: string;
+  allowDMs?: boolean;
+  locks?: string | string[];
+  cooldown?: number;
+  cooldownPermission?: string;
+  info?: any;
+  _lock?: Lock;
 }
 
-export interface ICustomArgumentTypesMap {
+export type PluginCommandDefinition = ICommandDefinition<CommandContext, ICommandExtraData>;
+export type PluginCommandConfig = ICommandConfig<CommandContext, ICommandExtraData>;
+
+export interface CustomArgumentTypes {
   [key: string]: TTypeConverterFn<CommandContext>;
 }
 
-interface CommandEventHandlerProps extends EventHandlerProps {
-  command: TFindMatchingCommandResult<CommandContext, unknown>;
-  args: { [key: string]: any };
-  error?: string;
-}
-
-interface CommandFnProps extends CommandEventHandlerProps {
-  command: IMatchedCommand<CommandContext, unknown>;
-  args: { [key: string]: any };
-}
-
-export type CommandEventMiddleware = EventMiddleware<any, CommandEventHandlerProps>;
-
-/**
- * Wrapper for command handlers that converts event handler args (for "messageCreate")
- * to a cleaner set of arguments used for command handlers
- */
-export function eventArgsToCommandArgs(targetFn) {
-  return function([msg], props) {
-    return targetFn.call(this, msg, props.args, props);
-  };
+export function createCommandTriggerRegexp(src: string | RegExp): RegExp {
+  return typeof src === "string" ? new RegExp(escapeStringRegex(src), "i") : src;
 }
 
 /**
@@ -104,4 +94,75 @@ export function getCommandSignature(
   const usageLine = `${prefix}${trigger} ${paramStrings.join(" ")} ${optStrings.join(" ")}`.replace(/\s+/g, " ").trim();
 
   return usageLine;
+}
+
+/**
+ * Command pre-filter to restrict the command to the plugin's guilds, unless
+ * allowed for DMs
+ */
+export function restrictCommandSource(cmd: PluginCommandDefinition, context: CommandContext): boolean {
+  if (context.message.channel instanceof PrivateChannel) {
+    if (!cmd.config.extra?.allowDMs) {
+      return false;
+    }
+  } else if (!(context.message.channel instanceof GuildChannel)) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Command pre-filter to restrict the command by specifying a required
+ * permission
+ */
+export function checkCommandPermission(cmd: PluginCommandDefinition, context: CommandContext): boolean {
+  const permission = cmd.config.extra?.requiredPermission;
+  if (permission) {
+    const config = context.pluginData.config.getForMessage(context.message);
+    if (!hasPermission(config, permission)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Command post-filter to check if the command's on cooldown and, if not, to put
+ * it on cooldown
+ */
+export function checkCommandCooldown(cmd: PluginCommandDefinition, context: CommandContext): boolean {
+  if (cmd.config.extra?.cooldown) {
+    const cdKey = `${cmd.id}-${context.message.author.id}`;
+
+    let cdApplies = true;
+    if (cmd.config.extra.cooldownPermission) {
+      const config = context.pluginData.config.getForMessage(context.message);
+      cdApplies = hasPermission(config, cmd.config.extra.cooldownPermission);
+    }
+
+    if (cdApplies && context.pluginData.cooldowns.isOnCooldown(cdKey)) {
+      // We're on cooldown
+      return false;
+    }
+
+    context.pluginData.cooldowns.setCooldown(cdKey, cmd.config.extra.cooldown);
+  }
+
+  return true;
+}
+
+/**
+ * Command post-filter to wait for and trigger any locks the command has, and to
+ * interrupt command execution if the lock gets interrupted before it
+ */
+export async function checkCommandLocks(cmd: PluginCommandDefinition, context: CommandContext): Promise<boolean> {
+  if (!cmd.config.extra?.locks) {
+    return true;
+  }
+
+  const lock = (cmd.config.extra._lock = await context.pluginData.locks.acquire(cmd.config.extra.locks));
+
+  return !lock.interrupted;
 }
