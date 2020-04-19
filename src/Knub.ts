@@ -5,7 +5,7 @@ import _fs from "fs";
 import { logger, LoggerFn, setLoggerFn } from "./logger";
 import { AnyExtendedPlugin, Plugin } from "./Plugin";
 import { AnyExtendedGlobalPlugin, GlobalPlugin } from "./GlobalPlugin";
-import EventEmitter from "events";
+import { EventEmitter } from "events";
 import { GlobalConfig, GuildConfig } from "./configInterfaces";
 import { get } from "./utils";
 import { LockManager } from "./LockManager";
