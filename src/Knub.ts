@@ -75,7 +75,7 @@ export class Knub<
   TGuildConfig extends GuildConfig = GuildConfig,
   TGlobalConfig extends GlobalConfig = GlobalConfig
 > extends EventEmitter {
-  protected bot: Client;
+  protected client: Client;
   protected globalPlugins: GlobalPluginMap = new Map();
   protected loadedGlobalPlugins: Map<string, LoadedGlobalPlugin> = new Map();
   protected plugins: PluginMap = new Map();
@@ -92,7 +92,7 @@ export class Knub<
 
     const args: KnubArgs<TGuildConfig> = Object.assign({}, defaultKnubParams, userArgs);
 
-    this.bot = client;
+    this.client = client;
     this.globalLocks = new LockManager();
     this.performanceDebugItems = [];
 
@@ -179,11 +179,11 @@ export class Knub<
   }
 
   public async run(): Promise<void> {
-    this.bot.on("debug", async (str) => {
+    this.client.on("debug", async (str) => {
       logger.debug(`[ERIS] ${str}`);
     });
 
-    this.bot.on("error", async (err: Error) => {
+    this.client.on("error", async (err: Error) => {
       logger.error(`[ERIS] ${String(err)}`);
     });
 
@@ -191,7 +191,7 @@ export class Knub<
       logger.info("This is taking unusually long. Check the token?");
     }, 30 * 1000);
 
-    this.bot.on("ready", async () => {
+    this.client.on("ready", async () => {
       clearTimeout(loadErrorTimeout);
 
       logger.info("Bot connected!");
@@ -203,12 +203,12 @@ export class Knub<
 
       logger.info("Loading guilds..");
 
-      this.bot.on("guildAvailable", (guild: Guild) => {
+      this.client.on("guildAvailable", (guild: Guild) => {
         logger.info(`Joined guild: ${guild.id}`);
         this.loadGuild(guild.id);
       });
 
-      this.bot.on("guildUnavailable", (guild: Guild) => {
+      this.client.on("guildUnavailable", (guild: Guild) => {
         logger.info(`Left guild: ${guild.id}`);
         this.unloadGuild(guild.id);
       });
@@ -218,13 +218,13 @@ export class Knub<
       this.emit("loadingFinished");
     });
 
-    await this.bot.connect();
+    await this.client.connect();
   }
 
   public async stop(): Promise<void> {
     await this.unloadAllGuilds();
     await this.unloadAllGlobalPlugins();
-    await this.bot.disconnect({ reconnect: false });
+    await this.client.disconnect({ reconnect: false });
   }
 
   public transferPluginDecoratorValues(PluginClass: typeof AnyExtendedPlugin) {
@@ -250,7 +250,7 @@ export class Knub<
   }
 
   protected async loadAllGuilds(): Promise<void> {
-    const guilds: Guild[] = Array.from(this.bot.guilds.values());
+    const guilds: Guild[] = Array.from(this.client.guilds.values());
     const loadPromises = guilds.map((guild) => this.loadGuild(guild.id));
 
     await Promise.all(loadPromises);
@@ -272,7 +272,7 @@ export class Knub<
       return;
     }
 
-    if (!this.bot.guilds.has(guildId)) {
+    if (!this.client.guilds.has(guildId)) {
       // Only load the guild if we're actually in the guild
       return;
     }
@@ -346,8 +346,8 @@ export class Knub<
     const PluginClass = this.plugins.get(pluginName);
 
     const pluginData: PluginData = {
-      client: this.bot,
-      guild: this.bot.guilds.get(guildData.id),
+      client: this.client,
+      guild: this.client.guilds.get(guildData.id),
       config: new PluginConfigManager(
         PluginClass.defaultOptions ?? { config: {} },
         get(guildData.config, `plugins.${pluginName}`) || {},
@@ -355,7 +355,7 @@ export class Knub<
         guildData.config.levels || {}
       ),
       events: new PluginEventManager(),
-      commands: new PluginCommandManager(this.bot, {
+      commands: new PluginCommandManager(this.client, {
         prefix: guildData.config.prefix,
       }),
       locks: guildData.locks,
@@ -374,7 +374,7 @@ export class Knub<
     try {
       await instance.onLoad?.();
     } catch (e) {
-      throw new PluginLoadError(PluginClass.pluginName, this.bot.guilds.get(guildData.id), e);
+      throw new PluginLoadError(PluginClass.pluginName, this.client.guilds.get(guildData.id), e);
     }
 
     // Register initial event listeners
@@ -439,7 +439,7 @@ export class Knub<
     const PluginClass = this.globalPlugins.get(pluginName);
 
     const pluginData: PluginData = {
-      client: this.bot,
+      client: this.client,
       guild: null,
       config: new PluginConfigManager(
         PluginClass.defaultOptions ?? { config: {} },
@@ -448,7 +448,7 @@ export class Knub<
         this.globalConfig.levels || {}
       ),
       events: new PluginEventManager({ implicitGuildRestriction: false }),
-      commands: new PluginCommandManager(this.bot, {
+      commands: new PluginCommandManager(this.client, {
         prefix: this.globalConfig.prefix,
       }),
       locks: this.globalLocks,
