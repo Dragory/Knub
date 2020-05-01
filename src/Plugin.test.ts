@@ -14,6 +14,7 @@ import { EventMeta, PluginEventManager } from "./PluginEventManager";
 import { CommandMeta } from "./commandUtils";
 import { PluginCommandManager } from "./PluginCommandManager";
 import { PluginConfigManager } from "./PluginConfigManager";
+import { EventArguments } from "./eventArguments";
 
 process.on("unhandledRejection", (err) => {
   throw err;
@@ -345,7 +346,7 @@ describe("Plugin", () => {
           public static pluginName = "events";
 
           @d.event("messageCreate")
-          public msgEv([message]) {
+          public msgEv({ message }: EventArguments["messageCreate"]) {
             if (message instanceof Message) {
               done();
             }

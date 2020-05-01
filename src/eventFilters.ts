@@ -1,9 +1,15 @@
 import { EventMeta, Listener } from "./PluginEventManager";
-import { Awaitable, eventToChannel, eventToGuild, eventToMessage, eventToUser, resolveMember } from "./utils";
+import { Awaitable, resolveMember } from "./utils";
 import { GroupChannel, PrivateChannel } from "eris";
 import { hasPermission } from "./pluginUtils";
+import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils";
+import { EventArguments } from "./eventArguments";
 
-export type EventFilter = (event: string, args: any[], eventMeta: EventMeta) => Awaitable<boolean>;
+export type EventFilter = <T extends string>(
+  event: T,
+  args: EventArguments[T],
+  eventMeta: EventMeta
+) => Awaitable<boolean>;
 
 export type FilteredListener<T extends Listener> = (...params: Parameters<T>) => ReturnType<T>;
 
@@ -53,21 +59,21 @@ export function withAnyFilter<T extends Listener>(
 
 export function onlyGuild(): EventFilter {
   return (event, args, meta) => {
-    const guild = eventToGuild[event]?.(...args) ?? null;
+    const guild = eventToGuild[event as string]?.(args) ?? null;
     return guild && meta.pluginData.guild === guild;
   };
 }
 
 export function onlyDM(): EventFilter {
   return (event, args) => {
-    const channel = eventToChannel[event]?.(...args) ?? null;
+    const channel = eventToChannel[event as string]?.(args) ?? null;
     return channel && channel instanceof PrivateChannel;
   };
 }
 
 export function onlyGroup(): EventFilter {
   return (event, args) => {
-    const channel = eventToChannel[event]?.(...args) ?? null;
+    const channel = eventToChannel[event as string]?.(args) ?? null;
     return channel && channel instanceof GroupChannel;
   };
 }
@@ -78,9 +84,9 @@ export function cooldown(timeMs: number, permission?: string): EventFilter {
   return (event, args, meta) => {
     let cdApplies = true;
     if (permission) {
-      const user = eventToUser[event]?.(...args);
-      const channel = eventToChannel[event]?.(...args);
-      const msg = eventToMessage[event]?.(...args);
+      const user = eventToUser[event as string]?.(args);
+      const channel = eventToChannel[event as string]?.(args);
+      const msg = eventToMessage[event as string]?.(args);
       const config = meta.pluginData.config.getMatchingConfig({
         channelId: channel?.id,
         userId: user?.id,
@@ -102,7 +108,7 @@ export function cooldown(timeMs: number, permission?: string): EventFilter {
 
 export function requirePermission(permission: string): EventFilter {
   return (event, args, meta) => {
-    const user = eventToUser[event]?.(...args) ?? null;
+    const user = eventToUser[event as string]?.(args) ?? null;
     const member = user ? resolveMember(meta.pluginData.guild, user.id) : null;
     const config = member
       ? meta.pluginData.config.getForMember(member)
@@ -116,14 +122,14 @@ export function requirePermission(permission: string): EventFilter {
 
 export function ignoreBots(): EventFilter {
   return (event, args) => {
-    const user = eventToUser[event]?.(...args) ?? null;
+    const user = eventToUser[event as string]?.(args) ?? null;
     return !user || !user.bot;
   };
 }
 
 export function ignoreSelf(): EventFilter {
   return (event, args, meta) => {
-    const user = eventToUser[event]?.(...args) ?? null;
+    const user = eventToUser[event as string]?.(args) ?? null;
     return !user || user.id !== meta.pluginData.client.user.id;
   };
 }

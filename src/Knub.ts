@@ -398,8 +398,8 @@ export class Knub<
     }
 
     // Initialize the messageCreate event listener for commands
-    pluginData.events.on("messageCreate", ([msg], { pluginData: _pluginData }) => {
-      return _pluginData.commands.runFromMessage(msg);
+    pluginData.events.on("messageCreate", ({ message }, { pluginData: _pluginData }) => {
+      return _pluginData.commands.runFromMessage(message);
     });
 
     guildData.loadedPlugins.set(pluginName, {
@@ -488,8 +488,8 @@ export class Knub<
     }
 
     // Initialize the messageCreate event listener for commands
-    pluginData.events.on("messageCreate", ([msg], { pluginData: _pluginData }) => {
-      return _pluginData.commands.runFromMessage(msg);
+    pluginData.events.on("messageCreate", ({ message }, { pluginData: _pluginData }) => {
+      return _pluginData.commands.runFromMessage(message);
     });
 
     this.loadedGlobalPlugins.set(pluginName, {

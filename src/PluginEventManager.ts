@@ -2,6 +2,7 @@ import { PluginData } from "./PluginData";
 import { EventFilter, ignoreBots, ignoreSelf, onlyGuild, withFilters } from "./eventFilters";
 import { Awaitable } from "./utils";
 import { Lock } from "./LockManager";
+import { fromErisArgs, UnknownEventArguments } from "./eventArguments";
 
 export interface EventMeta {
   pluginData: PluginData;
@@ -74,7 +75,11 @@ export class PluginEventManager {
     const filteredListener = withFilters(blueprint.event, blueprint.listener, filters);
 
     const wrappedListener: WrappedListener = (...args: any[]) => {
-      return filteredListener(args, {
+      const convertedArgs = fromErisArgs[blueprint.event]
+        ? fromErisArgs[blueprint.event](...args)
+        : ({ args } as UnknownEventArguments);
+
+      return filteredListener(convertedArgs, {
         pluginData: this.pluginData,
       });
     };
