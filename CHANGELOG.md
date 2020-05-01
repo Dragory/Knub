@@ -1,7 +1,12 @@
 # NEXT
+* Knub now uses Eris 0.12
 * New Plugin constructor signature
-* Most plugin functionality has been moved to separate "manager" objects, e.g. PluginCommandManager, PluginEventManager, etc.
-* New concept of a "pluginData" object — a container with several plugin instance specific tools and values (including the manager objects above). This is passed as the only constructor argument to Plugin, and is also passed to event filters, command filters, event listeners, and command handlers.
+* Most plugin functionality has been moved to separate "manager" objects, e.g.
+  PluginCommandManager, PluginEventManager, etc.
+* New concept of a "pluginData" object — a container with several plugin
+  instance specific tools and values (including the manager objects above). This
+  is passed as the only constructor argument to Plugin, and is also passed to
+  event filters, command filters, event listeners, and command handlers.
 * Deprecated:
 	* Plugin.getDefaultOptions() — now a static property "defaultOptions"
 	* Plugin.getConfig() — Use this.config.get() instead
@@ -19,10 +24,13 @@
 	* Plugin.runtimePluginName — Always the same as pluginName now
 	* Plugin.bot — now called Plugin.client
 * New static plugin fields:
-	* commands — array of command blueprints to register when the plugin is loaded
-	* events — array of event listener blueprints to register when the plugin is loaded
+	* commands — array of command blueprints to register when Knub loads the
+	  plugin
+	* events — array of event listener blueprints to register when Knub loads
+	  the plugin
 	* defaultOptions — default options (config + overrides) for the plugin
-* command() and event() decorators no longer save their data in class metadata, but in the static commands/events arrays instead
+* command() and event() decorators no longer save their data in class metadata,
+  but in the static commands/events arrays instead
 
 **TODO:**
 * Re-implement support for custom argument types
@@ -51,8 +59,8 @@
 * `IGuildData` and `IOptions` are now exported from `index.ts`
 
 # 28.0.0
-* **BREAKING CHANGE:** Errors in plugins are now only re-thrown as `PluginError` in
-  **production mode** (i.e. NODE_ENV=production). Before, this happened
+* **BREAKING CHANGE:** Errors in plugins are now only re-thrown as `PluginError`
+  in **production mode** (i.e. NODE_ENV=production). Before, this happened
   regardless of NODE_ENV.
   * This change was made because catching and then re-throwing the error caused
     issues with debuggers. Specifically, the call stack when pausing on the
