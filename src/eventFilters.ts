@@ -1,6 +1,5 @@
 import { EventMeta, Listener } from "./PluginEventManager";
-import { PluginData } from "./PluginData";
-import { Awaitable, eventToChannel, eventToGuild, eventToUser, resolveMember } from "./utils";
+import { Awaitable, eventToChannel, eventToGuild, eventToMessage, eventToUser, resolveMember } from "./utils";
 import { GroupChannel, PrivateChannel } from "eris";
 import { hasPermission } from "./pluginUtils";
 
@@ -73,6 +72,34 @@ export function onlyGroup(): EventFilter {
   };
 }
 
+let evCdKeyNum = 1;
+export function cooldown(timeMs: number, permission?: string): EventFilter {
+  const cdKey = `event-${evCdKeyNum++}`;
+  return (event, args, meta) => {
+    let cdApplies = true;
+    if (permission) {
+      const user = eventToUser[event]?.(...args);
+      const channel = eventToChannel[event]?.(...args);
+      const msg = eventToMessage[event]?.(...args);
+      const config = meta.pluginData.config.getMatchingConfig({
+        channelId: channel?.id,
+        userId: user?.id,
+        message: msg,
+      });
+
+      cdApplies = !config || hasPermission(config, permission);
+    }
+
+    if (cdApplies && meta.pluginData.cooldowns.isOnCooldown(cdKey)) {
+      // We're on cooldown
+      return false;
+    }
+
+    meta.pluginData.cooldowns.setCooldown(cdKey, timeMs);
+    return true;
+  };
+}
+
 export function requirePermission(permission: string): EventFilter {
   return (event, args, meta) => {
     const user = eventToUser[event]?.(...args) ?? null;
@@ -105,6 +132,8 @@ export function locks(locksToAcquire: string | string[]): EventFilter {
   return async (event, args, meta) => {
     const lock = await meta.pluginData.locks.acquire(locksToAcquire);
     if (lock.interrupted) return false;
+
+    meta.lock = lock;
 
     return true;
   };

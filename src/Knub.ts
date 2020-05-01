@@ -16,6 +16,7 @@ import { EventListenerBlueprint, PluginEventManager } from "./PluginEventManager
 import { PluginCommandManager } from "./PluginCommandManager";
 import { CooldownManager } from "./CooldownManager";
 import { getMetadataFromAllProperties } from "./decoratorUtils";
+import { PluginLoadError } from "./PluginLoadError";
 
 const fs = _fs.promises;
 
@@ -373,9 +374,7 @@ export class Knub<
     try {
       await instance.onLoad?.();
     } catch (e) {
-      if (!(e instanceof Error)) throw e;
-      logger.warn(`Could not load plugin ${pluginName} for guild ${guildData.id}: ${e.stack}`);
-      return;
+      throw new PluginLoadError(PluginClass.pluginName, this.bot.guilds.get(guildData.id), e);
     }
 
     // Register initial event listeners
@@ -465,9 +464,7 @@ export class Knub<
     try {
       await instance.onLoad?.();
     } catch (e) {
-      if (!(e instanceof Error)) throw e;
-      logger.warn(`Could not load global plugin ${pluginName}: ${e.stack}`);
-      return;
+      throw new PluginLoadError(PluginClass.pluginName, null, e);
     }
 
     // Register initial event listeners

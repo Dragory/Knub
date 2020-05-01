@@ -17,8 +17,8 @@ export class CooldownManager {
     setTimeout(() => this.cleanup(), CLEANUP_INTERVAL);
   }
 
-  public setCooldown(key, time) {
-    const cdEnd = Date.now() + time;
+  public setCooldown(key, timeMs) {
+    const cdEnd = Date.now() + timeMs;
     this.cooldowns.set(key, cdEnd);
   }
 

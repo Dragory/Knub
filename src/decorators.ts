@@ -3,7 +3,7 @@ import { ICommandConfig, IParameter, parseParameters } from "knub-command-manage
 import { CommandBlueprint, CommandContext, ICommandExtraData } from "./commandUtils";
 import { Plugin } from "./Plugin";
 import { EventListenerBlueprint, OnOpts } from "./PluginEventManager";
-import { locks as locksFilter, requirePermission } from "./eventFilters";
+import { locks as locksFilter, requirePermission, cooldown as cooldownFilter } from "./eventFilters";
 import { appendToPropertyMetadata } from "./decoratorUtils";
 
 export interface CooldownDecoratorData {
@@ -15,6 +15,12 @@ function applyCooldownToCommand(commandData: CommandBlueprint, cooldown: Cooldow
   commandData.config.extra = commandData.config.extra || {};
   commandData.config.extra.cooldown = cooldown.time;
   commandData.config.extra.cooldownPermission = cooldown.permission;
+}
+
+function applyCooldownToEvent(eventData: EventListenerBlueprint, cooldown: CooldownDecoratorData) {
+  eventData.opts = eventData.opts || {};
+  eventData.opts.filters = eventData.opts.filters || [];
+  eventData.opts.filters.push(cooldownFilter(cooldown.time, cooldown.permission));
 }
 
 function applyRequiredPermissionToCommand(commandData: CommandBlueprint, permission: string) {
@@ -29,6 +35,7 @@ function applyRequiredPermissionToEvent(eventData: EventListenerBlueprint, permi
 }
 
 function applyLockToCommand(commandData: CommandBlueprint, locks: string | string[]) {
+  commandData.config.extra = commandData.config.extra || {};
   commandData.config.extra.locks = locks;
 }
 
@@ -85,6 +92,10 @@ function OnEventDecorator(eventName: string, opts?: OnOpts) {
 
     appendToPropertyMetadata(target, propertyKey, "decoratorEvents", eventListenerBlueprint);
 
+    // Apply existing cooldowns from decorators
+    const cooldownData: CooldownDecoratorData = Reflect.getMetadata("decoratorCooldown", target, propertyKey);
+    if (cooldownData) applyCooldownToEvent(eventListenerBlueprint, cooldownData);
+
     // Apply existing permission requirements from decorators
     const permission: string = Reflect.getMetadata("decoratorPermission", target, propertyKey);
     if (permission) applyRequiredPermissionToEvent(eventListenerBlueprint, permission);
@@ -132,10 +143,10 @@ function LockDecorator(locks: string | string[]) {
 /**
  * PLUGINS: Specify a cooldown for a command
  */
-function CooldownDecorator(time: number, permission: string = null) {
+function CooldownDecorator(timeMs: number, permission: string = null) {
   return (target: any, propertyKey: string) => {
     const cooldownData: CooldownDecoratorData = {
-      time,
+      time: timeMs,
       permission,
     };
     Reflect.defineMetadata("decoratorCooldown", cooldownData, target, propertyKey);
@@ -143,6 +154,10 @@ function CooldownDecorator(time: number, permission: string = null) {
     // Apply to existing commands
     const commands: CommandBlueprint[] = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
     commands.forEach((cmd) => applyCooldownToCommand(cmd, cooldownData));
+
+    // Apply to existing events
+    const events: EventListenerBlueprint[] = Reflect.getMetadata("decoratorEvents", target, propertyKey) || [];
+    events.forEach((ev) => applyCooldownToEvent(ev, cooldownData));
   };
 }
 

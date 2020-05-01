@@ -2,24 +2,22 @@ import {
   CommandManager,
   findMatchingCommandResultHasError,
   IArgumentMap,
-  ICommandConfig,
   ICommandDefinition,
   IMatchedOptionMap,
-  IParameter
 } from "knub-command-manager";
 import {
+  checkCommandCooldown,
+  checkCommandLocks,
+  checkCommandPermission,
+  CommandBlueprint,
+  CommandContext,
+  CommandFn,
+  CommandMeta,
   getCommandSignature,
   getDefaultPrefix,
   ICommandExtraData,
-  CommandContext,
-  CommandFn,
-  CommandBlueprint,
-  restrictCommandSource,
-  checkCommandPermission,
-  checkCommandCooldown,
-  checkCommandLocks,
   PluginCommandDefinition,
-  CommandMeta
+  restrictCommandSource,
 } from "./commandUtils";
 // tslint:disable-next-line:no-submodule-imports
 import { TTypeConverterFn } from "knub-command-manager/dist/types";
@@ -47,8 +45,8 @@ export class PluginCommandManager {
       prefix: opts.prefix ?? getDefaultPrefix(client),
       types: {
         ...baseParameterTypes,
-        ...opts.customArgumentTypes
-      }
+        ...opts.customArgumentTypes,
+      },
     });
 
     this.handlers = new Map();
@@ -90,7 +88,7 @@ export class PluginCommandManager {
 
     const command = await this.manager.findMatchingCommand(msg.content, {
       message: msg,
-      pluginData: this.pluginData
+      pluginData: this.pluginData,
     });
 
     if (!command) {
@@ -103,14 +101,20 @@ export class PluginCommandManager {
       return;
     }
 
-    await this.runCommand(msg, command, command.args, command.opts);
+    const extraMeta: Partial<CommandMeta> = {};
+    if (command.config.extra?._lock) {
+      extraMeta.lock = command.config.extra._lock;
+    }
+
+    await this.runCommand(msg, command, command.args, command.opts, extraMeta);
   }
 
   private async runCommand(
     msg: Message,
     command: ICommandDefinition<CommandContext, ICommandExtraData>,
     args: IArgumentMap = {},
-    opts: IMatchedOptionMap = {}
+    opts: IMatchedOptionMap = {},
+    extraMeta?: Partial<CommandMeta>
   ): Promise<void> {
     const handler = this.handlers.get(command.id);
 
@@ -126,9 +130,10 @@ export class PluginCommandManager {
 
     const finalArgs = { ...argValueMap, ...optValueMap };
     const meta: CommandMeta = {
+      ...extraMeta,
       message: msg,
       pluginData: this.pluginData,
-      command
+      command,
     };
 
     await handler(finalArgs, meta);

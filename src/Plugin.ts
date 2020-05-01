@@ -41,7 +41,7 @@ export abstract class Plugin<TConfig extends {} = BasePluginConfig, TCustomOverr
 
   protected readonly client: Client;
 
-  private pluginData: PluginClassData;
+  protected pluginData: PluginClassData;
   protected config: PluginConfigManager<TConfig, TCustomOverrideCriteria>;
   protected locks: LockManager;
   protected commandManager: PluginCommandManager;

@@ -6,7 +6,7 @@ import {
   IParameter,
   isSwitchOption,
   TSignature,
-  TTypeConverterFn
+  TTypeConverterFn,
 } from "knub-command-manager";
 import { Lock } from "./LockManager";
 import { PluginData } from "./PluginData";
@@ -20,6 +20,7 @@ export interface CommandMeta {
   message: Message;
   command: ICommandDefinition<any, any>;
   pluginData: PluginData;
+  lock?: Lock;
 }
 
 export type CommandFn = (args: any, meta: CommandMeta) => Awaitable<void>;
@@ -34,6 +35,7 @@ export interface CommandBlueprint {
 export interface CommandContext {
   message: Message;
   pluginData: PluginData;
+  lock?: Lock;
 }
 
 export interface ICommandExtraData {
@@ -64,10 +66,10 @@ export function getCommandSignature(
   overrideSignature?: TSignature
 ) {
   const signature = overrideSignature || command.signatures[0];
-  const paramStrings = signature.map(param => {
+  const paramStrings = signature.map((param) => {
     return param.required ? `<${param.name}>` : `[${param.name}]`;
   });
-  const optStrings = (command.options || []).map(opt => {
+  const optStrings = (command.options || []).map((opt) => {
     const required = isSwitchOption(opt) ? false : opt.required;
     return required ? `<-${opt.name}>` : `[-${opt.name}]`;
   });
@@ -158,6 +160,5 @@ export async function checkCommandLocks(cmd: PluginCommandDefinition, context: C
   }
 
   const lock = (cmd.config.extra._lock = await context.pluginData.locks.acquire(cmd.config.extra.locks));
-
   return !lock.interrupted;
 }

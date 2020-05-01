@@ -1,14 +1,16 @@
-import EventEmitter = NodeJS.EventEmitter;
 import { PluginData } from "./PluginData";
-import { Guild } from "eris";
 import { EventFilter, ignoreBots, ignoreSelf, onlyGuild, withFilters } from "./eventFilters";
 import { Awaitable } from "./utils";
+import { Lock } from "./LockManager";
 
 export interface EventMeta {
   pluginData: PluginData;
+
+  // Added by locks() event filter
+  lock?: Lock;
 }
 
-export type Listener = (args: any[], meta: EventMeta) => Awaitable<void>;
+export type Listener<T extends string = any> = (args: any, meta: EventMeta) => Awaitable<void>;
 export type WrappedListener = (args: any[]) => Awaitable<void>;
 
 export interface PluginEventManagerOpts {
@@ -73,7 +75,7 @@ export class PluginEventManager {
 
     const wrappedListener: WrappedListener = (...args: any[]) => {
       return filteredListener(args, {
-        pluginData: this.pluginData
+        pluginData: this.pluginData,
       });
     };
 
@@ -83,11 +85,11 @@ export class PluginEventManager {
     return wrappedListener;
   }
 
-  public on(event: string, listener: Listener, opts?: OnOpts): WrappedListener {
+  public on<T extends string>(event: T, listener: Listener<T>, opts?: OnOpts): WrappedListener {
     return this.registerEventListener({
       event,
       listener,
-      opts
+      opts,
     });
   }
 
