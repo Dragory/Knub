@@ -10,11 +10,11 @@ import {
 } from "./testUtils";
 import * as assert from "assert";
 import { noop } from "./utils";
-import { EventMeta, PluginEventManager } from "./PluginEventManager";
-import { CommandMeta } from "./commandUtils";
-import { PluginCommandManager } from "./PluginCommandManager";
-import { PluginConfigManager } from "./PluginConfigManager";
-import { EventArguments } from "./eventArguments";
+import { EventMeta, PluginEventManager } from "./events/PluginEventManager";
+import { CommandMeta } from "./commands/commandUtils";
+import { PluginCommandManager } from "./commands/PluginCommandManager";
+import { PluginConfigManager } from "./config/PluginConfigManager";
+import { EventArguments } from "./events/eventArguments";
 
 process.on("unhandledRejection", (err) => {
   throw err;

@@ -1,16 +1,9 @@
 import { Client, GuildChannel, Message, PrivateChannel } from "eris";
-import { Awaitable } from "./utils";
-import {
-  ICommandConfig,
-  ICommandDefinition,
-  IParameter,
-  isSwitchOption,
-  TSignature,
-  TTypeConverterFn,
-} from "knub-command-manager";
-import { Lock } from "./LockManager";
-import { PluginData } from "./PluginData";
-import { hasPermission } from "./pluginUtils";
+import { Awaitable } from "../utils";
+import { ICommandConfig, ICommandDefinition, isSwitchOption, TSignature, TTypeConverterFn } from "knub-command-manager";
+import { Lock } from "../LockManager";
+import { PluginData } from "../PluginData";
+import { hasPermission } from "../pluginUtils";
 
 export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);
@@ -24,13 +17,6 @@ export interface CommandMeta {
 }
 
 export type CommandFn = (args: any, meta: CommandMeta) => Awaitable<void>;
-
-export interface CommandBlueprint {
-  trigger: string;
-  parameters?: IParameter[];
-  run: CommandFn;
-  config?: PluginCommandConfig;
-}
 
 export interface CommandContext {
   message: Message;

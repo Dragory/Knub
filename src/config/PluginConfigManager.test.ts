@@ -9,17 +9,17 @@ describe("PluginConfigManager", () => {
           can_do: false,
           nested: {
             one: 10,
-            two: 20
-          }
-        }
+            two: 20,
+          },
+        },
       },
       {
         config: {
           can_do: true,
           nested: {
-            two: 30
-          }
-        }
+            two: 30,
+          },
+        },
       }
     );
 
@@ -32,32 +32,32 @@ describe("PluginConfigManager", () => {
     const configManager = new PluginConfigManager(
       {
         config: {
-          can_do: false
+          can_do: false,
         },
         overrides: [
           {
             level: ">=50",
             config: {
-              can_do: true
-            }
-          }
-        ]
+              can_do: true,
+            },
+          },
+        ],
       },
       {
         overrides: [
           {
             level: ">=20",
             config: {
-              can_do: true
-            }
+              can_do: true,
+            },
           },
           {
             level: ">=40",
             config: {
-              can_do: false
-            }
-          }
-        ]
+              can_do: false,
+            },
+          },
+        ],
       }
     );
 
@@ -71,16 +71,16 @@ describe("PluginConfigManager", () => {
     const configManager = new PluginConfigManager(
       {
         config: {
-          can_do: false
+          can_do: false,
         },
         overrides: [
           {
             level: ">=50",
             config: {
-              can_do: true
-            }
-          }
-        ]
+              can_do: true,
+            },
+          },
+        ],
       },
       {
         replaceDefaultOverrides: true,
@@ -88,10 +88,10 @@ describe("PluginConfigManager", () => {
           {
             level: ">=100",
             config: {
-              can_do: true
-            }
-          }
-        ]
+              can_do: true,
+            },
+          },
+        ],
       }
     );
 

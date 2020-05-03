@@ -16,7 +16,7 @@ export { logger } from "./logger";
 import * as utils from "./utils";
 export { utils };
 
-import * as configUtils from "./configUtils";
+import * as configUtils from "./config/configUtils";
 export { configUtils };
 
 import * as pluginUtils from "./pluginUtils";
@@ -30,10 +30,10 @@ export {
   GuildConfig,
   GlobalConfig,
   PartialPluginOptions,
-  PluginOptions
-} from "./configInterfaces";
+  PluginOptions,
+} from "./config/configInterfaces";
 
-export { getCommandSignature, PluginCommandConfig, CommandContext } from "./commandUtils";
+export { getCommandSignature, PluginCommandConfig, CommandContext } from "./commands/commandUtils";
 
 export {
   waitForReaction,
@@ -45,7 +45,7 @@ export {
   getInviteLink,
   splitIntoCleanChunks,
   splitMessageIntoChunks,
-  createChunkedMessage
+  createChunkedMessage,
 } from "./helpers";
 
 export { PluginError } from "./PluginError";

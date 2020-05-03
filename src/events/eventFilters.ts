@@ -1,7 +1,7 @@
 import { EventMeta, Listener } from "./PluginEventManager";
-import { Awaitable, resolveMember } from "./utils";
+import { Awaitable, resolveMember } from "../utils";
 import { GroupChannel, PrivateChannel } from "eris";
-import { hasPermission } from "./pluginUtils";
+import { hasPermission } from "../pluginUtils";
 import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils";
 import { EventArguments } from "./eventArguments";
 

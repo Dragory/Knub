@@ -4,12 +4,12 @@ import {
   IArgumentMap,
   ICommandDefinition,
   IMatchedOptionMap,
+  TTypeConverterFn,
 } from "knub-command-manager";
 import {
   checkCommandCooldown,
   checkCommandLocks,
   checkCommandPermission,
-  CommandBlueprint,
   CommandContext,
   CommandFn,
   CommandMeta,
@@ -19,11 +19,10 @@ import {
   PluginCommandDefinition,
   restrictCommandSource,
 } from "./commandUtils";
-// tslint:disable-next-line:no-submodule-imports
-import { TTypeConverterFn } from "knub-command-manager/dist/types";
 import { baseParameterTypes } from "./baseParameterTypes";
 import { Client, Message } from "eris";
-import { PluginData } from "./PluginData";
+import { PluginData } from "../PluginData";
+import { CommandBlueprint } from "./CommandBlueprint";
 
 export interface PluginCommandManagerOpts<TContext> {
   prefix?: string | RegExp;

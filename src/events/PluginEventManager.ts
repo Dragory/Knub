@@ -1,8 +1,9 @@
-import { PluginData } from "./PluginData";
+import { PluginData } from "../PluginData";
 import { EventFilter, ignoreBots, ignoreSelf, onlyGuild, withFilters } from "./eventFilters";
-import { Awaitable } from "./utils";
-import { Lock } from "./LockManager";
-import { fromErisArgs, UnknownEventArguments } from "./eventArguments";
+import { Awaitable } from "../utils";
+import { Lock } from "../LockManager";
+import { EventArguments, fromErisArgs, UnknownEventArguments } from "./eventArguments";
+import { EventListenerBlueprint } from "./EventListenerBlueprint";
 
 export interface EventMeta {
   pluginData: PluginData;
@@ -11,7 +12,11 @@ export interface EventMeta {
   lock?: Lock;
 }
 
-export type Listener<T extends string = any> = (args: any, meta: EventMeta) => Awaitable<void>;
+export type Listener<TEventName extends string> = (
+  args: EventArguments[TEventName],
+  meta: EventMeta
+) => Awaitable<void>;
+
 export type WrappedListener = (args: any[]) => Awaitable<void>;
 
 export interface PluginEventManagerOpts {
@@ -25,11 +30,17 @@ export interface OnOpts {
   filters?: EventFilter[];
 }
 
-export interface EventListenerBlueprint {
-  event: string;
-  listener: Listener;
-  opts?: OnOpts;
-}
+// TODO:
+// const createEventListener = <T extends string>(blueprint: EventListenerBlueprint<T>): EventListenerBlueprint<T> => {
+//   return blueprint;
+// };
+//
+// createEventListener({
+//   event: "messageCreate",
+//   listener: ({ message }) => {
+//     console.log('hi', message.id);
+//   },
+// });
 
 /**
  * A wrapper for the Eris event emitter that passes plugin data to the listener

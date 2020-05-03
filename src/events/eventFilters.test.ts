@@ -1,6 +1,6 @@
 import { onlyGuild } from "./eventFilters";
 import { Message } from "eris";
-import { PluginData } from "./PluginData";
+import { PluginData } from "../PluginData";
 import * as assert from "assert";
 
 describe("Event filters", () => {

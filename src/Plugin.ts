@@ -1,15 +1,17 @@
 import { Client, Guild, Member, TextableChannel } from "eris";
-import { BasePluginConfig, GuildConfig, PluginOptions } from "./configInterfaces";
-import { CommandBlueprint, CustomArgumentTypes } from "./commandUtils";
+import { BasePluginConfig, GuildConfig, PluginOptions } from "./config/configInterfaces";
+import { CustomArgumentTypes } from "./commands/commandUtils";
 import { Knub } from "./Knub";
-import { MatchParams } from "./configUtils";
+import { MatchParams } from "./config/configUtils";
 import { LockManager } from "./LockManager";
 import { CooldownManager } from "./CooldownManager";
 import { getMemberLevel } from "./pluginUtils";
-import { PluginConfigManager } from "./PluginConfigManager";
+import { PluginConfigManager } from "./config/PluginConfigManager";
 import { PluginClassData } from "./PluginData";
-import { PluginCommandManager } from "./PluginCommandManager";
-import { EventListenerBlueprint, PluginEventManager } from "./PluginEventManager";
+import { PluginCommandManager } from "./commands/PluginCommandManager";
+import { PluginEventManager } from "./events/PluginEventManager";
+import { CommandBlueprint } from "./commands/CommandBlueprint";
+import { EventListenerBlueprint } from "./events/EventListenerBlueprint";
 
 /**
  * Base class for Knub plugins

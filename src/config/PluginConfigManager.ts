@@ -1,7 +1,7 @@
 import { PartialPluginOptions, PermissionLevels, PluginOptions } from "./configInterfaces";
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { Channel, GuildChannel, Member, Message, User } from "eris";
-import { getMemberLevel } from "./pluginUtils";
+import { getMemberLevel } from "../pluginUtils";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string;
@@ -38,7 +38,7 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
       config: mergeConfig(defaultOptions.config ?? {}, userOptions.config ?? {}),
       overrides: userOptions.replaceDefaultOverrides
         ? userOptions.overrides ?? []
-        : (userOptions.overrides ?? []).concat(defaultOptions.overrides ?? [])
+        : (userOptions.overrides ?? []).concat(defaultOptions.overrides ?? []),
     };
   }
 
@@ -76,7 +76,7 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
       userId,
       channelId,
       categoryId,
-      memberRoles
+      memberRoles,
     };
 
     return getMatchingPluginConfig<TConfig, TCustomOverrideCriteria>(
@@ -93,20 +93,20 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
       userId: msg.author.id,
       channelId: msg.channel.id,
       categoryId: (msg.channel as GuildChannel).parentID,
-      memberRoles: msg.member ? msg.member.roles : []
+      memberRoles: msg.member ? msg.member.roles : [],
     });
   }
 
   public getForChannel(channel: Channel): TConfig {
     return this.getMatchingConfig({
       channelId: channel.id,
-      categoryId: (channel as GuildChannel).parentID
+      categoryId: (channel as GuildChannel).parentID,
     });
   }
 
   public getForUser(user: User): TConfig {
     return this.getMatchingConfig({
-      userId: user.id
+      userId: user.id,
     });
   }
 
@@ -115,7 +115,7 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
     return this.getMatchingConfig({
       level,
       userId: member.user.id,
-      memberRoles: member.roles
+      memberRoles: member.roles,
     });
   }
 }

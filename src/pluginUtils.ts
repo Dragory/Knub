@@ -1,5 +1,5 @@
 import { Plugin } from "./Plugin";
-import { PermissionLevels } from "./configInterfaces";
+import { PermissionLevels } from "./config/configInterfaces";
 import { Member } from "eris";
 import { get } from "./utils";
 

@@ -6,17 +6,19 @@ import { logger, LoggerFn, setLoggerFn } from "./logger";
 import { AnyExtendedPlugin, Plugin } from "./Plugin";
 import { AnyExtendedGlobalPlugin, GlobalPlugin } from "./GlobalPlugin";
 import { EventEmitter } from "events";
-import { GlobalConfig, GuildConfig } from "./configInterfaces";
+import { GlobalConfig, GuildConfig } from "./config/configInterfaces";
 import { get } from "./utils";
 import { LockManager } from "./LockManager";
-import { CommandBlueprint, CustomArgumentTypes } from "./commandUtils";
+import { CustomArgumentTypes } from "./commands/commandUtils";
 import { PluginData } from "./PluginData";
-import { PluginConfigManager } from "./PluginConfigManager";
-import { EventListenerBlueprint, PluginEventManager } from "./PluginEventManager";
-import { PluginCommandManager } from "./PluginCommandManager";
+import { PluginConfigManager } from "./config/PluginConfigManager";
+import { PluginEventManager } from "./events/PluginEventManager";
+import { PluginCommandManager } from "./commands/PluginCommandManager";
 import { CooldownManager } from "./CooldownManager";
 import { getMetadataFromAllProperties } from "./decoratorUtils";
 import { PluginLoadError } from "./PluginLoadError";
+import { CommandBlueprint } from "./commands/CommandBlueprint";
+import { EventListenerBlueprint } from "./events/EventListenerBlueprint";
 
 const fs = _fs.promises;
 

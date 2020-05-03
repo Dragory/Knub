@@ -1,7 +1,7 @@
 import { Client, Guild } from "eris";
-import { PluginEventManager } from "./PluginEventManager";
-import { PluginCommandManager } from "./PluginCommandManager";
-import { PluginConfigManager } from "./PluginConfigManager";
+import { PluginEventManager } from "./events/PluginEventManager";
+import { PluginCommandManager } from "./commands/PluginCommandManager";
+import { PluginConfigManager } from "./config/PluginConfigManager";
 import { LockManager } from "./LockManager";
 import { AnyExtendedPlugin } from "./Plugin";
 import { CooldownManager } from "./CooldownManager";
