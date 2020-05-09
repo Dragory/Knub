@@ -1,4 +1,4 @@
-import { CooldownManager, Knub, LockManager, PluginBlueprint } from "./index";
+import { CooldownManager, Knub, LockManager, PluginBlueprint } from "../index";
 import { Guild } from "eris";
 import {
   createMockClient,
@@ -7,13 +7,13 @@ import {
   createMockTextChannel,
   createMockUser,
   sleep,
-} from "./testUtils";
+} from "../testUtils";
 import * as assert from "assert";
-import { noop } from "./utils";
-import { PluginEventManager } from "./events/PluginEventManager";
-import { PluginCommandManager } from "./commands/PluginCommandManager";
-import { PluginConfigManager } from "./config/PluginConfigManager";
-import { createEventListener } from "./events/eventUtils";
+import { noop } from "../utils";
+import { PluginEventManager } from "../events/PluginEventManager";
+import { PluginCommandManager } from "../commands/PluginCommandManager";
+import { PluginConfigManager } from "../config/PluginConfigManager";
+import { createEventListener } from "../events/eventUtils";
 
 process.on("unhandledRejection", (err) => {
   throw err;

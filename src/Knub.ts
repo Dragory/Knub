@@ -3,13 +3,13 @@ import { logger, setLoggerFn } from "./logger";
 import { EventEmitter } from "events";
 import { BaseConfig } from "./config/configInterfaces";
 import { get } from "./utils";
-import { LockManager } from "./LockManager";
-import { PluginData } from "./PluginData";
+import { LockManager } from "./locks/LockManager";
+import { PluginData } from "./plugins/PluginData";
 import { PluginConfigManager } from "./config/PluginConfigManager";
 import { PluginEventManager } from "./events/PluginEventManager";
 import { PluginCommandManager } from "./commands/PluginCommandManager";
-import { CooldownManager } from "./CooldownManager";
-import { PluginLoadError } from "./PluginLoadError";
+import { CooldownManager } from "./cooldowns/CooldownManager";
+import { PluginLoadError } from "./plugins/PluginLoadError";
 import {
   defaultGetConfig,
   defaultGetEnabledGlobalPlugins,
@@ -18,7 +18,7 @@ import {
   isGuildContext,
   isPluginClass,
   applyPluginClassDecoratorValues,
-} from "./pluginUtils";
+} from "./plugins/pluginUtils";
 import {
   AnyContext,
   GlobalContext,

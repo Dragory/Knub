@@ -2,10 +2,10 @@ import "reflect-metadata";
 
 export { Knub } from "./Knub";
 
-export { PluginClass } from "./PluginClass";
-export { PluginBlueprint } from "./PluginBlueprint";
+export { PluginClass } from "./plugins/PluginClass";
+export { PluginBlueprint } from "./plugins/PluginBlueprint";
 
-import * as decorators from "./decorators";
+import * as decorators from "./plugins/decorators";
 export { decorators };
 
 export { logger } from "./logger";
@@ -16,7 +16,7 @@ export { utils };
 import * as configUtils from "./config/configUtils";
 export { configUtils };
 
-import * as pluginUtils from "./pluginUtils";
+import * as pluginUtils from "./plugins/pluginUtils";
 export { pluginUtils };
 
 export { KnubOptions, KnubArgs, BaseContext, GuildContext, GlobalContext } from "./types";
@@ -34,12 +34,12 @@ export { getCommandSignature, PluginCommandConfig, CommandContext } from "./comm
 import * as helpers from "./helpers";
 export { helpers };
 
-export { PluginError } from "./PluginError";
+export { PluginError } from "./plugins/PluginError";
 
 export { PluginConfigManager } from "./config/PluginConfigManager";
 export { PluginCommandManager } from "./commands/PluginCommandManager";
 export { PluginEventManager } from "./events/PluginEventManager";
-export { LockManager, Lock } from "./LockManager";
-export { CooldownManager } from "./CooldownManager";
+export { LockManager, Lock } from "./locks/LockManager";
+export { CooldownManager } from "./cooldowns/CooldownManager";
 
 export { TypeConversionError } from "knub-command-manager";

@@ -2,10 +2,10 @@ import { TextableChannel } from "eris";
 import { BaseConfig } from "./config/configInterfaces";
 import { LoggerFn } from "./logger";
 import { CustomArgumentTypes } from "./commands/commandUtils";
-import { LockManager } from "./LockManager";
-import { AnyExtendedPluginClass, PluginClass } from "./PluginClass";
-import { PluginBlueprint } from "./PluginBlueprint";
-import { PluginData } from "./PluginData";
+import { LockManager } from "./locks/LockManager";
+import { AnyExtendedPluginClass, PluginClass } from "./plugins/PluginClass";
+import { PluginBlueprint } from "./plugins/PluginBlueprint";
+import { PluginData } from "./plugins/PluginData";
 import { Awaitable } from "./utils";
 
 type StatusMessageFn = (channel: TextableChannel, body: string) => void;

@@ -12,9 +12,9 @@ export class Lock {
   constructor(oldLocks: Lock[] = [], lockTimeout = DEFAULT_LOCK_TIMEOUT) {
     // A new lock can be built by combining the state from previous locks
     // For now, this means if any of the old locks was interrupted, the new one is as well
-    this.interrupted = oldLocks.some(l => l && l.interrupted);
+    this.interrupted = oldLocks.some((l) => l && l.interrupted);
 
-    this.unlockPromise = new Promise(resolve => {
+    this.unlockPromise = new Promise((resolve) => {
       this.resolve = resolve;
     });
 
@@ -46,7 +46,7 @@ export class LockManager {
     if (!Array.isArray(keys)) keys = [keys];
     if (lockTimeout == null) lockTimeout = this.lockTimeout;
 
-    keys.forEach(key => {
+    keys.forEach((key) => {
       clearTimeout(this.lockGCTimeouts.get(key));
       this.lockGCTimeouts.delete(key);
     });
@@ -57,13 +57,13 @@ export class LockManager {
       []
     );
     const newLockPromise = Promise.all(oldLockPromises)
-      .then(oldLocks => {
+      .then((oldLocks) => {
         // And then we have to wait for these old locks to unlock as well
-        return Promise.all(oldLocks.map(l => l.unlockPromise));
+        return Promise.all(oldLocks.map((l) => l.unlockPromise));
       })
-      .then(unlockedOldLocks => {
+      .then((unlockedOldLocks) => {
         // And *then* we can return a new lock
-        (keys as string[]).forEach(key => {
+        (keys as string[]).forEach((key) => {
           this.lockGCTimeouts.set(
             key,
             setTimeout(() => {

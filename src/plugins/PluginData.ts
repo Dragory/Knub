@@ -1,11 +1,11 @@
 import { Client, Guild } from "eris";
-import { PluginEventManager } from "./events/PluginEventManager";
-import { PluginCommandManager } from "./commands/PluginCommandManager";
-import { PluginConfigManager } from "./config/PluginConfigManager";
-import { LockManager } from "./LockManager";
+import { PluginEventManager } from "../events/PluginEventManager";
+import { PluginCommandManager } from "../commands/PluginCommandManager";
+import { PluginConfigManager } from "../config/PluginConfigManager";
+import { LockManager } from "../locks/LockManager";
 import { AnyExtendedPluginClass } from "./PluginClass";
-import { CooldownManager } from "./CooldownManager";
-import { Knub } from "./Knub";
+import { CooldownManager } from "../cooldowns/CooldownManager";
+import { Knub } from "../Knub";
 
 type GetPluginFn = <T extends typeof AnyExtendedPluginClass>(plugin: T) => InstanceType<T>;
 

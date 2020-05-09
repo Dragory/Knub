@@ -1,17 +1,17 @@
 import { Client, Guild, Member, TextableChannel } from "eris";
-import { BaseConfig, BasePluginConfig, PluginOptions } from "./config/configInterfaces";
-import { CustomArgumentTypes } from "./commands/commandUtils";
-import { Knub } from "./Knub";
-import { MatchParams } from "./config/configUtils";
-import { LockManager } from "./LockManager";
-import { CooldownManager } from "./CooldownManager";
+import { BaseConfig, BasePluginConfig, PluginOptions } from "../config/configInterfaces";
+import { CustomArgumentTypes } from "../commands/commandUtils";
+import { Knub } from "../Knub";
+import { MatchParams } from "../config/configUtils";
+import { LockManager } from "../locks/LockManager";
+import { CooldownManager } from "../cooldowns/CooldownManager";
 import { getMemberLevel } from "./pluginUtils";
-import { PluginConfigManager } from "./config/PluginConfigManager";
+import { PluginConfigManager } from "../config/PluginConfigManager";
 import { PluginClassData } from "./PluginData";
-import { PluginCommandManager } from "./commands/PluginCommandManager";
-import { PluginEventManager } from "./events/PluginEventManager";
-import { CommandBlueprint } from "./commands/CommandBlueprint";
-import { EventListenerBlueprint } from "./events/EventListenerBlueprint";
+import { PluginCommandManager } from "../commands/PluginCommandManager";
+import { PluginEventManager } from "../events/PluginEventManager";
+import { CommandBlueprint } from "../commands/CommandBlueprint";
+import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 
 /**
  * Base class for Knub plugins

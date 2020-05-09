@@ -1,9 +1,9 @@
-import { BasePluginConfig, PluginOptions } from "./config/configInterfaces";
-import { CustomArgumentTypes } from "./commands/commandUtils";
-import { Awaitable } from "./utils";
+import { BasePluginConfig, PluginOptions } from "../config/configInterfaces";
+import { CustomArgumentTypes } from "../commands/commandUtils";
+import { Awaitable } from "../utils";
 import { PluginData } from "./PluginData";
-import { CommandBlueprint } from "./commands/CommandBlueprint";
-import { EventListenerBlueprint } from "./events/EventListenerBlueprint";
+import { CommandBlueprint } from "../commands/CommandBlueprint";
+import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 
 export interface PluginBlueprint<TConfig extends {} = BasePluginConfig, TCustomOverrideCriteria extends {} = {}> {
   // REQUIRED: Internal name for the plugin

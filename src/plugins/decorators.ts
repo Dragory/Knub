@@ -1,12 +1,12 @@
 import "reflect-metadata";
 import { ICommandConfig, IParameter, parseParameters } from "knub-command-manager";
-import { CommandContext, ICommandExtraData } from "./commands/commandUtils";
+import { CommandContext, ICommandExtraData } from "../commands/commandUtils";
 import { PluginClass } from "./PluginClass";
-import { OnOpts } from "./events/PluginEventManager";
-import { locks as locksFilter, requirePermission, cooldown as cooldownFilter } from "./events/eventFilters";
+import { OnOpts } from "../events/PluginEventManager";
+import { locks as locksFilter, requirePermission, cooldown as cooldownFilter } from "../events/eventFilters";
 import { appendToPropertyMetadata } from "./decoratorUtils";
-import { CommandBlueprint } from "./commands/CommandBlueprint";
-import { EventListenerBlueprint } from "./events/EventListenerBlueprint";
+import { CommandBlueprint } from "../commands/CommandBlueprint";
+import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 
 export interface CooldownDecoratorData {
   time: number;

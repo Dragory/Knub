@@ -1,14 +1,14 @@
-import { BaseConfig, PermissionLevels } from "./config/configInterfaces";
+import { BaseConfig, PermissionLevels } from "../config/configInterfaces";
 import { Member } from "eris";
-import { get } from "./utils";
+import { get } from "../utils";
 import { AnyExtendedPluginClass, PluginClass } from "./PluginClass";
 import { PluginBlueprint } from "./PluginBlueprint";
 import path from "path";
 import _fs from "fs";
-import { GuildContext, BaseContext, PluginMap, ValidPlugin } from "./types";
+import { GuildContext, BaseContext, PluginMap, ValidPlugin } from "../types";
 import { getMetadataFromAllProperties } from "./decoratorUtils";
-import { EventListenerBlueprint } from "./events/EventListenerBlueprint";
-import { CommandBlueprint } from "./commands/CommandBlueprint";
+import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
+import { CommandBlueprint } from "../commands/CommandBlueprint";
 
 const fs = _fs.promises;
 

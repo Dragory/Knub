@@ -1,7 +1,7 @@
 import { PartialPluginOptions, PermissionLevels, PluginOptions } from "./configInterfaces";
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { Channel, GuildChannel, Member, Message, User } from "eris";
-import { getMemberLevel } from "../pluginUtils";
+import { getMemberLevel } from "../plugins/pluginUtils";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string;

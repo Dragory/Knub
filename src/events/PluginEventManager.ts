@@ -1,7 +1,7 @@
-import { PluginData } from "../PluginData";
+import { PluginData } from "../plugins/PluginData";
 import { EventFilter, ignoreBots, ignoreSelf, onlyGuild, withFilters } from "./eventFilters";
 import { Awaitable } from "../utils";
-import { Lock } from "../LockManager";
+import { Lock } from "../locks/LockManager";
 import { EventArguments, fromErisArgs, UnknownEventArguments } from "./eventArguments";
 import { EventListenerBlueprint } from "./EventListenerBlueprint";
 

@@ -1,9 +1,9 @@
 import { Client, GuildChannel, Message, PrivateChannel } from "eris";
 import { Awaitable } from "../utils";
 import { ICommandConfig, ICommandDefinition, isSwitchOption, TSignature, TTypeConverterFn } from "knub-command-manager";
-import { Lock } from "../LockManager";
-import { PluginData } from "../PluginData";
-import { hasPermission } from "../pluginUtils";
+import { Lock } from "../locks/LockManager";
+import { PluginData } from "../plugins/PluginData";
+import { hasPermission } from "../plugins/pluginUtils";
 
 export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);

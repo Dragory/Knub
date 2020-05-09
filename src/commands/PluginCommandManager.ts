@@ -21,7 +21,7 @@ import {
 } from "./commandUtils";
 import { baseParameterTypes } from "./baseParameterTypes";
 import { Client, Message } from "eris";
-import { PluginData } from "../PluginData";
+import { PluginData } from "../plugins/PluginData";
 import { CommandBlueprint } from "./CommandBlueprint";
 
 export interface PluginCommandManagerOpts<TContext> {
