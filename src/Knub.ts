@@ -1,157 +1,103 @@
 import { Client, Guild, TextableChannel } from "eris";
-import path from "path";
-
-import _fs from "fs";
-import { logger, LoggerFn, setLoggerFn } from "./logger";
-import { AnyExtendedPlugin, Plugin } from "./Plugin";
-import { AnyExtendedGlobalPlugin, GlobalPlugin } from "./GlobalPlugin";
+import { logger, setLoggerFn } from "./logger";
 import { EventEmitter } from "events";
-import { GlobalConfig, GuildConfig } from "./config/configInterfaces";
+import { BaseConfig } from "./config/configInterfaces";
 import { get } from "./utils";
 import { LockManager } from "./LockManager";
-import { CustomArgumentTypes } from "./commands/commandUtils";
 import { PluginData } from "./PluginData";
 import { PluginConfigManager } from "./config/PluginConfigManager";
 import { PluginEventManager } from "./events/PluginEventManager";
 import { PluginCommandManager } from "./commands/PluginCommandManager";
 import { CooldownManager } from "./CooldownManager";
-import { getMetadataFromAllProperties } from "./decoratorUtils";
 import { PluginLoadError } from "./PluginLoadError";
-import { CommandBlueprint } from "./commands/CommandBlueprint";
-import { EventListenerBlueprint } from "./events/EventListenerBlueprint";
+import {
+  defaultGetConfig,
+  defaultGetEnabledGlobalPlugins,
+  defaultGetEnabledGuildPlugins,
+  getPluginName,
+  isGuildContext,
+  isPluginClass,
+  transferPluginClassDecoratorValues,
+} from "./pluginUtils";
+import {
+  AnyContext,
+  GlobalContext,
+  GuildContext,
+  KnubArgs,
+  KnubOptions,
+  LoadedPlugin,
+  PluginMap,
+  ValidPlugin,
+} from "./types";
 
-const fs = _fs.promises;
-
-type StatusMessageFn = (channel: TextableChannel, body: string) => void;
-
-export interface KnubOptions<TGuildConfig extends GuildConfig> {
-  autoInitGuilds?: boolean;
-  getConfig?: (id: string) => any | Promise<any>;
-  getEnabledPlugins?: (guildId: string, guildConfig: TGuildConfig) => string[] | Promise<string[]>;
-  canLoadGuild?: (guildId: string) => boolean | Promise<boolean>;
-  logFn?: LoggerFn;
-  performanceDebug?: {
-    enabled?: boolean;
-    size?: number;
-    threshold?: number;
-  };
-  customArgumentTypes?: CustomArgumentTypes;
-  sendErrorMessageFn?: StatusMessageFn;
-  sendSuccessMessageFn?: StatusMessageFn;
-  [key: string]: any;
-}
-
-export interface LoadedPlugin {
-  instance: Plugin;
-  pluginData: PluginData;
-}
-
-export interface LoadedGlobalPlugin {
-  instance: GlobalPlugin;
-  pluginData: PluginData;
-}
-
-export interface LoadedGuild<TGuildConfig extends GuildConfig> {
-  id: string;
-  config: TGuildConfig;
-  loadedPlugins: Map<string, LoadedPlugin>;
-  locks: LockManager;
-}
-
-export interface KnubArgs<TGuildConfig extends GuildConfig> {
-  plugins?: Array<typeof AnyExtendedPlugin>;
-  globalPlugins?: Array<typeof AnyExtendedGlobalPlugin>;
-  options?: KnubOptions<TGuildConfig>;
-}
-
-export type PluginMap = Map<string, typeof AnyExtendedPlugin>;
-export type GlobalPluginMap = Map<string, typeof AnyExtendedGlobalPlugin>;
-
-const defaultKnubParams: KnubArgs<GuildConfig> = {
-  plugins: [],
+const defaultKnubParams: KnubArgs<BaseConfig, BaseConfig> = {
+  guildPlugins: [],
   globalPlugins: [],
   options: {},
 };
 
 export class Knub<
-  TGuildConfig extends GuildConfig = GuildConfig,
-  TGlobalConfig extends GlobalConfig = GlobalConfig
+  TGuildConfig extends BaseConfig = BaseConfig,
+  TGlobalConfig extends BaseConfig = BaseConfig
 > extends EventEmitter {
   protected client: Client;
-  protected globalPlugins: GlobalPluginMap = new Map();
-  protected loadedGlobalPlugins: Map<string, LoadedGlobalPlugin> = new Map();
-  protected plugins: PluginMap = new Map();
-  protected options: KnubOptions<TGuildConfig>;
-  protected djsOptions: any;
-  protected loadedGuilds: Map<string, LoadedGuild<TGuildConfig>> = new Map();
-  protected globalConfig: TGlobalConfig;
-  protected globalLocks: LockManager;
 
-  protected performanceDebugItems: string[];
+  protected guildPlugins: PluginMap = new Map();
+  protected globalPlugins: PluginMap = new Map();
 
-  constructor(client: Client, userArgs: KnubArgs<TGuildConfig>) {
+  protected loadedGuilds: Map<string, GuildContext<TGuildConfig>> = new Map();
+  protected globalContext: GlobalContext<TGlobalConfig>;
+
+  protected options: KnubOptions<TGuildConfig, TGlobalConfig>;
+
+  constructor(client: Client, userArgs: KnubArgs<TGuildConfig, TGlobalConfig>) {
     super();
 
-    const args: KnubArgs<TGuildConfig> = Object.assign({}, defaultKnubParams, userArgs);
+    const args: KnubArgs<TGuildConfig, TGlobalConfig> = {
+      ...defaultKnubParams,
+      ...userArgs,
+    };
 
     this.client = client;
-    this.globalLocks = new LockManager();
-    this.performanceDebugItems = [];
 
-    args.globalPlugins.forEach((PluginClass) => {
-      if (PluginClass.pluginName == null) {
-        throw new Error(`No plugin name specified for global plugin ${PluginClass.name}`);
+    this.globalContext = {
+      config: null,
+      loadedPlugins: new Map(),
+      locks: new LockManager(),
+    };
+
+    const uniquePluginNames = new Set();
+    const validatePlugin = (plugin: ValidPlugin) => {
+      const pluginName = getPluginName(plugin);
+
+      if (pluginName == null) {
+        throw new Error(`No plugin name specified for plugin ${pluginName}`);
       }
 
-      if (this.globalPlugins.has(PluginClass.pluginName)) {
-        throw new Error(`Duplicate plugin name: ${PluginClass.pluginName}`);
+      if (uniquePluginNames.has(pluginName)) {
+        throw new Error(`Duplicate plugin name: ${pluginName}`);
       }
 
-      this.transferPluginDecoratorValues(PluginClass);
+      uniquePluginNames.add(pluginName);
+    };
 
-      this.globalPlugins.set(PluginClass.pluginName, PluginClass);
+    args.globalPlugins.forEach((globalPlugin) => {
+      validatePlugin(globalPlugin);
+      transferPluginClassDecoratorValues(globalPlugin);
+      this.globalPlugins.set(getPluginName(globalPlugin), globalPlugin);
     });
 
-    args.plugins.forEach((PluginClass) => {
-      if (PluginClass.pluginName == null) {
-        throw new Error(`No plugin name specified for plugin ${PluginClass.name}`);
-      }
-
-      if (this.plugins.has(PluginClass.pluginName)) {
-        throw new Error(`Duplicate plugin name: ${PluginClass.pluginName}`);
-      }
-
-      this.transferPluginDecoratorValues(PluginClass);
-
-      this.plugins.set(PluginClass.pluginName, PluginClass);
+    args.guildPlugins.forEach((plugin) => {
+      validatePlugin(plugin);
+      transferPluginClassDecoratorValues(plugin);
+      this.guildPlugins.set(getPluginName(plugin), plugin);
     });
 
-    const defaultOptions: KnubOptions<TGuildConfig> = {
-      // Default JSON config files
-      async getConfig(id) {
-        const configFile = id ? `${id}.json` : "global.json";
-        const configPath = path.join("config", configFile);
-
-        try {
-          await fs.access(configPath);
-        } catch (e) {
-          return {};
-        }
-
-        const json = await fs.readFile(configPath, { encoding: "utf8" });
-        return JSON.parse(json);
-      },
-
-      // By default, load all plugins that haven't been explicitly disabled
-      getEnabledPlugins: async (guildId, guildConfig) => {
-        const plugins = guildConfig.plugins || {};
-        return Array.from(this.plugins.keys()).filter((pluginName) => {
-          return !plugins[pluginName] || plugins[pluginName].enabled !== false;
-        });
-      },
-
+    const defaultOptions: KnubOptions<TGuildConfig, TGlobalConfig> = {
+      getConfig: defaultGetConfig,
+      getEnabledGuildPlugins: defaultGetEnabledGuildPlugins,
+      getEnabledGlobalPlugins: defaultGetEnabledGlobalPlugins,
       canLoadGuild: () => true,
-
       customArgumentTypes: {},
 
       sendErrorMessageFn(channel, body) {
@@ -229,28 +175,6 @@ export class Knub<
     await this.client.disconnect({ reconnect: false });
   }
 
-  public transferPluginDecoratorValues(PluginClass: typeof AnyExtendedPlugin) {
-    if (PluginClass._decoratorValuesTransferred) {
-      return;
-    }
-
-    const events = Array.from(
-      Object.values(getMetadataFromAllProperties<EventListenerBlueprint>(PluginClass, "decoratorEvents"))
-    ).flat();
-
-    PluginClass.events = PluginClass.events || [];
-    PluginClass.events.push(...Object.values(events));
-
-    const commands = Array.from(
-      Object.values(getMetadataFromAllProperties<CommandBlueprint>(PluginClass, "decoratorCommands"))
-    ).flat();
-
-    PluginClass.commands = PluginClass.commands || [];
-    PluginClass.commands.push(...Object.values(commands));
-
-    PluginClass._decoratorValuesTransferred = true;
-  }
-
   protected async loadAllGuilds(): Promise<void> {
     const guilds: Guild[] = Array.from(this.client.guilds.values());
     const loadPromises = guilds.map((guild) => this.loadGuild(guild.id));
@@ -260,7 +184,7 @@ export class Knub<
 
   protected async unloadAllGuilds(): Promise<void> {
     const loadedGuilds = this.getLoadedGuilds();
-    const unloadPromises = loadedGuilds.map((loadedGuild) => this.unloadGuild(loadedGuild.id));
+    const unloadPromises = loadedGuilds.map((loadedGuild) => this.unloadGuild(loadedGuild.guildId));
 
     await Promise.all(unloadPromises);
   }
@@ -269,39 +193,40 @@ export class Knub<
    * Initializes the specified guild's config and loads its plugins
    */
   public async loadGuild(guildId: string): Promise<void> {
+    // Don't load the same guild twice
     if (this.loadedGuilds.has(guildId)) {
-      // Prevent loading the same guild twice
       return;
     }
 
+    // Only load the guild if we're actually in the guild
     if (!this.client.guilds.has(guildId)) {
-      // Only load the guild if we're actually in the guild
       return;
     }
 
-    const guildData: LoadedGuild<TGuildConfig> = {
+    if (!(await this.options.canLoadGuild(guildId))) {
+      return;
+    }
+
+    const guildContext: GuildContext<TGuildConfig> = {
+      guildId,
       config: null,
-      id: guildId,
       loadedPlugins: new Map(),
       locks: new LockManager(),
     };
 
-    this.loadedGuilds.set(guildId, guildData);
-
-    // Can we load this guild?
-    if (!(await this.options.canLoadGuild(guildData.id))) {
-      this.loadedGuilds.delete(guildId);
-      return;
-    }
+    this.loadedGuilds.set(guildId, guildContext);
 
     // Load config
-    guildData.config = await this.options.getConfig(guildData.id);
+    guildContext.config = await this.options.getConfig(guildId);
 
     // Load plugins
-    const enabledPlugins = await this.options.getEnabledPlugins.call(this, guildData.id, guildData.config);
+    const enabledPlugins = await this.options.getEnabledGuildPlugins(guildContext, this.guildPlugins);
 
-    const loadPromises = enabledPlugins.map((pluginName) => this.loadPlugin(guildData, pluginName));
-    await Promise.all(loadPromises);
+    for (const pluginName of enabledPlugins) {
+      const loadedPlugin = await this.loadPlugin(guildContext, this.guildPlugins.get(pluginName));
+      guildContext.loadedPlugins.set(pluginName, loadedPlugin);
+      this.emit("guildPluginLoaded", guildContext, pluginName);
+    }
 
     this.emit("guildLoaded", guildId);
   }
@@ -310,13 +235,14 @@ export class Knub<
    * Unloads all plugins in the specified guild and removes the guild from the list of loaded guilds
    */
   public async unloadGuild(guildId: string): Promise<void> {
-    const guildData = this.loadedGuilds.get(guildId);
-    if (!guildData) {
+    const guildContext = this.loadedGuilds.get(guildId);
+    if (!guildContext) {
       return;
     }
 
-    for (const pluginName of guildData.loadedPlugins.keys()) {
-      await this.unloadPlugin(guildData, pluginName);
+    for (const pluginName of guildContext.loadedPlugins.keys()) {
+      await this.unloadPlugin(guildContext, pluginName);
+      this.emit("guildPluginUnloaded", guildContext, pluginName);
     }
 
     this.loadedGuilds.delete(guildId);
@@ -324,217 +250,153 @@ export class Knub<
     this.emit("guildUnloaded", guildId);
   }
 
-  /**
-   * Unload and immediately reload a guild
-   */
   public async reloadGuild(guildId: string): Promise<void> {
     await this.unloadGuild(guildId);
     await this.loadGuild(guildId);
   }
 
-  public getLoadedGuild(guildId: string): LoadedGuild<TGuildConfig> {
+  public getLoadedGuild(guildId: string): GuildContext<TGuildConfig> {
     return this.loadedGuilds.get(guildId);
   }
 
-  public getLoadedGuilds(): Array<LoadedGuild<TGuildConfig>> {
+  public getLoadedGuilds(): Array<GuildContext<TGuildConfig>> {
     return Array.from(this.loadedGuilds.values());
   }
 
-  public async loadPlugin(guildData: LoadedGuild<TGuildConfig>, pluginName: string): Promise<Plugin> {
-    if (!this.plugins.has(pluginName)) {
-      throw new Error(`Unknown plugin: ${pluginName}`);
-    }
+  public async loadPlugin(
+    ctx: GuildContext<TGuildConfig> | GlobalContext<TGlobalConfig>,
+    plugin: ValidPlugin
+  ): Promise<LoadedPlugin> {
+    const pluginName = isPluginClass(plugin) ? plugin.pluginName : plugin.name;
 
-    const PluginClass = this.plugins.get(pluginName);
+    const guild = isGuildContext(ctx) ? this.client.guilds.get(ctx.guildId) : null;
 
     const pluginData: PluginData = {
       client: this.client,
-      guild: this.client.guilds.get(guildData.id),
+      guild,
       config: new PluginConfigManager(
-        PluginClass.defaultOptions ?? { config: {} },
-        get(guildData.config, `plugins.${pluginName}`) || {},
+        plugin.defaultOptions ?? { config: {} },
+        get(ctx.config, `plugins.${pluginName}`) || {},
         null,
-        guildData.config.levels || {}
+        ctx.config.levels || {}
       ),
       events: new PluginEventManager(),
       commands: new PluginCommandManager(this.client, {
-        prefix: guildData.config.prefix,
+        prefix: ctx.config.prefix,
+        customArgumentTypes: plugin.customArgumentTypes,
       }),
-      locks: guildData.locks,
+      locks: ctx.locks,
       cooldowns: new CooldownManager(),
-      guildConfig: guildData.config,
+      guildConfig: ctx.config,
     };
 
     pluginData.events.setPluginData(pluginData);
     pluginData.commands.setPluginData(pluginData);
 
-    const instance = new PluginClass({
-      ...pluginData,
-      knub: this,
-    });
+    let instance;
+    let blueprint;
+    let bindTarget = null;
 
-    try {
-      await instance.onLoad?.();
-    } catch (e) {
-      throw new PluginLoadError(PluginClass.pluginName, this.client.guilds.get(guildData.id), e);
+    if (isPluginClass(plugin)) {
+      // Load plugin class
+      instance = new plugin({
+        ...pluginData,
+        knub: this,
+      });
+
+      try {
+        await instance.onLoad?.();
+      } catch (e) {
+        throw new PluginLoadError(plugin.pluginName, guild, e);
+      }
+
+      bindTarget = instance;
+    } else {
+      // Load plugin blueprint
+      blueprint = plugin;
+
+      try {
+        await plugin.onLoad?.(pluginData);
+      } catch (e) {
+        throw new PluginLoadError(plugin.name, guild, e);
+      }
     }
 
     // Register initial event listeners
-    if (PluginClass.events) {
-      for (const blueprint of PluginClass.events) {
+    if (plugin.events) {
+      for (const eventListenerBlueprint of plugin.events) {
         pluginData.events.registerEventListener({
-          ...blueprint,
-          listener: blueprint.listener.bind(instance),
+          ...eventListenerBlueprint,
+          listener: eventListenerBlueprint.listener.bind(bindTarget),
         });
       }
     }
 
     // Register initial commands
-    if (PluginClass.commands) {
-      for (const blueprint of PluginClass.commands) {
+    if (plugin.commands) {
+      for (const commandBlueprint of plugin.commands) {
         pluginData.commands.add({
-          ...blueprint,
-          run: blueprint.run.bind(instance),
+          ...commandBlueprint,
+          run: commandBlueprint.run.bind(bindTarget),
         });
       }
     }
 
-    // Initialize the messageCreate event listener for commands
+    // Initialize messageCreate event listener for commands
     pluginData.events.on("messageCreate", ({ message }, { pluginData: _pluginData }) => {
       return _pluginData.commands.runFromMessage(message);
     });
 
-    guildData.loadedPlugins.set(pluginName, {
+    return {
       instance,
+      blueprint,
       pluginData,
-    });
-
-    this.emit("guildPluginLoaded", guildData, pluginName);
-
-    return instance;
+    };
   }
 
-  public async unloadPlugin(guildData: LoadedGuild<TGuildConfig>, pluginName: string): Promise<void> {
-    const loadedPlugin = guildData.loadedPlugins.get(pluginName);
+  public async unloadPlugin(ctx: AnyContext<TGuildConfig, TGlobalConfig>, pluginName: string): Promise<void> {
+    const loadedPlugin = ctx.loadedPlugins.get(pluginName);
+    if (!loadedPlugin) return;
 
-    loadedPlugin.pluginData.events.clearAllListeners();
-    await loadedPlugin.instance.onUnload?.();
-    guildData.loadedPlugins.delete(pluginName);
+    if (loadedPlugin.instance) {
+      await loadedPlugin.instance.onUnload?.();
+    } else if (loadedPlugin.blueprint) {
+      await loadedPlugin.blueprint.onUnload?.(loadedPlugin.pluginData);
+    }
 
-    this.emit("guildPluginUnloaded", guildData, pluginName);
+    ctx.loadedPlugins.delete(pluginName);
   }
 
-  public async reloadPlugin(guildData: LoadedGuild<TGuildConfig>, pluginName: string): Promise<void> {
-    await this.unloadPlugin(guildData, pluginName);
-    await this.loadPlugin(guildData, pluginName);
+  public async reloadPlugin(ctx: AnyContext<TGuildConfig, TGlobalConfig>, pluginName: string): Promise<void> {
+    await this.unloadPlugin(ctx, pluginName);
+
+    const plugin = isGuildContext(ctx) ? this.guildPlugins.get(pluginName) : this.globalPlugins.get(pluginName);
+
+    await this.loadPlugin(ctx, plugin);
   }
 
   public getAvailablePlugins(): PluginMap {
-    return this.plugins;
-  }
-
-  public async loadGlobalPlugin(pluginName: string): Promise<GlobalPlugin> {
-    if (!this.globalPlugins.has(pluginName)) {
-      throw new Error(`Unknown global plugin: ${pluginName}`);
-    }
-
-    const PluginClass = this.globalPlugins.get(pluginName);
-
-    const pluginData: PluginData = {
-      client: this.client,
-      guild: null,
-      config: new PluginConfigManager(
-        PluginClass.defaultOptions ?? { config: {} },
-        get(this.globalConfig, `plugins.${pluginName}`) || {},
-        null,
-        this.globalConfig.levels || {}
-      ),
-      events: new PluginEventManager({ implicitGuildRestriction: false }),
-      commands: new PluginCommandManager(this.client, {
-        prefix: this.globalConfig.prefix,
-      }),
-      locks: this.globalLocks,
-      cooldowns: new CooldownManager(),
-      guildConfig: this.globalConfig,
-    };
-
-    const instance = new PluginClass({
-      ...pluginData,
-      knub: this,
-    });
-
-    try {
-      await instance.onLoad?.();
-    } catch (e) {
-      throw new PluginLoadError(PluginClass.pluginName, null, e);
-    }
-
-    // Register initial event listeners
-    if (PluginClass.events) {
-      for (const blueprint of PluginClass.events) {
-        pluginData.events.registerEventListener({
-          ...blueprint,
-          listener: blueprint.listener.bind(instance),
-        });
-      }
-    }
-
-    // Register initial commands
-    if (PluginClass.commands) {
-      for (const blueprint of PluginClass.commands) {
-        pluginData.commands.add({
-          ...blueprint,
-          run: blueprint.run.bind(instance),
-        });
-      }
-    }
-
-    // Initialize the messageCreate event listener for commands
-    pluginData.events.on("messageCreate", ({ message }, { pluginData: _pluginData }) => {
-      return _pluginData.commands.runFromMessage(message);
-    });
-
-    this.loadedGlobalPlugins.set(pluginName, {
-      instance,
-      pluginData,
-    });
-
-    this.emit("globalPluginLoaded", pluginName);
-
-    return instance;
-  }
-
-  public async unloadGlobalPlugin(pluginName: string): Promise<void> {
-    const loadedPlugin = this.loadedGlobalPlugins.get(pluginName);
-    await loadedPlugin.instance.onUnload?.();
-    this.loadedGlobalPlugins.delete(pluginName);
-    this.emit("globalPluginUnloaded", pluginName);
-  }
-
-  public async reloadGlobalPlugin(pluginName: string): Promise<void> {
-    await this.unloadGlobalPlugin(pluginName);
-    await this.loadGlobalPlugin(pluginName);
+    return this.guildPlugins;
   }
 
   public async reloadAllGlobalPlugins() {
-    for (const pluginName of this.loadedGlobalPlugins.keys()) {
-      await this.reloadGlobalPlugin(pluginName);
-    }
+    await this.unloadAllGlobalPlugins();
+    await this.loadAllGlobalPlugins();
   }
 
   public async loadAllGlobalPlugins() {
-    for (const name of this.globalPlugins.keys()) {
-      this.loadGlobalPlugin(name);
+    for (const plugin of this.globalPlugins.values()) {
+      this.loadPlugin(this.globalContext, plugin);
     }
   }
 
   public async unloadAllGlobalPlugins() {
-    for (const pluginName of this.loadedGlobalPlugins.keys()) {
-      await this.unloadGlobalPlugin(pluginName);
+    for (const pluginName of this.globalPlugins.keys()) {
+      await this.unloadPlugin(this.globalContext, pluginName);
     }
   }
 
-  public getGlobalPlugins(): GlobalPluginMap {
+  public getGlobalPlugins(): PluginMap {
     return this.globalPlugins;
   }
 
@@ -544,15 +406,11 @@ export class Knub<
   }
 
   public async loadGlobalConfig() {
-    this.globalConfig = await this.options.getConfig("global");
+    this.globalContext.config = await this.options.getConfig("global");
   }
 
   public getGlobalConfig(): TGlobalConfig {
-    return this.globalConfig;
-  }
-
-  public getCustomArgumentTypes(): CustomArgumentTypes {
-    return this.options.customArgumentTypes || {};
+    return this.globalContext.config;
   }
 
   public sendErrorMessage(channel: TextableChannel, body: string) {

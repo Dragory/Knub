@@ -3,11 +3,11 @@ import { PluginEventManager } from "./events/PluginEventManager";
 import { PluginCommandManager } from "./commands/PluginCommandManager";
 import { PluginConfigManager } from "./config/PluginConfigManager";
 import { LockManager } from "./LockManager";
-import { AnyExtendedPlugin } from "./Plugin";
+import { AnyExtendedPluginClass } from "./PluginClass";
 import { CooldownManager } from "./CooldownManager";
 import { Knub } from "./Knub";
 
-type GetPluginFn = <T extends typeof AnyExtendedPlugin>(plugin: T) => InstanceType<T>;
+type GetPluginFn = <T extends typeof AnyExtendedPluginClass>(plugin: T) => InstanceType<T>;
 
 export interface PluginData<TConfig = any, TCustomOverrideCriteria = unknown> {
   client: Client;

@@ -4,17 +4,7 @@ export interface PermissionLevels {
   [roleOrUserId: string]: number;
 }
 
-export interface GuildConfig {
-  prefix?: string;
-
-  levels?: PermissionLevels;
-
-  plugins?: {
-    [key: string]: PartialPluginOptions;
-  };
-}
-
-export interface GlobalConfig {
+export interface BaseConfig {
   prefix?: string;
 
   levels?: PermissionLevels;

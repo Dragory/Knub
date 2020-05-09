@@ -1,4 +1,4 @@
-import { CooldownManager, decorators as d, Knub, LockManager, Plugin } from "./index";
+import { CooldownManager, decorators as d, Knub, LockManager, PluginClass } from "./index";
 import { Guild, Message } from "eris";
 import {
   createMockClient,
@@ -24,7 +24,7 @@ describe("Plugin", () => {
   describe("Lifecycle hooks", () => {
     it("runs plugin-supplied onLoad() function", (done) => {
       (async () => {
-        class PluginToLoad extends Plugin {
+        class PluginToLoad extends PluginClass {
           public static pluginName = "plugin-to-load";
 
           public async onLoad() {
@@ -34,7 +34,7 @@ describe("Plugin", () => {
 
         const client = createMockClient();
         const knub = new Knub(client, {
-          plugins: [PluginToLoad],
+          guildPlugins: [PluginToLoad],
           options: {
             getEnabledPlugins() {
               return ["plugin-to-load"];
@@ -55,7 +55,7 @@ describe("Plugin", () => {
 
     it("runs plugin-supplied onUnload() function", (done) => {
       (async () => {
-        class PluginToUnload extends Plugin {
+        class PluginToUnload extends PluginClass {
           public static pluginName = "plugin-to-unload";
 
           public async onUnload() {
@@ -65,7 +65,7 @@ describe("Plugin", () => {
 
         const client = createMockClient();
         const knub = new Knub(client, {
-          plugins: [PluginToUnload],
+          guildPlugins: [PluginToUnload],
           options: {
             getEnabledPlugins() {
               return ["plugin-to-unload"];
@@ -90,7 +90,7 @@ describe("Plugin", () => {
   describe("Decorator commands", () => {
     it("loads and runs decorator-defined commands", (done) => {
       (async () => {
-        class CommandPlugin extends Plugin {
+        class CommandPlugin extends PluginClass {
           public static pluginName = "commands";
 
           @d.command("foo")
@@ -101,7 +101,7 @@ describe("Plugin", () => {
 
         const client = createMockClient();
         const knub = new Knub(client, {
-          plugins: [CommandPlugin],
+          guildPlugins: [CommandPlugin],
           options: {
             getEnabledPlugins() {
               return ["commands"];
@@ -138,7 +138,7 @@ describe("Plugin", () => {
         const author = createMockUser(client);
         const author2 = createMockUser(client);
 
-        class CommandCooldownTestPlugin extends Plugin {
+        class CommandCooldownTestPlugin extends PluginClass {
           public static pluginName = "command-cooldown-test";
 
           public static defaultOptions = {
@@ -163,7 +163,7 @@ describe("Plugin", () => {
         }
 
         const knub = new Knub(client, {
-          plugins: [CommandCooldownTestPlugin],
+          guildPlugins: [CommandCooldownTestPlugin],
           options: {
             getEnabledPlugins() {
               return ["command-cooldown-test"];
@@ -212,7 +212,7 @@ describe("Plugin", () => {
         const author = createMockUser(client);
         const author2 = createMockUser(client);
 
-        class CommandPermissionTestPlugin extends Plugin {
+        class CommandPermissionTestPlugin extends PluginClass {
           public static pluginName = "command-permission-test";
 
           public static defaultOptions = {
@@ -237,7 +237,7 @@ describe("Plugin", () => {
         }
 
         const knub = new Knub(client, {
-          plugins: [CommandPermissionTestPlugin],
+          guildPlugins: [CommandPermissionTestPlugin],
           options: {
             getEnabledPlugins() {
               return ["command-permission-test"];
@@ -279,7 +279,7 @@ describe("Plugin", () => {
         const client = createMockClient();
         const author = createMockUser(client);
 
-        class CommandLockTestPlugin extends Plugin {
+        class CommandLockTestPlugin extends PluginClass {
           public static pluginName = "command-lock-test";
 
           @d.command("lock")
@@ -302,7 +302,7 @@ describe("Plugin", () => {
         }
 
         const knub = new Knub(client, {
-          plugins: [CommandLockTestPlugin],
+          guildPlugins: [CommandLockTestPlugin],
           options: {
             getEnabledPlugins() {
               return ["command-lock-test"];
@@ -342,7 +342,7 @@ describe("Plugin", () => {
   describe("Decorator events", () => {
     it("loads and runs decorator-defined event handlers", (done) => {
       (async () => {
-        class EventPlugin extends Plugin {
+        class EventPlugin extends PluginClass {
           public static pluginName = "events";
 
           @d.event("messageCreate")
@@ -355,7 +355,7 @@ describe("Plugin", () => {
 
         const client = createMockClient();
         const knub = new Knub(client, {
-          plugins: [EventPlugin],
+          guildPlugins: [EventPlugin],
           options: {
             getEnabledPlugins() {
               return ["events"];
@@ -387,7 +387,7 @@ describe("Plugin", () => {
         const author = createMockUser(client);
         const author2 = createMockUser(client);
 
-        class EventCooldownTestPlugin extends Plugin {
+        class EventCooldownTestPlugin extends PluginClass {
           public static pluginName = "event-cooldown-test";
 
           public static defaultOptions = {
@@ -412,7 +412,7 @@ describe("Plugin", () => {
         }
 
         const knub = new Knub(client, {
-          plugins: [EventCooldownTestPlugin],
+          guildPlugins: [EventCooldownTestPlugin],
           options: {
             getEnabledPlugins() {
               return ["event-cooldown-test"];
@@ -456,7 +456,7 @@ describe("Plugin", () => {
         const author = createMockUser(client);
         const author2 = createMockUser(client);
 
-        class EventPermissionTestPlugin extends Plugin {
+        class EventPermissionTestPlugin extends PluginClass {
           public static pluginName = "event-permission-test";
 
           public static defaultOptions = {
@@ -481,7 +481,7 @@ describe("Plugin", () => {
         }
 
         const knub = new Knub(client, {
-          plugins: [EventPermissionTestPlugin],
+          guildPlugins: [EventPermissionTestPlugin],
           options: {
             getEnabledPlugins() {
               return ["event-permission-test"];
@@ -520,7 +520,7 @@ describe("Plugin", () => {
         const client = createMockClient();
         const author = createMockUser(client);
 
-        class EventLockTestPlugin extends Plugin {
+        class EventLockTestPlugin extends PluginClass {
           public static pluginName = "event-lock-test";
 
           @d.event("messageCreate")
@@ -543,7 +543,7 @@ describe("Plugin", () => {
         }
 
         const knub = new Knub(client, {
-          plugins: [EventLockTestPlugin],
+          guildPlugins: [EventLockTestPlugin],
           options: {
             getEnabledPlugins() {
               return ["event-lock-test"];
@@ -578,7 +578,7 @@ describe("Plugin", () => {
   describe("Misc", () => {
     it("pluginData contains everything", () => {
       return (async () => {
-        class TestPlugin extends Plugin {
+        class TestPlugin extends PluginClass {
           public static pluginName = "test-plugin";
 
           onLoad() {
@@ -593,7 +593,7 @@ describe("Plugin", () => {
 
         const client = createMockClient();
         const knub = new Knub(client, {
-          plugins: [TestPlugin],
+          guildPlugins: [TestPlugin],
           options: {
             getEnabledPlugins() {
               return ["test-plugin"];
@@ -616,7 +616,7 @@ describe("Plugin", () => {
       (async () => {
         let msgEvFnCallNum = 0;
 
-        class PluginToUnload extends Plugin {
+        class PluginToUnload extends PluginClass {
           public static pluginName = "plugin-to-unload";
 
           @d.event("messageCreate")
@@ -627,7 +627,7 @@ describe("Plugin", () => {
 
         const client = createMockClient();
         const knub = new Knub(client, {
-          plugins: [PluginToUnload],
+          guildPlugins: [PluginToUnload],
           options: {
             getEnabledPlugins() {
               return ["plugin-to-unload"];

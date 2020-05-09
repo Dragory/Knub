@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { ICommandConfig, IParameter, parseParameters } from "knub-command-manager";
 import { CommandContext, ICommandExtraData } from "./commands/commandUtils";
-import { Plugin } from "./Plugin";
+import { PluginClass } from "./PluginClass";
 import { OnOpts } from "./events/PluginEventManager";
 import { locks as locksFilter, requirePermission, cooldown as cooldownFilter } from "./events/eventFilters";
 import { appendToPropertyMetadata } from "./decoratorUtils";
@@ -55,7 +55,7 @@ function CommandDecorator(
   parameters: string | IParameter[] = [],
   config: ICommandConfig<CommandContext, ICommandExtraData> = {}
 ) {
-  return (target: typeof Plugin.prototype, propertyKey: string) => {
+  return (target: typeof PluginClass.prototype, propertyKey: string) => {
     // Add command blueprint to the plugin's static commands array
     const blueprint = {
       trigger,
@@ -84,7 +84,7 @@ function CommandDecorator(
  * PLUGINS: Turn a class method into an event listener
  */
 function OnEventDecorator(eventName: string, opts?: OnOpts) {
-  return (target: typeof Plugin.prototype, propertyKey: string) => {
+  return (target: typeof PluginClass.prototype, propertyKey: string) => {
     // Add event listener blueprint to the plugin's static event listeners array
     const eventListenerBlueprint: EventListenerBlueprint = {
       event: eventName,

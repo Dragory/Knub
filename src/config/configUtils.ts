@@ -1,4 +1,5 @@
 import { PluginOptions, PluginOverrideCriteria } from "./configInterfaces";
+import { Awaitable } from "../utils";
 
 const condRegex = /^(\D+)(\d+)$/;
 const splitCond = (v, defaultCond): [string, string] => {
@@ -59,7 +60,7 @@ export function mergeConfig<T extends {}>(...sources: any[]): T {
   return target;
 }
 
-type CustomOverrideResolver<T> = (criteria: T, matchParams: MatchParams) => boolean | Promise<boolean>;
+type CustomOverrideResolver<T> = (criteria: T, matchParams: MatchParams) => Awaitable<boolean>;
 
 /**
  * Returns matching plugin options for the specified matchParams based on overrides

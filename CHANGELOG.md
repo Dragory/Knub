@@ -1,39 +1,58 @@
 # NEXT
 * Knub now uses Eris 0.12
-* New Plugin constructor signature
-* Most plugin functionality has been moved to separate "manager" objects, e.g.
-  PluginCommandManager, PluginEventManager, etc.
-* New concept of a "pluginData" object — a container with several plugin
-  instance specific tools and values (including the manager objects above). This
-  is passed as the only constructor argument to Plugin, and is also passed to
-  event filters, command filters, event listeners, and command handlers.
+* The `Plugin` class is now called `PluginClass`
+* Deprecated the `GlobalPlugin` class. Use `PluginClass` instead.
+* `PluginClass` constructor now takes a `PluginData` object as its only
+  argument
+* Most plugin functionality has been moved to separate "manager" objects:
+  `PluginCommandManager`, `PluginEventManager`, etc.
+  These can be accessed through the `PluginData` object (see below).
+* New: **PluginBlueprint**
+    * An alternative, static way of defining plugins without using classes
+    * Makes it easier to split large plugins into smaller chunks
+* New: **EventListenerBlueprint**
+    * A static way of defining event listeners
+    * Works with both PluginClass and PluginBlueprint
+* New: **CommandBlueprint**
+    * A static way of defining a command
+    * Works with both PluginClass and PluginBlueprint
+* New: **PluginData** object
+    * A plugin instance specific object with several utilities, such as event
+      and command managers. Most plugin functionality has been moved to
+      PluginData. This object is passed to each plugin and is also available in
+      event filters, command filters, event listeners, and command handlers.
+* Changes to `KnubArgs` (the object passed to Knub constructor):
+    * Renamed `plugins` to `guildPlugins`
+    * `options.getEnabledPlugins` is now split into two functions:
+        * `options.getEnabledGuildPlugins`
+        * `options.getEnabledGlobalPlugins`
+        * Signature: `(ctx, pluginMap) => Awaitable<string[]>`
 * Deprecated:
-	* Plugin.getDefaultOptions() — now a static property "defaultOptions"
-	* Plugin.getConfig() — Use this.config.get() instead
-	* Plugin.getMatchingConfig() — Use this.config.getMatchingConfig() instead
-	* Plugin.getConfigForMsg() — Use this.config.getForMsg() instead
-	* Plugin.getConfigForChannel() — Use this.config.getForChannel() instead
-	* Plugin.getConfigForUser() — Use this.config.getForUser() instead
-	* Plugin.getConfigForMember() — Use this.config.getForMember() instead
-	* Plugin.hasPermission() — Use pluginUtils.hasPermission() instead
-	* Plugin.addCommand() — Use this.commands.add() instead
-	* Plugin.removeCommand() — Use this.commands.remove() instead
-	* Plugin.on() — Use this.events.on() instead
-	* Plugin.off() — Use this.events.off() instead
-	* Plugin.clearEventHandlers() — Use this.events.clearAllListeners() instead
-	* Plugin.runtimePluginName — Always the same as pluginName now
-	* Plugin.bot — now called Plugin.client
+	* `PluginClass.getDefaultOptions()` — now a static property "defaultOptions"
+	* `PluginClass.getConfig()` — Use this.config.get() instead
+	* `PluginClass.getMatchingConfig()` — Use this.config.getMatchingConfig() instead
+	* `PluginClass.getConfigForMsg()` — Use this.config.getForMsg() instead
+	* `PluginClass.getConfigForChannel()` — Use this.config.getForChannel() instead
+	* `PluginClass.getConfigForUser()` — Use this.config.getForUser() instead
+	* `PluginClass.getConfigForMember()` — Use this.config.getForMember() instead
+	* `PluginClass.hasPermission()` — Use pluginUtils.hasPermission() instead
+	* `PluginClass.addCommand()` — Use this.commands.add() instead
+	* `PluginClass.removeCommand()` — Use this.commands.remove() instead
+	* `PluginClass.on()` — Use this.events.on() instead
+	* `PluginClass.off()` — Use this.events.off() instead
+	* `PluginClass.clearEventHandlers()` — Use this.events.clearAllListeners() instead
+	* `PluginClass.runtimePluginName` — Always the same as pluginName now
+	* `PluginClass.bot` — now called Plugin.client
 * New static plugin fields:
-	* commands — array of command blueprints to register when Knub loads the
+	* `commands` — array of command blueprints to register when Knub loads the
 	  plugin
-	* events — array of event listener blueprints to register when Knub loads
+	* `events` — array of event listener blueprints to register when Knub loads
 	  the plugin
-	* defaultOptions — default options (config + overrides) for the plugin
+	* `defaultOptions` — default options (config + overrides) for the plugin
 * command() and event() decorators no longer save their data in class metadata,
   but in the static commands/events arrays instead
 
 **TODO:**
-* Re-implement support for custom argument types
 * Re-implement support for custom overrides
 * More tests!
 * PluginData.getPlugin()

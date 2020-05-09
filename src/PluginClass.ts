@@ -1,5 +1,5 @@
 import { Client, Guild, Member, TextableChannel } from "eris";
-import { BasePluginConfig, GuildConfig, PluginOptions } from "./config/configInterfaces";
+import { BaseConfig, BasePluginConfig, PluginOptions } from "./config/configInterfaces";
 import { CustomArgumentTypes } from "./commands/commandUtils";
 import { Knub } from "./Knub";
 import { MatchParams } from "./config/configUtils";
@@ -16,7 +16,7 @@ import { EventListenerBlueprint } from "./events/EventListenerBlueprint";
 /**
  * Base class for Knub plugins
  */
-export abstract class Plugin<TConfig extends {} = BasePluginConfig, TCustomOverrideCriteria extends {} = {}> {
+export abstract class PluginClass<TConfig extends {} = BasePluginConfig, TCustomOverrideCriteria extends {} = {}> {
   // REQUIRED: Internal name for the plugin
   public static pluginName: string;
 
@@ -39,7 +39,7 @@ export abstract class Plugin<TConfig extends {} = BasePluginConfig, TCustomOverr
   // Guild info - these will be null for global plugins
   public readonly guildId: string;
   protected readonly guild: Guild;
-  protected readonly guildConfig: GuildConfig;
+  protected readonly guildConfig: BaseConfig;
 
   protected readonly client: Client;
 
@@ -135,7 +135,7 @@ export abstract class Plugin<TConfig extends {} = BasePluginConfig, TCustomOverr
    * Returns the specified plugin for the same guild as this plugin
    * Useful for interoperability between plugins
    */
-  protected getPlugin<T extends Plugin>(name: string): T {
+  protected getPlugin<T extends PluginClass>(name: string): T {
     const guildData = this.knub.getLoadedGuild(this.guildId);
     return guildData.loadedPlugins.get(name)?.instance as T;
   }
@@ -149,4 +149,4 @@ export abstract class Plugin<TConfig extends {} = BasePluginConfig, TCustomOverr
   }
 }
 
-export class AnyExtendedPlugin extends Plugin<any> {}
+export class AnyExtendedPluginClass extends PluginClass<any> {}
