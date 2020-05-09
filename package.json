@@ -6,6 +6,7 @@
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": "dist/index.js",
   "scripts": {
     "test": "mocha --exit -r ts-node/register src/**/*.test.ts -- --trace-warnings",
     "build": "shx touch dist && shx rm -r dist && tsc --sourceMap false",
