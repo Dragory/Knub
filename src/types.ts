@@ -28,8 +28,8 @@ export interface KnubOptions<TGuildConfig extends BaseConfig, TGlobalConfig exte
 }
 
 export interface KnubArgs<TGuildConfig extends BaseConfig, TGlobalConfig extends BaseConfig> {
-  guildPlugins?: Array<typeof AnyExtendedPluginClass>;
-  globalPlugins?: Array<typeof AnyExtendedPluginClass>;
+  guildPlugins?: ValidPlugin[];
+  globalPlugins?: ValidPlugin[];
   options?: KnubOptions<TGuildConfig, TGlobalConfig>;
 }
 
