@@ -20,7 +20,7 @@ process.on("unhandledRejection", (err) => {
   throw err;
 });
 
-describe("Plugin", () => {
+describe("PluginClass", () => {
   describe("Lifecycle hooks", () => {
     it("runs plugin-supplied onLoad() function", (done) => {
       (async () => {

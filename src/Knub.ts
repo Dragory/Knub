@@ -17,7 +17,7 @@ import {
   getPluginName,
   isGuildContext,
   isPluginClass,
-  transferPluginClassDecoratorValues,
+  applyPluginClassDecoratorValues,
 } from "./pluginUtils";
 import {
   AnyContext,
@@ -83,13 +83,21 @@ export class Knub<
 
     args.globalPlugins.forEach((globalPlugin) => {
       validatePlugin(globalPlugin);
-      transferPluginClassDecoratorValues(globalPlugin);
+
+      if (isPluginClass(globalPlugin)) {
+        applyPluginClassDecoratorValues(globalPlugin);
+      }
+
       this.globalPlugins.set(getPluginName(globalPlugin), globalPlugin);
     });
 
     args.guildPlugins.forEach((plugin) => {
       validatePlugin(plugin);
-      transferPluginClassDecoratorValues(plugin);
+
+      if (isPluginClass(plugin)) {
+        applyPluginClassDecoratorValues(plugin);
+      }
+
       this.guildPlugins.set(getPluginName(plugin), plugin);
     });
 
@@ -357,6 +365,8 @@ export class Knub<
   public async unloadPlugin(ctx: AnyContext<TGuildConfig, TGlobalConfig>, pluginName: string): Promise<void> {
     const loadedPlugin = ctx.loadedPlugins.get(pluginName);
     if (!loadedPlugin) return;
+
+    loadedPlugin.pluginData.events.clearAllListeners();
 
     if (loadedPlugin.instance) {
       await loadedPlugin.instance.onUnload?.();

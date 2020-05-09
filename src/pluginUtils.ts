@@ -46,7 +46,7 @@ export function getPluginName(plugin: ValidPlugin) {
   return isPluginClass(plugin) ? plugin.pluginName : plugin.name;
 }
 
-export function transferPluginClassDecoratorValues(plugin: typeof AnyExtendedPluginClass) {
+export function applyPluginClassDecoratorValues(plugin: typeof AnyExtendedPluginClass) {
   if (plugin._decoratorValuesTransferred) {
     return;
   }

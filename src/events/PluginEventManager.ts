@@ -30,18 +30,6 @@ export interface OnOpts {
   filters?: EventFilter[];
 }
 
-// TODO:
-// const createEventListener = <T extends string>(blueprint: EventListenerBlueprint<T>): EventListenerBlueprint<T> => {
-//   return blueprint;
-// };
-//
-// createEventListener({
-//   event: "messageCreate",
-//   listener: ({ message }) => {
-//     console.log('hi', message.id);
-//   },
-// });
-
 /**
  * A wrapper for the Eris event emitter that passes plugin data to the listener
  * functions and, by default, restricts events to the plugin's guilds.

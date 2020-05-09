@@ -1,5 +1,14 @@
 import { Channel, Guild, GuildChannel, Member, Message, User } from "eris";
 import { KnownEventArguments } from "./eventArguments";
+import { EventListenerBlueprint } from "./EventListenerBlueprint";
+
+/**
+ * An identity function that helps with type hinting.
+ * Takes an event listener blueprint as an argument and returns that same blueprint.
+ */
+export function createEventListener<T extends string>(blueprint: EventListenerBlueprint<T>): EventListenerBlueprint<T> {
+  return blueprint;
+}
 
 type EventToGuild = {
   [P in keyof KnownEventArguments]?: (args: KnownEventArguments[P]) => Guild | undefined;

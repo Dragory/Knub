@@ -11,18 +11,18 @@ export type EventFilter = <T extends string>(
   eventMeta: EventMeta
 ) => Awaitable<boolean>;
 
-export type FilteredListener<T extends Listener> = (...params: Parameters<T>) => ReturnType<T>;
+export type FilteredListener<T extends Listener<any>> = (...params: Parameters<T>) => ReturnType<T>;
 
 /**
  * Runs the specified event listener if the event passes ALL of the specified
  * filter
  */
-export function withFilters<T extends Listener>(
+export function withFilters<T extends Listener<any>>(
   event: string,
   listener: T,
   filters: EventFilter[]
 ): FilteredListener<T> {
-  const wrapped: Listener = async (args, eventMeta) => {
+  const wrapped: Listener<any> = async (args, eventMeta) => {
     for (const filter of filters) {
       const filterResult = await filter(event, args, eventMeta);
       if (!filterResult) return;
@@ -38,12 +38,12 @@ export function withFilters<T extends Listener>(
  * Runs the specified event listener if the event passes ANY of the specified
  * filters
  */
-export function withAnyFilter<T extends Listener>(
+export function withAnyFilter<T extends Listener<any>>(
   event: string,
   listener: T,
   filters: EventFilter[]
 ): FilteredListener<T> {
-  const wrapped: Listener = async (args, eventMeta) => {
+  const wrapped: Listener<any> = async (args, eventMeta) => {
     for (const filter of filters) {
       const filterResult = await filter(event, args, eventMeta);
       if (filterResult) {
