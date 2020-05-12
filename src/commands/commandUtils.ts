@@ -4,6 +4,15 @@ import { ICommandConfig, ICommandDefinition, isSwitchOption, TSignature, TTypeCo
 import { Lock } from "../locks/LockManager";
 import { PluginData } from "../plugins/PluginData";
 import { hasPermission } from "../helpers";
+import { CommandBlueprint } from "./CommandBlueprint";
+
+/**
+ * An identity function that helps with type hinting.
+ * Takes a command blueprint as an argument and returns that same blueprint.
+ */
+export function asCommand<T extends CommandBlueprint>(blueprint: T): T {
+  return blueprint;
+}
 
 export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);

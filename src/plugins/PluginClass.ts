@@ -1,13 +1,12 @@
 import { Client, Guild, Member, TextableChannel } from "eris";
 import { BaseConfig, BasePluginConfig, PluginOptions } from "../config/configTypes";
 import { CustomArgumentTypes } from "../commands/commandUtils";
-import { Knub } from "../Knub";
 import { MatchParams } from "../config/configUtils";
 import { LockManager } from "../locks/LockManager";
 import { CooldownManager } from "../cooldowns/CooldownManager";
-import { getMemberLevel } from "./pluginUtils";
+import { getMemberLevel, ResolvablePlugin } from "./pluginUtils";
 import { PluginConfigManager } from "../config/PluginConfigManager";
-import { PluginClassData } from "./PluginData";
+import { PluginData } from "./PluginData";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginEventManager } from "../events/PluginEventManager";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
@@ -23,6 +22,9 @@ export abstract class PluginClass<TConfig extends {} = BasePluginConfig, TCustom
   // Arbitrary info about the plugin, e.g. description.
   // This property is mainly here to set a convention, as it's not actually used in Knub itself.
   public static pluginInfo: any;
+
+  // Other plugins that are required for this plugin to function. They will be loaded before this plugin.
+  public static dependencies: ResolvablePlugin[];
 
   // The plugin's default options, including overrides
   public static defaultOptions: PluginOptions<any, any>;
@@ -43,21 +45,16 @@ export abstract class PluginClass<TConfig extends {} = BasePluginConfig, TCustom
 
   protected readonly client: Client;
 
-  protected pluginData: PluginClassData;
+  protected pluginData: PluginData;
   protected config: PluginConfigManager<TConfig, TCustomOverrideCriteria>;
   protected locks: LockManager;
   protected commandManager: PluginCommandManager;
   protected eventManager: PluginEventManager;
   protected cooldowns: CooldownManager;
 
-  /**
-   * @deprecated Kept here for backwards compatibility. Not recommended to use directly.
-   */
-  protected knub: Knub;
-
   public static _decoratorValuesTransferred = false;
 
-  constructor(pluginData: PluginClassData<TConfig, TCustomOverrideCriteria>) {
+  constructor(pluginData: PluginData<TConfig, TCustomOverrideCriteria>) {
     this.pluginData = pluginData;
 
     this.client = pluginData.client;
@@ -69,7 +66,6 @@ export abstract class PluginClass<TConfig extends {} = BasePluginConfig, TCustom
     this.commandManager = pluginData.commands;
     this.cooldowns = pluginData.cooldowns;
     this.locks = pluginData.locks;
-    this.knub = pluginData.knub;
   }
 
   /**
@@ -120,32 +116,6 @@ export abstract class PluginClass<TConfig extends {} = BasePluginConfig, TCustom
    */
   protected getMemberLevel(member: Partial<Member>): number {
     return getMemberLevel(this.guildConfig.levels, member as Member);
-  }
-
-  /**
-   * Checks whether the specified plugin for the same guild as this plugin exists
-   * Useful for interoperability between plugins
-   */
-  protected hasPlugin(name: string): boolean {
-    const guildData = this.knub.getLoadedGuild(this.guildId);
-    return guildData.loadedPlugins.has(name);
-  }
-
-  /**
-   * Returns the specified plugin for the same guild as this plugin
-   * Useful for interoperability between plugins
-   */
-  protected getPlugin<T extends PluginClass>(name: string): T {
-    const guildData = this.knub.getLoadedGuild(this.guildId);
-    return guildData.loadedPlugins.get(name)?.instance as T;
-  }
-
-  protected sendErrorMessage(channel: TextableChannel, body: string) {
-    this.knub.sendErrorMessage(channel, body);
-  }
-
-  protected sendSuccessMessage(channel: TextableChannel, body: string) {
-    this.knub.sendSuccessMessage(channel, body);
   }
 }
 

@@ -87,6 +87,135 @@ describe("PluginClass", () => {
     });
   });
 
+  describe("Dependencies", () => {
+    it("hasPlugin", (done) => {
+      (async () => {
+        class DependencyToLoad extends PluginClass {
+          public static pluginName = "dependency-to-load";
+        }
+
+        class PluginToLoad extends PluginClass {
+          public static pluginName = "plugin-to-load";
+
+          public async onLoad() {
+            setTimeout(() => {
+              assert.ok(this.pluginData.hasPlugin("dependency-to-load"));
+              assert.ok(!this.pluginData.hasPlugin("unknown-dependency"));
+              assert.ok(this.pluginData.hasPlugin(DependencyToLoad));
+              done();
+            }, 50);
+          }
+        }
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [DependencyToLoad, PluginToLoad],
+          options: {
+            getEnabledPlugins() {
+              return ["dependency-to-load", "plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("getPlugin", (done) => {
+      (async () => {
+        class DependencyToLoad extends PluginClass {
+          public static pluginName = "dependency-to-load";
+
+          ok() {
+            done();
+          }
+        }
+
+        class PluginToLoad extends PluginClass {
+          public static pluginName = "plugin-to-load";
+
+          public async onLoad() {
+            setTimeout(() => {
+              const instance = this.pluginData.getPlugin(DependencyToLoad);
+              instance.ok();
+            }, 50);
+          }
+        }
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [DependencyToLoad, PluginToLoad],
+          options: {
+            getEnabledPlugins() {
+              return ["dependency-to-load", "plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("automatic dependency loading", (done) => {
+      (async () => {
+        class DependencyToLoad extends PluginClass {
+          public static pluginName = "dependency-to-load";
+        }
+
+        class OtherDependencyToLoad extends PluginClass {
+          public static pluginName = "other-dependency-to-load";
+        }
+
+        class PluginToLoad extends PluginClass {
+          public static pluginName = "plugin-to-load";
+
+          public static dependencies = [DependencyToLoad, "other-dependency-to-load"];
+
+          public async onLoad() {
+            setTimeout(() => {
+              assert.ok(this.pluginData.hasPlugin("dependency-to-load"));
+              assert.ok(this.pluginData.hasPlugin(OtherDependencyToLoad));
+              done();
+            }, 50);
+          }
+        }
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [DependencyToLoad, OtherDependencyToLoad, PluginToLoad],
+          options: {
+            getEnabledPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+  });
+
   describe("Decorator commands", () => {
     it("loads and runs decorator-defined commands", (done) => {
       (async () => {

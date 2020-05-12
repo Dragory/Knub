@@ -1,4 +1,4 @@
-import { Client, Guild, TextableChannel } from "eris";
+import { Client, Guild } from "eris";
 import { logger, setLoggerFn } from "./logger";
 import { EventEmitter } from "events";
 import { BaseConfig } from "./config/configTypes";
@@ -18,6 +18,9 @@ import {
   isGuildContext,
   isPluginClass,
   applyPluginClassDecoratorValues,
+  ResolvablePlugin,
+  PluginPublicInterface,
+  isPluginBlueprint,
 } from "./plugins/pluginUtils";
 import {
   AnyContext,
@@ -27,8 +30,11 @@ import {
   KnubOptions,
   LoadedPlugin,
   PluginMap,
-  ValidPlugin,
+  Plugin,
 } from "./types";
+import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
+import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./plugins/PluginBlueprint";
+import { UnknownPluginError } from "./plugins/UnknownPluginError";
 
 const defaultKnubParams: KnubArgs<BaseConfig, BaseConfig> = {
   guildPlugins: [],
@@ -67,7 +73,7 @@ export class Knub<
     };
 
     const uniquePluginNames = new Set();
-    const validatePlugin = (plugin: ValidPlugin) => {
+    const validatePlugin = (plugin: Plugin) => {
       const pluginName = getPluginName(plugin);
 
       if (pluginName == null) {
@@ -227,10 +233,18 @@ export class Knub<
     // Load config
     guildContext.config = await this.options.getConfig(guildId);
 
-    // Load plugins
+    // Load plugins and their dependencies
     const enabledPlugins = await this.options.getEnabledGuildPlugins(guildContext, this.guildPlugins);
+    const dependencies = enabledPlugins
+      .map((pluginName) => this.getPluginDependencies(this.guildPlugins.get(pluginName)))
+      .flat();
+    const pluginsToLoad = Array.from(new Set([...dependencies, ...enabledPlugins]));
 
-    for (const pluginName of enabledPlugins) {
+    for (const pluginName of pluginsToLoad) {
+      if (!this.guildPlugins.has(pluginName)) {
+        throw new UnknownPluginError(`Unknown plugin: ${pluginName}`);
+      }
+
       const loadedPlugin = await this.loadPlugin(guildContext, this.guildPlugins.get(pluginName));
       guildContext.loadedPlugins.set(pluginName, loadedPlugin);
       this.emit("guildPluginLoaded", guildContext, pluginName);
@@ -271,9 +285,23 @@ export class Knub<
     return Array.from(this.loadedGuilds.values());
   }
 
+  protected getPluginDependencies(plugin: Plugin): string[] {
+    if (!plugin.dependencies) {
+      return [];
+    }
+
+    return plugin.dependencies.map((dependency) => {
+      if (typeof dependency === "string") {
+        return dependency;
+      }
+
+      return isPluginBlueprint(dependency) ? dependency.name : dependency.pluginName;
+    });
+  }
+
   public async loadPlugin(
     ctx: GuildContext<TGuildConfig> | GlobalContext<TGlobalConfig>,
-    plugin: ValidPlugin
+    plugin: Plugin
   ): Promise<LoadedPlugin> {
     const pluginName = isPluginClass(plugin) ? plugin.pluginName : plugin.name;
 
@@ -296,21 +324,23 @@ export class Knub<
       locks: ctx.locks,
       cooldowns: new CooldownManager(),
       guildConfig: ctx.config,
+
+      hasPlugin: (resolvablePlugin) => this.ctxHasPlugin(ctx, resolvablePlugin),
+      getPlugin: (resolvablePlugin) => this.getPluginPublicInterface(ctx, resolvablePlugin, pluginData),
     };
 
     pluginData.events.setPluginData(pluginData);
     pluginData.commands.setPluginData(pluginData);
 
+    let _class;
     let instance;
     let blueprint;
     let bindTarget = null;
 
     if (isPluginClass(plugin)) {
       // Load plugin class
-      instance = new plugin({
-        ...pluginData,
-        knub: this,
-      });
+      _class = plugin;
+      instance = new plugin(pluginData);
 
       try {
         await instance.onLoad?.();
@@ -330,7 +360,7 @@ export class Knub<
       }
     }
 
-    // Register initial event listeners
+    // Register static event listeners
     if (plugin.events) {
       for (const eventListenerBlueprint of plugin.events) {
         pluginData.events.registerEventListener({
@@ -340,7 +370,7 @@ export class Knub<
       }
     }
 
-    // Register initial commands
+    // Register static commands
     if (plugin.commands) {
       for (const commandBlueprint of plugin.commands) {
         pluginData.commands.add({
@@ -356,6 +386,7 @@ export class Knub<
     });
 
     return {
+      class: _class,
       instance,
       blueprint,
       pluginData,
@@ -423,11 +454,45 @@ export class Knub<
     return this.globalContext.config;
   }
 
-  public sendErrorMessage(channel: TextableChannel, body: string) {
-    this.options.sendErrorMessageFn(channel, body);
+  protected ctxHasPlugin<T extends ResolvablePlugin>(
+    ctx: AnyContext<TGuildConfig, TGlobalConfig>,
+    plugin: ResolvablePlugin
+  ): boolean {
+    const pluginName = typeof plugin === "string" ? plugin : getPluginName(plugin);
+
+    return ctx.loadedPlugins.has(pluginName);
   }
 
-  public sendSuccessMessage(channel: TextableChannel, body: string) {
-    this.options.sendSuccessMessageFn(channel, body);
+  protected getPluginPublicInterface<T extends ResolvablePlugin>(
+    ctx: AnyContext<TGuildConfig, TGlobalConfig>,
+    plugin: ResolvablePlugin,
+    pluginData: PluginData
+  ): PluginPublicInterface<T> {
+    const pluginName = typeof plugin === "string" ? plugin : getPluginName(plugin);
+
+    if (!ctx.loadedPlugins.has(pluginName)) {
+      throw new PluginNotLoadedError(`Plugin ${pluginName} is not loaded`);
+    }
+
+    const loadedPlugin = ctx.loadedPlugins.get(pluginName);
+    const publicInterface = loadedPlugin.blueprint
+      ? this.resolvePluginBlueprintPublicInterface(loadedPlugin.blueprint, pluginData)
+      : loadedPlugin.instance;
+
+    return publicInterface as PluginPublicInterface<T>;
+  }
+
+  protected resolvePluginBlueprintPublicInterface<T extends PluginBlueprint>(
+    blueprint: T,
+    pluginData: PluginData
+  ): ResolvedPluginBlueprintPublicInterface<T["public"]> {
+    if (!blueprint.public) {
+      return null;
+    }
+
+    return Array.from(Object.entries(blueprint.public)).reduce((obj, [prop, fn]) => {
+      obj[prop] = fn(pluginData);
+      return obj;
+    }, {}) as ResolvedPluginBlueprintPublicInterface<T["public"]>;
   }
 }

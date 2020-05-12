@@ -3,28 +3,47 @@ import { PluginEventManager } from "../events/PluginEventManager";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { LockManager } from "../locks/LockManager";
-import { AnyExtendedPluginClass } from "./PluginClass";
 import { CooldownManager } from "../cooldowns/CooldownManager";
-import { Knub } from "../Knub";
+import { PluginPublicInterface, ResolvablePlugin } from "./pluginUtils";
 
-type GetPluginFn = <T extends typeof AnyExtendedPluginClass>(plugin: T) => InstanceType<T>;
+export type HasPluginFn = <T extends ResolvablePlugin>(plugin: T) => boolean;
+export type GetPluginFn = <T extends ResolvablePlugin>(plugin: T) => PluginPublicInterface<T>;
 
+/**
+ * Instance-specific data for plugins
+ */
 export interface PluginData<TConfig = any, TCustomOverrideCriteria = unknown> {
+  /**
+   * The underlying Eris Client object
+   */
   client: Client;
+
+  /**
+   * The guild this plugin has been loaded for
+   */
   guild: Guild;
+
   config: PluginConfigManager<TConfig, TCustomOverrideCriteria>;
   events: PluginEventManager;
   commands: PluginCommandManager;
   locks: LockManager;
   cooldowns: CooldownManager;
-  // getPlugin: GetPluginFn;
-  guildConfig: any;
-}
 
-export interface PluginClassData<TConfig = any, TCustomOverrideCriteria = unknown>
-  extends PluginData<TConfig, TCustomOverrideCriteria> {
   /**
-   * @deprecated Kept here for backwards compatibility. Not recommended to use directly.
+   * Check whether a specific other plugin has been loaded for this guild
    */
-  knub: Knub;
+  hasPlugin: HasPluginFn;
+
+  /**
+   * Get the public interface for another plugin
+   * - For plugins based on `PluginClass`, this returns the entire class instance
+   * - For plugins based on PluginBlueprint, this returns the public interface
+   *   for that plugin
+   */
+  getPlugin: GetPluginFn;
+
+  /**
+   * The full guild config. Use `config` property for plugin config values.
+   */
+  guildConfig: any;
 }

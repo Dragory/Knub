@@ -40,3 +40,7 @@ export { LockManager, Lock } from "./locks/LockManager";
 export { CooldownManager } from "./cooldowns/CooldownManager";
 
 export { TypeConversionError } from "knub-command-manager";
+
+export { asPlugin } from "./plugins/pluginUtils";
+export { asCommand } from "./commands/commandUtils";
+export { asEventListener } from "./events/eventUtils";

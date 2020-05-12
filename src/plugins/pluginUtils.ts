@@ -1,15 +1,23 @@
 import { BaseConfig, PermissionLevels } from "../config/configTypes";
 import { Member } from "eris";
 import { AnyExtendedPluginClass, PluginClass } from "./PluginClass";
-import { PluginBlueprint } from "./PluginBlueprint";
+import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./PluginBlueprint";
 import path from "path";
 import _fs from "fs";
-import { BaseContext, GuildContext, PluginMap, ValidPlugin } from "../types";
+import { BaseContext, GuildContext, Plugin, PluginMap } from "../types";
 import { getMetadataFromAllProperties } from "./decoratorUtils";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 
 const fs = _fs.promises;
+
+/**
+ * An identity function that helps with type hinting.
+ * Takes a plugin blueprint as an argument and returns that same blueprint.
+ */
+export function asPlugin<T extends PluginBlueprint>(blueprint: T): T {
+  return blueprint;
+}
 
 export function getMemberLevel(levels: PermissionLevels, member: Member): number {
   if (member.guild.ownerID === member.id) {
@@ -37,7 +45,7 @@ export function isPluginBlueprint(value: any): value is PluginBlueprint {
   return !isPluginClass(value);
 }
 
-export function getPluginName(plugin: ValidPlugin) {
+export function getPluginName(plugin: Plugin) {
   return isPluginClass(plugin) ? plugin.pluginName : plugin.name;
 }
 
@@ -70,6 +78,14 @@ export function isGuildContext(ctx: BaseContext<any>): ctx is GuildContext<any> 
 export function isGlobalContext(ctx: BaseContext<any>): ctx is GuildContext<any> {
   return !isGuildContext(ctx);
 }
+
+export type ResolvablePlugin = Plugin | string;
+
+export type PluginPublicInterface<T extends ResolvablePlugin> = T extends typeof AnyExtendedPluginClass
+  ? InstanceType<T>
+  : T extends PluginBlueprint
+  ? ResolvedPluginBlueprintPublicInterface<T["public"]>
+  : unknown;
 
 /**
  * Load JSON config files from a "config" folder, relative to cwd

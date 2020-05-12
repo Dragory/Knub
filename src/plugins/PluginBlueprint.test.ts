@@ -1,4 +1,4 @@
-import { CooldownManager, Knub, LockManager, PluginBlueprint } from "../index";
+import { asPlugin, CooldownManager, Knub, LockManager, PluginBlueprint } from "../index";
 import { Guild } from "eris";
 import {
   createMockClient,
@@ -14,6 +14,7 @@ import { PluginEventManager } from "../events/PluginEventManager";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { asEventListener } from "../events/eventUtils";
+import { PluginData } from "./PluginData";
 
 process.on("unhandledRejection", (err) => {
   throw err;
@@ -80,6 +81,139 @@ describe("PluginBlueprint", () => {
 
         await sleep(30);
         client.emit("guildUnavailable", guild);
+      })();
+    });
+  });
+
+  describe("Dependencies", () => {
+    it("hasPlugin", (done) => {
+      (async () => {
+        const DependencyToLoad = asPlugin({
+          name: "dependency-to-load",
+        });
+
+        const PluginToLoad = asPlugin({
+          name: "plugin-to-load",
+
+          onLoad(pluginData) {
+            setTimeout(() => {
+              assert.ok(pluginData.hasPlugin("dependency-to-load"));
+              assert.ok(!pluginData.hasPlugin("unknown-dependency"));
+              assert.ok(pluginData.hasPlugin(DependencyToLoad));
+              done();
+            }, 50);
+          },
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [DependencyToLoad, PluginToLoad],
+          options: {
+            getEnabledPlugins() {
+              return ["dependency-to-load", "plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("getPlugin", (done) => {
+      (async () => {
+        const DependencyToLoad = asPlugin({
+          name: "dependency-to-load",
+
+          public: {
+            ok(pluginData: PluginData) {
+              assert.ok(pluginData != null);
+
+              return () => done();
+            },
+          },
+        });
+
+        const PluginToLoad = asPlugin({
+          name: "plugin-to-load",
+
+          onLoad(pluginData: PluginData) {
+            setTimeout(() => {
+              const instance = pluginData.getPlugin(DependencyToLoad);
+              instance.ok();
+            }, 50);
+          },
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [DependencyToLoad, PluginToLoad],
+          options: {
+            getEnabledPlugins() {
+              return ["dependency-to-load", "plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("automatic dependency loading", (done) => {
+      (async () => {
+        const DependencyToLoad = asPlugin({
+          name: "dependency-to-load",
+        });
+
+        const OtherDependencyToLoad = asPlugin({
+          name: "other-dependency-to-load",
+        });
+
+        const PluginToLoad = asPlugin({
+          name: "plugin-to-load",
+
+          dependencies: [DependencyToLoad, "other-dependency-to-load"],
+
+          onLoad(pluginData) {
+            setTimeout(() => {
+              assert.ok(pluginData.hasPlugin("dependency-to-load"));
+              assert.ok(pluginData.hasPlugin(OtherDependencyToLoad));
+              done();
+            }, 50);
+          },
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [DependencyToLoad, OtherDependencyToLoad, PluginToLoad],
+          options: {
+            getEnabledPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
       })();
     });
   });

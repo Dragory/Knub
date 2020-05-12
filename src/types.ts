@@ -10,9 +10,8 @@ import { Awaitable } from "./utils";
 
 type StatusMessageFn = (channel: TextableChannel, body: string) => void;
 
-export type ValidPlugin = typeof AnyExtendedPluginClass | PluginBlueprint;
-
-export type PluginMap = Map<string, ValidPlugin>;
+export type Plugin = typeof AnyExtendedPluginClass | PluginBlueprint;
+export type PluginMap = Map<string, Plugin>;
 
 export interface KnubOptions<TGuildConfig extends BaseConfig, TGlobalConfig extends BaseConfig> {
   autoInitGuilds?: boolean;
@@ -28,12 +27,13 @@ export interface KnubOptions<TGuildConfig extends BaseConfig, TGlobalConfig exte
 }
 
 export interface KnubArgs<TGuildConfig extends BaseConfig, TGlobalConfig extends BaseConfig> {
-  guildPlugins?: ValidPlugin[];
-  globalPlugins?: ValidPlugin[];
+  guildPlugins?: Plugin[];
+  globalPlugins?: Plugin[];
   options?: KnubOptions<TGuildConfig, TGlobalConfig>;
 }
 
 export interface LoadedPlugin {
+  class?: typeof PluginClass;
   instance?: PluginClass;
   blueprint?: PluginBlueprint;
   pluginData: PluginData;
