@@ -1,11 +1,10 @@
 import { BaseConfig, PermissionLevels } from "../config/configTypes";
 import { Member } from "eris";
-import { get } from "../utils";
 import { AnyExtendedPluginClass, PluginClass } from "./PluginClass";
 import { PluginBlueprint } from "./PluginBlueprint";
 import path from "path";
 import _fs from "fs";
-import { GuildContext, BaseContext, PluginMap, ValidPlugin } from "../types";
+import { BaseContext, GuildContext, PluginMap, ValidPlugin } from "../types";
 import { getMetadataFromAllProperties } from "./decoratorUtils";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
@@ -24,10 +23,6 @@ export function getMemberLevel(levels: PermissionLevels, member: Member): number
   }
 
   return 0;
-}
-
-export function hasPermission(config: any, permission: string) {
-  return get(config, permission) === true;
 }
 
 export function isPluginClass(value: any): value is typeof AnyExtendedPluginClass {

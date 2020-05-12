@@ -1,9 +1,9 @@
 import { EventMeta, Listener } from "./PluginEventManager";
 import { Awaitable, resolveMember } from "../utils";
 import { GroupChannel, PrivateChannel } from "eris";
-import { hasPermission } from "../plugins/pluginUtils";
 import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils";
 import { EventArguments } from "./eventArguments";
+import { hasPermission } from "../helpers";
 
 export type EventFilter = <T extends string>(
   event: T,

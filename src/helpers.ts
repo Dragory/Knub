@@ -1,5 +1,5 @@
-import { Client, Message, Emoji, TextChannel, Invite, TextableChannel, MessageContent, MessageFile } from "eris";
-import { noop, Reaction } from "./utils";
+import { Client, Emoji, Invite, Message, MessageContent, MessageFile, TextableChannel, TextChannel } from "eris";
+import { get, noop, Reaction } from "./utils";
 
 /**
  * Splits a string into chunks, preferring to split at newlines if possible
@@ -41,7 +41,7 @@ export function splitMessageIntoChunks(str: string): string[] {
   const chunks = splitIntoCleanChunks(str, 1990);
 
   let openCodeBlock = false;
-  return chunks.map(chunk => {
+  return chunks.map((chunk) => {
     // If the chunk starts with a newline, add an invisible unicode char so Discord doesn't strip it away
     if (chunk[0] === "\n") chunk = "\u200b" + chunk;
     // If the chunk ends with a newline, add an invisible unicode char so Discord doesn't strip it away
@@ -95,8 +95,8 @@ export function waitForReaction(
   restrictToUserId: string = null,
   timeout = 15000
 ): Promise<Emoji> {
-  return new Promise(resolve => {
-    availableReactions.forEach(reaction => msg.addReaction(reaction).catch(noop));
+  return new Promise((resolve) => {
+    availableReactions.forEach((reaction) => msg.addReaction(reaction).catch(noop));
 
     const timeoutTimer = setTimeout(() => {
       msg.removeReactions().catch(noop);
@@ -127,12 +127,12 @@ export function waitForReply(
   restrictToUserId: string = null,
   timeout = 15000
 ): Promise<Message> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const timeoutTimer = setTimeout(() => {
       resolve(null);
     }, timeout);
 
-    bot.on("messageCreate", msg => {
+    bot.on("messageCreate", (msg) => {
       if (!msg.channel || msg.channel.id !== channel.id) return;
       if (msg.author && msg.author.id === bot.user.id) return;
       if (restrictToUserId && (!msg.author || msg.author.id !== restrictToUserId)) return;
@@ -176,4 +176,8 @@ export function disableCodeBlocks(str: string): string {
  */
 export function getInviteLink(inv: Invite) {
   return `https://discord.gg/${inv.code}`;
+}
+
+export function hasPermission(config: any, permission: string) {
+  return get(config, permission) === true;
 }

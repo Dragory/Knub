@@ -3,7 +3,7 @@ import { Awaitable } from "../utils";
 import { ICommandConfig, ICommandDefinition, isSwitchOption, TSignature, TTypeConverterFn } from "knub-command-manager";
 import { Lock } from "../locks/LockManager";
 import { PluginData } from "../plugins/PluginData";
-import { hasPermission } from "../plugins/pluginUtils";
+import { hasPermission } from "../helpers";
 
 export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);
