@@ -13,7 +13,7 @@ import { noop } from "../utils";
 import { PluginEventManager } from "../events/PluginEventManager";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
-import { createEventListener } from "../events/eventUtils";
+import { asEventListener } from "../events/eventUtils";
 
 process.on("unhandledRejection", (err) => {
   throw err;
@@ -124,7 +124,7 @@ describe("PluginBlueprint", () => {
       (async () => {
         let msgEvFnCallNum = 0;
 
-        const messageCreateEv = createEventListener({
+        const messageCreateEv = asEventListener({
           event: "messageCreate",
           listener() {
             msgEvFnCallNum++;

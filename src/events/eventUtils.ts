@@ -6,7 +6,7 @@ import { EventListenerBlueprint } from "./EventListenerBlueprint";
  * An identity function that helps with type hinting.
  * Takes an event listener blueprint as an argument and returns that same blueprint.
  */
-export function createEventListener<T extends string>(blueprint: EventListenerBlueprint<T>): EventListenerBlueprint<T> {
+export function asEventListener<T extends string>(blueprint: EventListenerBlueprint<T>): EventListenerBlueprint<T> {
   return blueprint;
 }
 
