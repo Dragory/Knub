@@ -1,4 +1,4 @@
-import { BaseConfig, PermissionLevels } from "../config/configInterfaces";
+import { BaseConfig, PermissionLevels } from "../config/configTypes";
 import { Member } from "eris";
 import { get } from "../utils";
 import { AnyExtendedPluginClass, PluginClass } from "./PluginClass";

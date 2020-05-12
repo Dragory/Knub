@@ -1,7 +1,7 @@
 import { Client, Guild, TextableChannel } from "eris";
 import { logger, setLoggerFn } from "./logger";
 import { EventEmitter } from "events";
-import { BaseConfig } from "./config/configInterfaces";
+import { BaseConfig } from "./config/configTypes";
 import { get } from "./utils";
 import { LockManager } from "./locks/LockManager";
 import { PluginData } from "./plugins/PluginData";

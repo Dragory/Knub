@@ -1,5 +1,5 @@
 import { Client, Guild, Member, TextableChannel } from "eris";
-import { BaseConfig, BasePluginConfig, PluginOptions } from "../config/configInterfaces";
+import { BaseConfig, BasePluginConfig, PluginOptions } from "../config/configTypes";
 import { CustomArgumentTypes } from "../commands/commandUtils";
 import { Knub } from "../Knub";
 import { MatchParams } from "../config/configUtils";

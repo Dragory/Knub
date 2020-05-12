@@ -27,7 +27,7 @@ export {
   BaseConfig,
   PartialPluginOptions,
   PluginOptions,
-} from "./config/configInterfaces";
+} from "./config/configTypes";
 
 export { getCommandSignature, PluginCommandConfig, CommandContext } from "./commands/commandUtils";
 

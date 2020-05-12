@@ -1,4 +1,4 @@
-import { PluginOptions, PluginOverrideCriteria } from "./configInterfaces";
+import { PluginOptions, PluginOverrideCriteria } from "./configTypes";
 import { Awaitable } from "../utils";
 
 const condRegex = /^(\D+)(\d+)$/;

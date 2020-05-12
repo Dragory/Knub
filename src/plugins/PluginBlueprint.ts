@@ -1,4 +1,4 @@
-import { BasePluginConfig, PluginOptions } from "../config/configInterfaces";
+import { BasePluginConfig, PluginOptions } from "../config/configTypes";
 import { CustomArgumentTypes } from "../commands/commandUtils";
 import { Awaitable } from "../utils";
 import { PluginData } from "./PluginData";

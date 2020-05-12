@@ -1,5 +1,5 @@
 import { TextableChannel } from "eris";
-import { BaseConfig } from "./config/configInterfaces";
+import { BaseConfig } from "./config/configTypes";
 import { LoggerFn } from "./logger";
 import { CustomArgumentTypes } from "./commands/commandUtils";
 import { LockManager } from "./locks/LockManager";

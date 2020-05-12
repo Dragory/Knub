@@ -1,4 +1,4 @@
-import { PartialPluginOptions, PermissionLevels, PluginOptions } from "./configInterfaces";
+import { PartialPluginOptions, PermissionLevels, PluginOptions } from "./configTypes";
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { Channel, GuildChannel, Member, Message, User } from "eris";
 import { getMemberLevel } from "../plugins/pluginUtils";
