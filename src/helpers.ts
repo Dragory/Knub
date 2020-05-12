@@ -1,5 +1,9 @@
-import { Client, Emoji, Invite, Message, MessageContent, MessageFile, TextableChannel, TextChannel } from "eris";
-import { get, noop, Reaction } from "./utils";
+/**
+ * @file Public helper functions/types
+ */
+
+import { Client, Emoji, Guild, Invite, Message, MessageContent, MessageFile, TextableChannel, TextChannel } from "eris";
+import { get, getChannelId, getRoleId, getUserId, noop } from "./utils";
 
 /**
  * Splits a string into chunks, preferring to split at newlines if possible
@@ -82,6 +86,33 @@ export async function createChunkedMessage(channel: TextableChannel, messageText
   }
 
   return messages;
+}
+
+/**
+ * For unicode emoji, the unicode char/string itself.
+ * For custom emoji, a string in the format `"emojiName:emojiID"`.
+ * @see https://abal.moe/Eris/docs/Message#function-addReaction
+ */
+export type Reaction = string;
+
+export function resolveUser(bot: Client, str: string) {
+  const userId = getUserId(str);
+  return userId && bot.users.get(userId);
+}
+
+export function resolveMember(guild: Guild, str: string) {
+  const memberId = getUserId(str);
+  return memberId && guild.members.get(memberId);
+}
+
+export function resolveChannel(guild: Guild, str: string) {
+  const channelId = getChannelId(str);
+  return channelId && guild.channels.get(channelId);
+}
+
+export function resolveRole(guild: Guild, str: string) {
+  const roleId = getRoleId(str);
+  return roleId && guild.roles.get(roleId);
 }
 
 /**
@@ -181,3 +212,5 @@ export function getInviteLink(inv: Invite) {
 export function hasPermission(config: any, permission: string) {
   return get(config, permission) === true;
 }
+
+export { userMentionRegex, channelMentionRegex, roleMentionRegex, snowflakeRegex } from "./utils";
