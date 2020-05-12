@@ -1,4 +1,10 @@
-/.idea
 /node_modules
 /dist
 desktop.ini
+
+# IntelliJ
+**/.idea/workspace.xml
+**/.idea/tasks.xml
+**/.idea/usage.statistics.xml
+**/.idea/shelf
+**/.idea/dataSources*
