@@ -43,6 +43,7 @@
 	* `PluginClass.clearEventHandlers()` — Use `this.events.clearAllListeners()` instead
 	* `PluginClass.runtimePluginName` — Always the same as `pluginName` now
 	* `PluginClass.bot` — now called `PluginClass.client`
+	* `PluginClass.knub` — use `this.pluginData.getKnubInstance()` instead
 * New static plugin fields:
 	* `commands` — array of command blueprints to register when Knub loads the
 	  plugin
@@ -53,9 +54,10 @@
   but in the static commands/events arrays instead
 
 **TODO:**
+* Actually use getEnabledGlobalPlugins()
 * Re-implement support for custom overrides
+* Add tests for custom argument types
 * More tests!
-* PluginData.getPlugin()
 
 # 29.0.1
 * Fix override conditions resolving to `true` even when unknown conditions were

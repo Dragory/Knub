@@ -327,6 +327,8 @@ export class Knub<
 
       hasPlugin: (resolvablePlugin) => this.ctxHasPlugin(ctx, resolvablePlugin),
       getPlugin: (resolvablePlugin) => this.getPluginPublicInterface(ctx, resolvablePlugin, pluginData),
+
+      getKnubInstance: () => this,
     };
 
     pluginData.events.setPluginData(pluginData);

@@ -5,6 +5,7 @@ import { PluginConfigManager } from "../config/PluginConfigManager";
 import { LockManager } from "../locks/LockManager";
 import { CooldownManager } from "../cooldowns/CooldownManager";
 import { PluginPublicInterface, ResolvablePlugin } from "./pluginUtils";
+import { Knub } from "../Knub";
 
 export type HasPluginFn = <T extends ResolvablePlugin>(plugin: T) => boolean;
 export type GetPluginFn = <T extends ResolvablePlugin>(plugin: T) => PluginPublicInterface<T>;
@@ -46,4 +47,9 @@ export interface PluginData<TConfig = any, TCustomOverrideCriteria = unknown> {
    * The full guild config. Use `config` property for plugin config values.
    */
   guildConfig: any;
+
+  /**
+   * Get the active Knub instance
+   */
+  getKnubInstance: () => Knub;
 }
