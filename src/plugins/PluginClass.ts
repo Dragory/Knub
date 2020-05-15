@@ -5,7 +5,7 @@ import { MatchParams } from "../config/configUtils";
 import { LockManager } from "../locks/LockManager";
 import { CooldownManager } from "../cooldowns/CooldownManager";
 import { getMemberLevel, ResolvablePlugin } from "./pluginUtils";
-import { PluginConfigManager } from "../config/PluginConfigManager";
+import { CustomOverrideMatcher, PluginConfigManager } from "../config/PluginConfigManager";
 import { PluginData } from "./PluginData";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginEventManager } from "../events/PluginEventManager";
@@ -37,6 +37,9 @@ export abstract class PluginClass<TConfig extends {} = BasePluginConfig, TCustom
 
   // Custom argument types for commands
   public static customArgumentTypes: CustomArgumentTypes;
+
+  // If this plugin includes any custom overrides, this function evaluates them
+  public static customOverrideMatcher: CustomOverrideMatcher<any>;
 
   // Guild info - these will be null for global plugins
   public readonly guildId: string;

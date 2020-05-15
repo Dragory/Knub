@@ -1,5 +1,6 @@
 import { PluginOptions, PluginOverrideCriteria } from "./configTypes";
 import { Awaitable } from "../utils";
+import { PluginData } from "../plugins/PluginData";
 
 const condRegex = /^(\D+)(\d+)$/;
 const splitCond = (v, defaultCond): [string, string] => {
@@ -60,7 +61,7 @@ export function mergeConfig<T extends {}>(...sources: any[]): T {
   return target;
 }
 
-type CustomOverrideResolver<T> = (criteria: T, matchParams: MatchParams) => Awaitable<boolean>;
+type CustomOverrideResolver<T> = (pluginData: PluginData, criteria: T, matchParams: MatchParams) => Awaitable<boolean>;
 
 /**
  * Returns matching plugin options for the specified matchParams based on overrides
@@ -74,6 +75,7 @@ export function getMatchingPluginConfig<
     TCustomOverrideCriteria
   >
 >(
+  pluginData: PluginData<TConfig, TCustomOverrideCriteria>,
   pluginOptions: TPluginOptions,
   matchParams: MatchParams,
   customOverrideCriteriaResolver?: CustomOverrideResolver<TCustomOverrideCriteria>
@@ -83,6 +85,7 @@ export function getMatchingPluginConfig<
   const overrides = pluginOptions.overrides || [];
   for (const override of overrides) {
     const matches = evaluateOverrideCriteria<TCustomOverrideCriteria>(
+      pluginData,
       override,
       matchParams,
       customOverrideCriteriaResolver
@@ -97,6 +100,7 @@ export function getMatchingPluginConfig<
 }
 
 export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
+  pluginData: PluginData<any, TCustomOverrideCriteria>,
   criteria: PluginOverrideCriteria<TCustomOverrideCriteria>,
   matchParams: MatchParams,
   customOverrideCriteriaResolver?: CustomOverrideResolver<TCustomOverrideCriteria>
@@ -241,7 +245,7 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
 
     // Custom override criteria
     if (key === "extra" && customOverrideCriteriaResolver) {
-      if (!customOverrideCriteriaResolver(value, matchParams)) return false;
+      if (!customOverrideCriteriaResolver(pluginData, value, matchParams)) return false;
       matchedOne = true;
       continue;
     }
@@ -252,7 +256,7 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
 
       let match = true;
       for (const subCriteria of value) {
-        match = match && evaluateOverrideCriteria<TCustomOverrideCriteria>(subCriteria, matchParams);
+        match = match && evaluateOverrideCriteria<TCustomOverrideCriteria>(pluginData, subCriteria, matchParams);
       }
       if (!match) return false;
 
@@ -266,7 +270,7 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
 
       let match = false;
       for (const subCriteria of value) {
-        match = match || evaluateOverrideCriteria<TCustomOverrideCriteria>(subCriteria, matchParams);
+        match = match || evaluateOverrideCriteria<TCustomOverrideCriteria>(pluginData, subCriteria, matchParams);
       }
       if (match === false) return false;
 
@@ -275,7 +279,7 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
     }
 
     if (key === "not") {
-      const match = evaluateOverrideCriteria<TCustomOverrideCriteria>(value, matchParams);
+      const match = evaluateOverrideCriteria<TCustomOverrideCriteria>(pluginData, value, matchParams);
       if (match) return false;
 
       matchedOne = true;

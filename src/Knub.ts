@@ -313,7 +313,7 @@ export class Knub<
       config: new PluginConfigManager(
         plugin.defaultOptions ?? { config: {} },
         get(ctx.config, `plugins.${pluginName}`) || {},
-        null,
+        plugin.customOverrideMatcher,
         ctx.config.levels || {}
       ),
       events: new PluginEventManager(),
@@ -333,6 +333,7 @@ export class Knub<
 
     pluginData.events.setPluginData(pluginData);
     pluginData.commands.setPluginData(pluginData);
+    pluginData.config.setPluginData(pluginData);
 
     let _class;
     let instance;

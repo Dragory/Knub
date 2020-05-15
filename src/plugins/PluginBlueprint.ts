@@ -5,6 +5,7 @@ import { PluginData } from "./PluginData";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { ResolvablePlugin } from "./pluginUtils";
+import { CustomOverrideMatcher } from "../config/PluginConfigManager";
 
 /**
  * Each value in the public interface is a function that returns the actual
@@ -43,6 +44,9 @@ export interface PluginBlueprint<TConfig extends {} = BasePluginConfig, TCustomO
 
   // Custom argument types for commands
   customArgumentTypes?: CustomArgumentTypes;
+
+  // If this plugin includes any custom overrides, this function evaluates them
+  customOverrideMatcher?: CustomOverrideMatcher<TCustomOverrideCriteria>;
 
   // Public interface for this plugin
   public?: PluginBlueprintPublicInterface<TConfig, TCustomOverrideCriteria>;

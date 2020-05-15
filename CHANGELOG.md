@@ -28,7 +28,7 @@
         * `options.getEnabledGlobalPlugins`
         * Signature: `(ctx, pluginMap) => Awaitable<string[]>`
 * Deprecated:
-	* `PluginClass.getDefaultOptions()` — now a static property `defaultOptions`
+	* `PluginClass.getDefaultOptions()` — Now a static property `PluginClass.defaultOptions`
 	* `PluginClass.getConfig()` — Use `this.config.get()` instead
 	* `PluginClass.getMatchingConfig()` — Use `this.config.getMatchingConfig()` instead
 	* `PluginClass.getConfigForMsg()` — Use `this.config.getForMsg()` instead
@@ -41,7 +41,9 @@
 	* `PluginClass.on()` — Use `this.events.on()` instead
 	* `PluginClass.off()` — Use `this.events.off()` instead
 	* `PluginClass.clearEventHandlers()` — Use `this.events.clearAllListeners()` instead
-	* `PluginClass.runtimePluginName` — Always the same as `pluginName` now
+	* `PluginClass.matchCustomOverrideCriteria()` — Now a static property `PluginClass.customOverrideMatcher` with
+	  an updated signature
+	* `PluginClass.runtimePluginName` — Always the same as `PluginClass.pluginName` now
 	* `PluginClass.bot` — now called `PluginClass.client`
 	* `PluginClass.knub` — use `this.pluginData.getKnubInstance()` instead
 * New static plugin fields:
@@ -50,12 +52,13 @@
 	* `events` — array of event listener blueprints to register when Knub loads
 	  the plugin
 	* `defaultOptions` — default options (config + overrides) for the plugin
-* command() and event() decorators no longer save their data in class metadata,
+	* `customOverrideMatcher` — Matcher function for custom overrides, if used
+* `command()` and `event()` decorators no longer save their data in class metadata,
   but in the static commands/events arrays instead
 
 **TODO:**
 * Actually use getEnabledGlobalPlugins()
-* Re-implement support for custom overrides
+* Add tests for custom overrides
 * Add tests for custom argument types
 * More tests!
 

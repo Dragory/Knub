@@ -2,6 +2,7 @@ import { PartialPluginOptions, PermissionLevels, PluginOptions } from "./configT
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { Channel, GuildChannel, Member, Message, User } from "eris";
 import { getMemberLevel } from "../plugins/pluginUtils";
+import { PluginData } from "../plugins/PluginData";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string;
@@ -10,6 +11,7 @@ export interface ExtendedMatchParams extends MatchParams {
 }
 
 export type CustomOverrideMatcher<TCustomOverrideCriteria> = (
+  pluginData: PluginData,
   criteria: TCustomOverrideCriteria,
   matchParams: MatchParams
 ) => boolean;
@@ -18,6 +20,7 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
   private readonly levels: PermissionLevels;
   private readonly options: PluginOptions<TConfig, TCustomOverrideCriteria>;
   private readonly customOverrideMatcher: CustomOverrideMatcher<TCustomOverrideCriteria>;
+  private pluginData: PluginData<TConfig, TCustomOverrideCriteria>;
 
   constructor(
     defaultOptions: PluginOptions<TConfig, TCustomOverrideCriteria>,
@@ -40,6 +43,14 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
         ? userOptions.overrides ?? []
         : (userOptions.overrides ?? []).concat(defaultOptions.overrides ?? []),
     };
+  }
+
+  public setPluginData(pluginData: PluginData<TConfig, TCustomOverrideCriteria>) {
+    if (this.pluginData) {
+      throw new Error("Plugin data already set");
+    }
+
+    this.pluginData = pluginData;
   }
 
   public get(): TConfig {
@@ -80,6 +91,7 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
     };
 
     return getMatchingPluginConfig<TConfig, TCustomOverrideCriteria>(
+      this.pluginData,
       this.options,
       finalMatchParams,
       this.customOverrideMatcher
