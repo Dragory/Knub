@@ -1,5 +1,4 @@
 import { PluginOptions, PluginOverrideCriteria } from "./configTypes";
-import { Awaitable } from "../utils";
 import { PluginData } from "../plugins/PluginData";
 
 const condRegex = /^(\D+)(\d+)$/;
@@ -61,7 +60,10 @@ export function mergeConfig<T extends {}>(...sources: any[]): T {
   return target;
 }
 
-type CustomOverrideResolver<T> = (pluginData: PluginData, criteria: T, matchParams: MatchParams) => Awaitable<boolean>;
+/**
+ * Match override criteria `criteria` against `matchParams`. Return `true` if the criteria matches matchParams.
+ */
+export type CustomOverrideMatcher<T> = (pluginData: PluginData, criteria: T, matchParams: MatchParams) => boolean;
 
 /**
  * Returns matching plugin options for the specified matchParams based on overrides
@@ -78,7 +80,7 @@ export function getMatchingPluginConfig<
   pluginData: PluginData<TConfig, TCustomOverrideCriteria>,
   pluginOptions: TPluginOptions,
   matchParams: MatchParams,
-  customOverrideCriteriaResolver?: CustomOverrideResolver<TCustomOverrideCriteria>
+  customOverrideMatcher?: CustomOverrideMatcher<TCustomOverrideCriteria>
 ): TConfig {
   let result: TConfig = mergeConfig(pluginOptions.config || {});
 
@@ -88,7 +90,7 @@ export function getMatchingPluginConfig<
       pluginData,
       override,
       matchParams,
-      customOverrideCriteriaResolver
+      customOverrideMatcher
     );
 
     if (matches) {
@@ -103,7 +105,7 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
   pluginData: PluginData<any, TCustomOverrideCriteria>,
   criteria: PluginOverrideCriteria<TCustomOverrideCriteria>,
   matchParams: MatchParams,
-  customOverrideCriteriaResolver?: CustomOverrideResolver<TCustomOverrideCriteria>
+  customOverrideMatcher?: CustomOverrideMatcher<TCustomOverrideCriteria>
 ): boolean {
   let matchedOne = false;
 
@@ -244,8 +246,8 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
     }
 
     // Custom override criteria
-    if (key === "extra" && customOverrideCriteriaResolver) {
-      if (!customOverrideCriteriaResolver(pluginData, value, matchParams)) return false;
+    if (key === "extra" && customOverrideMatcher) {
+      if (!customOverrideMatcher(pluginData, value, matchParams)) return false;
       matchedOne = true;
       continue;
     }

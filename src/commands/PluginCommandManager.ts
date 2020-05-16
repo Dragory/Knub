@@ -66,7 +66,15 @@ export class PluginCommandManager {
     const postFilters = Array.from(blueprint.config?.postFilters ?? []);
     postFilters.unshift(checkCommandCooldown, checkCommandLocks);
 
-    const config = { ...blueprint.config, preFilters, postFilters };
+    const config = {
+      ...blueprint.config,
+      preFilters,
+      postFilters,
+      extra: {
+        blueprint,
+      },
+    };
+
     const command = this.manager.add(blueprint.trigger, blueprint.parameters, config);
     this.handlers.set(command.id, blueprint.run);
   }

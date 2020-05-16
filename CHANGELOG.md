@@ -27,7 +27,7 @@
         * `options.getEnabledGuildPlugins`
         * `options.getEnabledGlobalPlugins`
         * Signature: `(ctx, pluginMap) => Awaitable<string[]>`
-* Deprecated:
+* Deprecated PluginClass fields:
 	* `PluginClass.getDefaultOptions()` — Now a static property `PluginClass.defaultOptions`
 	* `PluginClass.getConfig()` — Use `this.config.get()` instead
 	* `PluginClass.getMatchingConfig()` — Use `this.config.getMatchingConfig()` instead
@@ -53,6 +53,10 @@
 	  the plugin
 	* `defaultOptions` — default options (config + overrides) for the plugin
 	* `customOverrideMatcher` — Matcher function for custom overrides, if used
+* Command `config.extra` no longer contains `requiredPermission`, `cooldown`, etc. directly.
+  Instead, `config.extra` now contains the original blueprint used to create the command (`config.extra.blueprint`),
+  which in turn contains the values that were previously in `config.extra`.
+  There should rarely be a need to touch these values directly.
 * `command()` and `event()` decorators no longer save their data in class metadata,
   but in the static commands/events arrays instead
 

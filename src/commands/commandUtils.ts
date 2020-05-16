@@ -1,4 +1,4 @@
-import { Client, GuildChannel, Message, PrivateChannel } from "eris";
+import { Client, GroupChannel, GuildChannel, Message, PrivateChannel } from "eris";
 import { Awaitable } from "../utils";
 import { ICommandConfig, ICommandDefinition, isSwitchOption, TSignature, TTypeConverterFn } from "knub-command-manager";
 import { Lock } from "../locks/LockManager";
@@ -34,12 +34,7 @@ export interface CommandContext {
 }
 
 export interface ICommandExtraData {
-  requiredPermission?: string;
-  allowDMs?: boolean;
-  locks?: string | string[];
-  cooldown?: number;
-  cooldownPermission?: string;
-  info?: any;
+  blueprint: CommandBlueprint;
   _lock?: Lock;
 }
 
@@ -93,15 +88,22 @@ export function getCommandSignature(
  * allowed for DMs
  */
 export function restrictCommandSource(cmd: PluginCommandDefinition, context: CommandContext): boolean {
-  if (context.message.channel instanceof PrivateChannel) {
-    if (!cmd.config.extra?.allowDMs) {
-      return false;
-    }
-  } else if (!(context.message.channel instanceof GuildChannel)) {
-    return false;
+  let source = cmd.config.extra?.blueprint.source ?? "guild";
+  if (!Array.isArray(source)) source = [source];
+
+  if (context.message.channel instanceof PrivateChannel && source.includes("dm")) {
+    return true;
   }
 
-  return true;
+  if (context.message.channel instanceof GroupChannel && source.includes("group")) {
+    return true;
+  }
+
+  if (context.message.channel instanceof GuildChannel && source.includes("guild")) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -109,7 +111,7 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
  * permission
  */
 export function checkCommandPermission(cmd: PluginCommandDefinition, context: CommandContext): boolean {
-  const permission = cmd.config.extra?.requiredPermission;
+  const permission = cmd.config.extra?.blueprint.permission;
   if (permission) {
     const config = context.pluginData.config.getForMessage(context.message);
     if (!hasPermission(config, permission)) {
@@ -125,13 +127,20 @@ export function checkCommandPermission(cmd: PluginCommandDefinition, context: Co
  * it on cooldown
  */
 export function checkCommandCooldown(cmd: PluginCommandDefinition, context: CommandContext): boolean {
-  if (cmd.config.extra?.cooldown) {
+  if (cmd.config.extra?.blueprint.cooldown) {
     const cdKey = `${cmd.id}-${context.message.author.id}`;
 
+    const cdValue =
+      typeof cmd.config.extra.blueprint.cooldown === "object"
+        ? cmd.config.extra.blueprint.cooldown.amount
+        : cmd.config.extra.blueprint.cooldown;
+    const cdPermission =
+      typeof cmd.config.extra.blueprint.cooldown === "object" ? cmd.config.extra.blueprint.cooldown.permission : null;
+
     let cdApplies = true;
-    if (cmd.config.extra.cooldownPermission) {
+    if (cdPermission) {
       const config = context.pluginData.config.getForMessage(context.message);
-      cdApplies = hasPermission(config, cmd.config.extra.cooldownPermission);
+      cdApplies = hasPermission(config, cdPermission);
     }
 
     if (cdApplies && context.pluginData.cooldowns.isOnCooldown(cdKey)) {
@@ -139,7 +148,7 @@ export function checkCommandCooldown(cmd: PluginCommandDefinition, context: Comm
       return false;
     }
 
-    context.pluginData.cooldowns.setCooldown(cdKey, cmd.config.extra.cooldown);
+    context.pluginData.cooldowns.setCooldown(cdKey, cdValue);
   }
 
   return true;
@@ -150,10 +159,10 @@ export function checkCommandCooldown(cmd: PluginCommandDefinition, context: Comm
  * interrupt command execution if the lock gets interrupted before it
  */
 export async function checkCommandLocks(cmd: PluginCommandDefinition, context: CommandContext): Promise<boolean> {
-  if (!cmd.config.extra?.locks) {
+  if (!cmd.config.extra?.blueprint.locks) {
     return true;
   }
 
-  const lock = (cmd.config.extra._lock = await context.pluginData.locks.acquire(cmd.config.extra.locks));
+  const lock = (cmd.config.extra._lock = await context.pluginData.locks.acquire(cmd.config.extra.blueprint.locks));
   return !lock.interrupted;
 }

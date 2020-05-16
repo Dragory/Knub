@@ -1,4 +1,4 @@
-import { BaseConfig, PermissionLevels } from "../config/configTypes";
+import { BaseConfig, BasePluginConfig, PermissionLevels } from "../config/configTypes";
 import { Member } from "eris";
 import { AnyExtendedPluginClass, PluginClass } from "./PluginClass";
 import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./PluginBlueprint";
@@ -15,7 +15,11 @@ const fs = _fs.promises;
  * An identity function that helps with type hinting.
  * Takes a plugin blueprint as an argument and returns that same blueprint.
  */
-export function asPlugin<T extends PluginBlueprint>(blueprint: T): T {
+export function asPlugin<
+  TConfig extends {} = BasePluginConfig,
+  TCustomOverrideCriteria extends {} = {},
+  T = PluginBlueprint<TConfig, TCustomOverrideCriteria>
+>(blueprint: T): T {
   return blueprint;
 }
 

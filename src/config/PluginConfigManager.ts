@@ -1,5 +1,5 @@
 import { PartialPluginOptions, PermissionLevels, PluginOptions } from "./configTypes";
-import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
+import { CustomOverrideMatcher, getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { Channel, GuildChannel, Member, Message, User } from "eris";
 import { getMemberLevel } from "../plugins/pluginUtils";
 import { PluginData } from "../plugins/PluginData";
@@ -9,12 +9,6 @@ export interface ExtendedMatchParams extends MatchParams {
   member?: Member;
   message?: Message;
 }
-
-export type CustomOverrideMatcher<TCustomOverrideCriteria> = (
-  pluginData: PluginData,
-  criteria: TCustomOverrideCriteria,
-  matchParams: MatchParams
-) => boolean;
 
 export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
   private readonly levels: PermissionLevels;

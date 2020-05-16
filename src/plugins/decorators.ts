@@ -14,9 +14,10 @@ export interface CooldownDecoratorData {
 }
 
 function applyCooldownToCommand(commandData: CommandBlueprint, cooldown: CooldownDecoratorData) {
-  commandData.config.extra = commandData.config.extra || {};
-  commandData.config.extra.cooldown = cooldown.time;
-  commandData.config.extra.cooldownPermission = cooldown.permission;
+  commandData.cooldown = {
+    amount: cooldown.time,
+    permission: cooldown.permission,
+  };
 }
 
 function applyCooldownToEvent(eventData: EventListenerBlueprint, cooldown: CooldownDecoratorData) {
@@ -26,8 +27,7 @@ function applyCooldownToEvent(eventData: EventListenerBlueprint, cooldown: Coold
 }
 
 function applyRequiredPermissionToCommand(commandData: CommandBlueprint, permission: string) {
-  commandData.config.extra = commandData.config.extra || {};
-  commandData.config.extra.requiredPermission = permission;
+  commandData.permission = permission;
 }
 
 function applyRequiredPermissionToEvent(eventData: EventListenerBlueprint, permission: string) {
@@ -37,8 +37,7 @@ function applyRequiredPermissionToEvent(eventData: EventListenerBlueprint, permi
 }
 
 function applyLockToCommand(commandData: CommandBlueprint, locks: string | string[]) {
-  commandData.config.extra = commandData.config.extra || {};
-  commandData.config.extra.locks = locks;
+  commandData.locks = locks;
 }
 
 function applyLockToEvent(eventData: EventListenerBlueprint, locks: string | string[]) {

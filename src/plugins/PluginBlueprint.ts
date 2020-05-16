@@ -5,7 +5,7 @@ import { PluginData } from "./PluginData";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { ResolvablePlugin } from "./pluginUtils";
-import { CustomOverrideMatcher } from "../config/PluginConfigManager";
+import { CustomOverrideMatcher } from "../config/configUtils";
 
 /**
  * Each value in the public interface is a function that returns the actual

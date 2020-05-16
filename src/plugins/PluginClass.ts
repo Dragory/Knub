@@ -1,11 +1,11 @@
-import { Client, Guild, Member, TextableChannel } from "eris";
+import { Client, Guild, Member } from "eris";
 import { BaseConfig, BasePluginConfig, PluginOptions } from "../config/configTypes";
 import { CustomArgumentTypes } from "../commands/commandUtils";
-import { MatchParams } from "../config/configUtils";
+import { CustomOverrideMatcher, MatchParams } from "../config/configUtils";
 import { LockManager } from "../locks/LockManager";
 import { CooldownManager } from "../cooldowns/CooldownManager";
 import { getMemberLevel, ResolvablePlugin } from "./pluginUtils";
-import { CustomOverrideMatcher, PluginConfigManager } from "../config/PluginConfigManager";
+import { PluginConfigManager } from "../config/PluginConfigManager";
 import { PluginData } from "./PluginData";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginEventManager } from "../events/PluginEventManager";

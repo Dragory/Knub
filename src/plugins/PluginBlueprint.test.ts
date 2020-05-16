@@ -1,4 +1,4 @@
-import { asPlugin, CooldownManager, Knub, LockManager, PluginBlueprint } from "../index";
+import { asCommand, asPlugin, CooldownManager, Knub, LockManager, PluginBlueprint } from "../index";
 import { Guild } from "eris";
 import {
   createMockClient,
@@ -214,6 +214,91 @@ describe("PluginBlueprint", () => {
         const guild = new Guild({ id: "0" }, client);
         client.guilds.set("0", guild);
         client.emit("guildAvailable", guild);
+      })();
+    });
+  });
+
+  describe("Custom overrides", () => {
+    it("Custom overrides work", () => {
+      return (async () => {
+        let commandTriggers = 0;
+
+        const TestPlugin = asPlugin<any, { myUserOverride: string }>({
+          name: "test-plugin",
+
+          defaultOptions: {
+            config: {
+              can_do: false,
+            },
+          },
+
+          customOverrideMatcher: (pluginData, criteria, matchParams) => {
+            return matchParams.userId === criteria.myUserOverride;
+          },
+
+          commands: [
+            asCommand({
+              trigger: "foo",
+              permission: "can_do",
+              run() {
+                commandTriggers++;
+              },
+            }),
+          ],
+        });
+
+        const client = createMockClient();
+        const user1 = createMockUser(client);
+        const user2 = createMockUser(client);
+
+        const knub = new Knub(client, {
+          guildPlugins: [TestPlugin],
+          options: {
+            getEnabledPlugins() {
+              return ["test-plugin"];
+            },
+            getConfig() {
+              return {
+                prefix: "!",
+                plugins: {
+                  "test-plugin": {
+                    overrides: [
+                      {
+                        extra: {
+                          myUserOverride: user1.id,
+                        },
+                        config: {
+                          can_do: true,
+                        },
+                      },
+                    ],
+                  },
+                },
+              };
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = createMockGuild(client);
+        client.emit("guildAvailable", guild);
+        await sleep(30);
+
+        const channel = createMockTextChannel(client, guild.id);
+
+        const message1 = createMockMessage(client, channel.id, user1, { content: "!foo" });
+        client.emit("messageCreate", message1);
+        await sleep(30);
+
+        const message2 = createMockMessage(client, channel.id, user2, { content: "!foo" });
+        client.emit("messageCreate", message2);
+        await sleep(30);
+
+        assert.equal(commandTriggers, 1);
       })();
     });
   });
