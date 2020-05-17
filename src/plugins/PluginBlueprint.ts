@@ -1,4 +1,4 @@
-import { BasePluginConfig, PluginOptions } from "../config/configTypes";
+import { PluginOptions } from "../config/configTypes";
 import { CustomArgumentTypes } from "../commands/commandUtils";
 import { Awaitable } from "../utils";
 import { PluginData } from "./PluginData";
@@ -6,6 +6,7 @@ import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { ResolvablePlugin } from "./pluginUtils";
 import { CustomOverrideMatcher } from "../config/configUtils";
+import { BasePluginType } from "./pluginTypes";
 
 /**
  * Each value in the public interface is a function that returns the actual
@@ -13,16 +14,16 @@ import { CustomOverrideMatcher } from "../config/configUtils";
  * This allows other plugins to be unaware of the pluginData object for the
  * plugin with the public interface.
  */
-export interface PluginBlueprintPublicInterface<TConfig, TCustomOverrideCriteria> {
-  [key: string]: (pluginData: PluginData<TConfig, TCustomOverrideCriteria>) => any;
+export interface PluginBlueprintPublicInterface<TPluginType extends BasePluginType> {
+  [key: string]: (pluginData: PluginData<TPluginType>) => any;
 }
 
 // The actual interface that other plugins receive
-export type ResolvedPluginBlueprintPublicInterface<T extends PluginBlueprintPublicInterface<any, any>> = {
+export type ResolvedPluginBlueprintPublicInterface<T extends PluginBlueprintPublicInterface<any>> = {
   [P in keyof T]: ReturnType<T[P]>;
 };
 
-export interface PluginBlueprint<TConfig extends {} = BasePluginConfig, TCustomOverrideCriteria extends {} = {}> {
+export interface PluginBlueprint<TPluginType extends BasePluginType = BasePluginType> {
   // REQUIRED: Internal name for the plugin
   name: string;
 
@@ -34,23 +35,23 @@ export interface PluginBlueprint<TConfig extends {} = BasePluginConfig, TCustomO
   dependencies?: ResolvablePlugin[];
 
   // The plugin's default options, including overrides
-  defaultOptions?: PluginOptions<TConfig, TCustomOverrideCriteria>;
+  defaultOptions?: PluginOptions<TPluginType>;
 
   // Commands that are automatically registered on plugin load
-  commands?: CommandBlueprint[];
+  commands?: Array<CommandBlueprint<TPluginType>>;
 
   // Event listeners that are automatically registered on plugin load
-  events?: EventListenerBlueprint[];
+  events?: Array<EventListenerBlueprint<TPluginType>>;
 
   // Custom argument types for commands
-  customArgumentTypes?: CustomArgumentTypes;
+  customArgumentTypes?: CustomArgumentTypes<TPluginType>;
 
   // If this plugin includes any custom overrides, this function evaluates them
-  customOverrideMatcher?: CustomOverrideMatcher<TCustomOverrideCriteria>;
+  customOverrideMatcher?: CustomOverrideMatcher<TPluginType>;
 
   // Public interface for this plugin
-  public?: PluginBlueprintPublicInterface<TConfig, TCustomOverrideCriteria>;
+  public?: PluginBlueprintPublicInterface<TPluginType>;
 
-  onLoad?: (pluginData: PluginData) => Awaitable<void>;
-  onUnload?: (pluginData: PluginData) => Awaitable<void>;
+  onLoad?: (pluginData: PluginData<TPluginType>) => Awaitable<void>;
+  onUnload?: (pluginData: PluginData<TPluginType>) => Awaitable<void>;
 }

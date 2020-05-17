@@ -6,6 +6,7 @@ import { LockManager } from "../locks/LockManager";
 import { CooldownManager } from "../cooldowns/CooldownManager";
 import { PluginPublicInterface, ResolvablePlugin } from "./pluginUtils";
 import { Knub } from "../Knub";
+import { BasePluginType } from "./pluginTypes";
 
 export type HasPluginFn = <T extends ResolvablePlugin>(plugin: T) => boolean;
 export type GetPluginFn = <T extends ResolvablePlugin>(plugin: T) => PluginPublicInterface<T>;
@@ -13,7 +14,7 @@ export type GetPluginFn = <T extends ResolvablePlugin>(plugin: T) => PluginPubli
 /**
  * Instance-specific data for plugins
  */
-export interface PluginData<TConfig = any, TCustomOverrideCriteria = unknown> {
+export interface PluginData<TPluginType extends BasePluginType> {
   /**
    * The underlying Eris Client object
    */
@@ -24,9 +25,9 @@ export interface PluginData<TConfig = any, TCustomOverrideCriteria = unknown> {
    */
   guild: Guild;
 
-  config: PluginConfigManager<TConfig, TCustomOverrideCriteria>;
-  events: PluginEventManager;
-  commands: PluginCommandManager;
+  config: PluginConfigManager<TPluginType>;
+  events: PluginEventManager<TPluginType>;
+  commands: PluginCommandManager<TPluginType>;
   locks: LockManager;
   cooldowns: CooldownManager;
 

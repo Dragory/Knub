@@ -19,7 +19,7 @@ describe("Event filters", () => {
       {
         pluginData: {
           guild,
-        } as PluginData,
+        } as PluginData<any>,
       }
     );
     assert.ok(result);

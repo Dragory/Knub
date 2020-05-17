@@ -53,6 +53,9 @@
 	  the plugin
 	* `defaultOptions` — default options (config + overrides) for the plugin
 	* `customOverrideMatcher` — Matcher function for custom overrides, if used
+* Functions and interfaces that previously took `TConfig` and `TCustomOverrideCriteria` now take a `TPluginType` type
+  instead. This is an interface that includes equivalents for `TConfig` and `TCustomOverrideCriteria` and is used
+  throughout Knub to pass plugin types.
 * Command `config.extra` no longer contains `requiredPermission`, `cooldown`, etc. directly.
   Instead, `config.extra` now contains the original blueprint used to create the command (`config.extra.blueprint`),
   which in turn contains the values that were previously in `config.extra`.

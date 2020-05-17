@@ -307,7 +307,7 @@ export class Knub<
 
     const guild = isGuildContext(ctx) ? this.client.guilds.get(ctx.guildId) : null;
 
-    const pluginData: PluginData = {
+    const pluginData: PluginData<any> = {
       client: this.client,
       guild,
       config: new PluginConfigManager(
@@ -469,7 +469,7 @@ export class Knub<
   protected getPluginPublicInterface<T extends ResolvablePlugin>(
     ctx: AnyContext<TGuildConfig, TGlobalConfig>,
     plugin: ResolvablePlugin,
-    pluginData: PluginData
+    pluginData: PluginData<any>
   ): PluginPublicInterface<T> {
     const pluginName = typeof plugin === "string" ? plugin : getPluginName(plugin);
 
@@ -487,7 +487,7 @@ export class Knub<
 
   protected resolvePluginBlueprintPublicInterface<T extends PluginBlueprint>(
     blueprint: T,
-    pluginData: PluginData
+    pluginData: PluginData<any>
   ): ResolvedPluginBlueprintPublicInterface<T["public"]> {
     if (!blueprint.public) {
       return null;

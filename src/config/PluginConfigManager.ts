@@ -3,6 +3,7 @@ import { CustomOverrideMatcher, getMatchingPluginConfig, MatchParams, mergeConfi
 import { Channel, GuildChannel, Member, Message, User } from "eris";
 import { getMemberLevel } from "../plugins/pluginUtils";
 import { PluginData } from "../plugins/PluginData";
+import { BasePluginType } from "../plugins/pluginTypes";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string;
@@ -10,16 +11,16 @@ export interface ExtendedMatchParams extends MatchParams {
   message?: Message;
 }
 
-export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
+export class PluginConfigManager<TPluginType extends BasePluginType> {
   private readonly levels: PermissionLevels;
-  private readonly options: PluginOptions<TConfig, TCustomOverrideCriteria>;
-  private readonly customOverrideMatcher: CustomOverrideMatcher<TCustomOverrideCriteria>;
-  private pluginData: PluginData<TConfig, TCustomOverrideCriteria>;
+  private readonly options: PluginOptions<TPluginType>;
+  private readonly customOverrideMatcher: CustomOverrideMatcher<TPluginType>;
+  private pluginData: PluginData<TPluginType>;
 
   constructor(
-    defaultOptions: PluginOptions<TConfig, TCustomOverrideCriteria>,
-    userOptions: PartialPluginOptions<TConfig, TCustomOverrideCriteria>,
-    customOverrideMatcher?: CustomOverrideMatcher<TCustomOverrideCriteria>,
+    defaultOptions: PluginOptions<TPluginType>,
+    userOptions: PartialPluginOptions<TPluginType>,
+    customOverrideMatcher?: CustomOverrideMatcher<TPluginType>,
     levels: PermissionLevels = {}
   ) {
     this.options = this.mergeOptions(defaultOptions, userOptions);
@@ -28,9 +29,9 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
   }
 
   private mergeOptions(
-    defaultOptions: PluginOptions<TConfig, TCustomOverrideCriteria>,
-    userOptions: PartialPluginOptions<TConfig, TCustomOverrideCriteria>
-  ): PluginOptions<TConfig, TCustomOverrideCriteria> {
+    defaultOptions: PluginOptions<TPluginType>,
+    userOptions: PartialPluginOptions<TPluginType>
+  ): PluginOptions<TPluginType> {
     return {
       config: mergeConfig(defaultOptions.config ?? {}, userOptions.config ?? {}),
       overrides: userOptions.replaceDefaultOverrides
@@ -39,7 +40,7 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
     };
   }
 
-  public setPluginData(pluginData: PluginData<TConfig, TCustomOverrideCriteria>) {
+  public setPluginData(pluginData: PluginData<TPluginType>) {
     if (this.pluginData) {
       throw new Error("Plugin data already set");
     }
@@ -47,11 +48,11 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
     this.pluginData = pluginData;
   }
 
-  public get(): TConfig {
+  public get(): TPluginType["config"] {
     return this.options.config;
   }
 
-  public getMatchingConfig(matchParams: ExtendedMatchParams): TConfig {
+  public getMatchingConfig(matchParams: ExtendedMatchParams): TPluginType["config"] {
     const message = matchParams.message;
 
     // Passed userId -> passed member's id -> passed message's author's id
@@ -84,7 +85,7 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
       memberRoles,
     };
 
-    return getMatchingPluginConfig<TConfig, TCustomOverrideCriteria>(
+    return getMatchingPluginConfig<TPluginType>(
       this.pluginData,
       this.options,
       finalMatchParams,
@@ -92,7 +93,7 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
     );
   }
 
-  public getForMessage(msg: Message): TConfig {
+  public getForMessage(msg: Message): TPluginType["config"] {
     const level = msg.member ? getMemberLevel(this.levels, msg.member) : null;
     return this.getMatchingConfig({
       level,
@@ -103,20 +104,20 @@ export class PluginConfigManager<TConfig, TCustomOverrideCriteria = unknown> {
     });
   }
 
-  public getForChannel(channel: Channel): TConfig {
+  public getForChannel(channel: Channel): TPluginType["config"] {
     return this.getMatchingConfig({
       channelId: channel.id,
       categoryId: (channel as GuildChannel).parentID,
     });
   }
 
-  public getForUser(user: User): TConfig {
+  public getForUser(user: User): TPluginType["config"] {
     return this.getMatchingConfig({
       userId: user.id,
     });
   }
 
-  public getForMember(member: Member): TConfig {
+  public getForMember(member: Member): TPluginType["config"] {
     const level = getMemberLevel(this.levels, member);
     return this.getMatchingConfig({
       level,

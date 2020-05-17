@@ -1,12 +1,13 @@
 import { IParameter } from "knub-command-manager";
 import { CommandFn, ICommandExtraData, PluginCommandConfig } from "./commandUtils";
+import { BasePluginType } from "../plugins/pluginTypes";
 
 type CommandSource = "guild" | "group" | "dm";
 
-export interface CommandBlueprint {
+export interface CommandBlueprint<TPluginType extends BasePluginType> {
   trigger: string;
   parameters?: IParameter[];
-  run: CommandFn;
+  run: CommandFn<TPluginType>;
   config?: PluginCommandConfig;
 
   // Required permission name

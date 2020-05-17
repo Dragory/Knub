@@ -1,4 +1,5 @@
 import { DeepPartial } from "ts-essentials";
+import { BasePluginType } from "../plugins/pluginTypes";
 
 export interface PermissionLevels {
   [roleOrUserId: string]: number;
@@ -14,21 +15,23 @@ export interface BaseConfig {
   };
 }
 
-export interface PartialPluginOptions<TConfig = BasePluginConfig, TCustomOverrideCriteria = unknown> {
+export interface PartialPluginOptions<TPluginType extends BasePluginType = BasePluginType> {
   enabled?: boolean;
-  config?: DeepPartial<TConfig>;
-  overrides?: Array<PluginOverride<TConfig, TCustomOverrideCriteria>>;
+  config?: DeepPartial<TPluginType["config"]>;
+  overrides?: Array<PluginOverride<TPluginType>>;
   replaceDefaultOverrides?: boolean;
 }
 
-export interface PluginOptions<TConfig = BasePluginConfig, TCustomOverrideCriteria = unknown>
-  extends PartialPluginOptions<TConfig, TCustomOverrideCriteria> {
-  config: TConfig;
-  overrides?: Array<PluginOverride<TConfig, TCustomOverrideCriteria>>;
+export interface PluginOptions<TPluginType extends BasePluginType = BasePluginType>
+  extends PartialPluginOptions<TPluginType> {
+  config: TPluginType["config"];
+  overrides?: Array<PluginOverride<TPluginType>>;
 }
 
-export type PluginOverride<TConfig, TCustomOverrideCriteria> = PluginOverrideCriteria<TCustomOverrideCriteria> & {
-  config?: DeepPartial<TConfig>;
+export type PluginOverride<TPluginType extends BasePluginType> = PluginOverrideCriteria<
+  TPluginType["customOverrideCriteria"]
+> & {
+  config?: DeepPartial<TPluginType["config"]>;
 };
 
 export interface PluginOverrideCriteria<TCustomOverrideCriteria> {

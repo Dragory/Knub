@@ -1,7 +1,7 @@
 import { Client, Guild, Member } from "eris";
-import { BaseConfig, BasePluginConfig, PluginOptions } from "../config/configTypes";
+import { BaseConfig, PluginOptions } from "../config/configTypes";
 import { CustomArgumentTypes } from "../commands/commandUtils";
-import { CustomOverrideMatcher, MatchParams } from "../config/configUtils";
+import { CustomOverrideMatcher } from "../config/configUtils";
 import { LockManager } from "../locks/LockManager";
 import { CooldownManager } from "../cooldowns/CooldownManager";
 import { getMemberLevel, ResolvablePlugin } from "./pluginUtils";
@@ -11,11 +11,12 @@ import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginEventManager } from "../events/PluginEventManager";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
+import { BasePluginType } from "./pluginTypes";
 
 /**
  * Base class for Knub plugins
  */
-export abstract class PluginClass<TConfig extends {} = BasePluginConfig, TCustomOverrideCriteria extends {} = {}> {
+export abstract class PluginClass<TPluginType extends BasePluginType = BasePluginType> {
   // REQUIRED: Internal name for the plugin
   public static pluginName: string;
 
@@ -27,16 +28,16 @@ export abstract class PluginClass<TConfig extends {} = BasePluginConfig, TCustom
   public static dependencies: ResolvablePlugin[];
 
   // The plugin's default options, including overrides
-  public static defaultOptions: PluginOptions<any, any>;
+  public static defaultOptions: PluginOptions<any>;
 
   // Commands that are automatically registered on plugin load
-  public static commands: CommandBlueprint[];
+  public static commands: Array<CommandBlueprint<any>>;
 
   // Event listeners that are automatically registered on plugin load
-  public static events: EventListenerBlueprint[];
+  public static events: Array<EventListenerBlueprint<any>>;
 
   // Custom argument types for commands
-  public static customArgumentTypes: CustomArgumentTypes;
+  public static customArgumentTypes: CustomArgumentTypes<any>;
 
   // If this plugin includes any custom overrides, this function evaluates them
   public static customOverrideMatcher: CustomOverrideMatcher<any>;
@@ -48,16 +49,16 @@ export abstract class PluginClass<TConfig extends {} = BasePluginConfig, TCustom
 
   protected readonly client: Client;
 
-  protected pluginData: PluginData;
-  protected config: PluginConfigManager<TConfig, TCustomOverrideCriteria>;
+  protected pluginData: PluginData<TPluginType>;
+  protected config: PluginConfigManager<TPluginType>;
   protected locks: LockManager;
-  protected commandManager: PluginCommandManager;
-  protected eventManager: PluginEventManager;
+  protected commandManager: PluginCommandManager<TPluginType>;
+  protected eventManager: PluginEventManager<TPluginType>;
   protected cooldowns: CooldownManager;
 
   public static _decoratorValuesTransferred = false;
 
-  constructor(pluginData: PluginData<TConfig, TCustomOverrideCriteria>) {
+  constructor(pluginData: PluginData<TPluginType>) {
     this.pluginData = pluginData;
 
     this.client = pluginData.client;
@@ -86,19 +87,9 @@ export abstract class PluginClass<TConfig extends {} = BasePluginConfig, TCustom
   }
 
   /**
-   * Function to resolve custom override criteria in the plugin's config.
-   * Remember to also set TCustomOverrideCriteria appropriately.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected matchCustomOverrideCriteria(criteria: TCustomOverrideCriteria, matchParams: MatchParams): boolean {
-    // Implemented by plugin
-    return true;
-  }
-
-  /**
    * Returns the plugin's config with overrides matching the given member id and channel id applied to it
    */
-  protected getConfigForMemberIdAndChannelId(memberId: string, channelId: string): TConfig {
+  protected getConfigForMemberIdAndChannelId(memberId: string, channelId: string): TPluginType["config"] {
     const guildId = this.client.channelGuildMap[channelId];
     const guild = this.client.guilds.get(guildId);
     const member = guild.members.get(memberId);

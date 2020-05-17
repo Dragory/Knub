@@ -1,7 +1,8 @@
 import { Listener, OnOpts } from "./PluginEventManager";
+import { BasePluginType } from "../plugins/pluginTypes";
 
-export interface EventListenerBlueprint<T extends string = any> {
-  event: T;
-  listener: Listener<T>;
+export interface EventListenerBlueprint<TPluginType extends BasePluginType, TEventName extends string = any> {
+  event: TEventName;
+  listener: Listener<TPluginType, TEventName>;
   opts?: OnOpts;
 }

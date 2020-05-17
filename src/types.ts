@@ -34,9 +34,9 @@ export interface KnubArgs<TGuildConfig extends BaseConfig, TGlobalConfig extends
 
 export interface LoadedPlugin {
   class?: typeof PluginClass;
-  instance?: PluginClass;
+  instance?: PluginClass<any>;
   blueprint?: PluginBlueprint;
-  pluginData: PluginData;
+  pluginData: PluginData<any>;
 }
 
 export interface BaseContext<TConfig extends BaseConfig> {

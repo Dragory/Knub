@@ -1,4 +1,4 @@
-import { BaseConfig, BasePluginConfig, PermissionLevels } from "../config/configTypes";
+import { BaseConfig, PermissionLevels } from "../config/configTypes";
 import { Member } from "eris";
 import { AnyExtendedPluginClass, PluginClass } from "./PluginClass";
 import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./PluginBlueprint";
@@ -8,6 +8,7 @@ import { BaseContext, GuildContext, Plugin, PluginMap } from "../types";
 import { getMetadataFromAllProperties } from "./decoratorUtils";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
+import { BasePluginType } from "./pluginTypes";
 
 const fs = _fs.promises;
 
@@ -15,11 +16,7 @@ const fs = _fs.promises;
  * An identity function that helps with type hinting.
  * Takes a plugin blueprint as an argument and returns that same blueprint.
  */
-export function asPlugin<
-  TConfig extends {} = BasePluginConfig,
-  TCustomOverrideCriteria extends {} = {},
-  T = PluginBlueprint<TConfig, TCustomOverrideCriteria>
->(blueprint: T): T {
+export function asPlugin<TPluginType extends BasePluginType, T = PluginBlueprint<TPluginType>>(blueprint: T): T {
   return blueprint;
 }
 
@@ -59,14 +56,14 @@ export function applyPluginClassDecoratorValues(plugin: typeof AnyExtendedPlugin
   }
 
   const events = Array.from(
-    Object.values(getMetadataFromAllProperties<EventListenerBlueprint>(plugin, "decoratorEvents"))
+    Object.values(getMetadataFromAllProperties<EventListenerBlueprint<any>>(plugin, "decoratorEvents"))
   ).flat();
 
   plugin.events = plugin.events || [];
   plugin.events.push(...Object.values(events));
 
   const commands = Array.from(
-    Object.values(getMetadataFromAllProperties<CommandBlueprint>(plugin, "decoratorCommands"))
+    Object.values(getMetadataFromAllProperties<CommandBlueprint<any>>(plugin, "decoratorCommands"))
   ).flat();
 
   plugin.commands = plugin.commands || [];

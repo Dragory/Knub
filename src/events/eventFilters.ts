@@ -5,24 +5,24 @@ import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eve
 import { EventArguments } from "./eventArguments";
 import { hasPermission, resolveMember } from "../helpers";
 
-export type EventFilter = <T extends string>(
-  event: T,
-  args: EventArguments[T],
-  eventMeta: EventMeta
+export type EventFilter = <TEventName extends string>(
+  event: TEventName,
+  args: EventArguments[TEventName],
+  eventMeta: EventMeta<any>
 ) => Awaitable<boolean>;
 
-export type FilteredListener<T extends Listener<any>> = (...params: Parameters<T>) => ReturnType<T>;
+export type FilteredListener<T extends Listener<any, any>> = (...params: Parameters<T>) => ReturnType<T>;
 
 /**
  * Runs the specified event listener if the event passes ALL of the specified
  * filter
  */
-export function withFilters<T extends Listener<any>>(
+export function withFilters<T extends Listener<any, any>>(
   event: string,
   listener: T,
   filters: EventFilter[]
 ): FilteredListener<T> {
-  const wrapped: Listener<any> = async (args, eventMeta) => {
+  const wrapped: Listener<any, any> = async (args, eventMeta) => {
     for (const filter of filters) {
       const filterResult = await filter(event, args, eventMeta);
       if (!filterResult) return;
@@ -38,12 +38,12 @@ export function withFilters<T extends Listener<any>>(
  * Runs the specified event listener if the event passes ANY of the specified
  * filters
  */
-export function withAnyFilter<T extends Listener<any>>(
+export function withAnyFilter<T extends Listener<any, any>>(
   event: string,
   listener: T,
   filters: EventFilter[]
 ): FilteredListener<T> {
-  const wrapped: Listener<any> = async (args, eventMeta) => {
+  const wrapped: Listener<any, any> = async (args, eventMeta) => {
     for (const filter of filters) {
       const filterResult = await filter(event, args, eventMeta);
       if (filterResult) {

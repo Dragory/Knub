@@ -14,7 +14,7 @@ import { PluginEventManager } from "../events/PluginEventManager";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { asEventListener } from "../events/eventUtils";
-import { PluginData } from "./PluginData";
+import { BasePluginType } from "./pluginTypes";
 
 process.on("unhandledRejection", (err) => {
   throw err;
@@ -132,7 +132,7 @@ describe("PluginBlueprint", () => {
           name: "dependency-to-load",
 
           public: {
-            ok(pluginData: PluginData) {
+            ok(pluginData) {
               assert.ok(pluginData != null);
 
               return () => done();
@@ -143,7 +143,7 @@ describe("PluginBlueprint", () => {
         const PluginToLoad = asPlugin({
           name: "plugin-to-load",
 
-          onLoad(pluginData: PluginData) {
+          onLoad(pluginData) {
             setTimeout(() => {
               const instance = pluginData.getPlugin(DependencyToLoad);
               instance.ok();
@@ -223,7 +223,13 @@ describe("PluginBlueprint", () => {
       return (async () => {
         let commandTriggers = 0;
 
-        const TestPlugin = asPlugin<any, { myUserOverride: string }>({
+        interface PluginType extends BasePluginType {
+          customOverrideCriteria: {
+            myUserOverride: string;
+          };
+        }
+
+        const TestPlugin = asPlugin<PluginType>({
           name: "test-plugin",
 
           defaultOptions: {
@@ -342,6 +348,12 @@ describe("PluginBlueprint", () => {
     it("event handlers are unloaded on plugin unload", (done) => {
       (async () => {
         let msgEvFnCallNum = 0;
+
+        interface PluginType extends BasePluginType {
+          config: {
+            value: number;
+          };
+        }
 
         const messageCreateEv = asEventListener({
           event: "messageCreate",

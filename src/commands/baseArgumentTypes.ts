@@ -4,11 +4,11 @@ import { getChannelId, getRoleId, getUserId } from "../utils";
 import { Channel, GuildChannel, Member, Role, TextChannel, User, VoiceChannel } from "eris";
 import { CommandContext } from "./commandUtils";
 
-export interface ParameterTypeMap {
-  [key: string]: TTypeConverterFn<CommandContext>;
+interface BaseArgumentTypeMap {
+  [key: string]: TTypeConverterFn<CommandContext<any>>;
 }
 
-export const baseParameterTypes: ParameterTypeMap = {
+export const baseArgumentTypes: BaseArgumentTypeMap = {
   ...defaultParameterTypes,
 
   boolean: defaultParameterTypes.bool,

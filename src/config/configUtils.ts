@@ -1,5 +1,6 @@
 import { PluginOptions, PluginOverrideCriteria } from "./configTypes";
 import { PluginData } from "../plugins/PluginData";
+import { BasePluginType } from "../plugins/pluginTypes";
 
 const condRegex = /^(\D+)(\d+)$/;
 const splitCond = (v, defaultCond): [string, string] => {
@@ -63,49 +64,44 @@ export function mergeConfig<T extends {}>(...sources: any[]): T {
 /**
  * Match override criteria `criteria` against `matchParams`. Return `true` if the criteria matches matchParams.
  */
-export type CustomOverrideMatcher<T> = (pluginData: PluginData, criteria: T, matchParams: MatchParams) => boolean;
+export type CustomOverrideMatcher<TPluginType extends BasePluginType> = (
+  pluginData: PluginData<TPluginType>,
+  criteria: TPluginType["customOverrideCriteria"],
+  matchParams: MatchParams
+) => boolean;
 
 /**
  * Returns matching plugin options for the specified matchParams based on overrides
  */
 export function getMatchingPluginConfig<
-  TConfig,
-  TCustomOverrideCriteria = unknown,
+  TPluginType extends BasePluginType,
   // Inferred type, should not be overridden
-  TPluginOptions extends PluginOptions<TConfig, TCustomOverrideCriteria> = PluginOptions<
-    TConfig,
-    TCustomOverrideCriteria
-  >
+  TPluginOptions extends PluginOptions<TPluginType> = PluginOptions<TPluginType>
 >(
-  pluginData: PluginData<TConfig, TCustomOverrideCriteria>,
+  pluginData: PluginData<TPluginType>,
   pluginOptions: TPluginOptions,
   matchParams: MatchParams,
-  customOverrideMatcher?: CustomOverrideMatcher<TCustomOverrideCriteria>
-): TConfig {
-  let result: TConfig = mergeConfig(pluginOptions.config || {});
+  customOverrideMatcher?: CustomOverrideMatcher<TPluginType>
+): TPluginType["config"] {
+  let result: TPluginType["config"] = mergeConfig(pluginOptions.config || {});
 
   const overrides = pluginOptions.overrides || [];
   for (const override of overrides) {
-    const matches = evaluateOverrideCriteria<TCustomOverrideCriteria>(
-      pluginData,
-      override,
-      matchParams,
-      customOverrideMatcher
-    );
+    const matches = evaluateOverrideCriteria<TPluginType>(pluginData, override, matchParams, customOverrideMatcher);
 
     if (matches) {
       result = mergeConfig(result, override.config);
     }
   }
 
-  return result as TConfig;
+  return result as TPluginType["config"];
 }
 
-export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
-  pluginData: PluginData<any, TCustomOverrideCriteria>,
-  criteria: PluginOverrideCriteria<TCustomOverrideCriteria>,
+export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
+  pluginData: PluginData<TPluginType>,
+  criteria: PluginOverrideCriteria<TPluginType["customOverrideCriteria"]>,
   matchParams: MatchParams,
-  customOverrideMatcher?: CustomOverrideMatcher<TCustomOverrideCriteria>
+  customOverrideMatcher?: CustomOverrideMatcher<TPluginType>
 ): boolean {
   let matchedOne = false;
 
@@ -258,7 +254,7 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
 
       let match = true;
       for (const subCriteria of value) {
-        match = match && evaluateOverrideCriteria<TCustomOverrideCriteria>(pluginData, subCriteria, matchParams);
+        match = match && evaluateOverrideCriteria<TPluginType>(pluginData, subCriteria, matchParams);
       }
       if (!match) return false;
 
@@ -272,7 +268,7 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
 
       let match = false;
       for (const subCriteria of value) {
-        match = match || evaluateOverrideCriteria<TCustomOverrideCriteria>(pluginData, subCriteria, matchParams);
+        match = match || evaluateOverrideCriteria<TPluginType>(pluginData, subCriteria, matchParams);
       }
       if (match === false) return false;
 
@@ -281,7 +277,7 @@ export function evaluateOverrideCriteria<TCustomOverrideCriteria = unknown>(
     }
 
     if (key === "not") {
-      const match = evaluateOverrideCriteria<TCustomOverrideCriteria>(pluginData, value, matchParams);
+      const match = evaluateOverrideCriteria<TPluginType>(pluginData, value, matchParams);
       if (match) return false;
 
       matchedOne = true;

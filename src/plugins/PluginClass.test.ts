@@ -413,7 +413,7 @@ describe("PluginClass", () => {
 
           @d.command("lock")
           @d.lock("blahblah")
-          public async lockCmdFn(args, meta: CommandMeta) {
+          public async lockCmdFn(args, meta: CommandMeta<any>) {
             // First call: 0*2 = 0, +1 = 1
             // Second call: 1*2 = 2, +1 = 3
             // If second call is executed too early (without considering lock):
@@ -654,7 +654,7 @@ describe("PluginClass", () => {
 
           @d.event("messageCreate")
           @d.lock("blahblah")
-          public async lockMsgEv(args, meta: EventMeta) {
+          public async lockMsgEv(args, meta: EventMeta<any>) {
             // First call: 0*2 = 0, +1 = 1
             // Second call: 1*2 = 2, +1 = 3
             // If second call is executed too early (without considering lock):

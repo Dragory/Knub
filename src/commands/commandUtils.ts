@@ -5,12 +5,13 @@ import { Lock } from "../locks/LockManager";
 import { PluginData } from "../plugins/PluginData";
 import { hasPermission } from "../helpers";
 import { CommandBlueprint } from "./CommandBlueprint";
+import { BasePluginType } from "../plugins/pluginTypes";
 
 /**
  * An identity function that helps with type hinting.
  * Takes a command blueprint as an argument and returns that same blueprint.
  */
-export function asCommand<T extends CommandBlueprint>(blueprint: T): T {
+export function asCommand<TPluginType extends BasePluginType, T = CommandBlueprint<TPluginType>>(blueprint: T): T {
   return blueprint;
 }
 
@@ -18,31 +19,34 @@ export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);
 }
 
-export interface CommandMeta {
+export interface CommandMeta<TPluginType extends BasePluginType> {
   message: Message;
   command: ICommandDefinition<any, any>;
-  pluginData: PluginData;
+  pluginData: PluginData<TPluginType>;
   lock?: Lock;
 }
 
-export type CommandFn = (args: any, meta: CommandMeta) => Awaitable<void>;
+export type CommandFn<TPluginType extends BasePluginType> = (
+  args: any,
+  meta: CommandMeta<TPluginType>
+) => Awaitable<void>;
 
-export interface CommandContext {
+export interface CommandContext<TPluginType extends BasePluginType> {
   message: Message;
-  pluginData: PluginData;
+  pluginData: PluginData<TPluginType>;
   lock?: Lock;
 }
 
-export interface ICommandExtraData {
-  blueprint: CommandBlueprint;
+export interface ICommandExtraData<TPluginType extends BasePluginType> {
+  blueprint: CommandBlueprint<TPluginType>;
   _lock?: Lock;
 }
 
-export type PluginCommandDefinition = ICommandDefinition<CommandContext, ICommandExtraData>;
-export type PluginCommandConfig = ICommandConfig<CommandContext, ICommandExtraData>;
+export type PluginCommandDefinition = ICommandDefinition<CommandContext<any>, ICommandExtraData<any>>;
+export type PluginCommandConfig = ICommandConfig<CommandContext<any>, ICommandExtraData<any>>;
 
-export interface CustomArgumentTypes {
-  [key: string]: TTypeConverterFn<CommandContext>;
+export interface CustomArgumentTypes<TPluginType extends BasePluginType> {
+  [key: string]: TTypeConverterFn<CommandContext<TPluginType>>;
 }
 
 /**
@@ -87,7 +91,7 @@ export function getCommandSignature(
  * Command pre-filter to restrict the command to the plugin's guilds, unless
  * allowed for DMs
  */
-export function restrictCommandSource(cmd: PluginCommandDefinition, context: CommandContext): boolean {
+export function restrictCommandSource(cmd: PluginCommandDefinition, context: CommandContext<any>): boolean {
   let source = cmd.config.extra?.blueprint.source ?? "guild";
   if (!Array.isArray(source)) source = [source];
 
@@ -110,7 +114,7 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
  * Command pre-filter to restrict the command by specifying a required
  * permission
  */
-export function checkCommandPermission(cmd: PluginCommandDefinition, context: CommandContext): boolean {
+export function checkCommandPermission(cmd: PluginCommandDefinition, context: CommandContext<any>): boolean {
   const permission = cmd.config.extra?.blueprint.permission;
   if (permission) {
     const config = context.pluginData.config.getForMessage(context.message);
@@ -126,7 +130,7 @@ export function checkCommandPermission(cmd: PluginCommandDefinition, context: Co
  * Command post-filter to check if the command's on cooldown and, if not, to put
  * it on cooldown
  */
-export function checkCommandCooldown(cmd: PluginCommandDefinition, context: CommandContext): boolean {
+export function checkCommandCooldown(cmd: PluginCommandDefinition, context: CommandContext<any>): boolean {
   if (cmd.config.extra?.blueprint.cooldown) {
     const cdKey = `${cmd.id}-${context.message.author.id}`;
 
@@ -158,7 +162,7 @@ export function checkCommandCooldown(cmd: PluginCommandDefinition, context: Comm
  * Command post-filter to wait for and trigger any locks the command has, and to
  * interrupt command execution if the lock gets interrupted before it
  */
-export async function checkCommandLocks(cmd: PluginCommandDefinition, context: CommandContext): Promise<boolean> {
+export async function checkCommandLocks(cmd: PluginCommandDefinition, context: CommandContext<any>): Promise<boolean> {
   if (!cmd.config.extra?.blueprint.locks) {
     return true;
   }

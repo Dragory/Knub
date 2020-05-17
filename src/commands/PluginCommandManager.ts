@@ -19,31 +19,32 @@ import {
   PluginCommandDefinition,
   restrictCommandSource,
 } from "./commandUtils";
-import { baseParameterTypes } from "./baseParameterTypes";
+import { baseArgumentTypes } from "./baseArgumentTypes";
 import { Client, Message } from "eris";
 import { PluginData } from "../plugins/PluginData";
 import { CommandBlueprint } from "./CommandBlueprint";
+import { BasePluginType } from "../plugins/pluginTypes";
 
-export interface PluginCommandManagerOpts<TContext> {
+export interface PluginCommandManagerOpts<TCommandContext> {
   prefix?: string | RegExp;
   customArgumentTypes?: {
-    [key: string]: TTypeConverterFn<CommandContext>;
+    [key: string]: TTypeConverterFn<TCommandContext>;
   };
 }
 
 /**
  * A module to manage and run commands for a single instance of a plugin
  */
-export class PluginCommandManager {
-  private pluginData: PluginData;
-  private manager: CommandManager<CommandContext, ICommandExtraData>;
-  private handlers: Map<number, CommandFn>;
+export class PluginCommandManager<TPluginType extends BasePluginType> {
+  private pluginData: PluginData<TPluginType>;
+  private manager: CommandManager<CommandContext<TPluginType>, ICommandExtraData<TPluginType>>;
+  private handlers: Map<number, CommandFn<TPluginType>>;
 
-  constructor(client: Client, opts: PluginCommandManagerOpts<CommandContext> = {}) {
-    this.manager = new CommandManager<CommandContext, ICommandExtraData>({
+  constructor(client: Client, opts: PluginCommandManagerOpts<CommandContext<TPluginType>> = {}) {
+    this.manager = new CommandManager<CommandContext<TPluginType>, ICommandExtraData<TPluginType>>({
       prefix: opts.prefix ?? getDefaultPrefix(client),
       types: {
-        ...baseParameterTypes,
+        ...baseArgumentTypes,
         ...opts.customArgumentTypes,
       },
     });
@@ -51,7 +52,7 @@ export class PluginCommandManager {
     this.handlers = new Map();
   }
 
-  public setPluginData(pluginData: PluginData) {
+  public setPluginData(pluginData: PluginData<TPluginType>) {
     if (this.pluginData) {
       throw new Error("Plugin data already set");
     }
@@ -59,7 +60,7 @@ export class PluginCommandManager {
     this.pluginData = pluginData;
   }
 
-  public add(blueprint: CommandBlueprint) {
+  public add(blueprint: CommandBlueprint<TPluginType>) {
     const preFilters = Array.from(blueprint.config?.preFilters ?? []);
     preFilters.unshift(restrictCommandSource, checkCommandPermission);
 
@@ -108,7 +109,7 @@ export class PluginCommandManager {
       return;
     }
 
-    const extraMeta: Partial<CommandMeta> = {};
+    const extraMeta: Partial<CommandMeta<TPluginType>> = {};
     if (command.config.extra?._lock) {
       extraMeta.lock = command.config.extra._lock;
     }
@@ -118,10 +119,10 @@ export class PluginCommandManager {
 
   private async runCommand(
     msg: Message,
-    command: ICommandDefinition<CommandContext, ICommandExtraData>,
+    command: ICommandDefinition<CommandContext<TPluginType>, ICommandExtraData<TPluginType>>,
     args: IArgumentMap = {},
     opts: IMatchedOptionMap = {},
-    extraMeta?: Partial<CommandMeta>
+    extraMeta?: Partial<CommandMeta<TPluginType>>
   ): Promise<void> {
     const handler = this.handlers.get(command.id);
 
@@ -136,7 +137,7 @@ export class PluginCommandManager {
     }, {});
 
     const finalArgs = { ...argValueMap, ...optValueMap };
-    const meta: CommandMeta = {
+    const meta: CommandMeta<TPluginType> = {
       ...extraMeta,
       message: msg,
       pluginData: this.pluginData,

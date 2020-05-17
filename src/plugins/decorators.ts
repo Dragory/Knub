@@ -13,34 +13,34 @@ export interface CooldownDecoratorData {
   permission: string;
 }
 
-function applyCooldownToCommand(commandData: CommandBlueprint, cooldown: CooldownDecoratorData) {
+function applyCooldownToCommand(commandData: CommandBlueprint<any>, cooldown: CooldownDecoratorData) {
   commandData.cooldown = {
     amount: cooldown.time,
     permission: cooldown.permission,
   };
 }
 
-function applyCooldownToEvent(eventData: EventListenerBlueprint, cooldown: CooldownDecoratorData) {
+function applyCooldownToEvent(eventData: EventListenerBlueprint<any>, cooldown: CooldownDecoratorData) {
   eventData.opts = eventData.opts || {};
   eventData.opts.filters = eventData.opts.filters || [];
   eventData.opts.filters.push(cooldownFilter(cooldown.time, cooldown.permission));
 }
 
-function applyRequiredPermissionToCommand(commandData: CommandBlueprint, permission: string) {
+function applyRequiredPermissionToCommand(commandData: CommandBlueprint<any>, permission: string) {
   commandData.permission = permission;
 }
 
-function applyRequiredPermissionToEvent(eventData: EventListenerBlueprint, permission: string) {
+function applyRequiredPermissionToEvent(eventData: EventListenerBlueprint<any>, permission: string) {
   eventData.opts = eventData.opts || {};
   eventData.opts.filters = eventData.opts.filters || [];
   eventData.opts.filters.push(requirePermission(permission));
 }
 
-function applyLockToCommand(commandData: CommandBlueprint, locks: string | string[]) {
+function applyLockToCommand(commandData: CommandBlueprint<any>, locks: string | string[]) {
   commandData.locks = locks;
 }
 
-function applyLockToEvent(eventData: EventListenerBlueprint, locks: string | string[]) {
+function applyLockToEvent(eventData: EventListenerBlueprint<any>, locks: string | string[]) {
   eventData.opts = eventData.opts || {};
   eventData.opts.filters = eventData.opts.filters || [];
   eventData.opts.filters.push(locksFilter(locks));
@@ -52,7 +52,7 @@ function applyLockToEvent(eventData: EventListenerBlueprint, locks: string | str
 function CommandDecorator(
   trigger: string,
   parameters: string | IParameter[] = [],
-  config: ICommandConfig<CommandContext, ICommandExtraData> = {}
+  config: ICommandConfig<CommandContext<any>, ICommandExtraData<any>> = {}
 ) {
   return (target: typeof PluginClass.prototype, propertyKey: string) => {
     // Add command blueprint to the plugin's static commands array
@@ -85,7 +85,7 @@ function CommandDecorator(
 function OnEventDecorator(eventName: string, opts?: OnOpts) {
   return (target: typeof PluginClass.prototype, propertyKey: string) => {
     // Add event listener blueprint to the plugin's static event listeners array
-    const eventListenerBlueprint: EventListenerBlueprint = {
+    const eventListenerBlueprint: EventListenerBlueprint<any> = {
       event: eventName,
       listener: target[propertyKey],
       opts,
@@ -115,11 +115,12 @@ function PermissionDecorator(permission: string) {
     Reflect.defineMetadata("decoratorPermission", permission, target, propertyKey);
 
     // Apply to existing commands
-    const commands: CommandBlueprint[] = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
+    const commands: Array<CommandBlueprint<any>> = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
     commands.forEach((cmd) => applyRequiredPermissionToCommand(cmd, permission));
 
     // Apply to existing events
-    const events: EventListenerBlueprint[] = Reflect.getMetadata("decoratorEvents", target, propertyKey) || [];
+    const events: Array<EventListenerBlueprint<any>> =
+      Reflect.getMetadata("decoratorEvents", target, propertyKey) || [];
     events.forEach((ev) => applyRequiredPermissionToEvent(ev, permission));
   };
 }
@@ -132,11 +133,12 @@ function LockDecorator(locks: string | string[]) {
     Reflect.defineMetadata("decoratorLocks", locks, target, propertyKey);
 
     // Apply to existing commands
-    const commands: CommandBlueprint[] = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
+    const commands: Array<CommandBlueprint<any>> = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
     commands.forEach((cmd) => applyLockToCommand(cmd, locks));
 
     // Apply to existing events
-    const events: EventListenerBlueprint[] = Reflect.getMetadata("decoratorEvents", target, propertyKey) || [];
+    const events: Array<EventListenerBlueprint<any>> =
+      Reflect.getMetadata("decoratorEvents", target, propertyKey) || [];
     events.forEach((ev) => applyLockToEvent(ev, locks));
   };
 }
@@ -153,11 +155,12 @@ function CooldownDecorator(timeMs: number, permission: string = null) {
     Reflect.defineMetadata("decoratorCooldown", cooldownData, target, propertyKey);
 
     // Apply to existing commands
-    const commands: CommandBlueprint[] = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
+    const commands: Array<CommandBlueprint<any>> = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
     commands.forEach((cmd) => applyCooldownToCommand(cmd, cooldownData));
 
     // Apply to existing events
-    const events: EventListenerBlueprint[] = Reflect.getMetadata("decoratorEvents", target, propertyKey) || [];
+    const events: Array<EventListenerBlueprint<any>> =
+      Reflect.getMetadata("decoratorEvents", target, propertyKey) || [];
     events.forEach((ev) => applyCooldownToEvent(ev, cooldownData));
   };
 }
