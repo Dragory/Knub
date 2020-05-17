@@ -20,7 +20,7 @@ export interface KnubOptions<TGuildConfig extends BaseConfig, TGlobalConfig exte
   getEnabledGlobalPlugins?: (ctx: GuildContext<TGlobalConfig>, plugins: PluginMap) => Awaitable<string[]>;
   canLoadGuild?: (guildId: string) => Awaitable<boolean>;
   logFn?: LoggerFn;
-  customArgumentTypes?: CustomArgumentTypes;
+  customArgumentTypes?: CustomArgumentTypes<any>;
   sendErrorMessageFn?: StatusMessageFn;
   sendSuccessMessageFn?: StatusMessageFn;
   [key: string]: any;
