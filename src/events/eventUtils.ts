@@ -22,7 +22,7 @@ type EventToUser = {
 };
 
 type EventToChannel = {
-  [P in keyof KnownEventArguments]?: (args: KnownEventArguments[P]) => Channel | undefined;
+  [P in keyof KnownEventArguments]?: (args: KnownEventArguments[P]) => Channel | { id: string } | undefined;
 };
 
 type EventToMessage = {

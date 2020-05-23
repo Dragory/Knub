@@ -1,12 +1,12 @@
 import {
   AnyChannel,
   AnyGuildChannel,
+  BaseInvite,
   Call,
   Emoji,
   FriendSuggestionReasons,
   GroupChannel,
   Guild,
-  Invite,
   Member,
   MemberPartial,
   Message,
@@ -144,11 +144,11 @@ export interface KnownEventArguments {
   };
   inviteCreate: {
     guild: Guild;
-    invite: Invite;
+    invite: BaseInvite;
   };
   inviteDelete: {
     guild: Guild;
-    invite: Invite;
+    invite: BaseInvite;
   };
   messageCreate: {
     message: Message;

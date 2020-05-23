@@ -2,7 +2,17 @@
  * @file Public helper functions/types
  */
 
-import { Client, Emoji, Guild, Invite, Message, MessageContent, MessageFile, TextableChannel, TextChannel } from "eris";
+import {
+  Client,
+  Emoji,
+  Guild,
+  BaseInvite,
+  Message,
+  MessageContent,
+  MessageFile,
+  TextableChannel,
+  TextChannel,
+} from "eris";
 import { get, getChannelId, getRoleId, getUserId, noop } from "./utils";
 
 /**
@@ -205,7 +215,7 @@ export function disableCodeBlocks(str: string): string {
 /**
  * Returns the full invite link for an invite object
  */
-export function getInviteLink(inv: Invite) {
+export function getInviteLink(inv: BaseInvite) {
   return `https://discord.gg/${inv.code}`;
 }
 
