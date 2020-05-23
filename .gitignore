@@ -8,3 +8,7 @@ desktop.ini
 **/.idea/usage.statistics.xml
 **/.idea/shelf
 **/.idea/dataSources*
+
+# Debug scripts
+*.debug.js
+*.debug.ts
