@@ -16,11 +16,13 @@ import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { EventArguments } from "../events/eventArguments";
 
-process.on("unhandledRejection", (err) => {
-  throw err;
-});
-
 describe("PluginClass", () => {
+  before(() => {
+    process.on("unhandledRejection", (err) => {
+      throw err;
+    });
+  });
+
   describe("Lifecycle hooks", () => {
     it("runs plugin-supplied onLoad() function", (done) => {
       (async () => {
