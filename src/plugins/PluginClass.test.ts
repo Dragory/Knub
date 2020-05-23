@@ -16,6 +16,7 @@ import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { EventArguments } from "../events/eventArguments";
 import { parseParameters } from "knub-command-manager";
+import { BasePluginType } from "./pluginTypes";
 
 describe("PluginClass", () => {
   before(() => {
@@ -703,6 +704,87 @@ describe("PluginClass", () => {
         await sleep(150);
 
         assert.strictEqual(lockNum, 3);
+      })();
+    });
+  });
+
+  describe("Custom overrides", () => {
+    it("Custom overrides work", () => {
+      return (async () => {
+        let commandTriggers = 0;
+
+        class TestPlugin extends PluginClass {
+          public static pluginName = "test-plugin";
+
+          public static defaultOptions = {
+            config: {
+              can_do: false,
+            },
+          };
+
+          public static customOverrideMatcher(pluginData, criteria, matchParams) {
+            return matchParams.userId === criteria.myUserOverride;
+          }
+
+          @d.command("foo")
+          @d.permission("can_do")
+          fooCmd() {
+            commandTriggers++;
+          }
+        }
+
+        const client = createMockClient();
+        const user1 = createMockUser(client);
+        const user2 = createMockUser(client);
+
+        const knub = new Knub(client, {
+          guildPlugins: [TestPlugin],
+          options: {
+            getEnabledPlugins() {
+              return ["test-plugin"];
+            },
+            getConfig() {
+              return {
+                prefix: "!",
+                plugins: {
+                  "test-plugin": {
+                    overrides: [
+                      {
+                        extra: {
+                          myUserOverride: user1.id,
+                        },
+                        config: {
+                          can_do: true,
+                        },
+                      },
+                    ],
+                  },
+                },
+              };
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = createMockGuild(client);
+        client.emit("guildAvailable", guild);
+        await sleep(30);
+
+        const channel = createMockTextChannel(client, guild.id);
+
+        const message1 = createMockMessage(client, channel.id, user1, { content: "!foo" });
+        client.emit("messageCreate", message1);
+        await sleep(30);
+
+        const message2 = createMockMessage(client, channel.id, user2, { content: "!foo" });
+        client.emit("messageCreate", message2);
+        await sleep(30);
+
+        assert.equal(commandTriggers, 1);
       })();
     });
   });
