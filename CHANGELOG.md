@@ -23,9 +23,7 @@
       event filters, command filters, event listeners, and command handlers.
 * Changes to `KnubArgs` (the object passed to Knub constructor):
     * Renamed `plugins` to `guildPlugins`
-    * `options.getEnabledPlugins` is now split into two functions:
-        * `options.getEnabledGuildPlugins`
-        * `options.getEnabledGlobalPlugins`
+    * `options.getEnabledPlugins` is now called `options.getEnabledGuildPlugins`
         * Signature: `(ctx, pluginMap) => Awaitable<string[]>`
 * Deprecated PluginClass fields:
 	* `PluginClass.getDefaultOptions()` — Now a static property `PluginClass.defaultOptions`
@@ -64,8 +62,6 @@
   but in the static commands/events arrays instead
 
 **TODO:**
-* Actually use getEnabledGlobalPlugins()
-* Add tests for custom overrides
 * Add tests for custom argument types
 * More tests!
 

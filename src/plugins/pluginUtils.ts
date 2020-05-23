@@ -114,13 +114,3 @@ export function defaultGetEnabledGuildPlugins(ctx: BaseContext<BaseConfig>, guil
     return plugins[pluginName]?.enabled !== false;
   });
 }
-
-/**
- * By default, load all global plugins that haven't been explicitly disabled
- */
-export function defaultGetEnabledGlobalPlugins(ctx: BaseContext<BaseConfig>, globalPlugins: PluginMap) {
-  const plugins = ctx.config.plugins ?? {};
-  return Array.from(globalPlugins.keys()).filter((pluginName) => {
-    return plugins[pluginName]?.enabled !== false;
-  });
-}
