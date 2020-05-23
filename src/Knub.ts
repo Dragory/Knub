@@ -12,7 +12,6 @@ import { CooldownManager } from "./cooldowns/CooldownManager";
 import { PluginLoadError } from "./plugins/PluginLoadError";
 import {
   defaultGetConfig,
-  defaultGetEnabledGlobalPlugins,
   defaultGetEnabledGuildPlugins,
   getPluginName,
   isGuildContext,
@@ -110,7 +109,6 @@ export class Knub<
     const defaultOptions: KnubOptions<TGuildConfig, TGlobalConfig> = {
       getConfig: defaultGetConfig,
       getEnabledGuildPlugins: defaultGetEnabledGuildPlugins,
-      getEnabledGlobalPlugins: defaultGetEnabledGlobalPlugins,
       canLoadGuild: () => true,
       customArgumentTypes: {},
 

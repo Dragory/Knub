@@ -17,7 +17,6 @@ export interface KnubOptions<TGuildConfig extends BaseConfig, TGlobalConfig exte
   autoInitGuilds?: boolean;
   getConfig?: (id: string) => Awaitable<any>;
   getEnabledGuildPlugins?: (ctx: GuildContext<TGuildConfig>, plugins: PluginMap) => Awaitable<string[]>;
-  getEnabledGlobalPlugins?: (ctx: GuildContext<TGlobalConfig>, plugins: PluginMap) => Awaitable<string[]>;
   canLoadGuild?: (guildId: string) => Awaitable<boolean>;
   logFn?: LoggerFn;
   customArgumentTypes?: CustomArgumentTypes<any>;
