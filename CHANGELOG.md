@@ -62,7 +62,6 @@
   but in the static commands/events arrays instead
 
 **TODO:**
-* Add tests for custom argument types
 * More tests!
 
 # 29.0.1

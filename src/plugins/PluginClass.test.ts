@@ -1,4 +1,4 @@
-import { CooldownManager, decorators as d, Knub, LockManager, PluginClass } from "../index";
+import { asCommand, asPlugin, CooldownManager, decorators as d, Knub, LockManager, PluginClass } from "../index";
 import { Guild, Message } from "eris";
 import {
   createMockClient,
@@ -15,6 +15,7 @@ import { CommandMeta } from "../commands/commandUtils";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { EventArguments } from "../events/eventArguments";
+import { parseParameters } from "knub-command-manager";
 
 describe("PluginClass", () => {
   before(() => {
@@ -702,6 +703,107 @@ describe("PluginClass", () => {
         await sleep(150);
 
         assert.strictEqual(lockNum, 3);
+      })();
+    });
+  });
+
+  describe("Custom argument types", () => {
+    it("Global", (done) => {
+      (async () => {
+        const client = createMockClient();
+        const guild = createMockGuild(client);
+
+        class TestPlugin extends PluginClass {
+          public static pluginName = "test-plugin";
+
+          @d.command("foo", "<str:foo>")
+          fooCmd({ str }) {
+            assert.equal(str, `bar-${guild.id}`);
+            done();
+          }
+        }
+
+        const knub = new Knub(client, {
+          guildPlugins: [TestPlugin],
+          options: {
+            getEnabledPlugins() {
+              return ["test-plugin"];
+            },
+            getConfig() {
+              return {
+                prefix: "!",
+              };
+            },
+            customArgumentTypes: {
+              foo: (value, ctx) => {
+                return `${value}-${ctx.pluginData.guild.id}`;
+              },
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        client.emit("guildAvailable", guild);
+        await sleep(30);
+
+        const channel = createMockTextChannel(client, guild.id);
+        const user = createMockUser(client);
+        const msg = createMockMessage(client, channel.id, user, { content: "!foo bar" });
+        client.emit("messageCreate", msg);
+      })();
+    });
+
+    it("Per plugin", (done) => {
+      (async () => {
+        const client = createMockClient();
+        const guild = createMockGuild(client);
+
+        class TestPlugin extends PluginClass {
+          public static pluginName = "test-plugin";
+
+          public static customArgumentTypes = {
+            foo: (value, ctx) => {
+              return `${value}-${ctx.pluginData.guild.id}`;
+            },
+          };
+
+          @d.command("foo", "<str:foo>")
+          fooCmd({ str }) {
+            assert.equal(str, `bar-${guild.id}`);
+            done();
+          }
+        }
+
+        const knub = new Knub(client, {
+          guildPlugins: [TestPlugin],
+          options: {
+            getEnabledPlugins() {
+              return ["test-plugin"];
+            },
+            getConfig() {
+              return {
+                prefix: "!",
+              };
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        client.emit("guildAvailable", guild);
+        await sleep(30);
+
+        const channel = createMockTextChannel(client, guild.id);
+        const user = createMockUser(client);
+        const msg = createMockMessage(client, channel.id, user, { content: "!foo bar" });
+        client.emit("messageCreate", msg);
       })();
     });
   });

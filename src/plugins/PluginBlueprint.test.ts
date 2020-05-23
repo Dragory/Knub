@@ -15,6 +15,7 @@ import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { asEventListener } from "../events/eventUtils";
 import { BasePluginType } from "./pluginTypes";
+import { parseParameters } from "knub-command-manager";
 
 describe("PluginBlueprint", () => {
   before(() => {
@@ -307,6 +308,114 @@ describe("PluginBlueprint", () => {
         await sleep(30);
 
         assert.equal(commandTriggers, 1);
+      })();
+    });
+  });
+
+  describe("Custom argument types", () => {
+    it("Global", (done) => {
+      (async () => {
+        const client = createMockClient();
+        const guild = createMockGuild(client);
+
+        const TestPlugin = asPlugin<any>({
+          name: "test-plugin",
+          commands: [
+            asCommand<any>({
+              trigger: "foo",
+              parameters: parseParameters("<str:foo>"),
+              run({ str }) {
+                assert.equal(str, `bar-${guild.id}`);
+                done();
+              },
+            }),
+          ],
+        });
+
+        const knub = new Knub(client, {
+          guildPlugins: [TestPlugin],
+          options: {
+            getEnabledPlugins() {
+              return ["test-plugin"];
+            },
+            getConfig() {
+              return {
+                prefix: "!",
+              };
+            },
+            customArgumentTypes: {
+              foo: (value, ctx) => {
+                return `${value}-${ctx.pluginData.guild.id}`;
+              },
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        client.emit("guildAvailable", guild);
+        await sleep(30);
+
+        const channel = createMockTextChannel(client, guild.id);
+        const user = createMockUser(client);
+        const msg = createMockMessage(client, channel.id, user, { content: "!foo bar" });
+        client.emit("messageCreate", msg);
+      })();
+    });
+
+    it("Per plugin", (done) => {
+      (async () => {
+        const client = createMockClient();
+        const guild = createMockGuild(client);
+
+        const TestPlugin = asPlugin<any>({
+          name: "test-plugin",
+          customArgumentTypes: {
+            foo: (value, ctx) => {
+              return `${value}-${ctx.pluginData.guild.id}`;
+            },
+          },
+          commands: [
+            asCommand<any>({
+              trigger: "foo",
+              parameters: parseParameters("<str:foo>"),
+              run({ str }) {
+                assert.equal(str, `bar-${guild.id}`);
+                done();
+              },
+            }),
+          ],
+        });
+
+        const knub = new Knub(client, {
+          guildPlugins: [TestPlugin],
+          options: {
+            getEnabledPlugins() {
+              return ["test-plugin"];
+            },
+            getConfig() {
+              return {
+                prefix: "!",
+              };
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        client.emit("guildAvailable", guild);
+        await sleep(30);
+
+        const channel = createMockTextChannel(client, guild.id);
+        const user = createMockUser(client);
+        const msg = createMockMessage(client, channel.id, user, { content: "!foo bar" });
+        client.emit("messageCreate", msg);
       })();
     });
   });
