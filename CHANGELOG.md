@@ -1,5 +1,5 @@
-# NEXT
-* Knub now uses Eris 0.12
+# 30.0.0-beta.0
+* Knub now uses Eris 0.13
 * The `Plugin` class is now called `PluginClass`
 * Deprecated the `GlobalPlugin` class. Use `PluginClass` instead.
 * `PluginClass` constructor now takes a `PluginData` object as its only
@@ -60,9 +60,6 @@
   There should rarely be a need to touch these values directly.
 * `command()` and `event()` decorators no longer save their data in class metadata,
   but in the static commands/events arrays instead
-
-**TODO:**
-* More tests!
 
 # 29.0.1
 * Fix override conditions resolving to `true` even when unknown conditions were
