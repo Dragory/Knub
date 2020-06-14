@@ -53,13 +53,16 @@ module.exports = {
     "@typescript-eslint/prefer-function-type": "error",
     "@typescript-eslint/prefer-namespace-keyword": "error",
     "@typescript-eslint/quotes": "off",
+    "@typescript-eslint/no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_"
+    }],
     "@typescript-eslint/semi": [
       "off",
       null,
     ],
     "@typescript-eslint/triple-slash-reference": "error",
     "@typescript-eslint/type-annotation-spacing": "off",
-    "@typescript-eslint/unified-signatures": "error",
+    "@typescript-eslint/unified-signatures": "off",
     "arrow-parens": [
       "off",
       "as-needed",
@@ -112,7 +115,7 @@ module.exports = {
     "no-shadow": [
       "error",
       {
-        "hoist": "all",
+        "hoist": "never",
       },
     ],
     "no-sparse-arrays": "error",

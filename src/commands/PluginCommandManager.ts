@@ -1,11 +1,4 @@
-import {
-  CommandManager,
-  findMatchingCommandResultHasError,
-  IArgumentMap,
-  ICommandDefinition,
-  IMatchedOptionMap,
-  TTypeConverterFn,
-} from "knub-command-manager";
+import { CommandManager, IMatchedCommand, isError } from "knub-command-manager";
 import {
   checkCommandCooldown,
   checkCommandLocks,
@@ -15,11 +8,10 @@ import {
   CommandMeta,
   getCommandSignature,
   getDefaultPrefix,
-  ICommandExtraData,
+  CommandExtraData,
   PluginCommandDefinition,
   restrictCommandSource,
 } from "./commandUtils";
-import { baseArgumentTypes } from "./baseArgumentTypes";
 import { Client, Message } from "eris";
 import { PluginData } from "../plugins/PluginData";
 import { CommandBlueprint } from "./CommandBlueprint";
@@ -27,9 +19,6 @@ import { BasePluginType } from "../plugins/pluginTypes";
 
 export interface PluginCommandManagerOpts<TCommandContext> {
   prefix?: string | RegExp;
-  customArgumentTypes?: {
-    [key: string]: TTypeConverterFn<TCommandContext>;
-  };
 }
 
 /**
@@ -37,16 +26,12 @@ export interface PluginCommandManagerOpts<TCommandContext> {
  */
 export class PluginCommandManager<TPluginType extends BasePluginType> {
   private pluginData: PluginData<TPluginType>;
-  private manager: CommandManager<CommandContext<TPluginType>, ICommandExtraData<TPluginType>>;
-  private handlers: Map<number, CommandFn<TPluginType>>;
+  private manager: CommandManager<CommandContext<TPluginType>, CommandExtraData<TPluginType>>;
+  private handlers: Map<number, CommandFn<TPluginType, any>>;
 
   constructor(client: Client, opts: PluginCommandManagerOpts<CommandContext<TPluginType>> = {}) {
-    this.manager = new CommandManager<CommandContext<TPluginType>, ICommandExtraData<TPluginType>>({
+    this.manager = new CommandManager<CommandContext<TPluginType>, CommandExtraData<TPluginType>>({
       prefix: opts.prefix ?? getDefaultPrefix(client),
-      types: {
-        ...baseArgumentTypes,
-        ...opts.customArgumentTypes,
-      },
     });
 
     this.handlers = new Map();
@@ -60,7 +45,7 @@ export class PluginCommandManager<TPluginType extends BasePluginType> {
     this.pluginData = pluginData;
   }
 
-  public add(blueprint: CommandBlueprint<TPluginType>) {
+  public add(blueprint: CommandBlueprint<TPluginType, any>) {
     const preFilters = Array.from(blueprint.config?.preFilters ?? []);
     preFilters.unshift(restrictCommandSource, checkCommandPermission);
 
@@ -76,7 +61,7 @@ export class PluginCommandManager<TPluginType extends BasePluginType> {
       },
     };
 
-    const command = this.manager.add(blueprint.trigger, blueprint.parameters, config);
+    const command = this.manager.add(blueprint.trigger, blueprint.signature, config);
     this.handlers.set(command.id, blueprint.run);
   }
 
@@ -103,7 +88,7 @@ export class PluginCommandManager<TPluginType extends BasePluginType> {
       return;
     }
 
-    if (findMatchingCommandResultHasError(command)) {
+    if (isError(command)) {
       const usageLine = getCommandSignature(command.command);
       msg.channel.createMessage(`${command.error}\nUsage: \`${usageLine}\``);
       return;
@@ -114,36 +99,28 @@ export class PluginCommandManager<TPluginType extends BasePluginType> {
       extraMeta.lock = command.config.extra._lock;
     }
 
-    await this.runCommand(msg, command, command.args, command.opts, extraMeta);
+    await this.runCommand(msg, command, extraMeta);
   }
 
   private async runCommand(
     msg: Message,
-    command: ICommandDefinition<CommandContext<TPluginType>, ICommandExtraData<TPluginType>>,
-    args: IArgumentMap = {},
-    opts: IMatchedOptionMap = {},
+    matchedCommand: IMatchedCommand<CommandContext<TPluginType>, CommandExtraData<TPluginType>>,
     extraMeta?: Partial<CommandMeta<TPluginType>>
   ): Promise<void> {
-    const handler = this.handlers.get(command.id);
+    const handler = this.handlers.get(matchedCommand.id);
 
-    const argValueMap = Object.entries(args).reduce((map, [key, arg]) => {
-      map[key] = arg.value;
+    const valueMap = Object.entries(matchedCommand.values).reduce((map, [key, matched]) => {
+      map[key] = matched.value;
       return map;
     }, {});
 
-    const optValueMap = Object.entries(opts).reduce((map, [key, opt]) => {
-      map[key] = opt.value;
-      return map;
-    }, {});
-
-    const finalArgs = { ...argValueMap, ...optValueMap };
     const meta: CommandMeta<TPluginType> = {
       ...extraMeta,
       message: msg,
       pluginData: this.pluginData,
-      command,
+      command: matchedCommand,
     };
 
-    await handler(finalArgs, meta);
+    await handler(valueMap, meta);
   }
 }

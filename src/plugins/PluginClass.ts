@@ -1,6 +1,6 @@
 import { Client, Guild, Member } from "eris";
 import { BaseConfig, PluginOptions } from "../config/configTypes";
-import { CustomArgumentTypes } from "../commands/commandUtils";
+import { CommandContext } from "../commands/commandUtils";
 import { CustomOverrideMatcher } from "../config/configUtils";
 import { LockManager } from "../locks/LockManager";
 import { CooldownManager } from "../cooldowns/CooldownManager";
@@ -12,6 +12,7 @@ import { PluginEventManager } from "../events/PluginEventManager";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { BasePluginType } from "./pluginTypes";
+import { TTypeConverterFn } from "knub-command-manager";
 
 /**
  * Base class for Knub plugins
@@ -31,13 +32,13 @@ export abstract class PluginClass<TPluginType extends BasePluginType = BasePlugi
   public static defaultOptions: PluginOptions<any>;
 
   // Commands that are automatically registered on plugin load
-  public static commands: Array<CommandBlueprint<any>>;
+  public static commands: Array<CommandBlueprint<any, any>>;
 
   // Event listeners that are automatically registered on plugin load
   public static events: Array<EventListenerBlueprint<any>>;
 
   // Custom argument types for commands
-  public static customArgumentTypes: CustomArgumentTypes<any>;
+  public static customArgumentTypes: Record<string, TTypeConverterFn<any, CommandContext<any>>>;
 
   // If this plugin includes any custom overrides, this function evaluates them
   public static customOverrideMatcher: CustomOverrideMatcher<any>;

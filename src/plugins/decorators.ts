@@ -1,19 +1,22 @@
 import "reflect-metadata";
-import { ICommandConfig, IParameter, parseParameters } from "knub-command-manager";
-import { CommandContext, ICommandExtraData } from "../commands/commandUtils";
+import { TSignatureOrArray } from "../commands/commandUtils";
 import { PluginClass } from "./PluginClass";
 import { OnOpts } from "../events/PluginEventManager";
-import { locks as locksFilter, requirePermission, cooldown as cooldownFilter } from "../events/eventFilters";
+import { cooldown as cooldownFilter, locks as locksFilter, requirePermission } from "../events/eventFilters";
 import { appendToPropertyMetadata } from "./decoratorUtils";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
+
+export type SemiCommandBlueprint = Omit<CommandBlueprint<any, any>, "signature"> & {
+  signature: CommandBlueprint<any, any>["signature"] | "string";
+};
 
 export interface CooldownDecoratorData {
   time: number;
   permission: string;
 }
 
-function applyCooldownToCommand(commandData: CommandBlueprint<any>, cooldown: CooldownDecoratorData) {
+function applyCooldownToCommand(commandData: SemiCommandBlueprint, cooldown: CooldownDecoratorData) {
   commandData.cooldown = {
     amount: cooldown.time,
     permission: cooldown.permission,
@@ -26,7 +29,7 @@ function applyCooldownToEvent(eventData: EventListenerBlueprint<any>, cooldown: 
   eventData.opts.filters.push(cooldownFilter(cooldown.time, cooldown.permission));
 }
 
-function applyRequiredPermissionToCommand(commandData: CommandBlueprint<any>, permission: string) {
+function applyRequiredPermissionToCommand(commandData: SemiCommandBlueprint, permission: string) {
   commandData.permission = permission;
 }
 
@@ -36,7 +39,7 @@ function applyRequiredPermissionToEvent(eventData: EventListenerBlueprint<any>, 
   eventData.opts.filters.push(requirePermission(permission));
 }
 
-function applyLockToCommand(commandData: CommandBlueprint<any>, locks: string | string[]) {
+function applyLockToCommand(commandData: SemiCommandBlueprint, locks: string | string[]) {
   commandData.locks = locks;
 }
 
@@ -51,15 +54,15 @@ function applyLockToEvent(eventData: EventListenerBlueprint<any>, locks: string 
  */
 function CommandDecorator(
   trigger: string,
-  parameters: string | IParameter[] = [],
-  config: ICommandConfig<CommandContext<any>, ICommandExtraData<any>> = {}
+  signature: string | TSignatureOrArray<any> = [],
+  rest?: Omit<SemiCommandBlueprint, "trigger" | "parameters" | "run">
 ) {
   return (target: typeof PluginClass.prototype, propertyKey: string) => {
     // Add command blueprint to the plugin's static commands array
     const blueprint = {
+      ...rest,
       trigger,
-      parameters: typeof parameters === "string" ? parseParameters(parameters) : parameters,
-      config,
+      signature,
       run: target[propertyKey],
     };
 
@@ -115,7 +118,7 @@ function PermissionDecorator(permission: string) {
     Reflect.defineMetadata("decoratorPermission", permission, target, propertyKey);
 
     // Apply to existing commands
-    const commands: Array<CommandBlueprint<any>> = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
+    const commands: SemiCommandBlueprint[] = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
     commands.forEach((cmd) => applyRequiredPermissionToCommand(cmd, permission));
 
     // Apply to existing events
@@ -133,7 +136,7 @@ function LockDecorator(locks: string | string[]) {
     Reflect.defineMetadata("decoratorLocks", locks, target, propertyKey);
 
     // Apply to existing commands
-    const commands: Array<CommandBlueprint<any>> = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
+    const commands: SemiCommandBlueprint[] = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
     commands.forEach((cmd) => applyLockToCommand(cmd, locks));
 
     // Apply to existing events
@@ -155,7 +158,7 @@ function CooldownDecorator(timeMs: number, permission: string = null) {
     Reflect.defineMetadata("decoratorCooldown", cooldownData, target, propertyKey);
 
     // Apply to existing commands
-    const commands: Array<CommandBlueprint<any>> = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
+    const commands: SemiCommandBlueprint[] = Reflect.getMetadata("decoratorCommands", target, propertyKey) || [];
     commands.forEach((cmd) => applyCooldownToCommand(cmd, cooldownData));
 
     // Apply to existing events

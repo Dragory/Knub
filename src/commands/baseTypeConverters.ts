@@ -1,17 +1,12 @@
-import { defaultParameterTypes, TypeConversionError, TTypeConverterFn } from "knub-command-manager";
+import { defaultTypeConverters, createTypeHelper, TypeConversionError } from "knub-command-manager";
 import { disableCodeBlocks } from "../helpers";
 import { getChannelId, getRoleId, getUserId } from "../utils";
 import { Channel, GuildChannel, Member, Role, TextChannel, User, VoiceChannel } from "eris";
-import { CommandContext } from "./commandUtils";
 
-interface BaseArgumentTypeMap {
-  [key: string]: TTypeConverterFn<CommandContext<any>>;
-}
+export const baseTypeConverters = {
+  ...defaultTypeConverters,
 
-export const baseArgumentTypes: BaseArgumentTypeMap = {
-  ...defaultParameterTypes,
-
-  boolean: defaultParameterTypes.bool,
+  boolean: defaultTypeConverters.bool,
 
   number(value) {
     const result = parseFloat(value);
@@ -159,4 +154,16 @@ export const baseArgumentTypes: BaseArgumentTypeMap = {
 
     return channelId;
   },
+};
+
+export const baseTypeHelpers = {
+  number: createTypeHelper<number>(baseTypeConverters.number),
+  user: createTypeHelper<User>(baseTypeConverters.user),
+  member: createTypeHelper<Member>(baseTypeConverters.member),
+  channel: createTypeHelper<Channel>(baseTypeConverters.channel),
+  textChannel: createTypeHelper<TextChannel>(baseTypeConverters.textChannel),
+  voiceChannel: createTypeHelper<VoiceChannel>(baseTypeConverters.voiceChannel),
+  role: createTypeHelper<Role>(baseTypeConverters.role),
+  userId: createTypeHelper<string>(baseTypeConverters.userId),
+  channelId: createTypeHelper<string>(baseTypeConverters.channelId),
 };

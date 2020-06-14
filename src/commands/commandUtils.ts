@@ -1,19 +1,15 @@
 import { Client, GroupChannel, GuildChannel, Message, PrivateChannel } from "eris";
 import { Awaitable } from "../utils";
-import { ICommandConfig, ICommandDefinition, isSwitchOption, TSignature, TTypeConverterFn } from "knub-command-manager";
+import { ICommandConfig, ICommandDefinition, IParameter, TOption, TSignature } from "knub-command-manager";
 import { Lock } from "../locks/LockManager";
 import { PluginData } from "../plugins/PluginData";
 import { hasPermission } from "../helpers";
 import { CommandBlueprint } from "./CommandBlueprint";
 import { BasePluginType } from "../plugins/pluginTypes";
 
-/**
- * An identity function that helps with type hinting.
- * Takes a command blueprint as an argument and returns that same blueprint.
- */
-export function asCommand<TPluginType extends BasePluginType, T = CommandBlueprint<TPluginType>>(blueprint: T): T {
-  return blueprint;
-}
+export type TSignatureOrArray<TPluginType extends BasePluginType> =
+  | TSignature<CommandContext<TPluginType>>
+  | Array<TSignature<CommandContext<TPluginType>>>;
 
 export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);
@@ -26,8 +22,36 @@ export interface CommandMeta<TPluginType extends BasePluginType> {
   lock?: Lock;
 }
 
-export type CommandFn<TPluginType extends BasePluginType> = (
-  args: any,
+/**
+ * Command signatures are objects where each property contains a parameter/option object.
+ * Each parameter/option object in turn contains a `type` function. ArgsFromSignature maps the signature object
+ * to the return types of said type functions. For example, if the signature had a "name" property with a type function
+ * that returns a string, ArgsFromSignature would return `{ name: string }`.
+ */
+type ArgsFromSignature<T extends TSignature<any>> = {
+  [K in keyof T]: ParameterOrOptionType<T[K]>;
+};
+
+/**
+ * Higher level wrapper for ArgsFromSignature that also supports multiple signatures,
+ * returning a union type of possible sets of arguments.
+ */
+export type ArgsFromSignatureOrArray<T extends TSignatureOrArray<any>> = ArgsFromSignatureUnion<
+  SignatureToArray<T>[number]
+>;
+
+// Needed to distribute the union type properly
+// See https://github.com/microsoft/TypeScript/issues/28339#issuecomment-463577347
+type ArgsFromSignatureUnion<T extends TSignature<any>> = T extends any ? ArgsFromSignature<T> : never;
+
+type SignatureToArray<T> = T extends any[] ? T : [T];
+
+type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
+
+type ParameterOrOptionType<T extends IParameter<any> | TOption<any>> = PromiseType<ReturnType<T["type"]>>;
+
+export type CommandFn<TPluginType extends BasePluginType, _TSignature extends TSignatureOrArray<TPluginType>> = (
+  args: ArgsFromSignatureOrArray<_TSignature>,
   meta: CommandMeta<TPluginType>
 ) => Awaitable<void>;
 
@@ -37,17 +61,13 @@ export interface CommandContext<TPluginType extends BasePluginType> {
   lock?: Lock;
 }
 
-export interface ICommandExtraData<TPluginType extends BasePluginType> {
-  blueprint: CommandBlueprint<TPluginType>;
+export interface CommandExtraData<TPluginType extends BasePluginType> {
+  blueprint: CommandBlueprint<TPluginType, any>;
   _lock?: Lock;
 }
 
-export type PluginCommandDefinition = ICommandDefinition<CommandContext<any>, ICommandExtraData<any>>;
-export type PluginCommandConfig = ICommandConfig<CommandContext<any>, ICommandExtraData<any>>;
-
-export interface CustomArgumentTypes<TPluginType extends BasePluginType> {
-  [key: string]: TTypeConverterFn<CommandContext<TPluginType>>;
-}
+export type PluginCommandDefinition = ICommandDefinition<CommandContext<any>, CommandExtraData<any>>;
+export type PluginCommandConfig = ICommandConfig<CommandContext<any>, CommandExtraData<any>>;
 
 /**
  * Returns a readable command signature string for the given command.
@@ -57,15 +77,18 @@ export interface CustomArgumentTypes<TPluginType extends BasePluginType> {
 export function getCommandSignature(
   command: PluginCommandDefinition,
   overrideTrigger?: string,
-  overrideSignature?: TSignature
+  overrideSignature?: TSignature<any>
 ) {
   const signature = overrideSignature || command.signatures[0];
-  const paramStrings = signature.map((param) => {
-    return param.required ? `<${param.name}>` : `[${param.name}]`;
+  const signatureEntries = Object.entries(signature);
+  const parameters = signatureEntries.filter(([_, param]) => param.option !== true) as Array<[string, IParameter<any>]>;
+  const options = signatureEntries.filter(([_, opt]) => opt.option === true) as Array<[string, TOption<any>]>;
+
+  const paramStrings = parameters.map(([name, param]) => {
+    return param.required ? `<${name}>` : `[${name}]`;
   });
-  const optStrings = (command.options || []).map((opt) => {
-    const required = isSwitchOption(opt) ? false : opt.required;
-    return required ? `<-${opt.name}>` : `[-${opt.name}]`;
+  const optStrings = options.map(([name, _opt]) => {
+    return `[-${name}]`;
   });
 
   const prefix =

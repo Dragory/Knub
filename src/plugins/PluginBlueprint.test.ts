@@ -1,4 +1,4 @@
-import { asCommand, asPlugin, CooldownManager, Knub, LockManager, PluginBlueprint } from "../index";
+import { command, eventListener, plugin, CooldownManager, Knub, LockManager, PluginBlueprint } from "../index";
 import { Guild } from "eris";
 import {
   createMockClient,
@@ -13,9 +13,8 @@ import { noop } from "../utils";
 import { PluginEventManager } from "../events/PluginEventManager";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
-import { asEventListener } from "../events/eventUtils";
 import { BasePluginType } from "./pluginTypes";
-import { parseParameters } from "knub-command-manager";
+import { parseSignature } from "knub-command-manager";
 
 describe("PluginBlueprint", () => {
   before(() => {
@@ -91,11 +90,11 @@ describe("PluginBlueprint", () => {
   describe("Dependencies", () => {
     it("hasPlugin", (done) => {
       (async () => {
-        const DependencyToLoad = asPlugin({
+        const DependencyToLoad = plugin({
           name: "dependency-to-load",
         });
 
-        const PluginToLoad = asPlugin({
+        const PluginToLoad = plugin({
           name: "plugin-to-load",
 
           onLoad(pluginData) {
@@ -131,7 +130,7 @@ describe("PluginBlueprint", () => {
 
     it("getPlugin", (done) => {
       (async () => {
-        const DependencyToLoad = asPlugin({
+        const DependencyToLoad = plugin({
           name: "dependency-to-load",
 
           public: {
@@ -143,7 +142,7 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        const PluginToLoad = asPlugin({
+        const PluginToLoad = plugin({
           name: "plugin-to-load",
 
           onLoad(pluginData) {
@@ -177,15 +176,15 @@ describe("PluginBlueprint", () => {
 
     it("automatic dependency loading", (done) => {
       (async () => {
-        const DependencyToLoad = asPlugin({
+        const DependencyToLoad = plugin({
           name: "dependency-to-load",
         });
 
-        const OtherDependencyToLoad = asPlugin({
+        const OtherDependencyToLoad = plugin({
           name: "other-dependency-to-load",
         });
 
-        const PluginToLoad = asPlugin({
+        const PluginToLoad = plugin({
           name: "plugin-to-load",
 
           dependencies: [DependencyToLoad, "other-dependency-to-load"],
@@ -232,7 +231,7 @@ describe("PluginBlueprint", () => {
           };
         }
 
-        const TestPlugin = asPlugin<PluginType>({
+        const TestPlugin = plugin<PluginType>({
           name: "test-plugin",
 
           defaultOptions: {
@@ -246,12 +245,8 @@ describe("PluginBlueprint", () => {
           },
 
           commands: [
-            asCommand({
-              trigger: "foo",
-              permission: "can_do",
-              run() {
-                commandTriggers++;
-              },
+            command("foo", {}, { permission: "can_do" }, () => {
+              commandTriggers++;
             }),
           ],
         });
@@ -313,79 +308,23 @@ describe("PluginBlueprint", () => {
   });
 
   describe("Custom argument types", () => {
-    it("Global", (done) => {
+    it("Custom argument types", (done) => {
       (async () => {
         const client = createMockClient();
         const guild = createMockGuild(client);
 
-        const TestPlugin = asPlugin<any>({
+        const types = {
+          foo: (value, ctx) => {
+            return `${value}-${ctx.pluginData.guild.id}`;
+          },
+        };
+
+        const TestPlugin = plugin<any>({
           name: "test-plugin",
           commands: [
-            asCommand<any>({
-              trigger: "foo",
-              parameters: parseParameters("<str:foo>"),
-              run({ str }) {
-                assert.equal(str, `bar-${guild.id}`);
-                done();
-              },
-            }),
-          ],
-        });
-
-        const knub = new Knub(client, {
-          guildPlugins: [TestPlugin],
-          options: {
-            getEnabledPlugins() {
-              return ["test-plugin"];
-            },
-            getConfig() {
-              return {
-                prefix: "!",
-              };
-            },
-            customArgumentTypes: {
-              foo: (value, ctx) => {
-                return `${value}-${ctx.pluginData.guild.id}`;
-              },
-            },
-            logFn: noop,
-          },
-        });
-
-        knub.run();
-        client.emit("ready");
-        await sleep(30);
-
-        client.emit("guildAvailable", guild);
-        await sleep(30);
-
-        const channel = createMockTextChannel(client, guild.id);
-        const user = createMockUser(client);
-        const msg = createMockMessage(client, channel.id, user, { content: "!foo bar" });
-        client.emit("messageCreate", msg);
-      })();
-    });
-
-    it("Per plugin", (done) => {
-      (async () => {
-        const client = createMockClient();
-        const guild = createMockGuild(client);
-
-        const TestPlugin = asPlugin<any>({
-          name: "test-plugin",
-          customArgumentTypes: {
-            foo: (value, ctx) => {
-              return `${value}-${ctx.pluginData.guild.id}`;
-            },
-          },
-          commands: [
-            asCommand<any>({
-              trigger: "foo",
-              parameters: parseParameters("<str:foo>"),
-              run({ str }) {
-                assert.equal(str, `bar-${guild.id}`);
-                done();
-              },
+            command("foo", parseSignature("<str:foo>", types, "foo"), ({ str }) => {
+              assert.equal(str, `bar-${guild.id}`);
+              done();
             }),
           ],
         });
@@ -466,11 +405,8 @@ describe("PluginBlueprint", () => {
           };
         }
 
-        const messageCreateEv = asEventListener({
-          event: "messageCreate",
-          listener() {
-            msgEvFnCallNum++;
-          },
+        const messageCreateEv = eventListener("messageCreate", () => {
+          msgEvFnCallNum++;
         });
 
         const PluginToUnload: PluginBlueprint = {

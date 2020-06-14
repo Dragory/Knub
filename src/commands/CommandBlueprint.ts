@@ -1,13 +1,15 @@
-import { IParameter } from "knub-command-manager";
-import { CommandFn, ICommandExtraData, PluginCommandConfig } from "./commandUtils";
+import { CommandFn, PluginCommandConfig, TSignatureOrArray } from "./commandUtils";
 import { BasePluginType } from "../plugins/pluginTypes";
 
 type CommandSource = "guild" | "group" | "dm";
 
-export interface CommandBlueprint<TPluginType extends BasePluginType> {
+export interface CommandBlueprint<
+  TPluginType extends BasePluginType,
+  _TSignature extends TSignatureOrArray<TPluginType>
+> {
   trigger: string;
-  parameters?: IParameter[];
-  run: CommandFn<TPluginType>;
+  signature?: _TSignature;
+  run: CommandFn<TPluginType, _TSignature>;
   config?: PluginCommandConfig;
 
   // Required permission name
@@ -32,4 +34,64 @@ export interface CommandBlueprint<TPluginType extends BasePluginType> {
 
   // Usage information for the command
   usage?: string;
+}
+
+/**
+ * Helper function that creates a command blueprint.
+ */
+export function command<TPluginType extends BasePluginType>(
+  // We can't replace CommandBlueprint<TPluginType, any> with a generic because it breaks type inference
+  trigger: CommandBlueprint<TPluginType, any>["trigger"],
+  run: CommandBlueprint<TPluginType, any>["run"]
+): CommandBlueprint<TPluginType, any>;
+
+/**
+ * Helper function that creates a command blueprint.
+ * Used for type inference between `signature` and the arguments for `run()`.
+ */
+export function command<TPluginType extends BasePluginType, _TSignature extends TSignatureOrArray<any>>(
+  // We can't replace CommandBlueprint<TPluginType, _TSignature> with a generic because it breaks type inference
+  trigger: CommandBlueprint<TPluginType, _TSignature>["trigger"],
+  signature: CommandBlueprint<TPluginType, _TSignature>["signature"],
+  run: CommandBlueprint<TPluginType, _TSignature>["run"]
+): CommandBlueprint<TPluginType, _TSignature>;
+
+/**
+ * Helper function that creates a command blueprint.
+ * Used for type inference between `signature` and the arguments for `run()`.
+ */
+export function command<TPluginType extends BasePluginType, _TSignature extends TSignatureOrArray<any>>(
+  // We can't replace CommandBlueprint<TPluginType, _TSignature> with a generic because it breaks type inference
+  trigger: CommandBlueprint<TPluginType, _TSignature>["trigger"],
+  signature: CommandBlueprint<TPluginType, _TSignature>["signature"],
+  options: Omit<CommandBlueprint<TPluginType, _TSignature>, "trigger" | "signature" | "run">,
+  run: CommandBlueprint<TPluginType, _TSignature>["run"]
+): CommandBlueprint<TPluginType, _TSignature>;
+
+/**
+ * Implementation of the various overloads above
+ */
+export function command(...args): CommandBlueprint<any, any> {
+  if (args.length === 2) {
+    // (trigger, run)
+    return {
+      trigger: args[0],
+      run: args[1],
+    };
+  } else if (args.length === 3) {
+    // (trigger, signature, run)
+    return {
+      trigger: args[0],
+      signature: args[1],
+      run: args[2],
+    };
+  } else if (args.length === 4) {
+    // (trigger, signature, options, run)
+    return {
+      ...args[2],
+      trigger: args[0],
+      signature: args[1],
+      run: args[3],
+    };
+  }
 }

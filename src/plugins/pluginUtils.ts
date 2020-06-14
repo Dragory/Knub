@@ -9,6 +9,9 @@ import { getMetadataFromAllProperties } from "./decoratorUtils";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { BasePluginType } from "./pluginTypes";
+import { SemiCommandBlueprint } from "./decorators";
+import { parseSignature } from "knub-command-manager";
+import { baseTypeConverters } from "..";
 
 const fs = _fs.promises;
 
@@ -16,7 +19,7 @@ const fs = _fs.promises;
  * An identity function that helps with type hinting.
  * Takes a plugin blueprint as an argument and returns that same blueprint.
  */
-export function asPlugin<TPluginType extends BasePluginType, T = PluginBlueprint<TPluginType>>(blueprint: T): T {
+export function plugin<TPluginType extends BasePluginType, T = PluginBlueprint<TPluginType>>(blueprint: T): T {
   return blueprint;
 }
 
@@ -46,10 +49,12 @@ export function isPluginBlueprint(value: any): value is PluginBlueprint {
   return !isPluginClass(value);
 }
 
+// eslint-disable-next-line no-shadow
 export function getPluginName(plugin: Plugin) {
   return isPluginClass(plugin) ? plugin.pluginName : plugin.name;
 }
 
+// eslint-disable-next-line no-shadow
 export function applyPluginClassDecoratorValues(plugin: typeof AnyExtendedPluginClass) {
   if (plugin._decoratorValuesTransferred) {
     return;
@@ -63,11 +68,19 @@ export function applyPluginClassDecoratorValues(plugin: typeof AnyExtendedPlugin
   plugin.events.push(...Object.values(events));
 
   const commands = Array.from(
-    Object.values(getMetadataFromAllProperties<CommandBlueprint<any>>(plugin, "decoratorCommands"))
+    Object.values(getMetadataFromAllProperties<SemiCommandBlueprint>(plugin, "decoratorCommands"))
   ).flat();
 
+  const commandTypes = { ...baseTypeConverters, ...plugin.customArgumentTypes };
+  const commandsWithParsedSignatures: Array<CommandBlueprint<any, any>> = commands.map((cmd) => {
+    return {
+      ...cmd,
+      signature: typeof cmd.signature === "string" ? parseSignature(cmd.signature, commandTypes) : cmd.signature,
+    };
+  });
+
   plugin.commands = plugin.commands || [];
-  plugin.commands.push(...Object.values(commands));
+  plugin.commands.push(...commandsWithParsedSignatures);
 
   plugin._decoratorValuesTransferred = true;
 }

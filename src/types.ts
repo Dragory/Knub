@@ -1,7 +1,6 @@
 import { TextableChannel } from "eris";
 import { BaseConfig } from "./config/configTypes";
 import { LoggerFn } from "./logger";
-import { CustomArgumentTypes } from "./commands/commandUtils";
 import { LockManager } from "./locks/LockManager";
 import { AnyExtendedPluginClass, PluginClass } from "./plugins/PluginClass";
 import { PluginBlueprint } from "./plugins/PluginBlueprint";
@@ -19,7 +18,6 @@ export interface KnubOptions<TGuildConfig extends BaseConfig, TGlobalConfig exte
   getEnabledGuildPlugins?: (ctx: GuildContext<TGuildConfig>, plugins: PluginMap) => Awaitable<string[]>;
   canLoadGuild?: (guildId: string) => Awaitable<boolean>;
   logFn?: LoggerFn;
-  customArgumentTypes?: CustomArgumentTypes<any>;
   sendErrorMessageFn?: StatusMessageFn;
   sendSuccessMessageFn?: StatusMessageFn;
   [key: string]: any;

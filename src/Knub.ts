@@ -317,10 +317,6 @@ export class Knub<
       events: new PluginEventManager(),
       commands: new PluginCommandManager(this.client, {
         prefix: ctx.config.prefix,
-        customArgumentTypes: {
-          ...this.options.customArgumentTypes,
-          ...plugin.customArgumentTypes,
-        },
       }),
       locks: ctx.locks,
       cooldowns: new CooldownManager(),

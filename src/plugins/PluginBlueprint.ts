@@ -1,5 +1,4 @@
 import { PluginOptions } from "../config/configTypes";
-import { CustomArgumentTypes } from "../commands/commandUtils";
 import { Awaitable } from "../utils";
 import { PluginData } from "./PluginData";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
@@ -38,13 +37,10 @@ export interface PluginBlueprint<TPluginType extends BasePluginType = BasePlugin
   defaultOptions?: PluginOptions<TPluginType>;
 
   // Commands that are automatically registered on plugin load
-  commands?: Array<CommandBlueprint<TPluginType>>;
+  commands?: Array<CommandBlueprint<TPluginType, any>>;
 
   // Event listeners that are automatically registered on plugin load
   events?: Array<EventListenerBlueprint<TPluginType>>;
-
-  // Custom argument types for commands
-  customArgumentTypes?: CustomArgumentTypes<TPluginType>;
 
   // If this plugin includes any custom overrides, this function evaluates them
   customOverrideMatcher?: CustomOverrideMatcher<TPluginType>;

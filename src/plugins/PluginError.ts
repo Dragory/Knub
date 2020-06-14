@@ -24,7 +24,7 @@ export class PluginError extends Error {
     }
   }
 
-  public [util.inspect.custom](depth, options) {
+  public [util.inspect.custom](_depth, _options) {
     return `PluginError: ${this.stack}`;
   }
 }

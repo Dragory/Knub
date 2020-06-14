@@ -27,7 +27,7 @@
     ]
   },
   "dependencies": {
-    "knub-command-manager": "^7.1.0",
+    "knub-command-manager": "^8.1.0",
     "reflect-metadata": "^0.1.13",
     "ts-essentials": "^2.0.12"
   },

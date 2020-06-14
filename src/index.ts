@@ -28,6 +28,8 @@ export {
 
 export { getCommandSignature, PluginCommandConfig, CommandContext } from "./commands/commandUtils";
 
+export * from "./commands/baseTypeConverters";
+
 import * as helpers from "./helpers";
 export { helpers };
 
@@ -39,8 +41,8 @@ export { PluginEventManager } from "./events/PluginEventManager";
 export { LockManager, Lock } from "./locks/LockManager";
 export { CooldownManager } from "./cooldowns/CooldownManager";
 
-export { TypeConversionError, parseParameters } from "knub-command-manager";
+export { TypeConversionError, parseSignature } from "knub-command-manager";
 
-export { asPlugin } from "./plugins/pluginUtils";
-export { asCommand } from "./commands/commandUtils";
-export { asEventListener } from "./events/eventUtils";
+export { plugin } from "./plugins/pluginUtils";
+export { command } from "./commands/CommandBlueprint";
+export { eventListener } from "./events/EventListenerBlueprint";

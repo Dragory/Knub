@@ -33,21 +33,25 @@ is coming in the near future.
 ### JavaScript example
 ```js
 const Eris = require("eris");
-const { Knub } = require("knub");
+const { Knub, command, simpleCommand, plugin, baseTypeHelpers } = require("knub");
 
-const MyCommand = {
-  trigger: "ping",
-  run(args, { message }) {
-    message.channel.createMessage("Pong!");
-  }
-};
+const t = baseTypeHelpers;
 
-const MyPlugin = {
+const MyCommand = command("echo", { text: t.string() }, (args, { message }) => {
+  message.channel.createMessage(args.text);
+});
+
+// simpleCommand(trigger, fn) is equivalent to command(trigger, {}, fn)
+const OtherCommand = simpleCommand("ping", (_, { message }) => {
+  message.channel.createMessage("Pong!");
+});
+
+const MyPlugin = plugin({
   name: "my-plugin",
   commands: [
     MyCommand,
   ]
-};
+});
 
 const client = new Eris("my-bot-token");
 const knub = new Knub(client, {
@@ -60,20 +64,20 @@ knub.run();
 ```
 
 ### TypeScript example
-```js
+```ts
 import Eris from "eris";
-import { Knub, asPlugin, asCommand } from "knub";
+import { Knub, plugin, command, simpleCommand, baseTypeHelpers as t } from "knub";
 
-// asCommand helper function used for type hints
-const MyCommand = asCommand({
-  trigger: "ping",
-  run(args, { message }) {
-    message.channel.createMessage("Pong!");
-  }
+const MyCommand = command("echo", { text: t.string() }, (args, { message }) => {
+  message.channel.createMessage(args.text); // Type of args.text is inferred from parameters
 });
 
-// asPlugin helper function used for type hints
-const MyPlugin = asPlugin({
+// simpleCommand(trigger, fn) is equivalent to command(trigger, {}, fn)
+const OtherCommand = simpleCommand("ping", (_, { message }) => {
+  message.channel.createMessage("Pong!");
+});
+
+const MyPlugin = plugin({
   name: "my-plugin",
   commands: [
     MyCommand,
