@@ -33,7 +33,7 @@ is coming in the near future.
 ### JavaScript example
 ```js
 const Eris = require("eris");
-const { Knub, command, simpleCommand, plugin, baseTypeHelpers } = require("knub");
+const { Knub, command, plugin, baseTypeHelpers } = require("knub");
 
 const t = baseTypeHelpers;
 
@@ -41,8 +41,7 @@ const MyCommand = command("echo", { text: t.string() }, (args, { message }) => {
   message.channel.createMessage(args.text);
 });
 
-// simpleCommand(trigger, fn) is equivalent to command(trigger, {}, fn)
-const OtherCommand = simpleCommand("ping", (_, { message }) => {
+const OtherCommand = command("ping", (_, { message }) => {
   message.channel.createMessage("Pong!");
 });
 
@@ -66,14 +65,13 @@ knub.run();
 ### TypeScript example
 ```ts
 import Eris from "eris";
-import { Knub, plugin, command, simpleCommand, baseTypeHelpers as t } from "knub";
+import { Knub, plugin, command, baseTypeHelpers as t } from "knub";
 
 const MyCommand = command("echo", { text: t.string() }, (args, { message }) => {
   message.channel.createMessage(args.text); // Type of args.text is inferred from parameters
 });
 
-// simpleCommand(trigger, fn) is equivalent to command(trigger, {}, fn)
-const OtherCommand = simpleCommand("ping", (_, { message }) => {
+const OtherCommand = command("ping", (_, { message }) => {
   message.channel.createMessage("Pong!");
 });
 
