@@ -1,3 +1,13 @@
+# 30.0.0-beta.1
+* Updated peer dependency of Eris to 0.13.2
+* Updated to `knub-command-manager` v8
+  * Signature strings (for parameters) are no longer parsed implicitly, and it is recommended
+    to specify them as an object using the new parameter helpers instead
+  * Options are no longer specified as command options, but as part of the command's signature
+* Replaced `asCommand()` helper from beta.0 with `command()` with better type inference
+* Replaced `asEvent()` helper from beta.0 with `event()` with better type inference
+* Replaced `asPlugin()` helper from beta.0 with `plugin()` for consistency with the above
+
 # 30.0.0-beta.0
 * Knub now uses Eris 0.13
 * The `Plugin` class is now called `PluginClass`
