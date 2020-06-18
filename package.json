@@ -48,7 +48,7 @@
     "typescript": "^3.9.3"
   },
   "peerDependencies": {
-    "eris": "^0.13.0"
+    "eris": "^0.13.2"
   },
   "files": [
     "/dist/**/!(*.test.js)"
