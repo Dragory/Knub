@@ -1,4 +1,4 @@
-import { BasePluginConfig } from "..";
+import { BasePluginConfig } from "../config/configTypes";
 
 export interface BasePluginType {
   config: BasePluginConfig;

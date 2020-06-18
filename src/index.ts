@@ -26,6 +26,8 @@ export {
   PluginOptions,
 } from "./config/configTypes";
 
+export { BasePluginType } from "./plugins/pluginTypes";
+
 export { getCommandSignature, PluginCommandConfig, CommandContext } from "./commands/commandUtils";
 
 export * from "./commands/baseTypeConverters";

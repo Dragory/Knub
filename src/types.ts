@@ -9,10 +9,10 @@ import { Awaitable } from "./utils";
 
 type StatusMessageFn = (channel: TextableChannel, body: string) => void;
 
-export type Plugin = typeof AnyExtendedPluginClass | PluginBlueprint;
+export type Plugin = typeof AnyExtendedPluginClass | PluginBlueprint<any>;
 export type PluginMap = Map<string, Plugin>;
 
-export interface KnubOptions<TGuildConfig extends BaseConfig, TGlobalConfig extends BaseConfig> {
+export interface KnubOptions<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> {
   autoInitGuilds?: boolean;
   getConfig?: (id: string) => Awaitable<any>;
   getEnabledGuildPlugins?: (ctx: GuildContext<TGuildConfig>, plugins: PluginMap) => Awaitable<string[]>;
@@ -23,7 +23,7 @@ export interface KnubOptions<TGuildConfig extends BaseConfig, TGlobalConfig exte
   [key: string]: any;
 }
 
-export interface KnubArgs<TGuildConfig extends BaseConfig, TGlobalConfig extends BaseConfig> {
+export interface KnubArgs<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> {
   guildPlugins?: Plugin[];
   globalPlugins?: Plugin[];
   options?: KnubOptions<TGuildConfig, TGlobalConfig>;
@@ -36,18 +36,18 @@ export interface LoadedPlugin {
   pluginData: PluginData<any>;
 }
 
-export interface BaseContext<TConfig extends BaseConfig> {
+export interface BaseContext<TConfig extends BaseConfig<any>> {
   config: TConfig;
   loadedPlugins: Map<string, LoadedPlugin>;
   locks: LockManager;
 }
 
-export interface GuildContext<TGuildConfig extends BaseConfig> extends BaseContext<TGuildConfig> {
+export interface GuildContext<TGuildConfig extends BaseConfig<any>> extends BaseContext<TGuildConfig> {
   guildId: string;
 }
 
-export type GlobalContext<TGlobalConfig extends BaseConfig> = BaseContext<TGlobalConfig>;
+export type GlobalContext<TGlobalConfig extends BaseConfig<any>> = BaseContext<TGlobalConfig>;
 
-export type AnyContext<TGuildConfig extends BaseConfig, TGlobalConfig extends BaseConfig> =
+export type AnyContext<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> =
   | GuildContext<TGuildConfig>
   | GlobalContext<TGlobalConfig>;

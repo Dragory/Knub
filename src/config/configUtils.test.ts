@@ -284,7 +284,7 @@ describe("configUtils", () => {
     });
 
     it("false when no conditions are present", () => {
-      const pluginOpts: PluginOptions = {
+      const pluginOpts: PluginOptions<BasePluginType> = {
         config: {
           value: 5,
         },
@@ -302,7 +302,7 @@ describe("configUtils", () => {
     });
 
     it("false when an empty 'all' condition is present", () => {
-      const pluginOpts: PluginOptions = {
+      const pluginOpts: PluginOptions<BasePluginType> = {
         config: {
           value: 5,
         },
@@ -324,7 +324,7 @@ describe("configUtils", () => {
     });
 
     it("false when an empty 'any' condition is present", () => {
-      const pluginOpts: PluginOptions = {
+      const pluginOpts: PluginOptions<BasePluginType> = {
         config: {
           value: 5,
         },
@@ -346,7 +346,7 @@ describe("configUtils", () => {
     });
 
     it("false when an unknown condition is present", () => {
-      const pluginOpts: PluginOptions = {
+      const pluginOpts: PluginOptions<BasePluginType> = {
         config: {
           value: 5,
         },

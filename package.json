@@ -29,23 +29,23 @@
   "dependencies": {
     "knub-command-manager": "^8.1.0",
     "reflect-metadata": "^0.1.13",
-    "ts-essentials": "^2.0.12"
+    "ts-essentials": "^6.0.7"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.3",
+    "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
-    "@types/node": "^12.12.36",
+    "@types/node": "^14.0.13",
     "@typescript-eslint/eslint-plugin": "^2.28.0",
     "@typescript-eslint/parser": "^2.28.0",
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
     "husky": "^4.2.5",
-    "lint-staged": "^10.1.6",
+    "lint-staged": "^10.2.11",
     "mocha": "^7.1.1",
-    "prettier": "^2.0.4",
+    "prettier": "^2.0.5",
     "shx": "^0.3.2",
-    "ts-node": "^8.8.2",
-    "typescript": "^3.9.3"
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.5"
   },
   "peerDependencies": {
     "eris": "^0.13.2"

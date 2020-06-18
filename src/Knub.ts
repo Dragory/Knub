@@ -34,16 +34,17 @@ import {
 import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
 import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./plugins/PluginBlueprint";
 import { UnknownPluginError } from "./plugins/UnknownPluginError";
+import { BasePluginType } from "./plugins/pluginTypes";
 
-const defaultKnubParams: KnubArgs<BaseConfig, BaseConfig> = {
+const defaultKnubParams: KnubArgs<BaseConfig<BasePluginType>, BaseConfig<BasePluginType>> = {
   guildPlugins: [],
   globalPlugins: [],
   options: {},
 };
 
 export class Knub<
-  TGuildConfig extends BaseConfig = BaseConfig,
-  TGlobalConfig extends BaseConfig = BaseConfig
+  TGuildConfig extends BaseConfig<any> = BaseConfig<BasePluginType>,
+  TGlobalConfig extends BaseConfig<any> = BaseConfig<BasePluginType>
 > extends EventEmitter {
   protected client: Client;
 

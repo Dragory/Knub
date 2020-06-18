@@ -5,27 +5,28 @@ export interface PermissionLevels {
   [roleOrUserId: string]: number;
 }
 
-export interface BaseConfig {
+export interface BaseConfig<TPluginType extends BasePluginType> {
   prefix?: string;
 
   levels?: PermissionLevels;
 
   plugins?: {
-    [key: string]: PartialPluginOptions;
+    [key: string]: PartialPluginOptions<TPluginType>;
   };
 }
 
-export interface PartialPluginOptions<TPluginType extends BasePluginType = BasePluginType> {
+export interface PartialPluginOptions<TPluginType extends BasePluginType> {
   enabled?: boolean;
   config?: DeepPartial<TPluginType["config"]>;
   overrides?: Array<PluginOverride<TPluginType>>;
   replaceDefaultOverrides?: boolean;
 }
 
-export interface PluginOptions<TPluginType extends BasePluginType = BasePluginType>
-  extends PartialPluginOptions<TPluginType> {
+export interface PluginOptions<TPluginType extends BasePluginType> {
+  enabled?: boolean;
   config: TPluginType["config"];
   overrides?: Array<PluginOverride<TPluginType>>;
+  replaceDefaultOverrides?: boolean;
 }
 
 export type PluginOverride<TPluginType extends BasePluginType> = PluginOverrideCriteria<

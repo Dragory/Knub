@@ -1,6 +1,8 @@
 import { noop } from "./utils";
 import { Client, Collection, Guild, Message, Shard, TextChannel, User } from "eris";
-import EventEmitter = require("events");
+import events = require("events");
+
+const EventEmitter = events.EventEmitter;
 
 function persist(that, prop, initial) {
   if (!that[prop]) {

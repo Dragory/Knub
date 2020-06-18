@@ -46,7 +46,7 @@ export abstract class PluginClass<TPluginType extends BasePluginType = BasePlugi
   // Guild info - these will be null for global plugins
   public readonly guildId: string;
   protected readonly guild: Guild;
-  protected readonly guildConfig: BaseConfig;
+  protected readonly guildConfig: BaseConfig<TPluginType>;
 
   protected readonly client: Client;
 

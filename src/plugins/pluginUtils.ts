@@ -45,7 +45,7 @@ export function isPluginClassInstance(value: any): value is AnyExtendedPluginCla
   return value instanceof PluginClass;
 }
 
-export function isPluginBlueprint(value: any): value is PluginBlueprint {
+export function isPluginBlueprint(value: any): value is PluginBlueprint<any> {
   return !isPluginClass(value);
 }
 
@@ -121,7 +121,7 @@ export async function defaultGetConfig(key) {
 /**
  * By default, load all guild plugins that haven't been explicitly disabled
  */
-export function defaultGetEnabledGuildPlugins(ctx: BaseContext<BaseConfig>, guildPlugins: PluginMap) {
+export function defaultGetEnabledGuildPlugins(ctx: BaseContext<BaseConfig<any>>, guildPlugins: PluginMap) {
   const plugins = ctx.config.plugins ?? {};
   return Array.from(guildPlugins.keys()).filter((pluginName) => {
     return plugins[pluginName]?.enabled !== false;
