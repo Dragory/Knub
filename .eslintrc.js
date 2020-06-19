@@ -17,6 +17,9 @@ module.exports = {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
   ],
+  "overrides": [
+    { "files": "*.ts" }
+  ],
   "rules": {
     "@typescript-eslint/adjacent-overload-signatures": "error",
     "@typescript-eslint/array-type": ["error", { default: "array-simple" }],
