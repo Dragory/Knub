@@ -1,12 +1,19 @@
+# 30.0.0-beta.2
+* Updated peer dependency of Eris to 0.13.3
+* Updated target Node.js version to 14
+* Updated several dependencies and made required changes to the code on Knub's end
+
 # 30.0.0-beta.1
 * Updated peer dependency of Eris to 0.13.2
 * Updated to `knub-command-manager` v8
   * Signature strings (for parameters) are no longer parsed implicitly, and it is recommended
-    to specify them as an object using the new parameter helpers instead
+    to specify them as an object using the new parameter helpers instead. If you'd prefer to use
+    a string instead, you can parse it with the exported `parseSignature()` helper function.
   * Options are no longer specified as command options, but as part of the command's signature
 * Replaced `asCommand()` helper from beta.0 with `command()` with better type inference
 * Replaced `asEvent()` helper from beta.0 with `event()` with better type inference
 * Replaced `asPlugin()` helper from beta.0 with `plugin()` for consistency with the above
+* Interfaces `PluginOptions`, `PartialPluginOptions`, and `BaseConfig` now always require specifying the type for `TPluginType`
 
 # 30.0.0-beta.0
 * Knub now uses Eris 0.13
