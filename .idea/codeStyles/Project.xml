@@ -10,6 +10,7 @@
       <option name="ENFORCE_TRAILING_COMMA" value="Remove" />
       <option name="SPACES_WITHIN_OBJECT_LITERAL_BRACES" value="true" />
       <option name="SPACES_WITHIN_IMPORTS" value="true" />
+      <option name="IMPORT_USE_NODE_RESOLUTION" value="FALSE" />
     </JSCodeStyleSettings>
     <PHPCodeStyleSettings>
       <option name="FIELDS_DEFAULT_VISIBILITY" value="protected" />
