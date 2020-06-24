@@ -1,4 +1,8 @@
 # 30.0.0-beta.3
+* **BREAKING CHANGE:** Default overrides for a plugin now come *before* overrides defined in the config
+  when evaluating overrides
+  * This behavior feels more intuitive than the previous one, since you'd expect to be "extending" the default
+    overrides, not prepending your own overrides to them
 * Added support for config preprocessors and validators
   * `PluginBlueprint.configPreprocessor`, `PluginBlueprint.configValidator`
   * `PluginClass.configPreprocessor`, `PluginClass.configValidator` (static)
