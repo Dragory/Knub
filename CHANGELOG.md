@@ -1,3 +1,8 @@
+# 30.0.0-beta.3
+* Added support for config preprocessors and validators
+  * `PluginBlueprint.configPreprocessor`, `PluginBlueprint.configValidator`
+  * `PluginClass.configPreprocessor`, `PluginClass.configValidator` (static)
+
 # 30.0.0-beta.2
 * Updated peer dependency of Eris to 0.13.3
 * Updated target Node.js version to 14
@@ -77,6 +82,7 @@
   There should rarely be a need to touch these values directly.
 * `command()` and `event()` decorators no longer save their data in class metadata,
   but in the static commands/events arrays instead
+* Renamed `Knub.getGuildData()` to `Knub.getLoadedGuild()`
 
 # 29.0.1
 * Fix override conditions resolving to `true` even when unknown conditions were
