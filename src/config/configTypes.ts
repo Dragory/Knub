@@ -1,5 +1,6 @@
 import { DeepPartial } from "ts-essentials";
 import { BasePluginType } from "../plugins/pluginTypes";
+import { Awaitable } from "../utils";
 
 export interface PermissionLevels {
   [roleOrUserId: string]: number;
@@ -52,3 +53,11 @@ export interface PluginOverrideCriteria<TCustomOverrideCriteria> {
 export interface BasePluginConfig {
   [key: string]: any;
 }
+
+export type ConfigValidatorFn<TPluginType extends BasePluginType> = (
+  options: PluginOptions<TPluginType>
+) => Awaitable<void>;
+
+export type ConfigPreprocessorFn<TPluginType extends BasePluginType> = (
+  options: PluginOptions<TPluginType>
+) => Awaitable<PluginOptions<TPluginType>>;

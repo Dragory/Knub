@@ -35,6 +35,7 @@ import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
 import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./plugins/PluginBlueprint";
 import { UnknownPluginError } from "./plugins/UnknownPluginError";
 import { BasePluginType } from "./plugins/pluginTypes";
+import { ConfigValidationError } from "./config/ConfigValidationError";
 
 const defaultKnubParams: KnubArgs<BaseConfig<BasePluginType>, BaseConfig<BasePluginType>> = {
   guildPlugins: [],
@@ -306,15 +307,29 @@ export class Knub<
 
     const guild = isGuildContext(ctx) ? this.client.guilds.get(ctx.guildId) : null;
 
+    const configManager = new PluginConfigManager(
+      plugin.defaultOptions ?? { config: {} },
+      get(ctx.config, `plugins.${pluginName}`) || {},
+      ctx.config.levels || {},
+      plugin.customOverrideMatcher,
+      plugin.configPreprocessor,
+      plugin.configValidator
+    );
+
+    try {
+      await configManager.init();
+    } catch (e) {
+      if (e instanceof ConfigValidationError) {
+        throw new PluginLoadError(pluginName, guild, e);
+      }
+
+      throw e;
+    }
+
     const pluginData: PluginData<any> = {
       client: this.client,
       guild,
-      config: new PluginConfigManager(
-        plugin.defaultOptions ?? { config: {} },
-        get(ctx.config, `plugins.${pluginName}`) || {},
-        plugin.customOverrideMatcher,
-        ctx.config.levels || {}
-      ),
+      config: configManager,
       events: new PluginEventManager(),
       commands: new PluginCommandManager(this.client, {
         prefix: ctx.config.prefix,
@@ -428,7 +443,7 @@ export class Knub<
 
   public async loadAllGlobalPlugins() {
     for (const plugin of this.globalPlugins.values()) {
-      this.loadPlugin(this.globalContext, plugin);
+      await this.loadPlugin(this.globalContext, plugin);
     }
   }
 

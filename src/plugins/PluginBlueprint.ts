@@ -1,4 +1,4 @@
-import { PluginOptions } from "../config/configTypes";
+import { ConfigPreprocessorFn, ConfigValidatorFn, PluginOptions } from "../config/configTypes";
 import { Awaitable } from "../utils";
 import { PluginData } from "./PluginData";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
@@ -44,6 +44,14 @@ export interface PluginBlueprint<TPluginType extends BasePluginType = BasePlugin
 
   // If this plugin includes any custom overrides, this function evaluates them
   customOverrideMatcher?: CustomOverrideMatcher<TPluginType>;
+
+  // Preprocesses the plugin's config after it's been merged with the default options
+  // but before it's validated by `this.configValidator`
+  configPreprocessor?: ConfigPreprocessorFn<TPluginType>;
+
+  // Validates the plugin's config after it's been merged with the default options
+  // and run through `this.configPreprocessor`
+  configValidator?: ConfigValidatorFn<TPluginType>;
 
   // Public interface for this plugin
   public?: PluginBlueprintPublicInterface<TPluginType>;

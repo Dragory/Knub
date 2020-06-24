@@ -1,4 +1,10 @@
-import { PartialPluginOptions, PermissionLevels, PluginOptions } from "./configTypes";
+import {
+  ConfigPreprocessorFn,
+  ConfigValidatorFn,
+  PartialPluginOptions,
+  PermissionLevels,
+  PluginOptions,
+} from "./configTypes";
 import { CustomOverrideMatcher, getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { Channel, GuildChannel, Member, Message, User } from "eris";
 import { getMemberLevel } from "../plugins/pluginUtils";
@@ -13,19 +19,35 @@ export interface ExtendedMatchParams extends MatchParams {
 
 export class PluginConfigManager<TPluginType extends BasePluginType> {
   private readonly levels: PermissionLevels;
-  private readonly options: PluginOptions<TPluginType>;
+  private options: PluginOptions<TPluginType>;
   private readonly customOverrideMatcher: CustomOverrideMatcher<TPluginType>;
+  private readonly preprocessor: ConfigPreprocessorFn<TPluginType>;
+  private readonly validator: ConfigValidatorFn<TPluginType>;
   private pluginData: PluginData<TPluginType>;
 
   constructor(
     defaultOptions: PluginOptions<TPluginType>,
     userOptions: PartialPluginOptions<TPluginType>,
+    levels: PermissionLevels = {},
     customOverrideMatcher?: CustomOverrideMatcher<TPluginType>,
-    levels: PermissionLevels = {}
+    preprocessor?: ConfigPreprocessorFn<TPluginType>,
+    validator?: ConfigValidatorFn<TPluginType>
   ) {
     this.options = this.mergeOptions(defaultOptions, userOptions);
-    this.customOverrideMatcher = customOverrideMatcher;
     this.levels = levels;
+    this.customOverrideMatcher = customOverrideMatcher;
+    this.preprocessor = preprocessor;
+    this.validator = validator;
+  }
+
+  public async init() {
+    if (this.preprocessor) {
+      this.options = await this.preprocessor(this.options);
+    }
+
+    if (this.validator) {
+      await this.validator(this.options);
+    }
   }
 
   private mergeOptions(

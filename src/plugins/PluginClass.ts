@@ -1,5 +1,5 @@
 import { Client, Guild, Member } from "eris";
-import { BaseConfig, PluginOptions } from "../config/configTypes";
+import { BaseConfig, ConfigPreprocessorFn, ConfigValidatorFn, PluginOptions } from "../config/configTypes";
 import { CommandContext } from "../commands/commandUtils";
 import { CustomOverrideMatcher } from "../config/configUtils";
 import { LockManager } from "../locks/LockManager";
@@ -42,6 +42,14 @@ export abstract class PluginClass<TPluginType extends BasePluginType = BasePlugi
 
   // If this plugin includes any custom overrides, this function evaluates them
   public static customOverrideMatcher: CustomOverrideMatcher<any>;
+
+  // Preprocesses the plugin's config after it's been merged with the default options
+  // but before it's validated by `this.configValidator`
+  public static configPreprocessor: ConfigPreprocessorFn<any>;
+
+  // Validates the plugin's config after it's been merged with the default options
+  // and run through `this.configPreprocessor`
+  public static configValidator: ConfigValidatorFn<any>;
 
   // Guild info - these will be null for global plugins
   public readonly guildId: string;

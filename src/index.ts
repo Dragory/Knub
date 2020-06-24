@@ -12,6 +12,7 @@ export { logger } from "./logger";
 
 import * as configUtils from "./config/configUtils";
 export { configUtils };
+export { ConfigValidationError } from "./config/ConfigValidationError";
 
 import * as pluginUtils from "./plugins/pluginUtils";
 export { pluginUtils };
