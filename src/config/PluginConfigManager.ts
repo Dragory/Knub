@@ -58,7 +58,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       config: mergeConfig(defaultOptions.config ?? {}, userOptions.config ?? {}),
       overrides: userOptions.replaceDefaultOverrides
         ? userOptions.overrides ?? []
-        : (userOptions.overrides ?? []).concat(defaultOptions.overrides ?? []),
+        : (defaultOptions.overrides ?? []).concat(userOptions.overrides ?? []),
     };
   }
 
