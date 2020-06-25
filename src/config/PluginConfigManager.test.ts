@@ -66,7 +66,7 @@ describe("PluginConfigManager", () => {
     expect(configManager.get().can_do).to.equal(false);
     expect(configManager.getMatchingConfig({ level: 20 }).can_do).to.equal(true);
     expect(configManager.getMatchingConfig({ level: 40 }).can_do).to.equal(false);
-    expect(configManager.getMatchingConfig({ level: 50 }).can_do).to.equal(true);
+    expect(configManager.getMatchingConfig({ level: 50 }).can_do).to.equal(false);
   });
 
   it("replace default overrides", () => {
