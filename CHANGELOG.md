@@ -5,7 +5,7 @@
     overrides, not prepending your own overrides to them
 * Added support for config preprocessors and validators
   * `PluginBlueprint.configPreprocessor`, `PluginBlueprint.configValidator`
-  * `PluginClass.configPreprocessor`, `PluginClass.configValidator` (static)
+  * `PluginClass.configPreprocessor` (static), `PluginClass.configValidator` (static)
 
 # 30.0.0-beta.2
 * Updated peer dependency of Eris to 0.13.3
