@@ -23,37 +23,61 @@ export type ResolvedPluginBlueprintPublicInterface<T extends PluginBlueprintPubl
 };
 
 export interface PluginBlueprint<TPluginType extends BasePluginType = BasePluginType> {
-  // REQUIRED: Internal name for the plugin
+  /**
+   * **[Required]** Internal name for the plugin
+   */
   name: string;
 
-  // Arbitrary info about the plugin, e.g. description.
-  // This property is mainly here to set a convention, as it's not actually used in Knub itself.
+  /**
+   * Arbitrary info about the plugin, e.g. description.
+   * This property is mainly here to set a convention, as it's not actually used in Knub itself.
+   */
   info?: any;
 
-  // Other plugins that are required for this plugin to function. They will be loaded before this plugin.
+  /**
+   * Other plugins that are required for this plugin to function. They will be loaded before this plugin.
+   */
   dependencies?: ResolvablePlugin[];
 
-  // The plugin's default options, including overrides
+  /**
+   * The plugin's default options, including overrides
+   */
   defaultOptions?: PluginOptions<TPluginType>;
 
-  // Commands that are automatically registered on plugin load
+  /**
+   * Commands that are automatically registered on plugin load
+   */
   commands?: Array<CommandBlueprint<TPluginType, any>>;
 
-  // Event listeners that are automatically registered on plugin load
+  /**
+   * Event listeners that are automatically registered on plugin load
+   */
   events?: Array<EventListenerBlueprint<TPluginType>>;
 
-  // If this plugin includes any custom overrides, this function evaluates them
+  /**
+   * If this plugin includes any custom overrides, this function evaluates them
+   */
   customOverrideMatcher?: CustomOverrideMatcher<TPluginType>;
 
-  // Preprocesses the plugin's config after it's been merged with the default options
-  // but before it's validated by `this.configValidator`
+  /**
+   * Preprocesses the plugin's config after it's been merged with the default options
+   * but before it's validated by `this.configValidator`.
+   *
+   * (Merge with default options) -> configPreprocessor -> configValidator
+   */
   configPreprocessor?: ConfigPreprocessorFn<TPluginType>;
 
-  // Validates the plugin's config after it's been merged with the default options
-  // and run through `this.configPreprocessor`
+  /**
+   * Validates the plugin's config after it's been merged with the default options
+   * and run through `this.configPreprocessor`.
+   *
+   * (Merge with default options) -> configPreprocessor -> configValidator
+   */
   configValidator?: ConfigValidatorFn<TPluginType>;
 
-  // Public interface for this plugin
+  /**
+   * Public interface for this plugin
+   */
   public?: PluginBlueprintPublicInterface<TPluginType>;
 
   onLoad?: (pluginData: PluginData<TPluginType>) => Awaitable<void>;

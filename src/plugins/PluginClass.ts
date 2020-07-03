@@ -18,37 +18,61 @@ import { TTypeConverterFn } from "knub-command-manager";
  * Base class for Knub plugins
  */
 export abstract class PluginClass<TPluginType extends BasePluginType = BasePluginType> {
-  // REQUIRED: Internal name for the plugin
+  /**
+   * **[Required]** Internal name for the plugin
+   */
   public static pluginName: string;
 
-  // Arbitrary info about the plugin, e.g. description.
-  // This property is mainly here to set a convention, as it's not actually used in Knub itself.
+  /**
+   * Arbitrary info about the plugin, e.g. description.
+   * This property is mainly here to set a convention, as it's not actually used in Knub itself.
+   */
   public static pluginInfo: any;
 
-  // Other plugins that are required for this plugin to function. They will be loaded before this plugin.
+  /**
+   * Other plugins that are required for this plugin to function. They will be loaded before this plugin.
+   */
   public static dependencies: ResolvablePlugin[];
 
-  // The plugin's default options, including overrides
+  /**
+   * The plugin's default options, including overrides
+   */
   public static defaultOptions: PluginOptions<any>;
 
-  // Commands that are automatically registered on plugin load
+  /**
+   * Commands that are automatically registered on plugin load
+   */
   public static commands: Array<CommandBlueprint<any, any>>;
 
-  // Event listeners that are automatically registered on plugin load
+  /**
+   * Event listeners that are automatically registered on plugin load
+   */
   public static events: Array<EventListenerBlueprint<any>>;
 
-  // Custom argument types for commands
+  /**
+   * Custom argument types for commands
+   */
   public static customArgumentTypes: Record<string, TTypeConverterFn<any, CommandContext<any>>>;
 
-  // If this plugin includes any custom overrides, this function evaluates them
+  /**
+   * If this plugin includes any custom overrides, this function evaluates them
+   */
   public static customOverrideMatcher: CustomOverrideMatcher<any>;
 
-  // Preprocesses the plugin's config after it's been merged with the default options
-  // but before it's validated by `this.configValidator`
+  /**
+   * Preprocesses the plugin's config after it's been merged with the default options
+   * but before it's validated by `this.configValidator`.
+   *
+   * (Merge with default options) -> configPreprocessor -> configValidator
+   */
   public static configPreprocessor: ConfigPreprocessorFn<any>;
 
-  // Validates the plugin's config after it's been merged with the default options
-  // and run through `this.configPreprocessor`
+  /**
+   * Validates the plugin's config after it's been merged with the default options
+   * and run through `this.configPreprocessor`.
+   *
+   * (Merge with default options) -> configPreprocessor -> configValidator
+   */
   public static configValidator: ConfigValidatorFn<any>;
 
   // Guild info - these will be null for global plugins
