@@ -1,3 +1,6 @@
+# 30.0.0-beta.4
+* Use block comments for `PluginClass` and `PluginBlueprint` properties so they're retained in compiled files
+
 # 30.0.0-beta.3
 * **BREAKING CHANGE:** Default overrides for a plugin now come *before* overrides defined in the config
   when evaluating overrides
