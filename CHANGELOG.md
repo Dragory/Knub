@@ -1,3 +1,7 @@
+# 30.0.0-beta.7
+* Add `string`, `bool`, and `switchOption` from `knub-command-manager` to `baseTypeHelpers`
+* Update TypeScript compilation target to `ES2020` for Node.js 14
+
 # 30.0.0-beta.6
 * Combined the `args` and `meta` parameters for command functions.
   The `args` object is now at `meta.args`.
