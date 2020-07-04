@@ -53,4 +53,9 @@ export interface PluginData<TPluginType extends BasePluginType> {
    * Get the active Knub instance
    */
   getKnubInstance: () => Knub;
+
+  /**
+   * The plugin's current state
+   */
+  state: TPluginType["state"];
 }
