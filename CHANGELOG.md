@@ -1,3 +1,7 @@
+# 30.0.0-beta.5
+* Export `PluginData` interface
+* Add plugin helper function: `helpers.getMemberLevel()`
+
 # 30.0.0-beta.4
 * Use block comments for `PluginClass` and `PluginBlueprint` properties so they're retained in compiled files
 
