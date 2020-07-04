@@ -45,10 +45,10 @@ const OtherCommand = command("ping", (_, { message }) => {
   message.channel.createMessage("Pong!");
 });
 
-const MyPlugin = plugin({
-  name: "my-plugin",
+const MyPlugin = plugin("my-plugin", {
   commands: [
     MyCommand,
+    OtherCommand,
   ]
 });
 
@@ -65,27 +65,35 @@ knub.run();
 ### TypeScript example
 ```ts
 import Eris from "eris";
-import { Knub, plugin, command, baseTypeHelpers as t } from "knub";
+import { Knub, plugin, command, BasePluginType } from "knub";
 
-const MyCommand = command("echo", { text: t.string() }, (args, { message }) => {
-  message.channel.createMessage(args.text); // Type of args.text is inferred from parameters
+// Use a custom plugin type
+interface CustomPluginType extends BasePluginType {
+  state: {
+    counter: number;
+  };
+}
+
+const CounterCommand = command<CustomPluginType>()("counter", (_, { message, pluginData }) => {
+  // Type of `pluginData.state.counter` is `number`
+  message.channel.createMessage(`Counter value: ${++pluginData.state.counter}`);
 });
 
-const OtherCommand = command("ping", (_, { message }) => {
-  message.channel.createMessage("Pong!");
-});
-
-const MyPlugin = plugin({
-  name: "my-plugin",
+const CounterPlugin = plugin<CustomPluginType>()("counter-plugin", {
   commands: [
-    MyCommand,
-  ]
+    CounterCommand,
+  ],
+
+  onLoad({ state }) {
+    // Initialize counter for CounterCommand
+    state.counter = 0;
+  },
 });
 
 const client = new Eris("my-bot-token");
 const knub = new Knub(client, {
   guildPlugins: [
-    MyPlugin,
+    CounterPlugin,
   ]
 });
 
