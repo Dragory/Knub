@@ -15,7 +15,7 @@ describe("eventListener() helper", () => {
 
     expect(blueprint.event).to.equal("messageCreate");
     expect(blueprint.listener).to.not.equal(undefined);
-    expect(blueprint.opts).to.equal(undefined);
+    expect(blueprint.allowSelf).to.equal(undefined);
   });
 
   it("(event, opts, listener)", () => {
@@ -27,7 +27,7 @@ describe("eventListener() helper", () => {
 
     expect(blueprint.event).to.equal("messageCreate");
     expect(blueprint.listener).to.not.equal(undefined);
-    expect(blueprint.opts).to.eql({ allowSelf: true });
+    expect(blueprint.allowSelf).to.equal(true);
   });
 
   interface CustomPluginType extends BasePluginType {
@@ -49,7 +49,7 @@ describe("eventListener() helper", () => {
 
     expect(blueprint.event).to.equal("messageCreate");
     expect(blueprint.listener).to.not.equal(undefined);
-    expect(blueprint.opts).to.equal(undefined);
+    expect(blueprint.allowSelf).to.equal(undefined);
   });
 
   it("<TPluginType>()(event, options, listener)", () => {
@@ -65,6 +65,6 @@ describe("eventListener() helper", () => {
 
     expect(blueprint.event).to.equal("messageCreate");
     expect(blueprint.listener).to.not.equal(undefined);
-    expect(blueprint.opts).to.eql({ allowSelf: true });
+    expect(blueprint.allowSelf).to.equal(true);
   });
 });

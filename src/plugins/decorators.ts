@@ -24,9 +24,8 @@ function applyCooldownToCommand(commandData: SemiCommandBlueprint, cooldown: Coo
 }
 
 function applyCooldownToEvent(eventData: EventListenerBlueprint<any>, cooldown: CooldownDecoratorData) {
-  eventData.opts = eventData.opts || {};
-  eventData.opts.filters = eventData.opts.filters || [];
-  eventData.opts.filters.push(cooldownFilter(cooldown.time, cooldown.permission));
+  eventData.filters = eventData.filters || [];
+  eventData.filters.push(cooldownFilter(cooldown.time, cooldown.permission));
 }
 
 function applyRequiredPermissionToCommand(commandData: SemiCommandBlueprint, permission: string) {
@@ -34,9 +33,8 @@ function applyRequiredPermissionToCommand(commandData: SemiCommandBlueprint, per
 }
 
 function applyRequiredPermissionToEvent(eventData: EventListenerBlueprint<any>, permission: string) {
-  eventData.opts = eventData.opts || {};
-  eventData.opts.filters = eventData.opts.filters || [];
-  eventData.opts.filters.push(requirePermission(permission));
+  eventData.filters = eventData.filters || [];
+  eventData.filters.push(requirePermission(permission));
 }
 
 function applyLockToCommand(commandData: SemiCommandBlueprint, locks: string | string[]) {
@@ -44,9 +42,8 @@ function applyLockToCommand(commandData: SemiCommandBlueprint, locks: string | s
 }
 
 function applyLockToEvent(eventData: EventListenerBlueprint<any>, locks: string | string[]) {
-  eventData.opts = eventData.opts || {};
-  eventData.opts.filters = eventData.opts.filters || [];
-  eventData.opts.filters.push(locksFilter(locks));
+  eventData.filters = eventData.filters || [];
+  eventData.filters.push(locksFilter(locks));
 }
 
 /**
@@ -89,9 +86,9 @@ function OnEventDecorator(eventName: string, opts?: OnOpts) {
   return (target: typeof PluginClass.prototype, propertyKey: string) => {
     // Add event listener blueprint to the plugin's static event listeners array
     const eventListenerBlueprint: EventListenerBlueprint<any> = {
+      ...opts,
       event: eventName,
       listener: target[propertyKey],
-      opts,
     };
 
     appendToPropertyMetadata(target, propertyKey, "decoratorEvents", eventListenerBlueprint);

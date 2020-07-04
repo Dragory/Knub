@@ -58,17 +58,17 @@ export class PluginEventManager<TPluginType extends BasePluginType> {
       this.listeners.set(blueprint.event, new Set());
     }
 
-    const filters = blueprint.opts?.filters || [];
+    const filters = blueprint.filters || [];
 
-    if (this.implicitGuildRestriction && !blueprint.opts?.allowOutsideOfGuild) {
+    if (this.implicitGuildRestriction && !blueprint.allowOutsideOfGuild) {
       filters.unshift(onlyGuild());
     }
 
-    if (!blueprint.opts?.allowSelf) {
+    if (!blueprint.allowSelf) {
       filters.unshift(ignoreSelf());
     }
 
-    if (!blueprint.opts?.allowBots) {
+    if (!blueprint.allowBots) {
       filters.unshift(ignoreBots());
     }
 
@@ -96,9 +96,9 @@ export class PluginEventManager<TPluginType extends BasePluginType> {
     opts?: OnOpts
   ): WrappedListener {
     return this.registerEventListener({
+      ...opts,
       event,
       listener,
-      opts,
     });
   }
 
