@@ -3,10 +3,11 @@
  */
 
 import {
+  BaseInvite,
   Client,
   Emoji,
   Guild,
-  BaseInvite,
+  Member,
   Message,
   MessageContent,
   MessageFile,
@@ -14,6 +15,8 @@ import {
   TextChannel,
 } from "eris";
 import { get, getChannelId, getRoleId, getUserId, noop } from "./utils";
+import { PluginData } from "./plugins/PluginData";
+import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils";
 
 /**
  * Splits a string into chunks, preferring to split at newlines if possible
@@ -221,6 +224,11 @@ export function getInviteLink(inv: BaseInvite) {
 
 export function hasPermission(config: any, permission: string) {
   return get(config, permission) === true;
+}
+
+export function getMemberLevel(pluginData: PluginData<any>, member: Member) {
+  const levels = pluginData.guildConfig.levels || {};
+  return _getMemberLevel(levels, member);
 }
 
 export { userMentionRegex, channelMentionRegex, roleMentionRegex, snowflakeRegex } from "./utils";
