@@ -12,7 +12,7 @@ export type HasPluginFn = <T extends ResolvablePlugin>(plugin: T) => boolean;
 export type GetPluginFn = <T extends ResolvablePlugin>(plugin: T) => PluginPublicInterface<T>;
 
 /**
- * Instance-specific data for plugins
+ * Instance-specific data and helpers for plugins
  */
 export interface PluginData<TPluginType extends BasePluginType> {
   /**

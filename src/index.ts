@@ -17,6 +17,8 @@ export { ConfigValidationError } from "./config/ConfigValidationError";
 import * as pluginUtils from "./plugins/pluginUtils";
 export { pluginUtils };
 
+export { PluginData } from "./plugins/PluginData";
+
 export { KnubOptions, KnubArgs, BaseContext, GuildContext, GlobalContext } from "./types";
 
 export {
