@@ -1,4 +1,13 @@
-import { command, eventListener, plugin, CooldownManager, Knub, LockManager, PluginBlueprint } from "../index";
+import {
+  command,
+  eventListener,
+  plugin,
+  CooldownManager,
+  Knub,
+  LockManager,
+  PluginBlueprint,
+  PluginData,
+} from "../index";
 import { Guild } from "eris";
 import {
   createMockClient,
@@ -15,6 +24,9 @@ import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { BasePluginType } from "./pluginTypes";
 import { parseSignature } from "knub-command-manager";
+import { expect } from "chai";
+
+type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
 describe("PluginBlueprint", () => {
   before(() => {
@@ -90,13 +102,9 @@ describe("PluginBlueprint", () => {
   describe("Dependencies", () => {
     it("hasPlugin", (done) => {
       (async () => {
-        const DependencyToLoad = plugin({
-          name: "dependency-to-load",
-        });
+        const DependencyToLoad = plugin("dependency-to-load", {});
 
-        const PluginToLoad = plugin({
-          name: "plugin-to-load",
-
+        const PluginToLoad = plugin("plugin-to-load", {
           onLoad(pluginData) {
             setTimeout(() => {
               assert.ok(pluginData.hasPlugin("dependency-to-load"));
@@ -130,9 +138,7 @@ describe("PluginBlueprint", () => {
 
     it("getPlugin", (done) => {
       (async () => {
-        const DependencyToLoad = plugin({
-          name: "dependency-to-load",
-
+        const DependencyToLoad = plugin("dependency-to-load", {
           public: {
             ok(pluginData) {
               assert.ok(pluginData != null);
@@ -142,9 +148,7 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        const PluginToLoad = plugin({
-          name: "plugin-to-load",
-
+        const PluginToLoad = plugin("plugin-to-load", {
           onLoad(pluginData) {
             setTimeout(() => {
               const instance = pluginData.getPlugin(DependencyToLoad);
@@ -176,17 +180,11 @@ describe("PluginBlueprint", () => {
 
     it("automatic dependency loading", (done) => {
       (async () => {
-        const DependencyToLoad = plugin({
-          name: "dependency-to-load",
-        });
+        const DependencyToLoad = plugin("dependency-to-load", {});
 
-        const OtherDependencyToLoad = plugin({
-          name: "other-dependency-to-load",
-        });
+        const OtherDependencyToLoad = plugin("other-dependency-to-load", {});
 
-        const PluginToLoad = plugin({
-          name: "plugin-to-load",
-
+        const PluginToLoad = plugin("plugin-to-load", {
           dependencies: [DependencyToLoad, "other-dependency-to-load"],
 
           onLoad(pluginData) {
@@ -231,9 +229,7 @@ describe("PluginBlueprint", () => {
           };
         }
 
-        const TestPlugin = plugin<PluginType>({
-          name: "test-plugin",
-
+        const TestPlugin = plugin<PluginType>()("test-plugin", {
           defaultOptions: {
             config: {
               can_do: false,
@@ -319,8 +315,7 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const TestPlugin = plugin<any>({
-          name: "test-plugin",
+        const TestPlugin = plugin("test-plugin", {
           commands: [
             command("foo", parseSignature("<str:foo>", types, "foo"), ({ str }) => {
               assert.equal(str, `bar-${guild.id}`);
@@ -451,6 +446,36 @@ describe("PluginBlueprint", () => {
 
         done();
       })();
+    });
+  });
+
+  describe("plugin() helper", () => {
+    it("(name, blueprint)", () => {
+      const blueprint = plugin("my-plugin", {
+        info: "foo",
+      });
+
+      expect(blueprint.name).to.equal("my-plugin");
+      expect(blueprint.info).to.equal("foo");
+    });
+
+    interface CustomPluginType extends BasePluginType {
+      state: {
+        foo: 5;
+      };
+    }
+
+    it("<TPluginType>()(name, blueprint)", () => {
+      const blueprint = plugin<CustomPluginType>()("my-plugin", {
+        info: "foo",
+      });
+
+      expect(blueprint.name).to.equal("my-plugin");
+      expect(blueprint.info).to.equal("foo");
+
+      // Test type inference
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const result: AssertEquals<Parameters<typeof blueprint.onLoad>[0], PluginData<CustomPluginType>> = true;
     });
   });
 });

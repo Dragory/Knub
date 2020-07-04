@@ -83,3 +83,34 @@ export interface PluginBlueprint<TPluginType extends BasePluginType = BasePlugin
   onLoad?: (pluginData: PluginData<TPluginType>) => Awaitable<void>;
   onUnload?: (pluginData: PluginData<TPluginType>) => Awaitable<void>;
 }
+
+type PluginBlueprintCreator<TPluginType extends BasePluginType> = (
+  name: string,
+  blueprint: Omit<PluginBlueprint<TPluginType>, "name">
+) => PluginBlueprint<TPluginType>;
+
+/**
+ * Helper function that creates a plugin blueprint.
+ *
+ * To specify `TPluginType` for additional type hints, use: `plugin<TPluginType>()(blueprint)`
+ */
+export function plugin(name: string, blueprint: Omit<PluginBlueprint, "name">): PluginBlueprint;
+
+/**
+ * Specify `TPluginType` for type hints and return self
+ */
+export function plugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<TPluginType>;
+
+export function plugin(...args) {
+  if (args.length === 2) {
+    // (name, blueprint)
+    // Return blueprint
+    return {
+      ...args[1],
+      name: args[0],
+    };
+  }
+
+  // No arguments, with TPluginType - return self
+  return plugin as PluginBlueprintCreator<any>;
+}

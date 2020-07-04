@@ -48,6 +48,6 @@ export { CooldownManager } from "./cooldowns/CooldownManager";
 
 export { TypeConversionError, parseSignature } from "knub-command-manager";
 
-export { plugin } from "./plugins/pluginUtils";
 export { command } from "./commands/CommandBlueprint";
 export { eventListener } from "./events/EventListenerBlueprint";
+export { plugin } from "./plugins/PluginBlueprint";

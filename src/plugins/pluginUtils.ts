@@ -8,22 +8,11 @@ import { BaseContext, GuildContext, Plugin, PluginMap } from "../types";
 import { getMetadataFromAllProperties } from "./decoratorUtils";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
-import { BasePluginType } from "./pluginTypes";
 import { SemiCommandBlueprint } from "./decorators";
 import { parseSignature } from "knub-command-manager";
 import { baseTypeConverters } from "..";
 
 const fs = _fs.promises;
-
-/**
- * An identity function that helps with type hinting.
- * Takes a plugin blueprint as an argument and returns that same blueprint.
- */
-export function plugin<TPluginType extends BasePluginType>(
-  blueprint: PluginBlueprint<TPluginType>
-): PluginBlueprint<TPluginType> {
-  return blueprint;
-}
 
 export function getMemberLevel(levels: PermissionLevels, member: Member): number {
   if (member.guild.ownerID === member.id) {
