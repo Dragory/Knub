@@ -20,7 +20,7 @@ type EventListenerBlueprintCreatorWithoutOpts<TPluginType extends BasePluginType
  */
 type EventListenerBlueprintCreatorWithOpts<TPluginType extends BasePluginType> = <TEventName extends string>(
   event: TEventName,
-  options: Omit<EventListenerBlueprint<BasePluginType, TEventName>, "listener" | "event">,
+  options: Omit<EventListenerBlueprint<TPluginType, TEventName>, "listener" | "event">,
   listener: EventListenerBlueprint<TPluginType, TEventName>["listener"]
 ) => EventListenerBlueprint<TPluginType, TEventName>;
 
@@ -36,8 +36,8 @@ type EventListenerBlueprintCreator<TPluginType extends BasePluginType> =
  */
 export function eventListener<TEventName extends string>(
   event: TEventName,
-  listener: EventListenerBlueprint<BasePluginType, TEventName>["listener"]
-): EventListenerBlueprint<BasePluginType, TEventName>;
+  listener: EventListenerBlueprint<any, TEventName>["listener"]
+): EventListenerBlueprint<any, TEventName>;
 
 /**
  * Helper function to create an event listener blueprint. Used for type inference from event name.
@@ -46,9 +46,9 @@ export function eventListener<TEventName extends string>(
  */
 export function eventListener<TEventName extends string>(
   event: TEventName,
-  options: Omit<EventListenerBlueprint<BasePluginType, TEventName>, "listener" | "event">,
-  listener: EventListenerBlueprint<BasePluginType, TEventName>["listener"]
-): EventListenerBlueprint<BasePluginType, TEventName>;
+  options: Omit<EventListenerBlueprint<any, TEventName>, "listener" | "event">,
+  listener: EventListenerBlueprint<any, TEventName>["listener"]
+): EventListenerBlueprint<any, TEventName>;
 
 /**
  * Specify `TPluginType` for type hints and return a function: `eventListener(event, listener, rest?)`
