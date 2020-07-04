@@ -138,8 +138,10 @@ export function command(...args) {
       signature: args[1],
       run: args[3],
     };
+  } else if (args.length === 0) {
+    // No arguments, with TPluginType - return self
+    return command as CommandBlueprintCreator<BasePluginType>;
   }
 
-  // No arguments, with TPluginType - return self
-  return command as CommandBlueprintCreator<BasePluginType>;
+  throw new Error(`No signature of command() takes ${args.length} arguments`);
 }

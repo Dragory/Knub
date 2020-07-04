@@ -73,8 +73,10 @@ export function eventListener(...args) {
       event,
       listener,
     };
+  } else if (args.length === 0) {
+    // No arguments, with TPluginType - return self
+    return eventListener as EventListenerBlueprintCreator<BasePluginType>;
   }
 
-  // No arguments, with TPluginType - return self
-  return eventListener as EventListenerBlueprintCreator<BasePluginType>;
+  throw new Error(`No signature of eventListener() takes ${args.length} arguments`);
 }

@@ -109,8 +109,10 @@ export function plugin(...args) {
       ...args[1],
       name: args[0],
     };
+  } else if (args.length === 0) {
+    // No arguments, with TPluginType - return self
+    return plugin as PluginBlueprintCreator<any>;
   }
 
-  // No arguments, with TPluginType - return self
-  return plugin as PluginBlueprintCreator<any>;
+  throw new Error(`No signature of plugin() takes ${args.length} arguments`);
 }
