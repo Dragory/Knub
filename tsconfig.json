@@ -3,7 +3,7 @@
     "module": "CommonJS",
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2017",
+    "target": "ES2020",
     "lib": [
       "esnext"
     ],
