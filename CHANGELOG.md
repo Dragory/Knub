@@ -1,3 +1,26 @@
+# 30.0.0-beta.6
+* Combined the `args` and `meta` parameters for command functions.
+  The `args` object is now at `meta.args`.
+  * E.g. `command("foo", ({ args }) => { ... })`
+* Updated `plugin()` helper signature for clarity and better type inference:
+  * `plugin(name, blueprint)`
+  * `plugin<TPluginType>()(name, blueprint)`
+* Updated `command()` helper signature for clarity and better type inference:
+  * `command(trigger, run)`
+  * `command(trigger, signature, run)`
+  * `command(trigger, signature, options, run)`
+  * `command<TPluginType>()(trigger, run)`
+  * `command<TPluginType>()(trigger, signature, run)`
+  * `command<TPluginType>()(trigger, signature, options, run)`
+* Updated `eventListener()` helper signature for clarity and better type inference:
+  * `eventListener(event, listener)`
+  * `eventListener(event, options, listener)`
+  * `eventListener<TPluginType>()(event, listener)`
+  * `eventListener<TPluginType>()(event, options, listener)`
+* `EventListenerBlueprint` now extends `OnOpts` rather than having a separate `opts` property for `OnOpts`
+* Add `PluginData#state` and `BasePluginType#state` to allow plugins to keep plugin-instance-specific state
+  and easily pass it around
+
 # 30.0.0-beta.5
 * Export `PluginData` interface
 * Add plugin helper function: `helpers.getMemberLevel()`
