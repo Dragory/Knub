@@ -19,7 +19,9 @@ const fs = _fs.promises;
  * An identity function that helps with type hinting.
  * Takes a plugin blueprint as an argument and returns that same blueprint.
  */
-export function plugin<TPluginType extends BasePluginType, T = PluginBlueprint<TPluginType>>(blueprint: T): T {
+export function plugin<TPluginType extends BasePluginType>(
+  blueprint: PluginBlueprint<TPluginType>
+): PluginBlueprint<TPluginType> {
   return blueprint;
 }
 
