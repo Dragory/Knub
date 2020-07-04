@@ -15,7 +15,8 @@ export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);
 }
 
-export interface CommandMeta<TPluginType extends BasePluginType> {
+export interface CommandMeta<TPluginType extends BasePluginType, TArguments extends any> {
+  args: TArguments;
   message: Message;
   command: ICommandDefinition<any, any>;
   pluginData: PluginData<TPluginType>;
@@ -51,8 +52,7 @@ type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 type ParameterOrOptionType<T extends IParameter<any> | TOption<any>> = PromiseType<ReturnType<T["type"]>>;
 
 export type CommandFn<TPluginType extends BasePluginType, _TSignature extends TSignatureOrArray<TPluginType>> = (
-  args: ArgsFromSignatureOrArray<_TSignature>,
-  meta: CommandMeta<TPluginType>
+  meta: CommandMeta<TPluginType, ArgsFromSignatureOrArray<_TSignature>>
 ) => Awaitable<void>;
 
 export interface CommandContext<TPluginType extends BasePluginType> {

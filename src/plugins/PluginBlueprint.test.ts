@@ -317,7 +317,7 @@ describe("PluginBlueprint", () => {
 
         const TestPlugin = plugin("test-plugin", {
           commands: [
-            command("foo", parseSignature("<str:foo>", types, "foo"), ({ str }) => {
+            command("foo", parseSignature("<str:foo>", types, "foo"), ({ args: { str } }) => {
               assert.equal(str, `bar-${guild.id}`);
               done();
             }),

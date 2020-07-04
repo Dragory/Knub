@@ -23,7 +23,7 @@ describe("command() helper", () => {
         foo: string(),
         bar: number(),
       },
-      (args) => {
+      ({ args }) => {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args, { foo: string; bar: number }> = true;
@@ -46,7 +46,7 @@ describe("command() helper", () => {
       {
         permission: "foo",
       },
-      (args) => {
+      ({ args }) => {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args, { foo: string; bar: number }> = true;
@@ -67,10 +67,10 @@ describe("command() helper", () => {
 
   it("<TPluginType>()(trigger, run)", () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const blueprint = command<CustomPluginType>()("cmd", (args, meta) => {
+    const blueprint = command<CustomPluginType>()("cmd", ({ pluginData }) => {
       // Test type inference
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const result: AssertEquals<typeof meta.pluginData.state.foo, 5> = true;
+      const result: AssertEquals<typeof pluginData.state.foo, 5> = true;
     });
 
     expect(blueprint.trigger).to.equal("cmd");
@@ -86,12 +86,12 @@ describe("command() helper", () => {
         foo: string(),
         bar: number(),
       },
-      (args, meta) => {
+      ({ args, pluginData }) => {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args, { foo: string; bar: number }> = true;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result2: AssertEquals<typeof meta.pluginData.state.foo, 5> = true;
+        const result2: AssertEquals<typeof pluginData.state.foo, 5> = true;
       }
     );
 
@@ -111,12 +111,12 @@ describe("command() helper", () => {
       {
         permission: "foo",
       },
-      (args, meta) => {
+      ({ args, pluginData }) => {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args, { foo: string; bar: number }> = true;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result2: AssertEquals<typeof meta.pluginData.state.foo, 5> = true;
+        const result2: AssertEquals<typeof pluginData.state.foo, 5> = true;
       }
     );
 

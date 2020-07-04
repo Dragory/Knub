@@ -94,7 +94,7 @@ export class PluginCommandManager<TPluginType extends BasePluginType> {
       return;
     }
 
-    const extraMeta: Partial<CommandMeta<TPluginType>> = {};
+    const extraMeta: Partial<CommandMeta<TPluginType, any>> = {};
     if (command.config.extra?._lock) {
       extraMeta.lock = command.config.extra._lock;
     }
@@ -105,7 +105,7 @@ export class PluginCommandManager<TPluginType extends BasePluginType> {
   private async runCommand(
     msg: Message,
     matchedCommand: IMatchedCommand<CommandContext<TPluginType>, CommandExtraData<TPluginType>>,
-    extraMeta?: Partial<CommandMeta<TPluginType>>
+    extraMeta?: Partial<CommandMeta<TPluginType, any>>
   ): Promise<void> {
     const handler = this.handlers.get(matchedCommand.id);
 
@@ -114,13 +114,14 @@ export class PluginCommandManager<TPluginType extends BasePluginType> {
       return map;
     }, {});
 
-    const meta: CommandMeta<TPluginType> = {
+    const meta: CommandMeta<TPluginType, any> = {
       ...extraMeta,
+      args: valueMap,
       message: msg,
       pluginData: this.pluginData,
       command: matchedCommand,
     };
 
-    await handler(valueMap, meta);
+    await handler(meta);
   }
 }

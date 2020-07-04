@@ -37,11 +37,11 @@ const { Knub, command, plugin, baseTypeHelpers } = require("knub");
 
 const t = baseTypeHelpers;
 
-const MyCommand = command("echo", { text: t.string() }, (args, { message }) => {
+const MyCommand = command("echo", { text: t.string() }, ({ args, message }) => {
   message.channel.createMessage(args.text);
 });
 
-const OtherCommand = command("ping", (_, { message }) => {
+const OtherCommand = command("ping", ({ message }) => {
   message.channel.createMessage("Pong!");
 });
 
@@ -74,7 +74,7 @@ interface CustomPluginType extends BasePluginType {
   };
 }
 
-const CounterCommand = command<CustomPluginType>()("counter", (_, { message, pluginData }) => {
+const CounterCommand = command<CustomPluginType>()("counter", ({ message, pluginData }) => {
   // Type of `pluginData.state.counter` is `number`
   message.channel.createMessage(`Counter value: ${++pluginData.state.counter}`);
 });

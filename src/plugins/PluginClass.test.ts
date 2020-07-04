@@ -415,7 +415,7 @@ describe("PluginClass", () => {
 
           @d.command("lock")
           @d.lock("blahblah")
-          public async lockCmdFn(args, meta: CommandMeta<any>) {
+          public async lockCmdFn(meta: CommandMeta<any, any>) {
             // First call: 0*2 = 0, +1 = 1
             // Second call: 1*2 = 2, +1 = 3
             // If second call is executed too early (without considering lock):
@@ -803,7 +803,7 @@ describe("PluginClass", () => {
           };
 
           @d.command("foo", "<str:foo>")
-          fooCmd({ str }) {
+          fooCmd({ args: { str } }) {
             assert.equal(str, `bar-${guild.id}`);
             done();
           }
