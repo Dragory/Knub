@@ -1,4 +1,11 @@
-import { defaultTypeConverters, createTypeHelper, TypeConversionError } from "knub-command-manager";
+import {
+  defaultTypeConverters,
+  createTypeHelper,
+  TypeConversionError,
+  string,
+  bool,
+  switchOption,
+} from "knub-command-manager";
 import { disableCodeBlocks } from "../helpers";
 import { getChannelId, getRoleId, getUserId } from "../utils";
 import { Channel, GuildChannel, Member, Role, TextChannel, User, VoiceChannel } from "eris";
@@ -157,6 +164,13 @@ export const baseTypeConverters = {
 };
 
 export const baseTypeHelpers = {
+  // knub-command-manager defaults
+  string,
+  bool,
+  switchOption,
+
+  // Knub-specific types
+  // knub-command-manager also has a number() helper, but we have slightly different error handling here
   number: createTypeHelper<number>(baseTypeConverters.number),
   user: createTypeHelper<User>(baseTypeConverters.user),
   member: createTypeHelper<Member>(baseTypeConverters.member),
