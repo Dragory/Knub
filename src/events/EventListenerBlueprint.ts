@@ -51,7 +51,7 @@ export function eventListener<TEventName extends string>(
 ): EventListenerBlueprint<any, TEventName>;
 
 /**
- * Specify `TPluginType` for type hints and return a function: `eventListener(event, listener, rest?)`
+ * Specify `TPluginType` for type hints and return self
  */
 export function eventListener<TPluginType extends BasePluginType>(): EventListenerBlueprintCreator<TPluginType>;
 

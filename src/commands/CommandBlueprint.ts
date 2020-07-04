@@ -105,6 +105,9 @@ export function command<_TSignature extends TSignatureOrArray<any>>(
   run: CommandBlueprint<any, _TSignature>["run"]
 ): CommandBlueprint<any, _TSignature>;
 
+/**
+ * Specify `TPluginType` for type hints and return self
+ */
 export function command<TPluginType extends BasePluginType>(): CommandBlueprintCreator<TPluginType>;
 
 /**
