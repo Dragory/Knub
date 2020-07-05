@@ -19,7 +19,7 @@ export { pluginUtils };
 
 export { PluginData } from "./plugins/PluginData";
 
-export { KnubOptions, KnubArgs, BaseContext, GuildContext, GlobalContext } from "./types";
+export { KnubOptions, KnubArgs, BaseContext, GuildContext, GlobalContext, Plugin, LoadedPlugin } from "./types";
 
 export {
   PermissionLevels,
