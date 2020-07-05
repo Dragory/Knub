@@ -477,9 +477,11 @@ describe("PluginClass", () => {
           public static pluginName = "events";
 
           @d.event("messageCreate")
-          public msgEv({ message }: EventArguments["messageCreate"]) {
+          public msgEv({ args: { message } }: EventMeta<any, EventArguments["messageCreate"]>) {
             if (message instanceof Message) {
               done();
+            } else {
+              assert.fail("Expected Message");
             }
           }
         }
@@ -656,7 +658,7 @@ describe("PluginClass", () => {
 
           @d.event("messageCreate")
           @d.lock("blahblah")
-          public async lockMsgEv(args, meta: EventMeta<any>) {
+          public async lockMsgEv(meta: EventMeta<any, unknown>) {
             // First call: 0*2 = 0, +1 = 1
             // Second call: 1*2 = 2, +1 = 3
             // If second call is executed too early (without considering lock):

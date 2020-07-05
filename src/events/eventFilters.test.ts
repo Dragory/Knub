@@ -7,21 +7,18 @@ describe("Event filters", () => {
   it("onlyGuild", () => {
     const filter = onlyGuild();
     const guild = {};
-    const result = filter(
-      "messageCreate",
-      {
+    const result = filter("messageCreate", {
+      args: {
         message: ({
           channel: {
             guild,
           },
         } as unknown) as Message,
       },
-      {
-        pluginData: {
-          guild,
-        } as PluginData<any>,
-      }
-    );
+      pluginData: {
+        guild,
+      } as PluginData<any>,
+    });
     assert.ok(result);
   });
 });

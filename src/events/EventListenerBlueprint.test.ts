@@ -9,7 +9,7 @@ describe("eventListener() helper", () => {
   it("(blueprint)", () => {
     const blueprint = eventListener({
       event: "messageCreate",
-      listener(args) {
+      listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args, { message: Message }> = true;
@@ -22,7 +22,7 @@ describe("eventListener() helper", () => {
   });
 
   it("(event, listener)", () => {
-    const blueprint = eventListener("messageCreate", (args) => {
+    const blueprint = eventListener("messageCreate", ({ args }) => {
       // Test type inference
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const result: AssertEquals<typeof args, { message: Message }> = true;
@@ -34,7 +34,7 @@ describe("eventListener() helper", () => {
   });
 
   it("(event, opts, listener)", () => {
-    const blueprint = eventListener("messageCreate", { allowSelf: true }, (args) => {
+    const blueprint = eventListener("messageCreate", { allowSelf: true }, ({ args }) => {
       // Test type inference
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const result: AssertEquals<typeof args, { message: Message }> = true;
@@ -54,12 +54,12 @@ describe("eventListener() helper", () => {
   it("<TPluginType>()(blueprint)", () => {
     const blueprint = eventListener<CustomPluginType>()({
       event: "messageCreate",
-      listener(args, meta) {
+      listener({ args, pluginData }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args, { message: Message }> = true;
 
-        const foo = meta.pluginData.config.get();
+        const foo = pluginData.config.get();
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result2: AssertEquals<typeof foo, { foo: 5 }> = true;
       },
@@ -71,12 +71,12 @@ describe("eventListener() helper", () => {
   });
 
   it("<TPluginType>()(event, listener)", () => {
-    const blueprint = eventListener<CustomPluginType>()("messageCreate", (args, meta) => {
+    const blueprint = eventListener<CustomPluginType>()("messageCreate", ({ args, pluginData }) => {
       // Test type inference
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const result: AssertEquals<typeof args, { message: Message }> = true;
 
-      const foo = meta.pluginData.config.get();
+      const foo = pluginData.config.get();
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const result2: AssertEquals<typeof foo, { foo: 5 }> = true;
     });
@@ -87,15 +87,19 @@ describe("eventListener() helper", () => {
   });
 
   it("<TPluginType>()(event, options, listener)", () => {
-    const blueprint = eventListener<CustomPluginType>()("messageCreate", { allowSelf: true }, (args, meta) => {
-      // Test type inference
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const result: AssertEquals<typeof args, { message: Message }> = true;
+    const blueprint = eventListener<CustomPluginType>()(
+      "messageCreate",
+      { allowSelf: true },
+      ({ args, pluginData }) => {
+        // Test type inference
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const result: AssertEquals<typeof args, { message: Message }> = true;
 
-      const foo = meta.pluginData.config.get();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const result2: AssertEquals<typeof foo, { foo: 5 }> = true;
-    });
+        const foo = pluginData.config.get();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const result2: AssertEquals<typeof foo, { foo: 5 }> = true;
+      }
+    );
 
     expect(blueprint.event).to.equal("messageCreate");
     expect(blueprint.listener).to.not.equal(undefined);

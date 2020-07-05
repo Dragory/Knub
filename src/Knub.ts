@@ -399,7 +399,7 @@ export class Knub<
     }
 
     // Initialize messageCreate event listener for commands
-    pluginData.events.on("messageCreate", ({ message }, { pluginData: _pluginData }) => {
+    pluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
       return _pluginData.commands.runFromMessage(message);
     });
 

@@ -6,7 +6,8 @@ import { EventArguments, fromErisArgs, UnknownEventArguments } from "./eventArgu
 import { EventListenerBlueprint } from "./EventListenerBlueprint";
 import { BasePluginType } from "../plugins/pluginTypes";
 
-export interface EventMeta<TPluginType extends BasePluginType> {
+export interface EventMeta<TPluginType extends BasePluginType, TArguments> {
+  args: TArguments;
   pluginData: PluginData<TPluginType>;
 
   // Added by locks() event filter
@@ -14,8 +15,7 @@ export interface EventMeta<TPluginType extends BasePluginType> {
 }
 
 export type Listener<TPluginType extends BasePluginType, TEventName extends string> = (
-  args: EventArguments[TEventName],
-  meta: EventMeta<TPluginType>
+  meta: EventMeta<TPluginType, EventArguments[TEventName]>
 ) => Awaitable<void>;
 
 export type WrappedListener = (args: any[]) => Awaitable<void>;
@@ -79,7 +79,8 @@ export class PluginEventManager<TPluginType extends BasePluginType> {
         ? fromErisArgs[blueprint.event](...args)
         : ({ args } as UnknownEventArguments);
 
-      return filteredListener(convertedArgs, {
+      return filteredListener({
+        args: convertedArgs,
         pluginData: this.pluginData,
       });
     };
