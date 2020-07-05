@@ -36,6 +36,12 @@ export interface CommandBlueprint<
   usage?: string;
 }
 
+type CommandBlueprintCreatorIdentity<TPluginType extends BasePluginType> = <
+  TSignature extends TSignatureOrArray<TPluginType>
+>(
+  blueprint: CommandBlueprint<TPluginType, TSignature>
+) => CommandBlueprint<TPluginType, TSignature>;
+
 type CommandBlueprintCreatorWithoutSignature<TPluginType extends BasePluginType> = (
   // We can't replace CommandBlueprint<TPluginType, any> with a generic because it breaks type inference
   trigger: CommandBlueprint<TPluginType, any>["trigger"],
@@ -63,9 +69,19 @@ type CommandBlueprintCreatorWithOptions<TPluginType extends BasePluginType> = <
 
 // prettier-ignore
 type CommandBlueprintCreator<TPluginType extends BasePluginType> =
+  & CommandBlueprintCreatorIdentity<TPluginType>
   & CommandBlueprintCreatorWithoutSignature<TPluginType>
   & CommandBlueprintCreatorWithoutOptions<TPluginType>
   & CommandBlueprintCreatorWithOptions<TPluginType>;
+
+/**
+ * Helper function that creates a command blueprint.
+ *
+ * To specify `TPluginType` for additional type hints, use: `command<TPluginType>()(blueprint)`
+ */
+export function command<_TSignature extends TSignatureOrArray<any>>(
+  blueprint: CommandBlueprint<any, _TSignature>
+): CommandBlueprint<any, _TSignature>;
 
 /**
  * Helper function that creates a command blueprint.
@@ -74,9 +90,9 @@ type CommandBlueprintCreator<TPluginType extends BasePluginType> =
  */
 export function command(
   // We can't replace CommandBlueprint<BasePluginType, any> with a generic because it breaks type inference
-  trigger: CommandBlueprint<any, any>["trigger"],
-  run: CommandBlueprint<any, any>["run"]
-): CommandBlueprint<any, any>;
+  trigger: CommandBlueprint<any, {}>["trigger"],
+  run: CommandBlueprint<any, {}>["run"]
+): CommandBlueprint<any, {}>;
 
 /**
  * Helper function that creates a command blueprint.
@@ -114,6 +130,11 @@ export function command<TPluginType extends BasePluginType>(): CommandBlueprintC
  * Implementation of the various overloads above
  */
 export function command(...args) {
+  if (args.length === 1) {
+    // (blueprint)
+    // Return command blueprint
+    return args[0];
+  }
   if (args.length === 2) {
     // (trigger, run)
     // Return command blueprint

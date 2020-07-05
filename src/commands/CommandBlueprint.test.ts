@@ -6,6 +6,25 @@ import { BasePluginType } from "..";
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
 describe("command() helper", () => {
+  it("(blueprint)", () => {
+    const blueprint = command({
+      trigger: "cmd",
+      signature: {
+        foo: string(),
+        bar: number(),
+      },
+      run({ args }) {
+        // Test type inference
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const result: AssertEquals<typeof args, { foo: string; bar: number }> = true;
+      },
+    });
+
+    expect(blueprint.trigger).to.equal("cmd");
+    expect(blueprint.signature).to.eql({ foo: string(), bar: number() });
+    expect(blueprint.run).to.not.equal(undefined);
+  });
+
   it("(trigger, run)", () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     const blueprint = command("cmd", () => {});
@@ -64,6 +83,27 @@ describe("command() helper", () => {
       foo: 5;
     };
   }
+
+  it("<TPluginType>()(blueprint)", () => {
+    const blueprint = command<CustomPluginType>()({
+      trigger: "cmd",
+      signature: {
+        foo: string(),
+        bar: number(),
+      },
+      run({ args, pluginData }) {
+        // Test type inference
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const result: AssertEquals<typeof args, { foo: string; bar: number }> = true;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const result2: AssertEquals<typeof pluginData.state.foo, 5> = true;
+      },
+    });
+
+    expect(blueprint.trigger).to.equal("cmd");
+    expect(blueprint.signature).to.eql({ foo: string(), bar: number() });
+    expect(blueprint.run).to.not.equal(undefined);
+  });
 
   it("<TPluginType>()(trigger, run)", () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
