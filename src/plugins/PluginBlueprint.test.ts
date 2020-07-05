@@ -450,6 +450,16 @@ describe("PluginBlueprint", () => {
   });
 
   describe("plugin() helper", () => {
+    it("(blueprint)", () => {
+      const blueprint = plugin({
+        name: "my-plugin",
+        info: "foo",
+      });
+
+      expect(blueprint.name).to.equal("my-plugin");
+      expect(blueprint.info).to.equal("foo");
+    });
+
     it("(name, blueprint)", () => {
       const blueprint = plugin("my-plugin", {
         info: "foo",
@@ -464,6 +474,20 @@ describe("PluginBlueprint", () => {
         foo: 5;
       };
     }
+
+    it("<TPluginType>()(blueprint)", () => {
+      const blueprint = plugin<CustomPluginType>()({
+        name: "my-plugin",
+        info: "foo",
+      });
+
+      expect(blueprint.name).to.equal("my-plugin");
+      expect(blueprint.info).to.equal("foo");
+
+      // Test type inference
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const result: AssertEquals<Parameters<typeof blueprint.onLoad>[0], PluginData<CustomPluginType>> = true;
+    });
 
     it("<TPluginType>()(name, blueprint)", () => {
       const blueprint = plugin<CustomPluginType>()("my-plugin", {

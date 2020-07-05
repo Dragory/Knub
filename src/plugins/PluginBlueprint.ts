@@ -84,15 +84,29 @@ export interface PluginBlueprint<TPluginType extends BasePluginType = BasePlugin
   onUnload?: (pluginData: PluginData<TPluginType>) => Awaitable<void>;
 }
 
-type PluginBlueprintCreator<TPluginType extends BasePluginType> = (
+type PluginBlueprintCreatorIdentity<TPluginType extends BasePluginType> = (
+  blueprint: PluginBlueprint<TPluginType>
+) => PluginBlueprint<TPluginType>;
+
+type PluginBlueprintCreatorWithName<TPluginType extends BasePluginType> = (
   name: string,
   blueprint: Omit<PluginBlueprint<TPluginType>, "name">
 ) => PluginBlueprint<TPluginType>;
+
+type PluginBlueprintCreator<TPluginType extends BasePluginType> = PluginBlueprintCreatorIdentity<TPluginType> &
+  PluginBlueprintCreatorWithName<TPluginType>;
 
 /**
  * Helper function that creates a plugin blueprint.
  *
  * To specify `TPluginType` for additional type hints, use: `plugin<TPluginType>()(blueprint)`
+ */
+export function plugin(blueprint: PluginBlueprint): PluginBlueprint;
+
+/**
+ * Helper function that creates a plugin blueprint.
+ *
+ * To specify `TPluginType` for additional type hints, use: `plugin<TPluginType>()(name, blueprint)`
  */
 export function plugin(name: string, blueprint: Omit<PluginBlueprint, "name">): PluginBlueprint;
 
@@ -102,7 +116,11 @@ export function plugin(name: string, blueprint: Omit<PluginBlueprint, "name">): 
 export function plugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<TPluginType>;
 
 export function plugin(...args) {
-  if (args.length === 2) {
+  if (args.length === 1) {
+    // (blueprint)
+    // Return blueprint
+    return args[0];
+  } else if (args.length === 2) {
     // (name, blueprint)
     // Return blueprint
     return {
