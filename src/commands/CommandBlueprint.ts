@@ -7,7 +7,7 @@ export interface CommandBlueprint<
   TPluginType extends BasePluginType,
   _TSignature extends TSignatureOrArray<TPluginType>
 > {
-  trigger: string;
+  trigger: string | string[];
   signature?: _TSignature;
   run: CommandFn<TPluginType, _TSignature>;
   config?: PluginCommandConfig;
