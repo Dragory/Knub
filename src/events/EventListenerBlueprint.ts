@@ -8,6 +8,13 @@ export interface EventListenerBlueprint<TPluginType extends BasePluginType, TEve
 }
 
 /**
+ * Helper function to create an event listener blueprint with type hints
+ */
+type EventListenerBlueprintCreatorIdentity<TPluginType extends BasePluginType> = <TEventName extends string>(
+  blueprint: EventListenerBlueprint<TPluginType, TEventName>
+) => EventListenerBlueprint<TPluginType, TEventName>;
+
+/**
  * Helper function to create an event listener blueprint with just event name and listener function
  */
 type EventListenerBlueprintCreatorWithoutOpts<TPluginType extends BasePluginType> = <TEventName extends string>(
@@ -26,8 +33,18 @@ type EventListenerBlueprintCreatorWithOpts<TPluginType extends BasePluginType> =
 
 // prettier-ignore
 type EventListenerBlueprintCreator<TPluginType extends BasePluginType> =
+  & EventListenerBlueprintCreatorIdentity<TPluginType>
   & EventListenerBlueprintCreatorWithoutOpts<TPluginType>
   & EventListenerBlueprintCreatorWithOpts<TPluginType>;
+
+/**
+ * Helper function to create an event listener blueprint. Used for type inference from event name.
+ *
+ * To specify `TPluginType` for additional type hints, use: `eventListener<TPluginType>()(blueprint)`
+ */
+export function eventListener<TEventName extends string>(
+  blueprint: EventListenerBlueprint<any, TEventName>
+): EventListenerBlueprint<any, TEventName>;
 
 /**
  * Helper function to create an event listener blueprint. Used for type inference from event name.
@@ -56,7 +73,11 @@ export function eventListener<TEventName extends string>(
 export function eventListener<TPluginType extends BasePluginType>(): EventListenerBlueprintCreator<TPluginType>;
 
 export function eventListener(...args) {
-  if (args.length === 2) {
+  if (args.length === 1) {
+    // (blueprint)
+    // Return event listener blueprint
+    return args[0];
+  } else if (args.length === 2) {
     // (event, listener)
     // Return event listener blueprint
     const [event, listener] = args;
