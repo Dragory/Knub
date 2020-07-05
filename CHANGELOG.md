@@ -1,12 +1,28 @@
+# 30.0.0-beta.8
+* **BREAKING CHANGE:** Combined the `args` and `meta` parameters for event listener functions.
+  The `args` object is now at `meta.args`.
+  * E.g. `eventListener("messageCreate", ({ args }) => { ... })`
+* New `plugin()` signatures:
+  * `plugin(blueprint)`
+  * `plugin<TPluginType>()(blueprint)`
+* New `command()` signatures:
+  * `command(blueprint)`
+  * `command<TPluginType>()(blueprint)`
+* New `eventListener()` signatures:
+  * `eventListener(blueprint)`
+  * `eventListener<TPluginType>()(blueprint)`
+* `CommandBlueprint` now also accepts arrays of triggers
+* Export `Plugin` and `LoadedPlugin`
+
 # 30.0.0-beta.7
 * Add `string`, `bool`, and `switchOption` from `knub-command-manager` to `baseTypeHelpers`
 * Update TypeScript compilation target to `ES2020` for Node.js 14
 
 # 30.0.0-beta.6
-* Combined the `args` and `meta` parameters for command functions.
+* **BREAKING CHANGE:** Combined the `args` and `meta` parameters for command functions.
   The `args` object is now at `meta.args`.
   * E.g. `command("foo", ({ args }) => { ... })`
-* Updated `plugin()` helper signature for clarity and better type inference:
+* **BREAKING CHANGE:** Updated `plugin()` helper signature for clarity and better type inference:
   * `plugin(name, blueprint)`
   * `plugin<TPluginType>()(name, blueprint)`
 * Updated `command()` helper signature for clarity and better type inference:
