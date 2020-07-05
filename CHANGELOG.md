@@ -1,3 +1,6 @@
+# 30.0.0-beta.9
+* Update to `knub-command-manager` v8.1.1 for improved type helper type hints
+
 # 30.0.0-beta.8
 * **BREAKING CHANGE:** Combined the `args` and `meta` parameters for event listener functions.
   The `args` object is now at `meta.args`.
