@@ -1,6 +1,5 @@
 import { TextableChannel } from "eris";
 import { BaseConfig } from "./config/configTypes";
-import { LoggerFn } from "./logger";
 import { LockManager } from "./locks/LockManager";
 import { PluginBlueprint } from "./plugins/PluginBlueprint";
 import { PluginData } from "./plugins/PluginData";
@@ -11,12 +10,14 @@ type StatusMessageFn = (channel: TextableChannel, body: string) => void;
 
 export type PluginMap = Map<string, PluginBlueprint<any>>;
 
+export type LogFn = (level, ...args) => void;
+
 export interface KnubOptions<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> {
   autoInitGuilds?: boolean;
   getConfig?: (id: string) => Awaitable<any>;
   getEnabledGuildPlugins?: (ctx: GuildContext<TGuildConfig>, plugins: PluginMap) => Awaitable<string[]>;
   canLoadGuild?: (guildId: string) => Awaitable<boolean>;
-  logFn?: LoggerFn;
+  logFn?: LogFn;
   sendErrorMessageFn?: StatusMessageFn;
   sendSuccessMessageFn?: StatusMessageFn;
   [key: string]: any;

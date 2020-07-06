@@ -12,8 +12,6 @@ export { plugin } from "./plugins/PluginBlueprint";
 export { command } from "./commands/CommandBlueprint";
 export { eventListener } from "./events/EventListenerBlueprint";
 
-export { logger } from "./logger";
-
 export { configUtils };
 export { ConfigValidationError } from "./config/ConfigValidationError";
 

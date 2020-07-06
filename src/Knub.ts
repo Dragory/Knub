@@ -1,5 +1,4 @@
 import { Client, Guild } from "eris";
-import { logger, setLoggerFn } from "./logger";
 import { EventEmitter } from "events";
 import { BaseConfig } from "./config/configTypes";
 import { get } from "./utils";
@@ -16,7 +15,16 @@ import {
   isGuildContext,
   PluginPublicInterface,
 } from "./plugins/pluginUtils";
-import { AnyContext, GlobalContext, GuildContext, KnubArgs, KnubOptions, LoadedPlugin, PluginMap } from "./types";
+import {
+  AnyContext,
+  GlobalContext,
+  GuildContext,
+  KnubArgs,
+  KnubOptions,
+  LoadedPlugin,
+  LogFn,
+  PluginMap,
+} from "./types";
 import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
 import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./plugins/PluginBlueprint";
 import { UnknownPluginError } from "./plugins/UnknownPluginError";
@@ -27,6 +35,17 @@ const defaultKnubParams: KnubArgs<BaseConfig<BasePluginType>, BaseConfig<BasePlu
   guildPlugins: [],
   globalPlugins: [],
   options: {},
+};
+
+const defaultLogFn: LogFn = (level, ...args) => {
+  /* eslint-disable no-console */
+  if (level === "error") {
+    console.error("[ERROR]", ...args);
+  } else if (level === "warn") {
+    console.warn("[WARN]", ...args);
+  } else {
+    console.log(`[${level.toUpperCase()}]`, ...args);
+  }
 };
 
 export class Knub<
@@ -42,6 +61,8 @@ export class Knub<
   protected globalContext: GlobalContext<TGlobalConfig>;
 
   protected options: KnubOptions<TGuildConfig, TGlobalConfig>;
+
+  protected log: LogFn = defaultLogFn;
 
   constructor(client: Client, userArgs: KnubArgs<TGuildConfig, TGlobalConfig>) {
     super();
@@ -110,47 +131,47 @@ export class Knub<
     this.options = { ...defaultOptions, ...args.options };
 
     if (this.options.logFn) {
-      setLoggerFn(this.options.logFn);
+      this.log = this.options.logFn;
     }
   }
 
   public async run(): Promise<void> {
     this.client.on("debug", async (str) => {
-      logger.debug(`[ERIS] ${str}`);
+      this.log("debug", `[ERIS] ${str}`);
     });
 
     this.client.on("error", async (err: Error) => {
-      logger.error(`[ERIS] ${String(err)}`);
+      this.log("error", `[ERIS] ${String(err)}`);
     });
 
-    const loadErrorTimeout = setTimeout(() => {
-      logger.info("This is taking unusually long. Check the token?");
+    const loadErrorInterval = setInterval(() => {
+      this.log("info", "Still connecting...");
     }, 30 * 1000);
 
     this.client.on("ready", async () => {
-      clearTimeout(loadErrorTimeout);
+      clearInterval(loadErrorInterval);
 
-      logger.info("Bot connected!");
+      this.log("info", "Bot connected!");
 
-      logger.info("Loading global plugins...");
+      this.log("info", "Loading global plugins...");
 
       await this.loadGlobalConfig();
       await this.loadAllGlobalPlugins();
 
-      logger.info("Loading guilds..");
+      this.log("info", "Loading guilds..");
 
       this.client.on("guildAvailable", (guild: Guild) => {
-        logger.info(`Joined guild: ${guild.id}`);
+        this.log("info", `Joined guild: ${guild.id}`);
         this.loadGuild(guild.id);
       });
 
       this.client.on("guildUnavailable", (guild: Guild) => {
-        logger.info(`Left guild: ${guild.id}`);
+        this.log("info", `Left guild: ${guild.id}`);
         this.unloadGuild(guild.id);
       });
 
       await this.loadAllGuilds();
-      logger.info("All loaded, the bot is now running!");
+      this.log("info", "All loaded, the bot is now running!");
       this.emit("loadingFinished");
     });
 
