@@ -1,3 +1,7 @@
+# 30.0.0-beta.10
+* Removed `exports` from `package.json` until
+  [microsoft/TypeScript#33079](https://github.com/microsoft/TypeScript/issues/33079) is fixed
+
 # 30.0.0-beta.9
 * Update to `knub-command-manager` v8.1.1 for improved type helper type hints
 
