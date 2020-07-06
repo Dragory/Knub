@@ -1,25 +1,27 @@
-import "reflect-metadata";
+import * as configUtils from "./config/configUtils";
+import * as pluginUtils from "./plugins/pluginUtils";
+import * as helpers from "./helpers";
 
 export { Knub } from "./Knub";
 
-export { PluginClass } from "./plugins/PluginClass";
 export { PluginBlueprint } from "./plugins/PluginBlueprint";
+export { CommandBlueprint } from "./commands/CommandBlueprint";
+export { EventListenerBlueprint } from "./events/EventListenerBlueprint";
 
-import * as decorators from "./plugins/decorators";
-export { decorators };
+export { plugin } from "./plugins/PluginBlueprint";
+export { command } from "./commands/CommandBlueprint";
+export { eventListener } from "./events/EventListenerBlueprint";
 
 export { logger } from "./logger";
 
-import * as configUtils from "./config/configUtils";
 export { configUtils };
 export { ConfigValidationError } from "./config/ConfigValidationError";
 
-import * as pluginUtils from "./plugins/pluginUtils";
 export { pluginUtils };
 
 export { PluginData } from "./plugins/PluginData";
 
-export { KnubOptions, KnubArgs, BaseContext, GuildContext, GlobalContext, Plugin, LoadedPlugin } from "./types";
+export { KnubOptions, KnubArgs, BaseContext, GuildContext, GlobalContext, LoadedPlugin } from "./types";
 
 export {
   PermissionLevels,
@@ -35,7 +37,6 @@ export { getCommandSignature, PluginCommandConfig, CommandContext } from "./comm
 
 export * from "./commands/baseTypeConverters";
 
-import * as helpers from "./helpers";
 export { helpers };
 
 export { PluginError } from "./plugins/PluginError";
@@ -47,7 +48,3 @@ export { LockManager, Lock } from "./locks/LockManager";
 export { CooldownManager } from "./cooldowns/CooldownManager";
 
 export { TypeConversionError, parseSignature } from "knub-command-manager";
-
-export { command } from "./commands/CommandBlueprint";
-export { eventListener } from "./events/EventListenerBlueprint";
-export { plugin } from "./plugins/PluginBlueprint";

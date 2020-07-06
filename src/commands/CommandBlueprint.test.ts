@@ -9,6 +9,7 @@ describe("command() helper", () => {
   it("(blueprint)", () => {
     const blueprint = command({
       trigger: "cmd",
+      permission: null,
       signature: {
         foo: string(),
         bar: number(),
@@ -87,6 +88,7 @@ describe("command() helper", () => {
   it("<TPluginType>()(blueprint)", () => {
     const blueprint = command<CustomPluginType>()({
       trigger: "cmd",
+      permission: null,
       signature: {
         foo: string(),
         bar: number(),

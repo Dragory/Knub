@@ -13,24 +13,10 @@ import { PluginLoadError } from "./plugins/PluginLoadError";
 import {
   defaultGetConfig,
   defaultGetEnabledGuildPlugins,
-  getPluginName,
   isGuildContext,
-  isPluginClass,
-  applyPluginClassDecoratorValues,
-  ResolvablePlugin,
   PluginPublicInterface,
-  isPluginBlueprint,
 } from "./plugins/pluginUtils";
-import {
-  AnyContext,
-  GlobalContext,
-  GuildContext,
-  KnubArgs,
-  KnubOptions,
-  LoadedPlugin,
-  PluginMap,
-  Plugin,
-} from "./types";
+import { AnyContext, GlobalContext, GuildContext, KnubArgs, KnubOptions, LoadedPlugin, PluginMap } from "./types";
 import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
 import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./plugins/PluginBlueprint";
 import { UnknownPluginError } from "./plugins/UnknownPluginError";
@@ -74,39 +60,27 @@ export class Knub<
     };
 
     const uniquePluginNames = new Set();
-    const validatePlugin = (plugin: Plugin) => {
-      const pluginName = getPluginName(plugin);
-
-      if (pluginName == null) {
-        throw new Error(`No plugin name specified for plugin ${pluginName}`);
+    const validatePlugin = (plugin: PluginBlueprint<any>) => {
+      if (plugin.name == null) {
+        throw new Error(`No plugin name specified for plugin`);
       }
 
-      if (uniquePluginNames.has(pluginName)) {
-        throw new Error(`Duplicate plugin name: ${pluginName}`);
+      if (uniquePluginNames.has(plugin.name)) {
+        throw new Error(`Duplicate plugin name: ${plugin.name}`);
       }
 
-      uniquePluginNames.add(pluginName);
+      uniquePluginNames.add(plugin.name);
     };
 
-    args.globalPlugins.forEach((globalPlugin) => {
+    for (const globalPlugin of args.globalPlugins) {
       validatePlugin(globalPlugin);
+      this.globalPlugins.set(globalPlugin.name, globalPlugin);
+    }
 
-      if (isPluginClass(globalPlugin)) {
-        applyPluginClassDecoratorValues(globalPlugin);
-      }
-
-      this.globalPlugins.set(getPluginName(globalPlugin), globalPlugin);
-    });
-
-    args.guildPlugins.forEach((plugin) => {
-      validatePlugin(plugin);
-
-      if (isPluginClass(plugin)) {
-        applyPluginClassDecoratorValues(plugin);
-      }
-
-      this.guildPlugins.set(getPluginName(plugin), plugin);
-    });
+    for (const guildPlugin of args.guildPlugins) {
+      validatePlugin(guildPlugin);
+      this.guildPlugins.set(guildPlugin.name, guildPlugin);
+    }
 
     const defaultOptions: KnubOptions<TGuildConfig, TGlobalConfig> = {
       getConfig: defaultGetConfig,
@@ -236,7 +210,7 @@ export class Knub<
     // Load plugins and their dependencies
     const enabledPlugins = await this.options.getEnabledGuildPlugins(guildContext, this.guildPlugins);
     const dependencies = enabledPlugins
-      .map((pluginName) => this.getPluginDependencies(this.guildPlugins.get(pluginName)))
+      .map((pluginName) => (this.guildPlugins.get(pluginName).dependencies || []).map((plugin) => plugin.name))
       .flat();
     const pluginsToLoad = Array.from(new Set([...dependencies, ...enabledPlugins]));
 
@@ -285,31 +259,15 @@ export class Knub<
     return Array.from(this.loadedGuilds.values());
   }
 
-  protected getPluginDependencies(plugin: Plugin): string[] {
-    if (!plugin.dependencies) {
-      return [];
-    }
-
-    return plugin.dependencies.map((dependency) => {
-      if (typeof dependency === "string") {
-        return dependency;
-      }
-
-      return isPluginBlueprint(dependency) ? dependency.name : dependency.pluginName;
-    });
-  }
-
-  public async loadPlugin(
+  public async loadPlugin<TPluginType extends BasePluginType>(
     ctx: GuildContext<TGuildConfig> | GlobalContext<TGlobalConfig>,
-    plugin: Plugin
-  ): Promise<LoadedPlugin> {
-    const pluginName = isPluginClass(plugin) ? plugin.pluginName : plugin.name;
-
+    plugin: PluginBlueprint<TPluginType>
+  ): Promise<LoadedPlugin<TPluginType>> {
     const guild = isGuildContext(ctx) ? this.client.guilds.get(ctx.guildId) : null;
 
     const configManager = new PluginConfigManager(
       plugin.defaultOptions ?? { config: {} },
-      get(ctx.config, `plugins.${pluginName}`) || {},
+      get(ctx.config, `plugins.${plugin.name}`) || {},
       ctx.config.levels || {},
       plugin.customOverrideMatcher,
       plugin.configPreprocessor,
@@ -320,7 +278,7 @@ export class Knub<
       await configManager.init();
     } catch (e) {
       if (e instanceof ConfigValidationError) {
-        throw new PluginLoadError(pluginName, guild, e);
+        throw new PluginLoadError(plugin.name, guild, e);
       }
 
       throw e;
@@ -350,32 +308,10 @@ export class Knub<
     pluginData.commands.setPluginData(pluginData);
     pluginData.config.setPluginData(pluginData);
 
-    let _class;
-    let instance;
-    let blueprint;
-    let bindTarget = null;
-
-    if (isPluginClass(plugin)) {
-      // Load plugin class
-      _class = plugin;
-      instance = new plugin(pluginData);
-
-      try {
-        await instance.onLoad?.();
-      } catch (e) {
-        throw new PluginLoadError(plugin.pluginName, guild, e);
-      }
-
-      bindTarget = instance;
-    } else {
-      // Load plugin blueprint
-      blueprint = plugin;
-
-      try {
-        await plugin.onLoad?.(pluginData);
-      } catch (e) {
-        throw new PluginLoadError(plugin.name, guild, e);
-      }
+    try {
+      await plugin.onLoad?.(pluginData);
+    } catch (e) {
+      throw new PluginLoadError(plugin.name, guild, e);
     }
 
     // Register static event listeners
@@ -383,7 +319,7 @@ export class Knub<
       for (const eventListenerBlueprint of plugin.events) {
         pluginData.events.registerEventListener({
           ...eventListenerBlueprint,
-          listener: eventListenerBlueprint.listener.bind(bindTarget),
+          listener: eventListenerBlueprint.listener,
         });
       }
     }
@@ -393,7 +329,7 @@ export class Knub<
       for (const commandBlueprint of plugin.commands) {
         pluginData.commands.add({
           ...commandBlueprint,
-          run: commandBlueprint.run.bind(bindTarget),
+          run: commandBlueprint.run,
         });
       }
     }
@@ -404,9 +340,7 @@ export class Knub<
     });
 
     return {
-      class: _class,
-      instance,
-      blueprint,
+      blueprint: plugin,
       pluginData,
     };
   }
@@ -417,11 +351,7 @@ export class Knub<
 
     loadedPlugin.pluginData.events.clearAllListeners();
 
-    if (loadedPlugin.instance) {
-      await loadedPlugin.instance.onUnload?.();
-    } else if (loadedPlugin.blueprint) {
-      await loadedPlugin.blueprint.onUnload?.(loadedPlugin.pluginData);
-    }
+    await loadedPlugin.blueprint.onUnload?.(loadedPlugin.pluginData);
 
     ctx.loadedPlugins.delete(pluginName);
   }
@@ -472,35 +402,26 @@ export class Knub<
     return this.globalContext.config;
   }
 
-  protected ctxHasPlugin<T extends ResolvablePlugin>(
-    ctx: AnyContext<TGuildConfig, TGlobalConfig>,
-    plugin: ResolvablePlugin
-  ): boolean {
-    const pluginName = typeof plugin === "string" ? plugin : getPluginName(plugin);
-
-    return ctx.loadedPlugins.has(pluginName);
+  protected ctxHasPlugin(ctx: AnyContext<TGuildConfig, TGlobalConfig>, plugin: PluginBlueprint<any>) {
+    return ctx.loadedPlugins.has(plugin.name);
   }
 
-  protected getPluginPublicInterface<T extends ResolvablePlugin>(
+  protected getPluginPublicInterface<T extends PluginBlueprint<any>>(
     ctx: AnyContext<TGuildConfig, TGlobalConfig>,
-    plugin: ResolvablePlugin,
+    plugin: T,
     pluginData: PluginData<any>
   ): PluginPublicInterface<T> {
-    const pluginName = typeof plugin === "string" ? plugin : getPluginName(plugin);
-
-    if (!ctx.loadedPlugins.has(pluginName)) {
-      throw new PluginNotLoadedError(`Plugin ${pluginName} is not loaded`);
+    if (!ctx.loadedPlugins.has(plugin.name)) {
+      throw new PluginNotLoadedError(`Plugin ${plugin.name} is not loaded`);
     }
 
-    const loadedPlugin = ctx.loadedPlugins.get(pluginName);
-    const publicInterface = loadedPlugin.blueprint
-      ? this.resolvePluginBlueprintPublicInterface(loadedPlugin.blueprint, pluginData)
-      : loadedPlugin.instance;
+    const loadedPlugin = ctx.loadedPlugins.get(plugin.name);
+    const publicInterface = this.resolvePluginBlueprintPublicInterface(loadedPlugin.blueprint, pluginData);
 
     return publicInterface as PluginPublicInterface<T>;
   }
 
-  protected resolvePluginBlueprintPublicInterface<T extends PluginBlueprint>(
+  protected resolvePluginBlueprintPublicInterface<T extends PluginBlueprint<any>>(
     blueprint: T,
     pluginData: PluginData<any>
   ): ResolvedPluginBlueprintPublicInterface<T["public"]> {

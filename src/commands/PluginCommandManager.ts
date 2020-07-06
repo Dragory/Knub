@@ -4,11 +4,11 @@ import {
   checkCommandLocks,
   checkCommandPermission,
   CommandContext,
+  CommandExtraData,
   CommandFn,
   CommandMeta,
   getCommandSignature,
   getDefaultPrefix,
-  CommandExtraData,
   PluginCommandDefinition,
   restrictCommandSource,
 } from "./commandUtils";

@@ -1,10 +1,10 @@
 import {
   command,
-  eventListener,
-  plugin,
   CooldownManager,
+  eventListener,
   Knub,
   LockManager,
+  plugin,
   PluginBlueprint,
   PluginData,
 } from "../index";
@@ -38,7 +38,7 @@ describe("PluginBlueprint", () => {
   describe("Lifecycle hooks", () => {
     it("runs plugin-supplied onLoad() function", (done) => {
       (async () => {
-        const PluginToLoad: PluginBlueprint = {
+        const PluginToLoad: PluginBlueprint<BasePluginType> = {
           name: "plugin-to-load",
           onLoad() {
             done();
@@ -68,7 +68,7 @@ describe("PluginBlueprint", () => {
 
     it("runs plugin-supplied onUnload() function", (done) => {
       (async () => {
-        const PluginToUnload: PluginBlueprint = {
+        const PluginToUnload: PluginBlueprint<BasePluginType> = {
           name: "plugin-to-unload",
           onUnload() {
             done();
@@ -107,9 +107,9 @@ describe("PluginBlueprint", () => {
         const PluginToLoad = plugin("plugin-to-load", {
           onLoad(pluginData) {
             setTimeout(() => {
-              assert.ok(pluginData.hasPlugin("dependency-to-load"));
-              assert.ok(!pluginData.hasPlugin("unknown-dependency"));
               assert.ok(pluginData.hasPlugin(DependencyToLoad));
+              assert.ok(pluginData.hasPlugin({ name: "dependency-to-load" }));
+              assert.ok(!pluginData.hasPlugin({ name: "unknown-plugin" }));
               done();
             }, 50);
           },
@@ -185,11 +185,11 @@ describe("PluginBlueprint", () => {
         const OtherDependencyToLoad = plugin("other-dependency-to-load", {});
 
         const PluginToLoad = plugin("plugin-to-load", {
-          dependencies: [DependencyToLoad, "other-dependency-to-load"],
+          dependencies: [DependencyToLoad, OtherDependencyToLoad],
 
           onLoad(pluginData) {
             setTimeout(() => {
-              assert.ok(pluginData.hasPlugin("dependency-to-load"));
+              assert.ok(pluginData.hasPlugin(DependencyToLoad));
               assert.ok(pluginData.hasPlugin(OtherDependencyToLoad));
               done();
             }, 50);
@@ -357,7 +357,7 @@ describe("PluginBlueprint", () => {
   describe("Misc", () => {
     it("pluginData contains everything", () => {
       return (async () => {
-        const TestPlugin: PluginBlueprint = {
+        const TestPlugin: PluginBlueprint<BasePluginType> = {
           name: "test-plugin",
           onLoad(pluginData) {
             assert.ok(pluginData.client != null);
@@ -404,7 +404,7 @@ describe("PluginBlueprint", () => {
           msgEvFnCallNum++;
         });
 
-        const PluginToUnload: PluginBlueprint = {
+        const PluginToUnload: PluginBlueprint<BasePluginType> = {
           name: "plugin-to-unload",
           events: [messageCreateEv],
         };

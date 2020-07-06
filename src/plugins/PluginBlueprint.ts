@@ -3,7 +3,6 @@ import { Awaitable } from "../utils";
 import { PluginData } from "./PluginData";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
-import { ResolvablePlugin } from "./pluginUtils";
 import { CustomOverrideMatcher } from "../config/configUtils";
 import { BasePluginType } from "./pluginTypes";
 
@@ -22,7 +21,7 @@ export type ResolvedPluginBlueprintPublicInterface<T extends PluginBlueprintPubl
   [P in keyof T]: ReturnType<T[P]>;
 };
 
-export interface PluginBlueprint<TPluginType extends BasePluginType = BasePluginType> {
+export interface PluginBlueprint<TPluginType extends BasePluginType> {
   /**
    * **[Required]** Internal name for the plugin
    */
@@ -35,9 +34,9 @@ export interface PluginBlueprint<TPluginType extends BasePluginType = BasePlugin
   info?: any;
 
   /**
-   * Other plugins that are required for this plugin to function. They will be loaded before this plugin.
+   * Names of other plugins that are required for this plugin to function. They will be loaded before this plugin.
    */
-  dependencies?: ResolvablePlugin[];
+  dependencies?: Array<PluginBlueprint<any>>;
 
   /**
    * The plugin's default options, including overrides
@@ -101,14 +100,17 @@ type PluginBlueprintCreator<TPluginType extends BasePluginType> = PluginBlueprin
  *
  * To specify `TPluginType` for additional type hints, use: `plugin<TPluginType>()(blueprint)`
  */
-export function plugin(blueprint: PluginBlueprint): PluginBlueprint;
+export function plugin(blueprint: PluginBlueprint<BasePluginType>): PluginBlueprint<BasePluginType>;
 
 /**
  * Helper function that creates a plugin blueprint.
  *
  * To specify `TPluginType` for additional type hints, use: `plugin<TPluginType>()(name, blueprint)`
  */
-export function plugin(name: string, blueprint: Omit<PluginBlueprint, "name">): PluginBlueprint;
+export function plugin(
+  name: string,
+  blueprint: Omit<PluginBlueprint<BasePluginType>, "name">
+): PluginBlueprint<BasePluginType>;
 
 /**
  * Specify `TPluginType` for type hints and return self

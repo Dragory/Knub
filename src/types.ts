@@ -2,15 +2,14 @@ import { TextableChannel } from "eris";
 import { BaseConfig } from "./config/configTypes";
 import { LoggerFn } from "./logger";
 import { LockManager } from "./locks/LockManager";
-import { AnyExtendedPluginClass, PluginClass } from "./plugins/PluginClass";
 import { PluginBlueprint } from "./plugins/PluginBlueprint";
 import { PluginData } from "./plugins/PluginData";
 import { Awaitable } from "./utils";
+import { BasePluginType } from "./plugins/pluginTypes";
 
 type StatusMessageFn = (channel: TextableChannel, body: string) => void;
 
-export type Plugin = typeof AnyExtendedPluginClass | PluginBlueprint<any>;
-export type PluginMap = Map<string, Plugin>;
+export type PluginMap = Map<string, PluginBlueprint<any>>;
 
 export interface KnubOptions<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> {
   autoInitGuilds?: boolean;
@@ -24,21 +23,19 @@ export interface KnubOptions<TGuildConfig extends BaseConfig<any>, TGlobalConfig
 }
 
 export interface KnubArgs<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> {
-  guildPlugins?: Plugin[];
-  globalPlugins?: Plugin[];
+  guildPlugins?: Array<PluginBlueprint<any>>;
+  globalPlugins?: Array<PluginBlueprint<any>>;
   options?: KnubOptions<TGuildConfig, TGlobalConfig>;
 }
 
-export interface LoadedPlugin {
-  class?: typeof PluginClass;
-  instance?: PluginClass<any>;
-  blueprint?: PluginBlueprint;
-  pluginData: PluginData<any>;
+export interface LoadedPlugin<TPluginType extends BasePluginType> {
+  blueprint: PluginBlueprint<TPluginType>;
+  pluginData: PluginData<TPluginType>;
 }
 
 export interface BaseContext<TConfig extends BaseConfig<any>> {
   config: TConfig;
-  loadedPlugins: Map<string, LoadedPlugin>;
+  loadedPlugins: Map<string, LoadedPlugin<any>>;
   locks: LockManager;
 }
 

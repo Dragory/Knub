@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "knub-command-manager": "^8.1.1",
-    "reflect-metadata": "^0.1.13",
     "ts-essentials": "^6.0.7"
   },
   "devDependencies": {

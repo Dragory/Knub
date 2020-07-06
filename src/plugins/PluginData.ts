@@ -4,12 +4,13 @@ import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { LockManager } from "../locks/LockManager";
 import { CooldownManager } from "../cooldowns/CooldownManager";
-import { PluginPublicInterface, ResolvablePlugin } from "./pluginUtils";
+import { PluginPublicInterface } from "./pluginUtils";
 import { Knub } from "../Knub";
 import { BasePluginType } from "./pluginTypes";
+import { PluginBlueprint } from "./PluginBlueprint";
 
-export type HasPluginFn = <T extends ResolvablePlugin>(plugin: T) => boolean;
-export type GetPluginFn = <T extends ResolvablePlugin>(plugin: T) => PluginPublicInterface<T>;
+export type HasPluginFn = <T extends PluginBlueprint<any>>(plugin: T) => boolean;
+export type GetPluginFn = <T extends PluginBlueprint<any>>(plugin: T) => PluginPublicInterface<T>;
 
 /**
  * Instance-specific data and helpers for plugins
@@ -38,9 +39,6 @@ export interface PluginData<TPluginType extends BasePluginType> {
 
   /**
    * Get the public interface for another plugin
-   * - For plugins based on `PluginClass`, this returns the entire class instance
-   * - For plugins based on PluginBlueprint, this returns the public interface
-   *   for that plugin
    */
   getPlugin: GetPluginFn;
 
