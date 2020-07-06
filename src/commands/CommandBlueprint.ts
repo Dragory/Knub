@@ -13,7 +13,7 @@ export interface CommandBlueprint<
   config?: PluginCommandConfig;
 
   // Required permission name
-  permission?: string;
+  permission: string | null;
 
   // Restrict the source of the command. Defaults to guild messages only.
   source?: CommandSource | CommandSource[];
@@ -141,6 +141,7 @@ export function command(...args) {
     return {
       trigger: args[0],
       run: args[1],
+      permission: null,
     };
   } else if (args.length === 3) {
     // (trigger, signature, run)
@@ -149,6 +150,7 @@ export function command(...args) {
       trigger: args[0],
       signature: args[1],
       run: args[2],
+      permission: null,
     };
   } else if (args.length === 4) {
     // (trigger, signature, options, run)

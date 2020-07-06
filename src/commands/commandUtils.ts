@@ -139,6 +139,12 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
  */
 export function checkCommandPermission(cmd: PluginCommandDefinition, context: CommandContext<any>): boolean {
   const permission = cmd.config.extra?.blueprint.permission;
+
+  // No permission defined, default to "no permission"
+  // If types are checked, this condition should never be true, but it's a safe-guard
+  if (permission === undefined) return false;
+
+  // If permission isn't set to a `null`, check it matches
   if (permission) {
     const config = context.pluginData.config.getForMessage(context.message);
     if (!hasPermission(config, permission)) {
