@@ -9,7 +9,7 @@
   "scripts": {
     "test": "mocha --exit -r ts-node/register src/**/*.test.ts -- --trace-warnings",
     "lint": "eslint src",
-    "build": "shx touch dist && shx rm -r dist && tsc --sourceMap false",
+    "build": "shx touch dist && shx rm -r dist && tsc --sourceMap false && shx cp .npmignore dist/",
     "preversion": "npm run test",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "shx touch dist && shx rm -r dist && tsc --watch",
@@ -50,6 +50,6 @@
     "eris": "^0.13.3"
   },
   "files": [
-    "/dist/**/!(*.test.js)"
+    "/dist"
   ]
 }
