@@ -79,7 +79,7 @@ export function getCommandSignature(
   overrideTrigger?: string,
   overrideSignature?: TSignature<any>
 ) {
-  const signature = overrideSignature || command.signatures[0];
+  const signature = overrideSignature || command.signatures[0] || {};
   const signatureEntries = Object.entries(signature);
   const parameters = signatureEntries.filter(([_, param]) => param.option !== true) as Array<[string, IParameter<any>]>;
   const options = signatureEntries.filter(([_, opt]) => opt.option === true) as Array<[string, TOption<any>]>;
