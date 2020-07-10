@@ -1,3 +1,13 @@
+# 30.0.0-beta.11
+* **BREAKING CHANGE:** Removed `PluginClass`. Use `PluginBlueprint` (via `plugin()` helper) instead.
+* **BREAKING CHANGE:** Removed `logger`.
+  * The logFn option still exists and is used internally, but Knub does not export a generic log function anymore;
+    that is left to the application.
+* **BREAKING CHANGE:** `CommandBlueprint` now always requires `permission` to be set.
+  Set to `null` to make a public command.
+* Fix error in getCommandSignature() when command has no signatures
+* Trim down the published package size slightly by leaving out test files
+
 # 30.0.0-beta.10
 * Removed `exports` from `package.json` until
   [microsoft/TypeScript#33079](https://github.com/microsoft/TypeScript/issues/33079) is fixed
