@@ -198,6 +198,23 @@ export class Knub<
     await Promise.all(unloadPromises);
   }
 
+  protected resolveDependencies(plugin: PluginBlueprint<any>, resolvedDependencies: Set<string> = new Set()) {
+    if (!plugin.dependencies) {
+      return resolvedDependencies;
+    }
+
+    for (const dependency of plugin.dependencies) {
+      if (!resolvedDependencies.has(dependency.name)) {
+        resolvedDependencies.add(dependency.name);
+
+        // Resolve transitive dependencies
+        this.resolveDependencies(dependency, resolvedDependencies);
+      }
+    }
+
+    return resolvedDependencies;
+  }
+
   /**
    * Initializes the specified guild's config and loads its plugins
    */
@@ -230,17 +247,24 @@ export class Knub<
 
     // Load plugins and their dependencies
     const enabledPlugins = await this.options.getEnabledGuildPlugins(guildContext, this.guildPlugins);
-    const dependencies = enabledPlugins
-      .map((pluginName) => (this.guildPlugins.get(pluginName).dependencies || []).map((plugin) => plugin.name))
-      .flat();
-    const pluginsToLoad = Array.from(new Set([...dependencies, ...enabledPlugins]));
+    const dependencies: Set<string> = new Set();
+    for (const pluginName of enabledPlugins) {
+      this.resolveDependencies(this.guildPlugins.get(pluginName), dependencies);
+    }
+
+    // Reverse the order of dependencies so transitive dependencies get loaded first
+    const dependenciesArr = Array.from(dependencies.values()).reverse();
+
+    const pluginsToLoad = Array.from(new Set([...dependenciesArr, ...enabledPlugins]));
 
     for (const pluginName of pluginsToLoad) {
       if (!this.guildPlugins.has(pluginName)) {
         throw new UnknownPluginError(`Unknown plugin: ${pluginName}`);
       }
 
-      const loadedPlugin = await this.loadPlugin(guildContext, this.guildPlugins.get(pluginName));
+      const isDependency = !enabledPlugins.includes(pluginName);
+
+      const loadedPlugin = await this.loadPlugin(guildContext, this.guildPlugins.get(pluginName), isDependency);
       guildContext.loadedPlugins.set(pluginName, loadedPlugin);
       this.emit("guildPluginLoaded", guildContext, pluginName);
     }
@@ -282,7 +306,8 @@ export class Knub<
 
   public async loadPlugin<TPluginType extends BasePluginType>(
     ctx: GuildContext<TGuildConfig> | GlobalContext<TGlobalConfig>,
-    plugin: PluginBlueprint<TPluginType>
+    plugin: PluginBlueprint<TPluginType>,
+    loadedAsDependency: boolean
   ): Promise<LoadedPlugin<TPluginType>> {
     const guild = isGuildContext(ctx) ? this.client.guilds.get(ctx.guildId) : null;
 
@@ -317,6 +342,8 @@ export class Knub<
       cooldowns: new CooldownManager(),
       guildConfig: ctx.config,
 
+      loadedAsDependency,
+
       hasPlugin: (resolvablePlugin) => this.ctxHasPlugin(ctx, resolvablePlugin),
       getPlugin: (resolvablePlugin) => this.getPluginPublicInterface(ctx, resolvablePlugin, pluginData),
 
@@ -335,23 +362,25 @@ export class Knub<
       throw new PluginLoadError(plugin.name, guild, e);
     }
 
-    // Register static event listeners
-    if (plugin.events) {
-      for (const eventListenerBlueprint of plugin.events) {
-        pluginData.events.registerEventListener({
-          ...eventListenerBlueprint,
-          listener: eventListenerBlueprint.listener,
-        });
+    if (!loadedAsDependency) {
+      // Register event listeners
+      if (plugin.events) {
+        for (const eventListenerBlueprint of plugin.events) {
+          pluginData.events.registerEventListener({
+            ...eventListenerBlueprint,
+            listener: eventListenerBlueprint.listener,
+          });
+        }
       }
-    }
 
-    // Register static commands
-    if (plugin.commands) {
-      for (const commandBlueprint of plugin.commands) {
-        pluginData.commands.add({
-          ...commandBlueprint,
-          run: commandBlueprint.run,
-        });
+      // Register commands
+      if (plugin.commands) {
+        for (const commandBlueprint of plugin.commands) {
+          pluginData.commands.add({
+            ...commandBlueprint,
+            run: commandBlueprint.run,
+          });
+        }
       }
     }
 
@@ -378,11 +407,12 @@ export class Knub<
   }
 
   public async reloadPlugin(ctx: AnyContext<TGuildConfig, TGlobalConfig>, pluginName: string): Promise<void> {
+    const loadedAsDependency = ctx.loadedPlugins.get(pluginName).pluginData.loadedAsDependency;
+
     await this.unloadPlugin(ctx, pluginName);
 
     const plugin = isGuildContext(ctx) ? this.guildPlugins.get(pluginName) : this.globalPlugins.get(pluginName);
-
-    await this.loadPlugin(ctx, plugin);
+    await this.loadPlugin(ctx, plugin, loadedAsDependency);
   }
 
   public getAvailablePlugins(): PluginMap {
@@ -396,7 +426,7 @@ export class Knub<
 
   public async loadAllGlobalPlugins() {
     for (const plugin of this.globalPlugins.values()) {
-      await this.loadPlugin(this.globalContext, plugin);
+      await this.loadPlugin(this.globalContext, plugin, false);
     }
   }
 

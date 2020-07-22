@@ -48,6 +48,12 @@ export interface PluginData<TPluginType extends BasePluginType> {
   guildConfig: any;
 
   /**
+   * Whether this plugin was loaded as a dependency, as opposed to being enabled explicitly.
+   * Plugins that are only loaded as a dependency do not have their commands or events registered.
+   */
+  loadedAsDependency: boolean;
+
+  /**
    * Get the active Knub instance
    */
   getKnubInstance: () => Knub;

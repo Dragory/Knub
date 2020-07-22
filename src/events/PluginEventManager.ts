@@ -124,6 +124,14 @@ export class PluginEventManager<TPluginType extends BasePluginType> {
     return false;
   }
 
+  public getListenerCount() {
+    let count = 0;
+    for (const listeners of this.listeners.values()) {
+      count += listeners.size;
+    }
+    return count;
+  }
+
   public clearAllListeners() {
     for (const [event, listeners] of this.listeners.entries()) {
       for (const listener of listeners) {

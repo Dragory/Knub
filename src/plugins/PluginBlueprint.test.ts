@@ -35,6 +35,50 @@ describe("PluginBlueprint", () => {
     });
   });
 
+  describe("Commands and events", () => {
+    it("loads commands and events", (done) => {
+      (async () => {
+        const PluginToLoad = plugin("plugin-to-load", {
+          commands: [command("foo", noop)],
+
+          events: [eventListener("messageCreate", noop)],
+
+          onLoad(pluginData) {
+            setTimeout(() => {
+              // The command above should be loaded
+              assert.strictEqual(pluginData.commands.getAll().length, 1);
+
+              // The event listener above should be loaded
+              // There is also a default messageCreate listener that's always registered
+              assert.strictEqual(pluginData.events.getListenerCount(), 2);
+
+              done();
+            }, 1);
+          },
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+  });
+
   describe("Lifecycle hooks", () => {
     it("runs plugin-supplied onLoad() function", (done) => {
       (async () => {
@@ -49,7 +93,7 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [PluginToLoad],
           options: {
-            getEnabledPlugins() {
+            getEnabledGuildPlugins() {
               return ["plugin-to-load"];
             },
             logFn: noop,
@@ -79,7 +123,7 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [PluginToUnload],
           options: {
-            getEnabledPlugins() {
+            getEnabledGuildPlugins() {
               return ["plugin-to-unload"];
             },
             logFn: noop,
@@ -119,7 +163,7 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [DependencyToLoad, PluginToLoad],
           options: {
-            getEnabledPlugins() {
+            getEnabledGuildPlugins() {
               return ["dependency-to-load", "plugin-to-load"];
             },
             logFn: noop,
@@ -161,7 +205,7 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [DependencyToLoad, PluginToLoad],
           options: {
-            getEnabledPlugins() {
+            getEnabledGuildPlugins() {
               return ["dependency-to-load", "plugin-to-load"];
             },
             logFn: noop,
@@ -200,7 +244,93 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [DependencyToLoad, OtherDependencyToLoad, PluginToLoad],
           options: {
-            getEnabledPlugins() {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("transitive dependencies", (done) => {
+      (async () => {
+        const DependencyTwo = plugin("dependency-two", {});
+        const DependencyOne = plugin("dependency-one", {
+          dependencies: [DependencyTwo],
+        });
+
+        const PluginToLoad = plugin("plugin-to-load", {
+          dependencies: [DependencyOne],
+
+          onLoad(pluginData) {
+            setTimeout(() => {
+              assert.ok(pluginData.hasPlugin(DependencyOne));
+              assert.ok(pluginData.hasPlugin(DependencyTwo));
+              done();
+            }, 50);
+          },
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [DependencyOne, DependencyTwo, PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("plugins loaded as dependencies do not load commands or events", (done) => {
+      (async () => {
+        const Dependency = plugin("dependency", {
+          commands: [command("foo", noop)],
+
+          events: [eventListener("messageCreate", noop)],
+
+          onLoad(pluginData) {
+            setTimeout(() => {
+              // The command above should *not* be loaded
+              assert.strictEqual(pluginData.commands.getAll().length, 0);
+
+              // The event listener above should *not* be loaded
+              // There is also a default messageCreate listener that's always registered
+              assert.strictEqual(pluginData.events.getListenerCount(), 1);
+
+              done();
+            }, 1);
+          },
+        });
+
+        const PluginToLoad = plugin("plugin-to-load", {
+          dependencies: [Dependency],
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [Dependency, PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
               return ["plugin-to-load"];
             },
             logFn: noop,
@@ -254,7 +384,7 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [TestPlugin],
           options: {
-            getEnabledPlugins() {
+            getEnabledGuildPlugins() {
               return ["test-plugin"];
             },
             getConfig() {
@@ -327,7 +457,7 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [TestPlugin],
           options: {
-            getEnabledPlugins() {
+            getEnabledGuildPlugins() {
               return ["test-plugin"];
             },
             getConfig() {
@@ -373,7 +503,7 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [TestPlugin],
           options: {
-            getEnabledPlugins() {
+            getEnabledGuildPlugins() {
               return ["test-plugin"];
             },
             logFn: noop,
@@ -413,7 +543,7 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [PluginToUnload],
           options: {
-            getEnabledPlugins() {
+            getEnabledGuildPlugins() {
               return ["plugin-to-unload"];
             },
             logFn: noop,
