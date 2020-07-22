@@ -49,7 +49,11 @@ type SignatureToArray<T> = T extends any[] ? T : [T];
 
 type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 
-type ParameterOrOptionType<T extends IParameter<any> | TOption<any>> = PromiseType<ReturnType<T["type"]>>;
+type ParameterOrOptionType<T extends IParameter<any> | TOption<any>> = T extends IParameter<any>
+  ? T["rest"] extends true
+    ? Array<PromiseType<ReturnType<T["type"]>>>
+    : PromiseType<ReturnType<T["type"]>>
+  : PromiseType<ReturnType<T["type"]>>;
 
 export type CommandFn<TPluginType extends BasePluginType, _TSignature extends TSignatureOrArray<TPluginType>> = (
   meta: CommandMeta<TPluginType, ArgsFromSignatureOrArray<_TSignature>>

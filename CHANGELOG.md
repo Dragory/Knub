@@ -1,3 +1,6 @@
+# 30.0.0-beta.13
+* Fix command argument type inference for rest parameters not being an array
+
 # 30.0.0-beta.12
 * Fix type inference for public interfaces of plugin blueprints created with the `plugin()` helper
   when using `pluginData.getPlugin()`
