@@ -609,6 +609,9 @@ describe("PluginBlueprint", () => {
       const blueprint = plugin<CustomPluginType>()({
         name: "my-plugin",
         info: "foo",
+
+        // eslint-disable-next-line
+        onLoad(pluginData) {},
       });
 
       expect(blueprint.name).to.equal("my-plugin");
@@ -622,6 +625,9 @@ describe("PluginBlueprint", () => {
     it("<TPluginType>()(name, blueprint)", () => {
       const blueprint = plugin<CustomPluginType>()("my-plugin", {
         info: "foo",
+
+        // eslint-disable-next-line
+        onLoad(pluginData) {},
       });
 
       expect(blueprint.name).to.equal("my-plugin");
@@ -631,5 +637,39 @@ describe("PluginBlueprint", () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const result: AssertEquals<Parameters<typeof blueprint.onLoad>[0], PluginData<CustomPluginType>> = true;
     });
+  });
+
+  describe("Public interfaces", () => {
+    it("Public interface type inference works", () => {
+      interface OtherPluginType extends BasePluginType {
+        state: {
+          foo: 5;
+        };
+      }
+
+      const OtherPlugin = plugin<OtherPluginType>()("other-plugin", {
+        public: {
+          myFn(pluginData) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const result: AssertEquals<typeof pluginData.state.foo, OtherPluginType["state"]["foo"]> = true;
+
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/no-empty-function
+            return (param: "a constant string") => {};
+          },
+        },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const MainPlugin = plugin("main-plugin", {
+        onLoad(pluginData) {
+          const otherPlugin = pluginData.getPlugin(OtherPlugin);
+
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const result: AssertEquals<Parameters<typeof otherPlugin.myFn>[0], "a constant string"> = true;
+        },
+      });
+    });
+
+    // Note: public interface *functionality* is already tested by Dependencies#getPlugin above
   });
 });

@@ -83,14 +83,18 @@ export interface PluginBlueprint<TPluginType extends BasePluginType> {
   onUnload?: (pluginData: PluginData<TPluginType>) => Awaitable<void>;
 }
 
-type PluginBlueprintCreatorIdentity<TPluginType extends BasePluginType> = (
-  blueprint: PluginBlueprint<TPluginType>
-) => PluginBlueprint<TPluginType>;
+type PluginBlueprintCreatorIdentity<TPluginType extends BasePluginType> = <
+  TBlueprint extends PluginBlueprint<TPluginType>
+>(
+  blueprint: TBlueprint
+) => TBlueprint;
 
-type PluginBlueprintCreatorWithName<TPluginType extends BasePluginType> = (
+type PluginBlueprintCreatorWithName<TPluginType extends BasePluginType> = <
+  TPartialBlueprint extends Omit<PluginBlueprint<TPluginType>, "name">
+>(
   name: string,
-  blueprint: Omit<PluginBlueprint<TPluginType>, "name">
-) => PluginBlueprint<TPluginType>;
+  blueprint: TPartialBlueprint
+) => TPartialBlueprint & { name: string };
 
 type PluginBlueprintCreator<TPluginType extends BasePluginType> = PluginBlueprintCreatorIdentity<TPluginType> &
   PluginBlueprintCreatorWithName<TPluginType>;
@@ -100,17 +104,17 @@ type PluginBlueprintCreator<TPluginType extends BasePluginType> = PluginBlueprin
  *
  * To specify `TPluginType` for additional type hints, use: `plugin<TPluginType>()(blueprint)`
  */
-export function plugin(blueprint: PluginBlueprint<BasePluginType>): PluginBlueprint<BasePluginType>;
+export function plugin<TBlueprint extends PluginBlueprint<BasePluginType>>(blueprint: TBlueprint): TBlueprint;
 
 /**
  * Helper function that creates a plugin blueprint.
  *
  * To specify `TPluginType` for additional type hints, use: `plugin<TPluginType>()(name, blueprint)`
  */
-export function plugin(
+export function plugin<TPartialBlueprint extends Omit<PluginBlueprint<BasePluginType>, "name">>(
   name: string,
-  blueprint: Omit<PluginBlueprint<BasePluginType>, "name">
-): PluginBlueprint<BasePluginType>;
+  blueprint: TPartialBlueprint
+): TPartialBlueprint & { name: string };
 
 /**
  * Specify `TPluginType` for type hints and return self

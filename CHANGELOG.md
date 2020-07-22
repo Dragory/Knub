@@ -1,3 +1,7 @@
+# 30.0.0-beta.12
+* Fix type inference for public interfaces of plugin blueprints created with the `plugin()` helper
+  when using `pluginData.getPlugin()`
+
 # 30.0.0-beta.11
 * **BREAKING CHANGE:** Removed `PluginClass`. Use `PluginBlueprint` (via `plugin()` helper) instead.
 * **BREAKING CHANGE:** Removed `logger`.
