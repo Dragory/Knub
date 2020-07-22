@@ -5,7 +5,8 @@
     that is left to the application.
 * **BREAKING CHANGE:** `CommandBlueprint` now always requires `permission` to be set.
   Set to `null` to make a public command.
-* **BREAKING CHANGE:** Plugins loaded only as dependencies no longer register their commands or events
+* **BREAKING CHANGE:** Plugins loaded only as dependencies no longer register their commands or events.
+  These plugins have a new property `loadedAsDependency` set to `true` in `pluginData`.
 * Transitive dependencies are now also loaded
 * Fix error in getCommandSignature() when command has no signatures
 * Trim down the published package size slightly by leaving out test files
