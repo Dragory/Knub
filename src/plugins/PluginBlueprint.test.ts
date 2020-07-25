@@ -222,6 +222,62 @@ describe("PluginBlueprint", () => {
       })();
     });
 
+    it("getPlugin has correct pluginData", (done) => {
+      (async () => {
+        const DependencyToLoad = plugin("dependency-to-load", {
+          defaultOptions: {
+            config: {
+              some_value: "cookies",
+            },
+          },
+
+          public: {
+            ok(pluginData) {
+              assert.ok(pluginData != null);
+              assert.strictEqual(pluginData.config.get().some_value, "cookies");
+              assert.notStrictEqual(pluginData.config.get().some_value, "milk");
+
+              return () => done();
+            },
+          },
+        });
+
+        const PluginToLoad = plugin("plugin-to-load", {
+          defaultOptions: {
+            config: {
+              some_value: "milk",
+            },
+          },
+
+          onLoad(pluginData) {
+            setTimeout(() => {
+              const instance = pluginData.getPlugin(DependencyToLoad);
+              instance.ok();
+            }, 50);
+          },
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [DependencyToLoad, PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["dependency-to-load", "plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
     it("automatic dependency loading", (done) => {
       (async () => {
         const DependencyToLoad = plugin("dependency-to-load", {});

@@ -1,3 +1,6 @@
+# 30.0.0-beta.14
+* Fix plugin public interface functions getting the *calling* Plugin's `PluginData`, not their own
+
 # 30.0.0-beta.13
 * Fix command argument type inference for rest parameters not being an array
 

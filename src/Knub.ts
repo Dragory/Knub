@@ -345,7 +345,7 @@ export class Knub<
       loadedAsDependency,
 
       hasPlugin: (resolvablePlugin) => this.ctxHasPlugin(ctx, resolvablePlugin),
-      getPlugin: (resolvablePlugin) => this.getPluginPublicInterface(ctx, resolvablePlugin, pluginData),
+      getPlugin: (resolvablePlugin) => this.getPluginPublicInterface(ctx, resolvablePlugin),
 
       getKnubInstance: () => this,
 
@@ -459,15 +459,14 @@ export class Knub<
 
   protected getPluginPublicInterface<T extends PluginBlueprint<any>>(
     ctx: AnyContext<TGuildConfig, TGlobalConfig>,
-    plugin: T,
-    pluginData: PluginData<any>
+    plugin: T
   ): PluginPublicInterface<T> {
     if (!ctx.loadedPlugins.has(plugin.name)) {
       throw new PluginNotLoadedError(`Plugin ${plugin.name} is not loaded`);
     }
 
     const loadedPlugin = ctx.loadedPlugins.get(plugin.name);
-    const publicInterface = this.resolvePluginBlueprintPublicInterface(loadedPlugin.blueprint, pluginData);
+    const publicInterface = this.resolvePluginBlueprintPublicInterface(loadedPlugin.blueprint, loadedPlugin.pluginData);
 
     return publicInterface as PluginPublicInterface<T>;
   }
