@@ -1,5 +1,5 @@
 import { BaseConfig, PermissionLevels } from "../config/configTypes";
-import { Member } from "eris";
+import { Guild, Member } from "eris";
 import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./PluginBlueprint";
 import path from "path";
 import _fs from "fs";
@@ -7,8 +7,13 @@ import { BaseContext, GuildContext, PluginMap } from "../types";
 
 const fs = _fs.promises;
 
-export function getMemberLevel(levels: PermissionLevels, member: Member): number {
-  if (member.guild.ownerID === member.id) {
+interface PartialMember {
+  id: Member["id"];
+  roles: Member["roles"];
+}
+
+export function getMemberLevel(levels: PermissionLevels, member: PartialMember, guild: Guild): number {
+  if (guild.ownerID === member.id) {
     return 99999;
   }
 

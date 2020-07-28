@@ -228,7 +228,7 @@ export function hasPermission(config: any, permission: string) {
 
 export function getMemberLevel(pluginData: PluginData<any>, member: Member) {
   const levels = pluginData.guildConfig.levels || {};
-  return _getMemberLevel(levels, member);
+  return _getMemberLevel(levels, member, pluginData.guild);
 }
 
 export { userMentionRegex, channelMentionRegex, roleMentionRegex, snowflakeRegex } from "./utils";

@@ -94,7 +94,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const member = matchParams.member || (message && message.member);
 
     // Passed level -> passed member's level
-    const level = matchParams?.level ?? (member && getMemberLevel(this.levels, member)) ?? null;
+    const level = matchParams?.level ?? (member && getMemberLevel(this.levels, member, this.pluginData.guild)) ?? null;
 
     // Passed roles -> passed member's roles
     const memberRoles = matchParams.memberRoles || (member && member.roles);
@@ -116,7 +116,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   }
 
   public getForMessage(msg: Message): TPluginType["config"] {
-    const level = msg.member ? getMemberLevel(this.levels, msg.member) : null;
+    const level = msg.member ? getMemberLevel(this.levels, msg.member, this.pluginData.guild) : null;
     return this.getMatchingConfig({
       level,
       userId: msg.author.id,
@@ -140,7 +140,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   }
 
   public getForMember(member: Member): TPluginType["config"] {
-    const level = getMemberLevel(this.levels, member);
+    const level = getMemberLevel(this.levels, member, this.pluginData.guild);
     return this.getMatchingConfig({
       level,
       userId: member.user.id,
