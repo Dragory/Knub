@@ -1,3 +1,6 @@
+# 30.0.0-beta.15
+* Fix `PluginConfigManager.getMatchingConfig()` breaking if Member doesn't have guild property
+
 # 30.0.0-beta.14
 * Fix plugin public interface functions getting the *calling* Plugin's `PluginData`, not their own
 
