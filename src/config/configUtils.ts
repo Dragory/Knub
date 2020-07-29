@@ -97,12 +97,18 @@ export function getMatchingPluginConfig<
   return result as TPluginType["config"];
 }
 
+/**
+ * Each criteria "block" ({ level: "...", channel: "..." }) matches only if *all* criteria in it match.
+ */
 export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
   pluginData: PluginData<TPluginType>,
   criteria: PluginOverrideCriteria<TPluginType["customOverrideCriteria"]>,
   matchParams: MatchParams,
   customOverrideMatcher?: CustomOverrideMatcher<TPluginType>
 ): boolean {
+  // Note: Despite the naming here, this does *not* imply any one criterion matching means the entire criteria block
+  // matches. When matching of one criterion fails, the command returns immediately. This variable is here purely so
+  // a block with no criteria evaluates to false.
   let matchedOne = false;
 
   for (const [key, value] of Object.entries(criteria)) {
