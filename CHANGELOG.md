@@ -1,3 +1,19 @@
+# 30.0.0-beta.17
+* **BREAKING CHANGE:** Removed exclusion modifiers from override values in favor of logical operator criteria.
+  * For example, instead of this:
+    ```yml
+    overrides:
+      - channel: "!1234"
+        config: ...
+    ```
+    ...use:
+    ```
+    overrides:
+      - not:
+          channel: "!1234"
+        config: ...
+    ```
+
 # 30.0.0-beta.16
 * Fix crash when `typingStart` channel is `undefined`
 
