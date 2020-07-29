@@ -2,12 +2,6 @@ import { PluginOptions, PluginOverrideCriteria } from "./configTypes";
 import { PluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
 
-const condRegex = /^(\D+)(\d+)$/;
-const splitCond = (v, defaultCond): [string, string] => {
-  const match = condRegex.exec(v);
-  return match ? [match[1], match[2]] : [defaultCond, v];
-};
-
 const levelRangeRegex = /^([<>=!]+)(\d+)$/;
 const splitLevelRange = (v, defaultMod): [string, number] => {
   const match = levelRangeRegex.exec(v);
@@ -143,7 +137,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
     }
 
     // Match on channel
-    // For a successful match, requires ANY of the specified channels to match, WITHOUT exclusions
+    // For a successful match, requires ANY of the specified channels to match
     if (key === "channel") {
       const matchChannel = matchParams.channelId;
       if (matchChannel) {
@@ -151,13 +145,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
         let match = false;
 
         for (const channelId of channels) {
-          const [mode, theChannelId] = splitCond(channelId, "=");
-
-          if (mode === "=") match = match || matchChannel === theChannelId;
-          else if (mode === "!" && matchChannel === theChannelId) {
-            match = false;
-            break;
-          }
+          match = match || matchChannel === channelId;
         }
 
         if (!match) return false;
@@ -170,7 +158,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
     }
 
     // Match on category
-    // For a successful match, requires ANY of the specified categories to match, WITHOUT exclusions
+    // For a successful match, requires ANY of the specified categories to match
     if (key === "category") {
       const matchCategory = matchParams.categoryId;
       if (matchCategory) {
@@ -178,13 +166,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
         let match = false;
 
         for (const categoryId of categories) {
-          const [mode, theCategoryId] = splitCond(categoryId, "=");
-
-          if (mode === "=") match = match || matchCategory === theCategoryId;
-          else if (mode === "!" && matchCategory === theCategoryId) {
-            match = false;
-            break;
-          }
+          match = match || matchCategory === categoryId;
         }
 
         if (!match) return false;
@@ -197,7 +179,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
     }
 
     // Match on role
-    // For a successful match, requires ALL specified roles and exclusions to match
+    // For a successful match, requires ALL specified roles to match
     if (key === "role") {
       const matchRoles = matchParams.memberRoles;
       if (matchRoles) {
@@ -205,10 +187,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
         let match = roles.length > 0;
 
         for (const role of roles) {
-          const [mode, theRole] = splitCond(role, "=");
-
-          if (mode === "=") match = match && matchRoles.includes(theRole);
-          else if (mode === "!") match = match && !matchRoles.includes(theRole);
+          match = match && matchRoles.includes(role);
         }
 
         if (!match) return false;
@@ -221,7 +200,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
     }
 
     // Match on user ID
-    // For a successful match, requires ANY of the specified user IDs to match, WITHOUT exclusions
+    // For a successful match, requires ANY of the specified user IDs to match
     if (key === "user") {
       const matchUser = matchParams.userId;
       if (matchUser) {
@@ -229,13 +208,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
         let match = false;
 
         for (const user of users) {
-          const [mode, userId] = splitCond(user, "=");
-
-          if (mode === "=") match = match || matchUser === userId;
-          else if (mode === "!" && matchUser === userId) {
-            match = false;
-            break;
-          }
+          match = match || matchUser === user;
         }
 
         if (!match) return false;

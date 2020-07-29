@@ -100,7 +100,7 @@ describe("configUtils", () => {
           },
         },
         {
-          role: ["3100", "!3200"],
+          role: ["3100", "3200"],
           config: {
             value: 20,
           },
@@ -177,8 +177,8 @@ describe("configUtils", () => {
       const matchedConfig2 = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {
         memberRoles: ["3100", "3200"],
       });
-      expect(matchedConfig1.value).to.equal(20); // has 3100, and no 3200 -> match
-      expect(matchedConfig2.value).to.equal(5); // has 3100, and excluded 3200 -> no match
+      expect(matchedConfig1.value).to.equal(5); // has 3100 but no 3200 -> no match
+      expect(matchedConfig2.value).to.equal(20); // has 3100 and 3200 -> match
     });
 
     it("custom resolver", () => {
