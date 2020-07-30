@@ -1,3 +1,6 @@
+# 30.0.0-beta.18
+* Disable implicit guild restriction on events for global plugins
+
 # 30.0.0-beta.17
 * **BREAKING CHANGE:** Removed exclusion modifiers from override values in favor of logical operator criteria.
   * For example, instead of this:
