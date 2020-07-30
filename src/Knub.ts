@@ -12,6 +12,7 @@ import { PluginLoadError } from "./plugins/PluginLoadError";
 import {
   defaultGetConfig,
   defaultGetEnabledGuildPlugins,
+  isGlobalContext,
   isGuildContext,
   PluginPublicInterface,
 } from "./plugins/pluginUtils";
@@ -334,7 +335,7 @@ export class Knub<
       client: this.client,
       guild,
       config: configManager,
-      events: new PluginEventManager(),
+      events: new PluginEventManager({ implicitGuildRestriction: !isGlobalContext(ctx) }),
       commands: new PluginCommandManager(this.client, {
         prefix: ctx.config.prefix,
       }),
