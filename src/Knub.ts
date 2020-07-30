@@ -265,7 +265,15 @@ export class Knub<
 
       const isDependency = !enabledPlugins.includes(pluginName);
 
-      const loadedPlugin = await this.loadPlugin(guildContext, this.guildPlugins.get(pluginName), isDependency);
+      let loadedPlugin;
+      try {
+        loadedPlugin = await this.loadPlugin(guildContext, this.guildPlugins.get(pluginName), isDependency);
+      } catch (e) {
+        // If plugin loading fails, unload the entire guild and re-throw the error
+        await this.unloadGuild(guildId);
+        throw e;
+      }
+
       guildContext.loadedPlugins.set(pluginName, loadedPlugin);
       this.emit("guildPluginLoaded", guildContext, pluginName);
     }

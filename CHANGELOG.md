@@ -1,3 +1,6 @@
+# 30.0.0-beta.19
+* If plugin loading fails, unload the entire guild and re-throw the error
+
 # 30.0.0-beta.18
 * Disable implicit guild restriction on events for global plugins
 
