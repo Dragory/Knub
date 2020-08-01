@@ -1,3 +1,8 @@
+# 30.0.0-beta.20
+* Fix the "ready" event listener adding multiple instances of guildAvailable listeners, causing
+  some servers to load multiple times (more pronounced with an async canLoadGuild() function).
+* Add some additional checks to make sure servers don't load twice
+
 # 30.0.0-beta.19
 * If plugin loading fails, unload the entire guild and re-throw the error
 

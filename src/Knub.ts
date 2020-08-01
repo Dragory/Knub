@@ -59,6 +59,7 @@ export class Knub<
   protected globalPlugins: PluginMap = new Map();
 
   protected loadedGuilds: Map<string, GuildContext<TGuildConfig>> = new Map();
+  protected canLoadGuildInProgress: Set<string> = new Set();
   protected globalContext: GlobalContext<TGlobalConfig>;
 
   protected options: KnubOptions<TGuildConfig, TGlobalConfig>;
@@ -149,7 +150,7 @@ export class Knub<
       this.log("info", "Still connecting...");
     }, 30 * 1000);
 
-    this.client.on("ready", async () => {
+    this.client.once("ready", async () => {
       clearInterval(loadErrorInterval);
 
       this.log("info", "Bot connected!");
@@ -230,9 +231,18 @@ export class Knub<
       return;
     }
 
-    if (!(await this.options.canLoadGuild(guildId))) {
+    if (this.canLoadGuildInProgress.has(guildId)) {
       return;
     }
+
+    this.canLoadGuildInProgress.add(guildId);
+
+    if (!(await this.options.canLoadGuild(guildId))) {
+      this.canLoadGuildInProgress.delete(guildId);
+      return;
+    }
+
+    this.canLoadGuildInProgress.delete(guildId);
 
     const guildContext: GuildContext<TGuildConfig> = {
       guildId,
