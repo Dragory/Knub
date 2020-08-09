@@ -1,3 +1,6 @@
+# 30.0.0-beta.21
+* Update `knub-command-manager` to `v8.1.2`, fixing error messages on invalid option values
+
 # 30.0.0-beta.20
 * Fix the "ready" event listener adding multiple instances of guildAvailable listeners, causing
   some servers to load multiple times (more pronounced with an async canLoadGuild() function).

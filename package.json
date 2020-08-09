@@ -27,7 +27,7 @@
     ]
   },
   "dependencies": {
-    "knub-command-manager": "^8.1.1",
+    "knub-command-manager": "^8.1.2",
     "ts-essentials": "^6.0.7"
   },
   "devDependencies": {
