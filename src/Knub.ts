@@ -3,31 +3,32 @@ import { EventEmitter } from "events";
 import { BaseConfig } from "./config/configTypes";
 import { get } from "./utils";
 import { LockManager } from "./locks/LockManager";
-import { PluginData } from "./plugins/PluginData";
+import { BasePluginData, GuildPluginData, GlobalPluginData, AnyPluginData } from "./plugins/PluginData";
 import { PluginConfigManager } from "./config/PluginConfigManager";
 import { PluginEventManager } from "./events/PluginEventManager";
 import { PluginCommandManager } from "./commands/PluginCommandManager";
 import { CooldownManager } from "./cooldowns/CooldownManager";
 import { PluginLoadError } from "./plugins/PluginLoadError";
-import {
-  defaultGetConfig,
-  defaultGetEnabledGuildPlugins,
-  isGlobalContext,
-  isGuildContext,
-  PluginPublicInterface,
-} from "./plugins/pluginUtils";
+import { defaultGetConfig, defaultGetEnabledGuildPlugins, PluginPublicInterface } from "./plugins/pluginUtils";
 import {
   AnyContext,
   GlobalContext,
+  GlobalPluginMap,
   GuildContext,
+  GuildPluginMap,
   KnubArgs,
   KnubOptions,
-  LoadedPlugin,
+  LoadedGlobalPlugin,
+  LoadedGuildPlugin,
   LogFn,
-  PluginMap,
 } from "./types";
 import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
-import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./plugins/PluginBlueprint";
+import {
+  AnyPluginBlueprint,
+  GlobalPluginBlueprint,
+  GuildPluginBlueprint,
+  ResolvedPluginBlueprintPublicInterface,
+} from "./plugins/PluginBlueprint";
 import { UnknownPluginError } from "./plugins/UnknownPluginError";
 import { BasePluginType } from "./plugins/pluginTypes";
 import { ConfigValidationError } from "./config/ConfigValidationError";
@@ -55,8 +56,8 @@ export class Knub<
 > extends EventEmitter {
   protected client: Client;
 
-  protected guildPlugins: PluginMap = new Map();
-  protected globalPlugins: PluginMap = new Map();
+  protected guildPlugins: GuildPluginMap = new Map();
+  protected globalPlugins: GlobalPluginMap = new Map();
 
   protected loadedGuilds: Map<string, GuildContext<TGuildConfig>> = new Map();
   protected canLoadGuildInProgress: Set<string> = new Set();
@@ -83,7 +84,7 @@ export class Knub<
     };
 
     const uniquePluginNames = new Set();
-    const validatePlugin = (plugin: PluginBlueprint<any>) => {
+    const validatePlugin = (plugin: AnyPluginBlueprint) => {
       if (plugin.name == null) {
         throw new Error(`No plugin name specified for plugin`);
       }
@@ -200,7 +201,7 @@ export class Knub<
     await Promise.all(unloadPromises);
   }
 
-  protected resolveDependencies(plugin: PluginBlueprint<any>, resolvedDependencies: Set<string> = new Set()) {
+  protected resolveDependencies(plugin: AnyPluginBlueprint, resolvedDependencies: Set<string> = new Set()) {
     if (!plugin.dependencies) {
       return resolvedDependencies;
     }
@@ -277,7 +278,7 @@ export class Knub<
 
       let loadedPlugin;
       try {
-        loadedPlugin = await this.loadPlugin(guildContext, this.guildPlugins.get(pluginName), isDependency);
+        loadedPlugin = await this.loadGuildPlugin(guildContext, this.guildPlugins.get(pluginName), isDependency);
       } catch (e) {
         // If plugin loading fails, unload the entire guild and re-throw the error
         await this.unloadGuild(guildId);
@@ -301,7 +302,7 @@ export class Knub<
     }
 
     for (const pluginName of guildContext.loadedPlugins.keys()) {
-      await this.unloadPlugin(guildContext, pluginName);
+      await this.unloadGuildPlugin(guildContext, pluginName);
       this.emit("guildPluginUnloaded", guildContext, pluginName);
     }
 
@@ -323,13 +324,19 @@ export class Knub<
     return Array.from(this.loadedGuilds.values());
   }
 
-  public async loadPlugin<TPluginType extends BasePluginType>(
-    ctx: GuildContext<TGuildConfig> | GlobalContext<TGlobalConfig>,
-    plugin: PluginBlueprint<TPluginType>,
-    loadedAsDependency: boolean
-  ): Promise<LoadedPlugin<TPluginType>> {
-    const guild = isGuildContext(ctx) ? this.client.guilds.get(ctx.guildId) : null;
+  public getAvailablePlugins(): GuildPluginMap {
+    return this.guildPlugins;
+  }
 
+  public getGlobalPlugins(): GlobalPluginMap {
+    return this.globalPlugins;
+  }
+
+  protected async getBasePluginData(
+    ctx: AnyContext<any, any>,
+    plugin: AnyPluginBlueprint,
+    loadedAsDependency: boolean
+  ): Promise<BasePluginData<any>> {
     const configManager = new PluginConfigManager(
       plugin.defaultOptions ?? { config: {} },
       get(ctx.config, `plugins.${plugin.name}`) || {},
@@ -343,23 +350,18 @@ export class Knub<
       await configManager.init();
     } catch (e) {
       if (e instanceof ConfigValidationError) {
-        throw new PluginLoadError(plugin.name, guild, e);
+        throw new PluginLoadError(plugin.name, ctx, e);
       }
 
       throw e;
     }
 
-    const pluginData: PluginData<any> = {
+    return {
       client: this.client,
-      guild,
       config: configManager,
-      events: new PluginEventManager({ implicitGuildRestriction: !isGlobalContext(ctx) }),
-      commands: new PluginCommandManager(this.client, {
-        prefix: ctx.config.prefix,
-      }),
       locks: ctx.locks,
       cooldowns: new CooldownManager(),
-      guildConfig: ctx.config,
+      fullConfig: ctx.config,
 
       loadedAsDependency,
 
@@ -370,22 +372,38 @@ export class Knub<
 
       state: {},
     };
+  }
 
-    pluginData.events.setPluginData(pluginData);
-    pluginData.commands.setPluginData(pluginData);
-    pluginData.config.setPluginData(pluginData);
+  public async loadGuildPlugin<TPluginType extends BasePluginType>(
+    ctx: GuildContext<TGuildConfig>,
+    plugin: GuildPluginBlueprint<TPluginType>,
+    loadedAsDependency: boolean
+  ): Promise<LoadedGuildPlugin<TPluginType>> {
+    const pluginData = (await this.getBasePluginData(ctx, plugin, loadedAsDependency)) as Partial<GuildPluginData<any>>;
+    pluginData.context = "guild";
+    pluginData.guild = this.client.guilds.get(ctx.guildId);
+
+    pluginData.events = new PluginEventManager<GuildPluginData<TPluginType>>();
+    pluginData.commands = new PluginCommandManager<GuildPluginData<TPluginType>>(this.client, {
+      prefix: ctx.config.prefix,
+    });
+
+    const fullPluginData = pluginData as GuildPluginData<any>;
+    fullPluginData.events.setPluginData(fullPluginData);
+    fullPluginData.commands.setPluginData(fullPluginData);
+    fullPluginData.config.setPluginData(fullPluginData);
 
     try {
-      await plugin.onLoad?.(pluginData);
+      await plugin.onLoad?.(fullPluginData);
     } catch (e) {
-      throw new PluginLoadError(plugin.name, guild, e);
+      throw new PluginLoadError(plugin.name, ctx, e);
     }
 
     if (!loadedAsDependency) {
       // Register event listeners
       if (plugin.events) {
         for (const eventListenerBlueprint of plugin.events) {
-          pluginData.events.registerEventListener({
+          fullPluginData.events.registerEventListener({
             ...eventListenerBlueprint,
             listener: eventListenerBlueprint.listener,
           });
@@ -395,26 +413,26 @@ export class Knub<
       // Register commands
       if (plugin.commands) {
         for (const commandBlueprint of plugin.commands) {
-          pluginData.commands.add({
+          fullPluginData.commands.add({
             ...commandBlueprint,
             run: commandBlueprint.run,
           });
         }
       }
-    }
 
-    // Initialize messageCreate event listener for commands
-    pluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
-      return _pluginData.commands.runFromMessage(message);
-    });
+      // Initialize messageCreate event listener for commands
+      fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
+        return _pluginData.commands.runFromMessage(message);
+      });
+    }
 
     return {
       blueprint: plugin,
-      pluginData,
+      pluginData: fullPluginData,
     };
   }
 
-  public async unloadPlugin(ctx: AnyContext<TGuildConfig, TGlobalConfig>, pluginName: string): Promise<void> {
+  public async unloadGuildPlugin(ctx: GuildContext<any>, pluginName: string): Promise<void> {
     const loadedPlugin = ctx.loadedPlugins.get(pluginName);
     if (!loadedPlugin) return;
 
@@ -425,17 +443,83 @@ export class Knub<
     ctx.loadedPlugins.delete(pluginName);
   }
 
-  public async reloadPlugin(ctx: AnyContext<TGuildConfig, TGlobalConfig>, pluginName: string): Promise<void> {
+  public async reloadGuildPlugin(ctx: GuildContext<any>, pluginName: string): Promise<void> {
     const loadedAsDependency = ctx.loadedPlugins.get(pluginName).pluginData.loadedAsDependency;
 
-    await this.unloadPlugin(ctx, pluginName);
+    await this.unloadGuildPlugin(ctx, pluginName);
 
-    const plugin = isGuildContext(ctx) ? this.guildPlugins.get(pluginName) : this.globalPlugins.get(pluginName);
-    await this.loadPlugin(ctx, plugin, loadedAsDependency);
+    const plugin = this.guildPlugins.get(pluginName);
+    await this.loadGuildPlugin(ctx, plugin, loadedAsDependency);
   }
 
-  public getAvailablePlugins(): PluginMap {
-    return this.guildPlugins;
+  public async loadGlobalPlugin<TPluginType extends BasePluginType>(
+    ctx: GlobalContext<TGlobalConfig>,
+    plugin: GlobalPluginBlueprint<TPluginType>,
+    loadedAsDependency: boolean
+  ): Promise<LoadedGlobalPlugin<TPluginType>> {
+    const pluginData = (await this.getBasePluginData(ctx, plugin, loadedAsDependency)) as Partial<
+      GlobalPluginData<any>
+    >;
+    pluginData.context = "global";
+
+    pluginData.events = new PluginEventManager<GlobalPluginData<TPluginType>>();
+    pluginData.commands = new PluginCommandManager<GlobalPluginData<TPluginType>>(this.client, {
+      prefix: ctx.config.prefix,
+    });
+
+    const fullPluginData = pluginData as GlobalPluginData<any>;
+    fullPluginData.events.setPluginData(fullPluginData);
+    fullPluginData.commands.setPluginData(fullPluginData);
+    fullPluginData.config.setPluginData(fullPluginData);
+
+    try {
+      await plugin.onLoad?.(fullPluginData);
+    } catch (e) {
+      throw new PluginLoadError(plugin.name, ctx, e);
+    }
+
+    if (!loadedAsDependency) {
+      // Register event listeners
+      if (plugin.events) {
+        for (const eventListenerBlueprint of plugin.events) {
+          fullPluginData.events.registerEventListener({
+            ...eventListenerBlueprint,
+            listener: eventListenerBlueprint.listener,
+          });
+        }
+      }
+
+      // Register commands
+      if (plugin.commands) {
+        for (const commandBlueprint of plugin.commands) {
+          fullPluginData.commands.add({
+            ...commandBlueprint,
+            run: commandBlueprint.run,
+          });
+        }
+      }
+
+      // Initialize messageCreate event listener for commands
+      fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
+        return _pluginData.commands.runFromMessage(message);
+      });
+    }
+
+    return {
+      blueprint: plugin,
+      pluginData: fullPluginData,
+    };
+  }
+
+  public async unloadGlobalPlugin(ctx: GlobalContext<any>, pluginName: string): Promise<void> {
+    const loadedPlugin = ctx.loadedPlugins.get(pluginName);
+    if (!loadedPlugin) return;
+
+    loadedPlugin.pluginData.events.clearAllListeners();
+
+    await loadedPlugin.blueprint.onUnload?.(loadedPlugin.pluginData);
+
+    ctx.loadedPlugins.delete(pluginName);
   }
 
   public async reloadAllGlobalPlugins() {
@@ -445,18 +529,14 @@ export class Knub<
 
   public async loadAllGlobalPlugins() {
     for (const plugin of this.globalPlugins.values()) {
-      await this.loadPlugin(this.globalContext, plugin, false);
+      await this.loadGlobalPlugin(this.globalContext, plugin, false);
     }
   }
 
   public async unloadAllGlobalPlugins() {
     for (const pluginName of this.globalPlugins.keys()) {
-      await this.unloadPlugin(this.globalContext, pluginName);
+      await this.unloadGlobalPlugin(this.globalContext, pluginName);
     }
-  }
-
-  public getGlobalPlugins(): PluginMap {
-    return this.globalPlugins;
   }
 
   public async reloadGlobalConfig() {
@@ -472,11 +552,11 @@ export class Knub<
     return this.globalContext.config;
   }
 
-  protected ctxHasPlugin(ctx: AnyContext<TGuildConfig, TGlobalConfig>, plugin: PluginBlueprint<any>) {
+  protected ctxHasPlugin(ctx: AnyContext<TGuildConfig, TGlobalConfig>, plugin: AnyPluginBlueprint) {
     return ctx.loadedPlugins.has(plugin.name);
   }
 
-  protected getPluginPublicInterface<T extends PluginBlueprint<any>>(
+  protected getPluginPublicInterface<T extends AnyPluginBlueprint>(
     ctx: AnyContext<TGuildConfig, TGlobalConfig>,
     plugin: T
   ): PluginPublicInterface<T> {
@@ -490,9 +570,9 @@ export class Knub<
     return publicInterface as PluginPublicInterface<T>;
   }
 
-  protected resolvePluginBlueprintPublicInterface<T extends PluginBlueprint<any>>(
+  protected resolvePluginBlueprintPublicInterface<T extends AnyPluginBlueprint>(
     blueprint: T,
-    pluginData: PluginData<any>
+    pluginData: AnyPluginData<any>
   ): ResolvedPluginBlueprintPublicInterface<T["public"]> {
     if (!blueprint.public) {
       return null;

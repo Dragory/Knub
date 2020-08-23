@@ -1,21 +1,20 @@
-import { PluginData } from "../plugins/PluginData";
+import { AnyPluginData } from "../plugins/PluginData";
 import { EventFilter, ignoreBots, ignoreSelf, onlyGuild, withFilters } from "./eventFilters";
 import { Awaitable } from "../utils";
 import { Lock } from "../locks/LockManager";
 import { EventArguments, fromErisArgs, UnknownEventArguments } from "./eventArguments";
 import { EventListenerBlueprint } from "./EventListenerBlueprint";
-import { BasePluginType } from "../plugins/pluginTypes";
 
-export interface EventMeta<TPluginType extends BasePluginType, TArguments> {
+export interface EventMeta<TPluginData extends AnyPluginData<any>, TArguments> {
   args: TArguments;
-  pluginData: PluginData<TPluginType>;
+  pluginData: TPluginData;
 
   // Added by locks() event filter
   lock?: Lock;
 }
 
-export type Listener<TPluginType extends BasePluginType, TEventName extends string> = (
-  meta: EventMeta<TPluginType, EventArguments[TEventName]>
+export type Listener<TPluginData extends AnyPluginData<any>, TEventName extends string> = (
+  meta: EventMeta<TPluginData, EventArguments[TEventName]>
 ) => Awaitable<void>;
 
 export type WrappedListener = (args: any[]) => Awaitable<void>;
@@ -35,9 +34,9 @@ export interface OnOpts {
  * A wrapper for the Eris event emitter that passes plugin data to the listener
  * functions and, by default, restricts events to the plugin's guilds.
  */
-export class PluginEventManager<TPluginType extends BasePluginType> {
+export class PluginEventManager<TPluginData extends AnyPluginData<any>> {
   private listeners: Map<string, Set<WrappedListener>>;
-  private pluginData: PluginData<TPluginType>;
+  private pluginData: TPluginData;
   private readonly implicitGuildRestriction: boolean;
 
   constructor(opts?: PluginEventManagerOpts) {
@@ -45,7 +44,7 @@ export class PluginEventManager<TPluginType extends BasePluginType> {
     this.implicitGuildRestriction = opts?.implicitGuildRestriction !== false;
   }
 
-  public setPluginData(pluginData: PluginData<TPluginType>) {
+  public setPluginData(pluginData: TPluginData) {
     if (this.pluginData) {
       throw new Error("Plugin data already set");
     }
@@ -53,7 +52,7 @@ export class PluginEventManager<TPluginType extends BasePluginType> {
     this.pluginData = pluginData;
   }
 
-  public registerEventListener(blueprint: EventListenerBlueprint<TPluginType>): WrappedListener {
+  public registerEventListener(blueprint: EventListenerBlueprint<TPluginData>): WrappedListener {
     if (!this.listeners.has(blueprint.event)) {
       this.listeners.set(blueprint.event, new Set());
     }
@@ -93,7 +92,7 @@ export class PluginEventManager<TPluginType extends BasePluginType> {
 
   public on<TEventName extends string>(
     event: TEventName,
-    listener: Listener<TPluginType, TEventName>,
+    listener: Listener<TPluginData, TEventName>,
     opts?: OnOpts
   ): WrappedListener {
     return this.registerEventListener({

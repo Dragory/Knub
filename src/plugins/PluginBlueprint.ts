@@ -1,6 +1,6 @@
 import { ConfigPreprocessorFn, ConfigValidatorFn, PluginOptions } from "../config/configTypes";
 import { Awaitable } from "../utils";
-import { PluginData } from "./PluginData";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "./PluginData";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { CustomOverrideMatcher } from "../config/configUtils";
@@ -12,8 +12,8 @@ import { BasePluginType } from "./pluginTypes";
  * This allows other plugins to be unaware of the pluginData object for the
  * plugin with the public interface.
  */
-export interface PluginBlueprintPublicInterface<TPluginType extends BasePluginType> {
-  [key: string]: (pluginData: PluginData<TPluginType>) => any;
+export interface PluginBlueprintPublicInterface<TPluginData extends AnyPluginData<any>> {
+  [key: string]: (pluginData: TPluginData) => any;
 }
 
 // The actual interface that other plugins receive
@@ -21,7 +21,7 @@ export type ResolvedPluginBlueprintPublicInterface<T extends PluginBlueprintPubl
   [P in keyof T]: ReturnType<T[P]>;
 };
 
-export interface PluginBlueprint<TPluginType extends BasePluginType> {
+interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
   /**
    * **[Required]** Internal name for the plugin
    */
@@ -34,29 +34,24 @@ export interface PluginBlueprint<TPluginType extends BasePluginType> {
   info?: any;
 
   /**
-   * Names of other plugins that are required for this plugin to function. They will be loaded before this plugin.
-   */
-  dependencies?: Array<PluginBlueprint<any>>;
-
-  /**
    * The plugin's default options, including overrides
    */
-  defaultOptions?: PluginOptions<TPluginType>;
+  defaultOptions?: PluginOptions<TPluginData["_pluginType"]>;
 
   /**
    * Commands that are automatically registered on plugin load
    */
-  commands?: Array<CommandBlueprint<TPluginType, any>>;
+  commands?: Array<CommandBlueprint<TPluginData, any>>;
 
   /**
    * Event listeners that are automatically registered on plugin load
    */
-  events?: Array<EventListenerBlueprint<TPluginType>>;
+  events?: Array<EventListenerBlueprint<TPluginData>>;
 
   /**
    * If this plugin includes any custom overrides, this function evaluates them
    */
-  customOverrideMatcher?: CustomOverrideMatcher<TPluginType>;
+  customOverrideMatcher?: CustomOverrideMatcher<TPluginData>;
 
   /**
    * Preprocesses the plugin's config after it's been merged with the default options
@@ -64,7 +59,7 @@ export interface PluginBlueprint<TPluginType extends BasePluginType> {
    *
    * (Merge with default options) -> configPreprocessor -> configValidator
    */
-  configPreprocessor?: ConfigPreprocessorFn<TPluginType>;
+  configPreprocessor?: ConfigPreprocessorFn<TPluginData["_pluginType"]>;
 
   /**
    * Validates the plugin's config after it's been merged with the default options
@@ -72,56 +67,59 @@ export interface PluginBlueprint<TPluginType extends BasePluginType> {
    *
    * (Merge with default options) -> configPreprocessor -> configValidator
    */
-  configValidator?: ConfigValidatorFn<TPluginType>;
+  configValidator?: ConfigValidatorFn<TPluginData["_pluginType"]>;
 
   /**
    * Public interface for this plugin
    */
-  public?: PluginBlueprintPublicInterface<TPluginType>;
+  public?: PluginBlueprintPublicInterface<TPluginData>;
 
-  onLoad?: (pluginData: PluginData<TPluginType>) => Awaitable<void>;
-  onUnload?: (pluginData: PluginData<TPluginType>) => Awaitable<void>;
+  onLoad?: (pluginData: TPluginData) => Awaitable<void>;
+  onUnload?: (pluginData: TPluginData) => Awaitable<void>;
 }
 
-type PluginBlueprintCreatorIdentity<TPluginType extends BasePluginType> = <
-  TBlueprint extends PluginBlueprint<TPluginType>
->(
+/**
+ * Blueprint for a plugin that can only be loaded in a guild context
+ */
+export interface GuildPluginBlueprint<TPluginType extends BasePluginType>
+  extends BasePluginBlueprint<GuildPluginData<TPluginType>> {
+  /**
+   * Names of other guild plugins that are required for this plugin to function. They will be loaded before this plugin.
+   */
+  dependencies?: Array<GuildPluginBlueprint<any>>;
+}
+
+/**
+ * Blueprint for a plugin that can only be loaded in a global context
+ */
+export interface GlobalPluginBlueprint<TPluginType extends BasePluginType>
+  extends BasePluginBlueprint<GlobalPluginData<TPluginType>> {
+  /**
+   * Names of other global plugins that are required for this plugin to function.
+   * They will be loaded before this plugin.
+   */
+  dependencies?: Array<GlobalPluginBlueprint<any>>;
+}
+
+export type AnyPluginBlueprint = GuildPluginBlueprint<any> | GlobalPluginBlueprint<any>;
+
+type PluginBlueprintCreatorIdentity<TBaseBlueprint extends AnyPluginBlueprint> = <TBlueprint extends TBaseBlueprint>(
   blueprint: TBlueprint
 ) => TBlueprint;
 
-type PluginBlueprintCreatorWithName<TPluginType extends BasePluginType> = <
-  TPartialBlueprint extends Omit<PluginBlueprint<TPluginType>, "name">
+type PluginBlueprintCreatorWithName<TBaseBlueprint extends AnyPluginBlueprint> = <
+  TPartialBlueprint extends Omit<TBaseBlueprint, "name">
 >(
   name: string,
   blueprint: TPartialBlueprint
 ) => TPartialBlueprint & { name: string };
 
-type PluginBlueprintCreator<TPluginType extends BasePluginType> = PluginBlueprintCreatorIdentity<TPluginType> &
-  PluginBlueprintCreatorWithName<TPluginType>;
+type PluginBlueprintCreator<TBaseBlueprint extends AnyPluginBlueprint> = PluginBlueprintCreatorIdentity<
+  TBaseBlueprint
+> &
+  PluginBlueprintCreatorWithName<TBaseBlueprint>;
 
-/**
- * Helper function that creates a plugin blueprint.
- *
- * To specify `TPluginType` for additional type hints, use: `plugin<TPluginType>()(blueprint)`
- */
-export function plugin<TBlueprint extends PluginBlueprint<BasePluginType>>(blueprint: TBlueprint): TBlueprint;
-
-/**
- * Helper function that creates a plugin blueprint.
- *
- * To specify `TPluginType` for additional type hints, use: `plugin<TPluginType>()(name, blueprint)`
- */
-export function plugin<TPartialBlueprint extends Omit<PluginBlueprint<BasePluginType>, "name">>(
-  name: string,
-  blueprint: TPartialBlueprint
-): TPartialBlueprint & { name: string };
-
-/**
- * Specify `TPluginType` for type hints and return self
- */
-export function plugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<TPluginType>;
-
-export function plugin(...args) {
+function plugin<TBlueprint extends AnyPluginBlueprint>(...args) {
   if (args.length === 1) {
     // (blueprint)
     // Return blueprint
@@ -135,8 +133,64 @@ export function plugin(...args) {
     };
   } else if (args.length === 0) {
     // No arguments, with TPluginType - return self
-    return plugin as PluginBlueprintCreator<any>;
+    return plugin as PluginBlueprintCreator<TBlueprint>;
   }
 
   throw new Error(`No signature of plugin() takes ${args.length} arguments`);
+}
+
+/**
+ * Helper function that creates a plugin blueprint for a guild plugin.
+ *
+ * To specify `TPluginType` for additional type hints, use: `guildPlugin<TPluginType>()(blueprint)`
+ */
+export function guildPlugin<TBlueprint extends GuildPluginBlueprint<any>>(blueprint: TBlueprint): TBlueprint;
+
+/**
+ * Helper function that creates a plugin blueprint for a guild plugin.
+ *
+ * To specify `TPluginType` for additional type hints, use: `guildPlugin<TPluginType>()(name, blueprint)`
+ */
+export function guildPlugin<TPartialBlueprint extends Omit<GuildPluginBlueprint<any>, "name">>(
+  name: string,
+  blueprint: TPartialBlueprint
+): TPartialBlueprint & { name: string };
+
+/**
+ * Specify `TPluginType` for type hints and return self
+ */
+export function guildPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
+  GuildPluginBlueprint<TPluginType>
+>;
+
+export function guildPlugin(...args) {
+  return plugin<GuildPluginBlueprint<any>>(...args);
+}
+
+/**
+ * Helper function that creates a plugin blueprint for a global plugin.
+ *
+ * To specify `TPluginType` for additional type hints, use: `globalPlugin<TPluginType>()(blueprint)`
+ */
+export function globalPlugin<TBlueprint extends GlobalPluginBlueprint<any>>(blueprint: TBlueprint): TBlueprint;
+
+/**
+ * Helper function that creates a plugin blueprint for a global plugin.
+ *
+ * To specify `TPluginType` for additional type hints, use: `globalPlugin<TPluginType>()(name, blueprint)`
+ */
+export function globalPlugin<TPartialBlueprint extends Omit<GlobalPluginBlueprint<any>, "name">>(
+  name: string,
+  blueprint: TPartialBlueprint
+): TPartialBlueprint & { name: string };
+
+/**
+ * Specify `TPluginType` for type hints and return self
+ */
+export function globalPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
+  GlobalPluginBlueprint<TPluginType>
+>;
+
+export function globalPlugin(...args) {
+  return plugin<GlobalPluginBlueprint<any>>(...args);
 }

@@ -1,3 +1,12 @@
+# 30.0.0-beta.22
+* More type-safety between guild plugins and global plugins
+  * `plugin()` => `guildPlugin()`, `globalPlugin()`
+  * `eventListener()` => `guildEventListener()`, `globalEventListener()`
+  * `command()` => `guildCommand()`, `globalCommand()`
+  * `Knub#loadPlugin()` => `Knub#loadGuildPlugin()`, `Knub#loadGlobalPlugin()`
+  * `Knub#unloadPlugin()` => `Knub#unloadGuildPlugin()`, `Knub#unloadGlobalPlugin()`
+  * `Knub#reloadPlugin()` => `Knub#reloadGuildPlugin()`, `Knub#reloadGlobalPlugin()`
+
 # 30.0.0-beta.21
 * Update `knub-command-manager` to `v8.1.2`, fixing error messages on invalid option values
 

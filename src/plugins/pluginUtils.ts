@@ -1,9 +1,14 @@
 import { BaseConfig, PermissionLevels } from "../config/configTypes";
 import { Guild, Member } from "eris";
-import { PluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./PluginBlueprint";
+import {
+  AnyPluginBlueprint,
+  GlobalPluginBlueprint,
+  GuildPluginBlueprint,
+  ResolvedPluginBlueprintPublicInterface,
+} from "./PluginBlueprint";
 import path from "path";
 import _fs from "fs";
-import { BaseContext, GuildContext, PluginMap } from "../types";
+import { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types";
 
 const fs = _fs.promises;
 
@@ -26,15 +31,29 @@ export function getMemberLevel(levels: PermissionLevels, member: PartialMember, 
   return 0;
 }
 
-export function isGuildContext(ctx: BaseContext<any>): ctx is GuildContext<any> {
+export function isGuildContext(ctx: AnyContext<any, any>): ctx is GuildContext<any> {
   return (ctx as any).guildId != null;
 }
 
-export function isGlobalContext(ctx: BaseContext<any>): ctx is GuildContext<any> {
+export function isGlobalContext(ctx: AnyContext<any, any>): ctx is GuildContext<any> {
   return !isGuildContext(ctx);
 }
 
-export type PluginPublicInterface<T extends PluginBlueprint<any>> = ResolvedPluginBlueprintPublicInterface<T["public"]>;
+export function isGuildBlueprintByContext(
+  _ctx: GuildContext<any>,
+  _blueprint: AnyPluginBlueprint
+): _blueprint is GuildPluginBlueprint<any> {
+  return true;
+}
+
+export function isGlobalBlueprintByContext(
+  _ctx: GlobalContext<any>,
+  _blueprint: AnyPluginBlueprint
+): _blueprint is GlobalPluginBlueprint<any> {
+  return true;
+}
+
+export type PluginPublicInterface<T extends AnyPluginBlueprint> = ResolvedPluginBlueprintPublicInterface<T["public"]>;
 
 /**
  * Load JSON config files from a "config" folder, relative to cwd
@@ -56,7 +75,10 @@ export async function defaultGetConfig(key) {
 /**
  * By default, load all guild plugins that haven't been explicitly disabled
  */
-export function defaultGetEnabledGuildPlugins(ctx: BaseContext<BaseConfig<any>>, guildPlugins: PluginMap) {
+export function defaultGetEnabledGuildPlugins(
+  ctx: AnyContext<BaseConfig<any>, BaseConfig<any>>,
+  guildPlugins: GuildPluginMap
+) {
   const plugins = ctx.config.plugins ?? {};
   return Array.from(guildPlugins.keys()).filter((pluginName) => {
     return plugins[pluginName]?.enabled !== false;

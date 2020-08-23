@@ -2,24 +2,23 @@ import { Client, GroupChannel, GuildChannel, Message, PrivateChannel } from "eri
 import { Awaitable } from "../utils";
 import { ICommandConfig, ICommandDefinition, IParameter, TOption, TSignature } from "knub-command-manager";
 import { Lock } from "../locks/LockManager";
-import { PluginData } from "../plugins/PluginData";
+import { AnyPluginData } from "../plugins/PluginData";
 import { hasPermission } from "../helpers";
 import { CommandBlueprint } from "./CommandBlueprint";
-import { BasePluginType } from "../plugins/pluginTypes";
 
-export type TSignatureOrArray<TPluginType extends BasePluginType> =
-  | TSignature<CommandContext<TPluginType>>
-  | Array<TSignature<CommandContext<TPluginType>>>;
+export type TSignatureOrArray<TPluginData extends AnyPluginData<any>> =
+  | TSignature<CommandContext<TPluginData>>
+  | Array<TSignature<CommandContext<TPluginData>>>;
 
 export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);
 }
 
-export interface CommandMeta<TPluginType extends BasePluginType, TArguments extends any> {
+export interface CommandMeta<TPluginData extends AnyPluginData<any>, TArguments extends any> {
   args: TArguments;
   message: Message;
   command: ICommandDefinition<any, any>;
-  pluginData: PluginData<TPluginType>;
+  pluginData: TPluginData;
   lock?: Lock;
 }
 
@@ -55,18 +54,18 @@ type ParameterOrOptionType<T extends IParameter<any> | TOption<any>> = T extends
     : PromiseType<ReturnType<T["type"]>>
   : PromiseType<ReturnType<T["type"]>>;
 
-export type CommandFn<TPluginType extends BasePluginType, _TSignature extends TSignatureOrArray<TPluginType>> = (
-  meta: CommandMeta<TPluginType, ArgsFromSignatureOrArray<_TSignature>>
+export type CommandFn<TPluginData extends AnyPluginData<any>, _TSignature extends TSignatureOrArray<TPluginData>> = (
+  meta: CommandMeta<TPluginData, ArgsFromSignatureOrArray<_TSignature>>
 ) => Awaitable<void>;
 
-export interface CommandContext<TPluginType extends BasePluginType> {
+export interface CommandContext<TPluginData extends AnyPluginData<any>> {
   message: Message;
-  pluginData: PluginData<TPluginType>;
+  pluginData: TPluginData;
   lock?: Lock;
 }
 
-export interface CommandExtraData<TPluginType extends BasePluginType> {
-  blueprint: CommandBlueprint<TPluginType, any>;
+export interface CommandExtraData<TPluginData extends AnyPluginData<any>> {
+  blueprint: CommandBlueprint<TPluginData, any>;
   _lock?: Lock;
 }
 

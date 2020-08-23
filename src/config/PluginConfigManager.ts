@@ -8,7 +8,7 @@ import {
 import { CustomOverrideMatcher, getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { Channel, GuildChannel, Member, Message, User } from "eris";
 import { getMemberLevel } from "../plugins/pluginUtils";
-import { PluginData } from "../plugins/PluginData";
+import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
 
 export interface ExtendedMatchParams extends MatchParams {
@@ -20,16 +20,16 @@ export interface ExtendedMatchParams extends MatchParams {
 export class PluginConfigManager<TPluginType extends BasePluginType> {
   private readonly levels: PermissionLevels;
   private options: PluginOptions<TPluginType>;
-  private readonly customOverrideMatcher: CustomOverrideMatcher<TPluginType>;
+  private readonly customOverrideMatcher: CustomOverrideMatcher<AnyPluginData<TPluginType>>;
   private readonly preprocessor: ConfigPreprocessorFn<TPluginType>;
   private readonly validator: ConfigValidatorFn<TPluginType>;
-  private pluginData: PluginData<TPluginType>;
+  private pluginData: AnyPluginData<TPluginType>;
 
   constructor(
     defaultOptions: PluginOptions<TPluginType>,
     userOptions: PartialPluginOptions<TPluginType>,
     levels: PermissionLevels = {},
-    customOverrideMatcher?: CustomOverrideMatcher<TPluginType>,
+    customOverrideMatcher?: CustomOverrideMatcher<AnyPluginData<TPluginType>>,
     preprocessor?: ConfigPreprocessorFn<TPluginType>,
     validator?: ConfigValidatorFn<TPluginType>
   ) {
@@ -62,7 +62,15 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     };
   }
 
-  public setPluginData(pluginData: PluginData<TPluginType>) {
+  protected getMemberLevel(member: Member) {
+    if (!isGuildPluginData(this.pluginData)) {
+      return null;
+    }
+
+    return getMemberLevel(this.levels, member, this.pluginData.guild);
+  }
+
+  public setPluginData(pluginData: AnyPluginData<TPluginType>) {
     if (this.pluginData) {
       throw new Error("Plugin data already set");
     }
@@ -94,7 +102,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const member = matchParams.member || (message && message.member);
 
     // Passed level -> passed member's level
-    const level = matchParams?.level ?? (member && getMemberLevel(this.levels, member, this.pluginData.guild)) ?? null;
+    const level = matchParams?.level ?? (member && this.getMemberLevel(member)) ?? null;
 
     // Passed roles -> passed member's roles
     const memberRoles = matchParams.memberRoles || (member && member.roles);
@@ -107,7 +115,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       memberRoles,
     };
 
-    return getMatchingPluginConfig<TPluginType>(
+    return getMatchingPluginConfig<AnyPluginData<TPluginType>>(
       this.pluginData,
       this.options,
       finalMatchParams,
@@ -116,7 +124,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   }
 
   public getForMessage(msg: Message): TPluginType["config"] {
-    const level = msg.member ? getMemberLevel(this.levels, msg.member, this.pluginData.guild) : null;
+    const level = msg.member ? this.getMemberLevel(msg.member) : null;
     return this.getMatchingConfig({
       level,
       userId: msg.author.id,
@@ -140,7 +148,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   }
 
   public getForMember(member: Member): TPluginType["config"] {
-    const level = getMemberLevel(this.levels, member, this.pluginData.guild);
+    const level = this.getMemberLevel(member);
     return this.getMatchingConfig({
       level,
       userId: member.user.id,

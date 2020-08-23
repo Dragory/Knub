@@ -1,14 +1,15 @@
-import { Guild } from "eris";
+import { AnyContext } from "../types";
+import { isGuildContext } from "./pluginUtils";
 
 export class PluginLoadError extends Error {
   public pluginName: string;
-  public guild: Guild | null;
+  public guildId?: string;
 
-  constructor(pluginName: string, guild: Guild | null, originalError: Error) {
+  constructor(pluginName: string, ctx: AnyContext<any, any>, originalError: Error) {
     super(`PluginLoadError (${pluginName}): ${originalError.message}`);
     this.stack = originalError.stack;
 
     this.pluginName = pluginName;
-    this.guild = guild;
+    this.guildId = isGuildContext(ctx) && ctx.guildId;
   }
 }

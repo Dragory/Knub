@@ -1,6 +1,5 @@
 import { PluginOptions, PluginOverrideCriteria } from "./configTypes";
-import { PluginData } from "../plugins/PluginData";
-import { BasePluginType } from "../plugins/pluginTypes";
+import { AnyPluginData } from "../plugins/PluginData";
 
 const levelRangeRegex = /^([<>=!]+)(\d+)$/;
 const splitLevelRange = (v, defaultMod): [string, number] => {
@@ -58,9 +57,9 @@ export function mergeConfig<T extends {}>(...sources: any[]): T {
 /**
  * Match override criteria `criteria` against `matchParams`. Return `true` if the criteria matches matchParams.
  */
-export type CustomOverrideMatcher<TPluginType extends BasePluginType> = (
-  pluginData: PluginData<TPluginType>,
-  criteria: TPluginType["customOverrideCriteria"],
+export type CustomOverrideMatcher<TPluginData extends AnyPluginData<any>> = (
+  pluginData: TPluginData,
+  criteria: TPluginData["_pluginType"]["customOverrideCriteria"],
   matchParams: MatchParams
 ) => boolean;
 
@@ -68,37 +67,37 @@ export type CustomOverrideMatcher<TPluginType extends BasePluginType> = (
  * Returns matching plugin options for the specified matchParams based on overrides
  */
 export function getMatchingPluginConfig<
-  TPluginType extends BasePluginType,
+  TPluginData extends AnyPluginData<any>,
   // Inferred type, should not be overridden
-  TPluginOptions extends PluginOptions<TPluginType> = PluginOptions<TPluginType>
+  TPluginOptions extends PluginOptions<TPluginData["_pluginType"]> = PluginOptions<TPluginData["_pluginType"]>
 >(
-  pluginData: PluginData<TPluginType>,
+  pluginData: TPluginData,
   pluginOptions: TPluginOptions,
   matchParams: MatchParams,
-  customOverrideMatcher?: CustomOverrideMatcher<TPluginType>
-): TPluginType["config"] {
-  let result: TPluginType["config"] = mergeConfig(pluginOptions.config || {});
+  customOverrideMatcher?: CustomOverrideMatcher<TPluginData>
+): TPluginData["_pluginType"]["config"] {
+  let result: TPluginData["_pluginType"]["config"] = mergeConfig(pluginOptions.config || {});
 
   const overrides = pluginOptions.overrides || [];
   for (const override of overrides) {
-    const matches = evaluateOverrideCriteria<TPluginType>(pluginData, override, matchParams, customOverrideMatcher);
+    const matches = evaluateOverrideCriteria<TPluginData>(pluginData, override, matchParams, customOverrideMatcher);
 
     if (matches) {
       result = mergeConfig(result, override.config);
     }
   }
 
-  return result as TPluginType["config"];
+  return result as TPluginData["_pluginType"]["config"];
 }
 
 /**
  * Each criteria "block" ({ level: "...", channel: "..." }) matches only if *all* criteria in it match.
  */
-export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
-  pluginData: PluginData<TPluginType>,
-  criteria: PluginOverrideCriteria<TPluginType["customOverrideCriteria"]>,
+export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>(
+  pluginData: TPluginData,
+  criteria: PluginOverrideCriteria<TPluginData["_pluginType"]["customOverrideCriteria"]>,
   matchParams: MatchParams,
-  customOverrideMatcher?: CustomOverrideMatcher<TPluginType>
+  customOverrideMatcher?: CustomOverrideMatcher<TPluginData>
 ): boolean {
   // Note: Despite the naming here, this does *not* imply any one criterion matching means the entire criteria block
   // matches. When matching of one criterion fails, the command returns immediately. This variable is here purely so
@@ -233,7 +232,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
 
       let match = true;
       for (const subCriteria of value) {
-        match = match && evaluateOverrideCriteria<TPluginType>(pluginData, subCriteria, matchParams);
+        match = match && evaluateOverrideCriteria<TPluginData>(pluginData, subCriteria, matchParams);
       }
       if (!match) return false;
 
@@ -247,7 +246,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
 
       let match = false;
       for (const subCriteria of value) {
-        match = match || evaluateOverrideCriteria<TPluginType>(pluginData, subCriteria, matchParams);
+        match = match || evaluateOverrideCriteria<TPluginData>(pluginData, subCriteria, matchParams);
       }
       if (match === false) return false;
 
@@ -256,7 +255,7 @@ export function evaluateOverrideCriteria<TPluginType extends BasePluginType>(
     }
 
     if (key === "not") {
-      const match = evaluateOverrideCriteria<TPluginType>(pluginData, value, matchParams);
+      const match = evaluateOverrideCriteria<TPluginData>(pluginData, value, matchParams);
       if (match) return false;
 
       matchedOne = true;

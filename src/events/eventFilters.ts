@@ -4,6 +4,7 @@ import { GroupChannel, PrivateChannel } from "eris";
 import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils";
 import { EventArguments } from "./eventArguments";
 import { hasPermission, resolveMember } from "../helpers";
+import { isGuildPluginData } from "../plugins/PluginData";
 
 export type EventFilter = <TEventName extends string>(
   event: TEventName,
@@ -58,6 +59,10 @@ export function withAnyFilter<T extends Listener<any, any>>(
 
 export function onlyGuild(): EventFilter {
   return (event, { args, pluginData }) => {
+    if (!isGuildPluginData(pluginData)) {
+      return false;
+    }
+
     const guild = eventToGuild[event as string]?.(args) ?? null;
     return guild && pluginData.guild === guild;
   };
@@ -108,7 +113,7 @@ export function cooldown(timeMs: number, permission?: string): EventFilter {
 export function requirePermission(permission: string): EventFilter {
   return (event, { args, pluginData }) => {
     const user = eventToUser[event as string]?.(args) ?? null;
-    const member = user ? resolveMember(pluginData.guild, user.id) : null;
+    const member = user && isGuildPluginData(pluginData) ? resolveMember(pluginData.guild, user.id) : null;
     const config = member
       ? pluginData.config.getForMember(member)
       : user

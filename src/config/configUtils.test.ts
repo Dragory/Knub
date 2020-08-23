@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { PluginOptions } from "../index";
 import { BasePluginType } from "../plugins/pluginTypes";
+import { GuildPluginData } from "../plugins/PluginData";
 
 describe("configUtils", () => {
   describe("mergeConfig", () => {
@@ -122,61 +123,101 @@ describe("configUtils", () => {
     };
 
     it("should use defaults with empty match params", () => {
-      const matchedConfig = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {});
+      const matchedConfig = getMatchingPluginConfig<GuildPluginData<SharedPluginType>>(
+        null as any,
+        sharedPluginOptions,
+        {}
+      );
       expect(matchedConfig.value).to.equal(5);
       expect(matchedConfig.hasAccess).to.equal(false);
     });
 
     it("should match levels", () => {
-      const matchedConfig = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {
-        level: 60,
-      });
+      const matchedConfig = getMatchingPluginConfig<GuildPluginData<SharedPluginType>>(
+        null as any,
+        sharedPluginOptions,
+        {
+          level: 60,
+        }
+      );
       expect(matchedConfig.hasAccess).to.equal(true);
     });
 
     it("should require all level conditions to apply", () => {
-      const matchedConfig = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {
-        level: 35,
-      });
+      const matchedConfig = getMatchingPluginConfig<GuildPluginData<SharedPluginType>>(
+        null as any,
+        sharedPluginOptions,
+        {
+          level: 35,
+        }
+      );
       expect(matchedConfig.hasAccess).to.equal(false);
     });
 
     it("should match channels and accept any specified channel", () => {
-      const matchedConfig1 = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {
-        channelId: "1100",
-      });
-      const matchedConfig2 = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {
-        channelId: "1200",
-      });
+      const matchedConfig1 = getMatchingPluginConfig<GuildPluginData<SharedPluginType>>(
+        null as any,
+        sharedPluginOptions,
+        {
+          channelId: "1100",
+        }
+      );
+      const matchedConfig2 = getMatchingPluginConfig<GuildPluginData<SharedPluginType>>(
+        null as any,
+        sharedPluginOptions,
+        {
+          channelId: "1200",
+        }
+      );
       expect(matchedConfig1.value).to.equal(10);
       expect(matchedConfig2.value).to.equal(10);
     });
 
     it("should match categories and accept any specified category", () => {
-      const matchedConfig1 = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {
-        categoryId: "9100",
-      });
-      const matchedConfig2 = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {
-        categoryId: "9200",
-      });
+      const matchedConfig1 = getMatchingPluginConfig<GuildPluginData<SharedPluginType>>(
+        null as any,
+        sharedPluginOptions,
+        {
+          categoryId: "9100",
+        }
+      );
+      const matchedConfig2 = getMatchingPluginConfig<GuildPluginData<SharedPluginType>>(
+        null as any,
+        sharedPluginOptions,
+        {
+          categoryId: "9200",
+        }
+      );
       expect(matchedConfig1.value).to.equal(120);
       expect(matchedConfig2.value).to.equal(120);
     });
 
     it("should match users", () => {
-      const matchedConfig = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {
-        userId: "2100",
-      });
+      const matchedConfig = getMatchingPluginConfig<GuildPluginData<SharedPluginType>>(
+        null as any,
+        sharedPluginOptions,
+        {
+          userId: "2100",
+        }
+      );
       expect(matchedConfig.value).to.equal(15);
     });
 
     it("should match roles", () => {
-      const matchedConfig1 = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {
-        memberRoles: ["3100"],
-      });
-      const matchedConfig2 = getMatchingPluginConfig<SharedPluginType>(null as any, sharedPluginOptions, {
-        memberRoles: ["3100", "3200"],
-      });
+      const matchedConfig1 = getMatchingPluginConfig<GuildPluginData<SharedPluginType>>(
+        null as any,
+        sharedPluginOptions,
+        {
+          memberRoles: ["3100"],
+        }
+      );
+      const matchedConfig2 = getMatchingPluginConfig<GuildPluginData<SharedPluginType>>(
+        null as any,
+        sharedPluginOptions,
+        {
+          memberRoles: ["3100", "3200"],
+        }
+      );
       expect(matchedConfig1.value).to.equal(5); // has 3100 but no 3200 -> no match
       expect(matchedConfig2.value).to.equal(20); // has 3100 and 3200 -> match
     });
@@ -235,7 +276,7 @@ describe("configUtils", () => {
         return true;
       };
 
-      const matchedConfig1 = getMatchingPluginConfig<CustomPluginType>(
+      const matchedConfig1 = getMatchingPluginConfig<GuildPluginData<CustomPluginType>>(
         null as any,
         customPluginOptions,
         {
@@ -245,7 +286,7 @@ describe("configUtils", () => {
         },
         customResolver
       );
-      const matchedConfig2 = getMatchingPluginConfig<CustomPluginType>(
+      const matchedConfig2 = getMatchingPluginConfig<GuildPluginData<CustomPluginType>>(
         null as any,
         customPluginOptions,
         {
@@ -255,7 +296,7 @@ describe("configUtils", () => {
         },
         customResolver
       );
-      const matchedConfig3 = getMatchingPluginConfig<CustomPluginType>(
+      const matchedConfig3 = getMatchingPluginConfig<GuildPluginData<CustomPluginType>>(
         null as any,
         customPluginOptions,
         {
@@ -265,7 +306,7 @@ describe("configUtils", () => {
         },
         customResolver
       );
-      const matchedConfig4 = getMatchingPluginConfig<CustomPluginType>(
+      const matchedConfig4 = getMatchingPluginConfig<GuildPluginData<CustomPluginType>>(
         null as any,
         customPluginOptions,
         {
@@ -396,15 +437,15 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig1 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts, {
+      const matchedConfig1 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts, {
         userId: "1000",
         level: 75,
       });
-      const matchedConfig2 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts, {
+      const matchedConfig2 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts, {
         userId: "1000",
         level: 120,
       });
-      const matchedConfig3 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts, {
+      const matchedConfig3 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts, {
         userId: "1000",
         level: 25,
       });
@@ -442,13 +483,13 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig1 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts, {
+      const matchedConfig1 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts, {
         level: 15,
       });
-      const matchedConfig2 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts, {
+      const matchedConfig2 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts, {
         level: 95,
       });
-      const matchedConfig3 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts, {
+      const matchedConfig3 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts, {
         level: 50,
       });
 
@@ -522,21 +563,21 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig1 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts1, {
+      const matchedConfig1 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts1, {
         userId: "1234",
       });
-      const matchedConfig2 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts1, {
+      const matchedConfig2 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts1, {
         userId: "5678",
       });
 
       expect(matchedConfig1.value).to.equal(5);
       expect(matchedConfig2.value).to.equal(10);
 
-      const matchedConfig3 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts2, {
+      const matchedConfig3 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts2, {
         level: 95,
         userId: "1234",
       });
-      const matchedConfig4 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts2, {
+      const matchedConfig4 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts2, {
         level: 95,
         userId: "5678",
       });
@@ -544,13 +585,13 @@ describe("configUtils", () => {
       expect(matchedConfig3.value).to.equal(5);
       expect(matchedConfig4.value).to.equal(20);
 
-      const matchedConfig5 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts3, {
+      const matchedConfig5 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts3, {
         level: 49,
       });
-      const matchedConfig6 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts3, {
+      const matchedConfig6 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts3, {
         level: 50,
       });
-      const matchedConfig7 = getMatchingPluginConfig<PluginType>(null as any, pluginOpts3, {
+      const matchedConfig7 = getMatchingPluginConfig<GuildPluginData<PluginType>>(null as any, pluginOpts3, {
         level: 51,
       });
 

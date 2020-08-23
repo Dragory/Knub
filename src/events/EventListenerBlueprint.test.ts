@@ -1,4 +1,4 @@
-import { eventListener } from "./EventListenerBlueprint";
+import { guildEventListener } from "./EventListenerBlueprint";
 import { Message } from "eris";
 import { BasePluginType } from "../plugins/pluginTypes";
 import { expect } from "chai";
@@ -7,7 +7,7 @@ type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false
 
 describe("eventListener() helper", () => {
   it("(blueprint)", () => {
-    const blueprint = eventListener({
+    const blueprint = guildEventListener({
       event: "messageCreate",
       listener({ args }) {
         // Test type inference
@@ -22,7 +22,7 @@ describe("eventListener() helper", () => {
   });
 
   it("(event, listener)", () => {
-    const blueprint = eventListener("messageCreate", ({ args }) => {
+    const blueprint = guildEventListener("messageCreate", ({ args }) => {
       // Test type inference
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const result: AssertEquals<typeof args, { message: Message }> = true;
@@ -34,7 +34,7 @@ describe("eventListener() helper", () => {
   });
 
   it("(event, opts, listener)", () => {
-    const blueprint = eventListener("messageCreate", { allowSelf: true }, ({ args }) => {
+    const blueprint = guildEventListener("messageCreate", { allowSelf: true }, ({ args }) => {
       // Test type inference
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const result: AssertEquals<typeof args, { message: Message }> = true;
@@ -52,7 +52,7 @@ describe("eventListener() helper", () => {
   }
 
   it("<TPluginType>()(blueprint)", () => {
-    const blueprint = eventListener<CustomPluginType>()({
+    const blueprint = guildEventListener<CustomPluginType>()({
       event: "messageCreate",
       listener({ args, pluginData }) {
         // Test type inference
@@ -71,7 +71,7 @@ describe("eventListener() helper", () => {
   });
 
   it("<TPluginType>()(event, listener)", () => {
-    const blueprint = eventListener<CustomPluginType>()("messageCreate", ({ args, pluginData }) => {
+    const blueprint = guildEventListener<CustomPluginType>()("messageCreate", ({ args, pluginData }) => {
       // Test type inference
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const result: AssertEquals<typeof args, { message: Message }> = true;
@@ -87,7 +87,7 @@ describe("eventListener() helper", () => {
   });
 
   it("<TPluginType>()(event, options, listener)", () => {
-    const blueprint = eventListener<CustomPluginType>()(
+    const blueprint = guildEventListener<CustomPluginType>()(
       "messageCreate",
       { allowSelf: true },
       ({ args, pluginData }) => {

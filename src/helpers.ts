@@ -15,7 +15,7 @@ import {
   TextChannel,
 } from "eris";
 import { get, getChannelId, getRoleId, getUserId, noop } from "./utils";
-import { PluginData } from "./plugins/PluginData";
+import { GuildPluginData } from "./plugins/PluginData";
 import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils";
 
 /**
@@ -226,8 +226,8 @@ export function hasPermission(config: any, permission: string) {
   return get(config, permission) === true;
 }
 
-export function getMemberLevel(pluginData: PluginData<any>, member: Member) {
-  const levels = pluginData.guildConfig.levels || {};
+export function getMemberLevel(pluginData: GuildPluginData<any>, member: Member) {
+  const levels = pluginData.fullConfig.levels || {};
   return _getMemberLevel(levels, member, pluginData.guild);
 }
 

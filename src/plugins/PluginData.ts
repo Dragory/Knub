@@ -7,45 +7,39 @@ import { CooldownManager } from "../cooldowns/CooldownManager";
 import { PluginPublicInterface } from "./pluginUtils";
 import { Knub } from "../Knub";
 import { BasePluginType } from "./pluginTypes";
-import { PluginBlueprint } from "./PluginBlueprint";
+import { AnyPluginBlueprint } from "./PluginBlueprint";
 
-export type HasPluginFn = <T extends PluginBlueprint<any>>(plugin: T) => boolean;
-export type GetPluginFn = <T extends PluginBlueprint<any>>(plugin: T) => PluginPublicInterface<T>;
+export type HasPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => boolean;
+export type GetPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => PluginPublicInterface<T>;
 
 /**
- * Instance-specific data and helpers for plugins
+ * PluginData for an unknown context.
+ * The properties defined here will be present in all PluginData objects, regardless of context.
  */
-export interface PluginData<TPluginType extends BasePluginType> {
+export type BasePluginData<TPluginType extends BasePluginType> = {
+  /**
+   * Fake property used for typing purposes
+   */
+  _pluginType?: TPluginType;
+
   /**
    * The underlying Eris Client object
    */
   client: Client;
 
-  /**
-   * The guild this plugin has been loaded for
-   */
-  guild: Guild;
-
   config: PluginConfigManager<TPluginType>;
-  events: PluginEventManager<TPluginType>;
-  commands: PluginCommandManager<TPluginType>;
   locks: LockManager;
   cooldowns: CooldownManager;
 
   /**
-   * Check whether a specific other plugin has been loaded for this guild
+   * Check whether a specific other plugin has been loaded for this context
    */
   hasPlugin: HasPluginFn;
 
   /**
-   * Get the public interface for another plugin
+   * Get the public interface for another plugin in this context
    */
   getPlugin: GetPluginFn;
-
-  /**
-   * The full guild config. Use `config` property for plugin config values.
-   */
-  guildConfig: any;
 
   /**
    * Whether this plugin was loaded as a dependency, as opposed to being enabled explicitly.
@@ -59,7 +53,53 @@ export interface PluginData<TPluginType extends BasePluginType> {
   getKnubInstance: () => Knub;
 
   /**
+   * The full config for the plugin's context. Use `config` property for plugin config values.
+   */
+  fullConfig: any;
+
+  /**
    * The plugin's current state
    */
   state: TPluginType["state"];
+};
+
+/**
+ * PluginData for a guild context
+ */
+export type GuildPluginData<TPluginType extends BasePluginType> = BasePluginData<TPluginType> & {
+  context: "guild";
+
+  /**
+   * The guild this plugin has been loaded for
+   */
+  guild: Guild;
+
+  events: PluginEventManager<GuildPluginData<TPluginType>>;
+  commands: PluginCommandManager<GuildPluginData<TPluginType>>;
+};
+
+/**
+ * PluginData for a global context
+ */
+export type GlobalPluginData<TPluginType extends BasePluginType> = BasePluginData<TPluginType> & {
+  context: "global";
+
+  events: PluginEventManager<GlobalPluginData<TPluginType>>;
+  commands: PluginCommandManager<GlobalPluginData<TPluginType>>;
+};
+
+export type AnyPluginData<TPluginType extends BasePluginType> =
+  | GuildPluginData<TPluginType>
+  | GlobalPluginData<TPluginType>;
+
+export function isGuildPluginData<TPluginType extends BasePluginType>(
+  pluginData: AnyPluginData<TPluginType>
+): pluginData is GuildPluginData<TPluginType> {
+  return pluginData.context === "guild";
+}
+
+export function isGlobalPluginData<TPluginType extends BasePluginType>(
+  pluginData: AnyPluginData<TPluginType>
+): pluginData is GlobalPluginData<TPluginType> {
+  return pluginData.context === "global";
 }

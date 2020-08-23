@@ -4,22 +4,30 @@ import * as helpers from "./helpers";
 
 export { Knub } from "./Knub";
 
-export { PluginBlueprint } from "./plugins/PluginBlueprint";
+export { GuildPluginBlueprint, GlobalPluginBlueprint } from "./plugins/PluginBlueprint";
 export { CommandBlueprint } from "./commands/CommandBlueprint";
 export { EventListenerBlueprint } from "./events/EventListenerBlueprint";
 
-export { plugin } from "./plugins/PluginBlueprint";
-export { command } from "./commands/CommandBlueprint";
-export { eventListener } from "./events/EventListenerBlueprint";
+export { guildPlugin, globalPlugin } from "./plugins/PluginBlueprint";
+export { guildCommand, globalCommand } from "./commands/CommandBlueprint";
+export { guildEventListener, globalEventListener } from "./events/EventListenerBlueprint";
 
 export { configUtils };
 export { ConfigValidationError } from "./config/ConfigValidationError";
 
 export { pluginUtils };
 
-export { PluginData } from "./plugins/PluginData";
+export { GuildPluginData, GlobalPluginData } from "./plugins/PluginData";
 
-export { KnubOptions, KnubArgs, BaseContext, GuildContext, GlobalContext, LoadedPlugin } from "./types";
+export {
+  KnubOptions,
+  KnubArgs,
+  GuildContext,
+  GlobalContext,
+  AnyContext,
+  LoadedGuildPlugin,
+  LoadedGlobalPlugin,
+} from "./types";
 
 export {
   PermissionLevels,
