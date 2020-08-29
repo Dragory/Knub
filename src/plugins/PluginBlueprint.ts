@@ -5,6 +5,7 @@ import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { CustomOverrideMatcher } from "../config/configUtils";
 import { BasePluginType } from "./pluginTypes";
+import { GuildEvent } from "../events/eventTypes";
 
 /**
  * Each value in the public interface is a function that returns the actual
@@ -42,11 +43,6 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
    * Commands that are automatically registered on plugin load
    */
   commands?: Array<CommandBlueprint<TPluginData, any>>;
-
-  /**
-   * Event listeners that are automatically registered on plugin load
-   */
-  events?: Array<EventListenerBlueprint<TPluginData>>;
 
   /**
    * If this plugin includes any custom overrides, this function evaluates them
@@ -87,6 +83,11 @@ export interface GuildPluginBlueprint<TPluginType extends BasePluginType>
    * Names of other guild plugins that are required for this plugin to function. They will be loaded before this plugin.
    */
   dependencies?: Array<GuildPluginBlueprint<any>>;
+
+  /**
+   * Event listeners that are automatically registered on plugin load
+   */
+  events?: Array<EventListenerBlueprint<GuildPluginData<TPluginType>, GuildEvent>>;
 }
 
 /**
@@ -99,6 +100,11 @@ export interface GlobalPluginBlueprint<TPluginType extends BasePluginType>
    * They will be loaded before this plugin.
    */
   dependencies?: Array<GlobalPluginBlueprint<any>>;
+
+  /**
+   * Event listeners that are automatically registered on plugin load
+   */
+  events?: Array<EventListenerBlueprint<GlobalPluginData<TPluginType>>>;
 }
 
 export type AnyPluginBlueprint = GuildPluginBlueprint<any> | GlobalPluginBlueprint<any>;

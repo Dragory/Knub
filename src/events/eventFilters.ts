@@ -1,12 +1,12 @@
-import { EventMeta, Listener } from "./PluginEventManager";
+import { EventMeta, Listener } from "./BasePluginEventManager";
 import { Awaitable } from "../utils";
 import { GroupChannel, PrivateChannel } from "eris";
 import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils";
-import { EventArguments } from "./eventArguments";
+import { EventArguments, ValidEvent } from "./eventTypes";
 import { hasPermission, resolveMember } from "../helpers";
 import { isGuildPluginData } from "../plugins/PluginData";
 
-export type EventFilter = <TEventName extends string>(
+export type EventFilter = <TEventName extends ValidEvent>(
   event: TEventName,
   meta: EventMeta<any, EventArguments[TEventName]>
 ) => Awaitable<boolean>;
@@ -18,7 +18,7 @@ export type FilteredListener<T extends Listener<any, any>> = (...params: Paramet
  * filter
  */
 export function withFilters<T extends Listener<any, any>>(
-  event: string,
+  event: ValidEvent,
   listener: T,
   filters: EventFilter[]
 ): FilteredListener<T> {
@@ -39,7 +39,7 @@ export function withFilters<T extends Listener<any, any>>(
  * filters
  */
 export function withAnyFilter<T extends Listener<any, any>>(
-  event: string,
+  event: ValidEvent,
   listener: T,
   filters: EventFilter[]
 ): FilteredListener<T> {

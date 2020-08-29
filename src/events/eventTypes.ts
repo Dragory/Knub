@@ -29,10 +29,10 @@ import {
 } from "eris";
 
 /**
- * Based on Eris types
+ * Known event types and their arguments. Based on Eris types.
  * @see https://github.com/abalabahaha/eris/blob/27bb9cd02ae990606ab50b32ac186da53d8ca45a/index.d.ts#L836
  */
-export interface KnownEventArguments {
+export interface KnownEvents {
   ready: {};
   disconnect: {};
   callCreate: {
@@ -240,17 +240,42 @@ export interface KnownEventArguments {
   };
 }
 
-export type UnknownEventArguments = {
-  args: any[];
-};
-
-export type EventArguments = KnownEventArguments & {
-  [key: string]: typeof key extends keyof KnownEventArguments ? never : UnknownEventArguments;
-};
+export type EventArguments = KnownEvents;
 
 type FromErisArgsObj = {
-  [P in keyof KnownEventArguments]: (...args: any[]) => KnownEventArguments[P];
+  [P in keyof KnownEvents]: (...args: any[]) => KnownEvents[P];
 };
+
+export const globalEvents = [
+  "callCreate",
+  "callRing",
+  "callDelete",
+  "callUpdate",
+  "debug",
+  "disconnect",
+  "friendSuggestionCreate",
+  "friendSuggestionDelete",
+  "guildAvailable",
+  "guildUnavailable",
+  "hello",
+  "rawWS",
+  "ready",
+  "unknown",
+  "userUpdate",
+  "warn",
+] as const;
+
+export type ValidEvent = keyof KnownEvents;
+export type GlobalEvent = typeof globalEvents[number];
+export type GuildEvent = Exclude<ValidEvent, GlobalEvent>;
+
+export function isGlobalEvent(ev: ValidEvent): ev is GlobalEvent {
+  return globalEvents.includes(ev as any);
+}
+
+export function isGuildEvent(ev: ValidEvent): ev is GuildEvent {
+  return !globalEvents.includes(ev as any);
+}
 
 /**
  * Each property is a function that converts Eris event listener arguments to

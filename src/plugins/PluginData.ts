@@ -1,5 +1,4 @@
 import { Client, Guild } from "eris";
-import { PluginEventManager } from "../events/PluginEventManager";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { LockManager } from "../locks/LockManager";
@@ -8,6 +7,8 @@ import { PluginPublicInterface } from "./pluginUtils";
 import { Knub } from "../Knub";
 import { BasePluginType } from "./pluginTypes";
 import { AnyPluginBlueprint } from "./PluginBlueprint";
+import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
+import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
 
 export type HasPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => boolean;
 export type GetPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => PluginPublicInterface<T>;
@@ -74,7 +75,7 @@ export type GuildPluginData<TPluginType extends BasePluginType> = BasePluginData
    */
   guild: Guild;
 
-  events: PluginEventManager<GuildPluginData<TPluginType>>;
+  events: GuildPluginEventManager<GuildPluginData<TPluginType>>;
   commands: PluginCommandManager<GuildPluginData<TPluginType>>;
 };
 
@@ -84,7 +85,7 @@ export type GuildPluginData<TPluginType extends BasePluginType> = BasePluginData
 export type GlobalPluginData<TPluginType extends BasePluginType> = BasePluginData<TPluginType> & {
   context: "global";
 
-  events: PluginEventManager<GlobalPluginData<TPluginType>>;
+  events: GlobalPluginEventManager<GlobalPluginData<TPluginType>>;
   commands: PluginCommandManager<GlobalPluginData<TPluginType>>;
 };
 

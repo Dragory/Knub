@@ -1,20 +1,20 @@
 import { Channel, Guild, GuildChannel, Member, Message, User } from "eris";
-import { KnownEventArguments } from "./eventArguments";
+import { KnownEvents } from "./eventTypes";
 
 type EventToGuild = {
-  [P in keyof KnownEventArguments]?: (args: KnownEventArguments[P]) => Guild | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Guild | undefined;
 };
 
 type EventToUser = {
-  [P in keyof KnownEventArguments]?: (args: KnownEventArguments[P]) => User | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => User | undefined;
 };
 
 type EventToChannel = {
-  [P in keyof KnownEventArguments]?: (args: KnownEventArguments[P]) => Channel | { id: string } | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Channel | { id: string } | undefined;
 };
 
 type EventToMessage = {
-  [P in keyof KnownEventArguments]?: (args: KnownEventArguments[P]) => Message | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Message | undefined;
 };
 
 export const eventToGuild: EventToGuild = {

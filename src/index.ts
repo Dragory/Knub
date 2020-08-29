@@ -49,7 +49,8 @@ export { PluginError } from "./plugins/PluginError";
 
 export { PluginConfigManager } from "./config/PluginConfigManager";
 export { PluginCommandManager } from "./commands/PluginCommandManager";
-export { PluginEventManager } from "./events/PluginEventManager";
+export { GuildPluginEventManager } from "./events/GuildPluginEventManager";
+export { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 export { LockManager, Lock } from "./locks/LockManager";
 export { CooldownManager } from "./cooldowns/CooldownManager";
 

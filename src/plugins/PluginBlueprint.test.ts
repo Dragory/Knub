@@ -1,5 +1,14 @@
-import { CooldownManager, guildCommand, guildEventListener, Knub, LockManager } from "../index";
-import { Guild } from "eris";
+import {
+  CooldownManager,
+  globalEventListener,
+  globalPlugin,
+  GlobalPluginBlueprint,
+  guildCommand,
+  guildEventListener,
+  Knub,
+  LockManager,
+} from "../index";
+import { Guild, TextChannel } from "eris";
 import {
   createMockClient,
   createMockGuild,
@@ -10,14 +19,16 @@ import {
 } from "../testUtils";
 import * as assert from "assert";
 import { noop } from "../utils";
-import { PluginEventManager } from "../events/PluginEventManager";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { BasePluginType } from "./pluginTypes";
 import { parseSignature } from "knub-command-manager";
 import { expect } from "chai";
 import { guildPlugin, GuildPluginBlueprint } from "./PluginBlueprint";
-import { GuildPluginData } from "./PluginData";
+import { GuildPluginData, isGlobalPluginData } from "./PluginData";
+import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
+import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
+import { GuildEvent } from "../events/eventTypes";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
@@ -68,6 +79,163 @@ describe("PluginBlueprint", () => {
         const guild = new Guild({ id: "0" }, client);
         client.guilds.set("0", guild);
         client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("guild events are only passed to the matching guild", (done) => {
+      (async () => {
+        const guildCounts = {
+          "0": 0,
+          "1": 0,
+        };
+
+        const PluginToLoad = guildPlugin("plugin-to-load", {
+          events: [
+            guildEventListener("messageCreate", ({ pluginData, args }) => {
+              assert.strictEqual(pluginData.guild.id, (args.message.channel as TextChannel).guild.id);
+              guildCounts[pluginData.guild.id]++;
+            }),
+          ],
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild0 = new Guild({ id: "0" }, client);
+        const guild1 = new Guild({ id: "1" }, client);
+        client.guilds.set("0", guild0);
+        client.guilds.set("1", guild1);
+        client.emit("guildAvailable", guild0);
+        client.emit("guildAvailable", guild1);
+        await sleep(30);
+
+        const user0 = createMockUser(client);
+        const user1 = createMockUser(client);
+        const guild0Channel = createMockTextChannel(client, guild0.id);
+        const guild1Channel = createMockTextChannel(client, guild1.id);
+
+        const guild0Message1 = createMockMessage(client, guild0Channel.id, user0, { content: "foo" });
+        const guild0Message2 = createMockMessage(client, guild0Channel.id, user0, { content: "bar" });
+        const guild1Message1 = createMockMessage(client, guild1Channel.id, user1, { content: "foo" });
+        const guild1Message2 = createMockMessage(client, guild1Channel.id, user1, { content: "bar" });
+
+        client.emit("messageCreate", guild0Message1);
+        client.emit("messageCreate", guild0Message2);
+        client.emit("messageCreate", guild1Message1);
+        client.emit("messageCreate", guild1Message2);
+        await sleep(30);
+
+        assert.strictEqual(guildCounts["0"], 2);
+        assert.strictEqual(guildCounts["1"], 2);
+        done();
+      })();
+    });
+
+    it("global events are not passed to guild event listeners", (done) => {
+      (async () => {
+        const PluginToLoad = guildPlugin("plugin-to-load", {
+          events: [
+            guildEventListener(("userUpdate" as unknown) as GuildEvent, () => {
+              assert.fail("userUpdate was called in a guild event listener");
+            }),
+          ],
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const guild0 = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild0);
+        client.emit("guildAvailable", guild0);
+        await sleep(30);
+
+        client.emit("userUpdate");
+        await sleep(30);
+
+        done();
+      })();
+    });
+
+    it("global events are passed to global event listeners", (done) => {
+      (async () => {
+        const PluginToLoad = globalPlugin("plugin-to-load", {
+          events: [
+            globalEventListener("userUpdate", () => {
+              done();
+            }),
+          ],
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        client.emit("userUpdate");
+      })();
+    });
+
+    it("guild events are passed to global event listeners", (done) => {
+      (async () => {
+        const client = createMockClient();
+        const guild = createMockGuild(client);
+
+        const PluginToLoad = globalPlugin("plugin-to-load", {
+          events: [
+            globalEventListener("messageCreate", ({ pluginData, args }) => {
+              assert.ok(isGlobalPluginData(pluginData));
+              assert.strictEqual((args.message.channel as TextChannel).guild.id, guild.id);
+              done();
+            }),
+          ],
+        });
+
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
+        await sleep(30);
+
+        const user = createMockUser(client);
+        const channel = createMockTextChannel(client, guild.id);
+        const message = createMockMessage(client, channel.id, user);
+        client.emit("messageCreate", message);
       })();
     });
   });
@@ -533,7 +701,7 @@ describe("PluginBlueprint", () => {
   });
 
   describe("Misc", () => {
-    it("pluginData contains everything", () => {
+    it("pluginData contains everything (guild plugin)", () => {
       return (async () => {
         const TestPlugin: GuildPluginBlueprint<BasePluginType> = {
           name: "test-plugin",
@@ -542,7 +710,7 @@ describe("PluginBlueprint", () => {
             assert.ok(pluginData.cooldowns instanceof CooldownManager);
             assert.ok(pluginData.commands instanceof PluginCommandManager);
             assert.ok(pluginData.config instanceof PluginConfigManager);
-            assert.ok(pluginData.events instanceof PluginEventManager);
+            assert.ok(pluginData.events instanceof GuildPluginEventManager);
             assert.ok(pluginData.locks instanceof LockManager);
           },
         };
@@ -564,6 +732,34 @@ describe("PluginBlueprint", () => {
 
         const guild = createMockGuild(client);
         client.emit("guildAvailable", guild);
+        await sleep(30);
+      })();
+    });
+
+    it("pluginData contains everything (global plugin)", () => {
+      return (async () => {
+        const TestPlugin: GlobalPluginBlueprint<BasePluginType> = {
+          name: "test-plugin",
+          onLoad(pluginData) {
+            assert.ok(pluginData.client != null);
+            assert.ok(pluginData.cooldowns instanceof CooldownManager);
+            assert.ok(pluginData.commands instanceof PluginCommandManager);
+            assert.ok(pluginData.config instanceof PluginConfigManager);
+            assert.ok(pluginData.events instanceof GlobalPluginEventManager);
+            assert.ok(pluginData.locks instanceof LockManager);
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [TestPlugin],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("ready");
         await sleep(30);
       })();
     });

@@ -3,6 +3,7 @@
   * `plugin()` => `guildPlugin()`, `globalPlugin()`
   * `eventListener()` => `guildEventListener()`, `globalEventListener()`
   * `command()` => `guildCommand()`, `globalCommand()`
+  * `PluginEventManager` => `GuildPluginEventManager`, `GlobalPluginEventManager`
   * `Knub#loadPlugin()` => `Knub#loadGuildPlugin()`, `Knub#loadGlobalPlugin()`
   * `Knub#unloadPlugin()` => `Knub#unloadGuildPlugin()`, `Knub#unloadGlobalPlugin()`
   * `Knub#reloadPlugin()` => `Knub#reloadGuildPlugin()`, `Knub#reloadGlobalPlugin()`

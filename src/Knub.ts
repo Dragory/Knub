@@ -5,7 +5,6 @@ import { get } from "./utils";
 import { LockManager } from "./locks/LockManager";
 import { BasePluginData, GuildPluginData, GlobalPluginData, AnyPluginData } from "./plugins/PluginData";
 import { PluginConfigManager } from "./config/PluginConfigManager";
-import { PluginEventManager } from "./events/PluginEventManager";
 import { PluginCommandManager } from "./commands/PluginCommandManager";
 import { CooldownManager } from "./cooldowns/CooldownManager";
 import { PluginLoadError } from "./plugins/PluginLoadError";
@@ -32,6 +31,9 @@ import {
 import { UnknownPluginError } from "./plugins/UnknownPluginError";
 import { BasePluginType } from "./plugins/pluginTypes";
 import { ConfigValidationError } from "./config/ConfigValidationError";
+import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
+import { EventRelay } from "./events/EventRelay";
+import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 
 const defaultKnubParams: KnubArgs<BaseConfig<BasePluginType>, BaseConfig<BasePluginType>> = {
   guildPlugins: [],
@@ -55,6 +57,7 @@ export class Knub<
   TGlobalConfig extends BaseConfig<any> = BaseConfig<BasePluginType>
 > extends EventEmitter {
   protected client: Client;
+  protected eventRelay: EventRelay;
 
   protected guildPlugins: GuildPluginMap = new Map();
   protected globalPlugins: GlobalPluginMap = new Map();
@@ -76,6 +79,7 @@ export class Knub<
     };
 
     this.client = client;
+    this.eventRelay = new EventRelay(client);
 
     this.globalContext = {
       config: null,
@@ -383,7 +387,7 @@ export class Knub<
     pluginData.context = "guild";
     pluginData.guild = this.client.guilds.get(ctx.guildId);
 
-    pluginData.events = new PluginEventManager<GuildPluginData<TPluginType>>();
+    pluginData.events = new GuildPluginEventManager<GuildPluginData<TPluginType>>(this.eventRelay);
     pluginData.commands = new PluginCommandManager<GuildPluginData<TPluginType>>(this.client, {
       prefix: ctx.config.prefix,
     });
@@ -462,7 +466,7 @@ export class Knub<
     >;
     pluginData.context = "global";
 
-    pluginData.events = new PluginEventManager<GlobalPluginData<TPluginType>>();
+    pluginData.events = new GlobalPluginEventManager<GlobalPluginData<TPluginType>>(this.eventRelay);
     pluginData.commands = new PluginCommandManager<GlobalPluginData<TPluginType>>(this.client, {
       prefix: ctx.config.prefix,
     });

@@ -1,9 +1,12 @@
-import { Listener, OnOpts } from "./PluginEventManager";
+import { Listener, OnOpts } from "./BasePluginEventManager";
 import { BasePluginType } from "../plugins/pluginTypes";
 import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../plugins/PluginData";
+import { GuildEvent, ValidEvent } from "./eventTypes";
 
-export interface EventListenerBlueprint<TPluginData extends AnyPluginData<any>, TEventName extends string = any>
-  extends OnOpts {
+export interface EventListenerBlueprint<
+  TPluginData extends AnyPluginData<any>,
+  TEventName extends ValidEvent = ValidEvent
+> extends OnOpts {
   event: TEventName;
   listener: Listener<TPluginData, TEventName>;
 }
@@ -11,14 +14,20 @@ export interface EventListenerBlueprint<TPluginData extends AnyPluginData<any>, 
 /**
  * Helper function to create an event listener blueprint with type hints
  */
-type EventListenerBlueprintCreatorIdentity<TPluginData extends AnyPluginData<any>> = <TEventName extends string>(
+type EventListenerBlueprintCreatorIdentity<
+  TPluginData extends AnyPluginData<any>,
+  TBaseEventName extends ValidEvent
+> = <TEventName extends TBaseEventName>(
   blueprint: EventListenerBlueprint<TPluginData, TEventName>
 ) => EventListenerBlueprint<TPluginData, TEventName>;
 
 /**
  * Helper function to create an event listener blueprint with just event name and listener function
  */
-type EventListenerBlueprintCreatorWithoutOpts<TPluginData extends AnyPluginData<any>> = <TEventName extends string>(
+type EventListenerBlueprintCreatorWithoutOpts<
+  TPluginData extends AnyPluginData<any>,
+  TBaseEventName extends ValidEvent
+> = <TEventName extends TBaseEventName>(
   event: TEventName,
   listener: EventListenerBlueprint<TPluginData, TEventName>["listener"]
 ) => EventListenerBlueprint<TPluginData, TEventName>;
@@ -26,17 +35,20 @@ type EventListenerBlueprintCreatorWithoutOpts<TPluginData extends AnyPluginData<
 /**
  * Helper function to create an event listener blueprint with event name, options, and a listener function
  */
-type EventListenerBlueprintCreatorWithOpts<TPluginData extends AnyPluginData<any>> = <TEventName extends string>(
+type EventListenerBlueprintCreatorWithOpts<
+  TPluginData extends AnyPluginData<any>,
+  TBaseEventName extends ValidEvent
+> = <TEventName extends TBaseEventName>(
   event: TEventName,
   options: Omit<EventListenerBlueprint<TPluginData, TEventName>, "listener" | "event">,
   listener: EventListenerBlueprint<TPluginData, TEventName>["listener"]
 ) => EventListenerBlueprint<TPluginData, TEventName>;
 
 // prettier-ignore
-type EventListenerBlueprintCreator<TPluginData extends AnyPluginData<any>> =
-  & EventListenerBlueprintCreatorIdentity<TPluginData>
-  & EventListenerBlueprintCreatorWithoutOpts<TPluginData>
-  & EventListenerBlueprintCreatorWithOpts<TPluginData>;
+type EventListenerBlueprintCreator<TPluginData extends AnyPluginData<any>, TEventName extends ValidEvent> =
+  & EventListenerBlueprintCreatorIdentity<TPluginData, TEventName>
+  & EventListenerBlueprintCreatorWithoutOpts<TPluginData, TEventName>
+  & EventListenerBlueprintCreatorWithOpts<TPluginData, TEventName>;
 
 function eventListener<TPluginData extends AnyPluginData<BasePluginType>>(...args) {
   if (args.length === 1) {
@@ -62,7 +74,7 @@ function eventListener<TPluginData extends AnyPluginData<BasePluginType>>(...arg
     };
   } else if (args.length === 0) {
     // No arguments, with TPluginType - return self
-    return eventListener as EventListenerBlueprintCreator<TPluginData>;
+    return eventListener as EventListenerBlueprintCreator<TPluginData, ValidEvent>;
   }
 
   throw new Error(`No signature of eventListener() takes ${args.length} arguments`);
@@ -75,7 +87,7 @@ function eventListener<TPluginData extends AnyPluginData<BasePluginType>>(...arg
  * To specify `TPluginType` for additional type hints, use:
  * `guildEventListener<TPluginType>()(blueprint)`
  */
-export function guildEventListener<TEventName extends string>(
+export function guildEventListener<TEventName extends GuildEvent>(
   blueprint: EventListenerBlueprint<GuildPluginData<any>, TEventName>
 ): EventListenerBlueprint<GuildPluginData<any>, TEventName>;
 
@@ -86,7 +98,7 @@ export function guildEventListener<TEventName extends string>(
  * To specify `TPluginType` for additional type hints, use:
  * `guildEventListener<TPluginType>()(event, listener)`
  */
-export function guildEventListener<TEventName extends string>(
+export function guildEventListener<TEventName extends GuildEvent>(
   event: TEventName,
   listener: EventListenerBlueprint<GuildPluginData<any>, TEventName>["listener"]
 ): EventListenerBlueprint<GuildPluginData<any>, TEventName>;
@@ -98,7 +110,7 @@ export function guildEventListener<TEventName extends string>(
  * To specify `TPluginType` for additional type hints, use:
  * `guildEventListener<TPluginType>()(event, options, listener)`
  */
-export function guildEventListener<TEventName extends string>(
+export function guildEventListener<TEventName extends GuildEvent>(
   event: TEventName,
   options: Omit<EventListenerBlueprint<GuildPluginData<any>, TEventName>, "listener" | "event">,
   listener: EventListenerBlueprint<GuildPluginData<any>, TEventName>["listener"]
@@ -108,7 +120,8 @@ export function guildEventListener<TEventName extends string>(
  * Specify `TPluginType` for type hints and return self
  */
 export function guildEventListener<TPluginType extends BasePluginType>(): EventListenerBlueprintCreator<
-  GuildPluginData<TPluginType>
+  GuildPluginData<TPluginType>,
+  GuildEvent
 >;
 
 export function guildEventListener(...args) {
@@ -122,7 +135,7 @@ export function guildEventListener(...args) {
  * To specify `TPluginType` for additional type hints, use:
  * `globalEventListener<TPluginType>()(blueprint)`
  */
-export function globalEventListener<TEventName extends string>(
+export function globalEventListener<TEventName extends ValidEvent>(
   blueprint: EventListenerBlueprint<GlobalPluginData<any>, TEventName>
 ): EventListenerBlueprint<GlobalPluginData<any>, TEventName>;
 
@@ -133,7 +146,7 @@ export function globalEventListener<TEventName extends string>(
  * To specify `TPluginType` for additional type hints, use:
  * `globalEventListener<TPluginType>()(event, listener)`
  */
-export function globalEventListener<TEventName extends string>(
+export function globalEventListener<TEventName extends ValidEvent>(
   event: TEventName,
   listener: EventListenerBlueprint<GlobalPluginData<any>, TEventName>["listener"]
 ): EventListenerBlueprint<GlobalPluginData<any>, TEventName>;
@@ -145,7 +158,7 @@ export function globalEventListener<TEventName extends string>(
  * To specify `TPluginType` for additional type hints, use:
  * `globalEventListener<TPluginType>()(event, options, listener)`
  */
-export function globalEventListener<TEventName extends string>(
+export function globalEventListener<TEventName extends ValidEvent>(
   event: TEventName,
   options: Omit<EventListenerBlueprint<GlobalPluginData<any>, TEventName>, "listener" | "event">,
   listener: EventListenerBlueprint<GlobalPluginData<any>, TEventName>["listener"]
@@ -155,7 +168,8 @@ export function globalEventListener<TEventName extends string>(
  * Specify `TPluginType` for type hints and return self
  */
 export function globalEventListener<TPluginType extends BasePluginType>(): EventListenerBlueprintCreator<
-  GlobalPluginData<TPluginType>
+  GlobalPluginData<TPluginType>,
+  ValidEvent
 >;
 
 export function globalEventListener(...args) {
