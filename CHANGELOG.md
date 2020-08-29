@@ -7,6 +7,12 @@
   * `Knub#loadPlugin()` => `Knub#loadGuildPlugin()`, `Knub#loadGlobalPlugin()`
   * `Knub#unloadPlugin()` => `Knub#unloadGuildPlugin()`, `Knub#unloadGlobalPlugin()`
   * `Knub#reloadPlugin()` => `Knub#reloadGuildPlugin()`, `Knub#reloadGlobalPlugin()`
+* Event handling performance improvements by centralizing guild/global event filtering/passing in an `EventRelay` object
+  * Event arguments are now only converted to Knub's object representation once
+  * Event guild is now also only checked once
+  * Guild events are now only passed to the `GuildPluginEventManager` objects of the plugins of the matching guild
+  * Global events are now only passed to the `GlobalPluginEventManager` objects of global plugins
+    * This should especially improve performance with presence events, which are often global (e.g. `userUpdate`)
 
 # 30.0.0-beta.21
 * Update `knub-command-manager` to `v8.1.2`, fixing error messages on invalid option values
