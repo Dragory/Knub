@@ -1,5 +1,10 @@
+# 30.0.0-beta.23
+* **BREAKING CHANGE:** Fix `guildCommand()` and `globalCommand()` requiring a full PluginData type instead of just a
+  PluginType type. The functions now only require a PluginType, which makes them consistent with other helpers in Knub.
+* Small other type fixes
+
 # 30.0.0-beta.22
-* More type-safety between guild plugins and global plugins
+* **BREAKING CHANGE:** Better type-safety between guild plugins and global plugins
   * `plugin()` => `guildPlugin()`, `globalPlugin()`
   * `eventListener()` => `guildEventListener()`, `globalEventListener()`
   * `command()` => `guildCommand()`, `globalCommand()`
