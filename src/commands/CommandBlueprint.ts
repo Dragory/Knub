@@ -169,7 +169,9 @@ export function guildCommand<_TSignature extends TSignatureOrArray<any>>(
 /**
  * Specify `TPluginType` for type hints and return self
  */
-export function guildCommand<TPluginData extends AnyPluginData<any>>(): CommandBlueprintCreator<TPluginData>;
+export function guildCommand<TPluginType extends BasePluginType>(): CommandBlueprintCreator<
+  GuildPluginData<TPluginType>
+>;
 
 export function guildCommand(...args) {
   return command<GuildPluginData<any>>(...args);
@@ -229,7 +231,9 @@ export function globalCommand<_TSignature extends TSignatureOrArray<any>>(
 /**
  * Specify `TPluginType` for type hints and return self
  */
-export function globalCommand<TPluginData extends AnyPluginData<any>>(): CommandBlueprintCreator<TPluginData>;
+export function globalCommand<TPluginType extends BasePluginType>(): CommandBlueprintCreator<
+  GlobalPluginData<TPluginType>
+>;
 
 export function globalCommand(...args) {
   return command<GlobalPluginData<any>>(...args);

@@ -1,7 +1,6 @@
 import { number, string } from "knub-command-manager";
 import { expect } from "chai";
 import { BasePluginType } from "..";
-import { GuildPluginData } from "../plugins/PluginData";
 import { guildCommand } from "./CommandBlueprint";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
@@ -87,7 +86,7 @@ describe("guildCommand() helper", () => {
   }
 
   it("<TPluginType>()(blueprint)", () => {
-    const blueprint = guildCommand<GuildPluginData<CustomPluginType>>()({
+    const blueprint = guildCommand<CustomPluginType>()({
       trigger: "cmd",
       permission: null,
       signature: {
@@ -110,7 +109,7 @@ describe("guildCommand() helper", () => {
 
   it("<TPluginType>()(trigger, run)", () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const blueprint = guildCommand<GuildPluginData<CustomPluginType>>()("cmd", ({ pluginData }) => {
+    const blueprint = guildCommand<CustomPluginType>()("cmd", ({ pluginData }) => {
       // Test type inference
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const result: AssertEquals<typeof pluginData.state.foo, 5> = true;
@@ -123,7 +122,7 @@ describe("guildCommand() helper", () => {
 
   it("<TPluginType>()(trigger, signature, run)", () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const blueprint = guildCommand<GuildPluginData<CustomPluginType>>()(
+    const blueprint = guildCommand<CustomPluginType>()(
       "cmd",
       {
         foo: string(),
@@ -145,7 +144,7 @@ describe("guildCommand() helper", () => {
 
   it("<TPluginType>()(trigger, signature, options, run)", () => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const blueprint = guildCommand<GuildPluginData<CustomPluginType>>()(
+    const blueprint = guildCommand<CustomPluginType>()(
       "cmd",
       {
         foo: string(),
