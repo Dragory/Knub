@@ -73,6 +73,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -110,6 +111,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -165,6 +167,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -199,6 +202,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -229,6 +233,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -262,6 +267,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -292,6 +298,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -332,6 +339,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -374,6 +382,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -430,6 +439,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -469,6 +479,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -509,6 +520,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -554,6 +566,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -627,6 +640,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -686,6 +700,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -727,6 +742,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
@@ -759,6 +775,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
       })();
@@ -795,6 +812,7 @@ describe("PluginBlueprint", () => {
         });
 
         knub.run();
+        client.emit("connect");
         client.emit("ready");
         await sleep(30);
 
