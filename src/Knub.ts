@@ -143,14 +143,6 @@ export class Knub<
   }
 
   public async run(): Promise<void> {
-    this.client.on("debug", async (str) => {
-      this.log("debug", `[ERIS] ${str}`);
-    });
-
-    this.client.on("error", async (err: Error) => {
-      this.log("error", `[ERIS] ${String(err)}`);
-    });
-
     const loadErrorInterval = setInterval(() => {
       this.log("info", "Still connecting...");
     }, 30 * 1000);
