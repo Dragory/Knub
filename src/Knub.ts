@@ -173,6 +173,11 @@ export class Knub<
       await this.loadAllAvailableGuilds();
     });
 
+    this.client.on("guildCreate", (guild: Guild) => {
+      this.log("info", `Joined guild: ${guild.id}`);
+      this.loadGuild(guild.id);
+    });
+
     this.client.on("guildAvailable", (guild: Guild) => {
       this.log("info", `Guild available: ${guild.id}`);
       this.loadGuild(guild.id);
