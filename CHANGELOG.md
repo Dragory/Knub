@@ -1,3 +1,5 @@
+
+
 # 30.0.0-beta.23
 * **BREAKING CHANGE:** Fix `guildCommand()` and `globalCommand()` requiring a full PluginData type instead of just a
   PluginType type. The functions now only require a PluginType, which makes them consistent with other helpers in Knub.
@@ -12,6 +14,9 @@
   * `Knub#loadPlugin()` => `Knub#loadGuildPlugin()`, `Knub#loadGlobalPlugin()`
   * `Knub#unloadPlugin()` => `Knub#unloadGuildPlugin()`, `Knub#unloadGlobalPlugin()`
   * `Knub#reloadPlugin()` => `Knub#reloadGuildPlugin()`, `Knub#reloadGlobalPlugin()`
+  * `PluginData` => `GuildPluginData`, `GlobalPluginData`
+  * `PluginData.guildConfig` => `GuildPluginData.fullConfig`
+  * `PluginData.globalConfig` => `GlobalPluginData.fullConfig`
 * Event handling performance improvements by centralizing guild/global event filtering/passing in an `EventRelay` object
   * Event arguments are now only converted to Knub's object representation once
   * Event guild is now also only checked once
