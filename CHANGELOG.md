@@ -1,4 +1,6 @@
-
+# 30.0.0-beta.24
+* Improve start-up handling to be able to load guilds earlier
+* Guilds are now automatically loaded when the bot initially joins the guilds
 
 # 30.0.0-beta.23
 * **BREAKING CHANGE:** Fix `guildCommand()` and `globalCommand()` requiring a full PluginData type instead of just a
