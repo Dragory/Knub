@@ -155,7 +155,7 @@ export class Knub<
       this.log("info", "Still connecting...");
     }, 30 * 1000);
 
-    this.client.once("ready", async () => {
+    this.client.once("connect", async () => {
       clearInterval(loadErrorInterval);
 
       this.log("info", "Bot connected!");
@@ -165,21 +165,22 @@ export class Knub<
       await this.loadGlobalConfig();
       await this.loadAllGlobalPlugins();
 
-      this.log("info", "Loading guilds..");
-
-      this.client.on("guildAvailable", (guild: Guild) => {
-        this.log("info", `Joined guild: ${guild.id}`);
-        this.loadGuild(guild.id);
-      });
-
-      this.client.on("guildUnavailable", (guild: Guild) => {
-        this.log("info", `Left guild: ${guild.id}`);
-        this.unloadGuild(guild.id);
-      });
-
-      await this.loadAllGuilds();
       this.log("info", "All loaded, the bot is now running!");
       this.emit("loadingFinished");
+    });
+
+    this.client.once("ready", async () => {
+      await this.loadAllAvailableGuilds();
+    });
+
+    this.client.on("guildAvailable", (guild: Guild) => {
+      this.log("info", `Guild available: ${guild.id}`);
+      this.loadGuild(guild.id);
+    });
+
+    this.client.on("guildUnavailable", (guild: Guild) => {
+      this.log("info", `Guild unavailable: ${guild.id}`);
+      this.unloadGuild(guild.id);
     });
 
     await this.client.connect();
@@ -191,7 +192,7 @@ export class Knub<
     await this.client.disconnect({ reconnect: false });
   }
 
-  protected async loadAllGuilds(): Promise<void> {
+  protected async loadAllAvailableGuilds(): Promise<void> {
     const guilds: Guild[] = Array.from(this.client.guilds.values());
     const loadPromises = guilds.map((guild) => this.loadGuild(guild.id));
 
