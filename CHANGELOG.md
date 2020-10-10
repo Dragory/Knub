@@ -1,3 +1,6 @@
+# 30.0.0-beta.25
+* Fixed global plugins attempting to load before the bot user was available
+
 # 30.0.0-beta.24
 * Improve start-up handling to be able to load guilds earlier
 * Guilds are now automatically loaded when the bot initially joins the guilds
