@@ -149,20 +149,21 @@ export class Knub<
 
     this.client.once("connect", async () => {
       clearInterval(loadErrorInterval);
-
       this.log("info", "Bot connected!");
+    });
 
-      this.log("info", "Loading global plugins...");
+    this.client.once("ready", async () => {
+      this.log("info", "Received READY");
+      this.log("info", "- Loading global plugins...");
 
       await this.loadGlobalConfig();
       await this.loadAllGlobalPlugins();
 
-      this.log("info", "All loaded, the bot is now running!");
-      this.emit("loadingFinished");
-    });
-
-    this.client.once("ready", async () => {
+      this.log("info", "- Loading available servers that haven't been loaded yet...");
       await this.loadAllAvailableGuilds();
+
+      this.log("info", "Done!");
+      this.emit("loadingFinished");
     });
 
     this.client.on("guildCreate", (guild: Guild) => {
