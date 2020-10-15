@@ -1,3 +1,6 @@
+# 30.0.0-beta.26
+* Update `messageReactionAdd` and `messageReactionRemove` event arguments
+
 # 30.0.0-beta.25
 * Fixed global plugins attempting to load before the bot user was available
 

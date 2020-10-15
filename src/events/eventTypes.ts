@@ -169,12 +169,12 @@ export interface KnownEvents {
   messageReactionAdd: {
     message: PossiblyUncachedMessage;
     emoji: Emoji;
-    userID: string;
+    member: Member | { id: string };
   };
   messageReactionRemove: {
     message: PossiblyUncachedMessage;
     emoji: Emoji;
-    userID: string;
+    member: Member | { id: string };
   };
   messageUpdate: {
     message: Message;
@@ -322,8 +322,8 @@ export const fromErisArgs: FromErisArgsObj = {
   messageReactionRemoveAll: (message) => ({ message }),
   messageReactionRemoveEmoji: (message, emoji) => ({ message, emoji }),
   messageDeleteBulk: (messages) => ({ messages }),
-  messageReactionAdd: (message, emoji, userID) => ({ message, emoji, userID }),
-  messageReactionRemove: (message, emoji, userID) => ({ message, emoji, userID }),
+  messageReactionAdd: (message, emoji, member) => ({ message, emoji, member }),
+  messageReactionRemove: (message, emoji, member) => ({ message, emoji, member }),
   messageUpdate: (message, oldMessage) => ({ message, oldMessage }),
   presenceUpdate: (other, oldPresence) => ({ other, oldPresence }),
   rawWS: (packet, id) => ({ packet, id }),
