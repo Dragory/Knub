@@ -63,15 +63,11 @@ export const eventToUser: EventToUser = {
   messageCreate: ({ message }) => message.author,
   messageDelete: ({ message }) => (message as Message).author,
   messageDeleteBulk: () => undefined,
-  messageReactionAdd: ({ message, userID }) => {
-    const member =
-      (message.channel as GuildChannel).guild && (message.channel as GuildChannel).guild.members.get(userID);
-    return member && member.user;
+  messageReactionAdd: ({ member }) => {
+    return member instanceof Member ? member.user : null;
   },
-  messageReactionRemove: ({ message, userID }) => {
-    const member =
-      (message.channel as GuildChannel).guild && (message.channel as GuildChannel).guild.members.get(userID);
-    return member && member.user;
+  messageReactionRemove: ({ member }) => {
+    return member instanceof Member ? member.user : null;
   },
   messageUpdate: ({ message }) => message.author,
   presenceUpdate: ({ other }) => other.user,
