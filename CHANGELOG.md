@@ -1,3 +1,6 @@
+# 30.0.0-beta.27
+* Update peer dependency to Eris ^0.14.0
+
 # 30.0.0-beta.26
 * Update `messageReactionAdd` and `messageReactionRemove` event arguments
 
