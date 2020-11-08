@@ -1,3 +1,7 @@
+# 30.0.0-beta.28
+* Knub is now compiled with TypeScript strict mode
+  * This has resulted in some typing tweaks/changes
+
 # 30.0.0-beta.27
 * Update peer dependency to Eris ^0.14.0
 
