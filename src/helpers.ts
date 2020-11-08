@@ -3,7 +3,7 @@
  */
 
 import {
-  BaseInvite,
+  Invite,
   Client,
   Emoji,
   Guild,
@@ -218,7 +218,7 @@ export function disableCodeBlocks(str: string): string {
 /**
  * Returns the full invite link for an invite object
  */
-export function getInviteLink(inv: BaseInvite) {
+export function getInviteLink(inv: Invite) {
   return `https://discord.gg/${inv.code}`;
 }
 

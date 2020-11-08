@@ -1,7 +1,7 @@
 import {
   AnyChannel,
   AnyGuildChannel,
-  BaseInvite,
+  Invite,
   Call,
   Emoji,
   FriendSuggestionReasons,
@@ -26,6 +26,7 @@ import {
   UnavailableGuild,
   User,
   VoiceChannel,
+  InviteWithMetadata,
 } from "eris";
 
 /**
@@ -144,11 +145,11 @@ export interface KnownEvents {
   };
   inviteCreate: {
     guild: Guild;
-    invite: BaseInvite;
+    invite: Invite & InviteWithMetadata;
   };
   inviteDelete: {
     guild: Guild;
-    invite: BaseInvite;
+    invite: Invite & InviteWithMetadata;
   };
   messageCreate: {
     message: Message;
