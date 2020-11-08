@@ -42,18 +42,18 @@ export class LockManager {
     this.lockGCTimeouts = new Map();
   }
 
-  public acquire(keys: string | string[], lockTimeout: number = null) {
+  public acquire(keys: string | string[], lockTimeout?: number) {
     if (!Array.isArray(keys)) keys = [keys];
     if (lockTimeout == null) lockTimeout = this.lockTimeout;
 
     keys.forEach((key) => {
-      clearTimeout(this.lockGCTimeouts.get(key));
+      clearTimeout(this.lockGCTimeouts.get(key)!);
       this.lockGCTimeouts.delete(key);
     });
 
     // To acquire a lock, we must first wait for all matching old locks to resolve
-    const oldLockPromises = keys.reduce(
-      (lockPromises, key) => (this.locks.has(key) ? [...lockPromises, this.locks.get(key)] : lockPromises),
+    const oldLockPromises = keys.reduce<Array<Promise<Lock>>>(
+      (lockPromises, key) => (this.locks.has(key) ? [...lockPromises, this.locks.get(key)!] : lockPromises),
       []
     );
     const newLockPromise = Promise.all(oldLockPromises)

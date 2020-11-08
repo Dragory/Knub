@@ -113,10 +113,11 @@ describe("PluginConfigManager", () => {
         },
       },
       {},
-      null,
-      (opts) => {
-        opts.config.someThing = 7;
-        return opts;
+      {
+        preprocessor(opts) {
+          opts.config.someThing = 7;
+          return opts;
+        },
       }
     );
     await configManager.init();
@@ -135,11 +136,12 @@ describe("PluginConfigManager", () => {
         },
       },
       {},
-      null,
-      async (opts) => {
-        await sleep(1);
-        opts.config.someThing = 20;
-        return opts;
+      {
+        async preprocessor(opts) {
+          await sleep(1);
+          opts.config.someThing = 20;
+          return opts;
+        },
       }
     );
     await configManager.init();
@@ -158,10 +160,10 @@ describe("PluginConfigManager", () => {
         },
       },
       {},
-      null,
-      null,
-      () => {
-        throw new ConfigValidationError("Test");
+      {
+        validator() {
+          throw new ConfigValidationError("Test");
+        },
       }
     );
 
@@ -187,11 +189,11 @@ describe("PluginConfigManager", () => {
         },
       },
       {},
-      null,
-      null,
-      async () => {
-        await sleep(1);
-        throw new ConfigValidationError("Test");
+      {
+        async validator() {
+          await sleep(1);
+          throw new ConfigValidationError("Test");
+        },
       }
     );
 

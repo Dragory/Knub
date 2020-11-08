@@ -1,12 +1,13 @@
 import {
   AnyChannel,
   AnyGuildChannel,
-  Invite,
   Call,
   Emoji,
   FriendSuggestionReasons,
   GroupChannel,
   Guild,
+  Invite,
+  InviteWithMetadata,
   Member,
   MemberPartial,
   Message,
@@ -26,7 +27,6 @@ import {
   UnavailableGuild,
   User,
   VoiceChannel,
-  InviteWithMetadata,
 } from "eris";
 
 /**

@@ -64,10 +64,10 @@ export const eventToUser: EventToUser = {
   messageDelete: ({ message }) => (message as Message).author,
   messageDeleteBulk: () => undefined,
   messageReactionAdd: ({ member }) => {
-    return member instanceof Member ? member.user : null;
+    return member instanceof Member ? member.user : undefined;
   },
   messageReactionRemove: ({ member }) => {
-    return member instanceof Member ? member.user : null;
+    return member instanceof Member ? member.user : undefined;
   },
   messageUpdate: ({ message }) => message.author,
   presenceUpdate: ({ other }) => other.user,

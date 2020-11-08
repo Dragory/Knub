@@ -15,28 +15,28 @@ export type LogFn = (level, ...args) => void;
 
 export interface KnubOptions<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> {
   autoInitGuilds?: boolean;
-  getConfig?: (id: string) => Awaitable<any>;
+  getConfig: (id: string) => Awaitable<any>;
   getEnabledGuildPlugins?: (ctx: GuildContext<TGuildConfig>, plugins: GuildPluginMap) => Awaitable<string[]>;
-  canLoadGuild?: (guildId: string) => Awaitable<boolean>;
+  canLoadGuild: (guildId: string) => Awaitable<boolean>;
   logFn?: LogFn;
-  sendErrorMessageFn?: StatusMessageFn;
-  sendSuccessMessageFn?: StatusMessageFn;
+  sendErrorMessageFn: StatusMessageFn;
+  sendSuccessMessageFn: StatusMessageFn;
   [key: string]: any;
 }
 
 export interface KnubArgs<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> {
-  guildPlugins?: Array<GuildPluginBlueprint<any>>;
-  globalPlugins?: Array<GlobalPluginBlueprint<any>>;
-  options?: KnubOptions<TGuildConfig, TGlobalConfig>;
+  guildPlugins: Array<GuildPluginBlueprint<any>>;
+  globalPlugins: Array<GlobalPluginBlueprint<any>>;
+  options: Partial<KnubOptions<TGuildConfig, TGlobalConfig>>;
 }
 
 export interface LoadedGuildPlugin<TPluginType extends BasePluginType> {
-  blueprint: GuildPluginBlueprint<TPluginType>;
+  blueprint: GuildPluginBlueprint<GuildPluginData<TPluginType>>;
   pluginData: GuildPluginData<TPluginType>;
 }
 
 export interface LoadedGlobalPlugin<TPluginType extends BasePluginType> {
-  blueprint: GlobalPluginBlueprint<TPluginType>;
+  blueprint: GlobalPluginBlueprint<GlobalPluginData<TPluginType>>;
   pluginData: GlobalPluginData<TPluginType>;
 }
 

@@ -5,7 +5,7 @@ import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { CustomOverrideMatcher } from "../config/configUtils";
 import { BasePluginType } from "./pluginTypes";
-import { GuildEvent } from "../events/eventTypes";
+import { GuildEvent, ValidEvent } from "../events/eventTypes";
 
 /**
  * Each value in the public interface is a function that returns the actual
@@ -77,8 +77,8 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
 /**
  * Blueprint for a plugin that can only be loaded in a guild context
  */
-export interface GuildPluginBlueprint<TPluginType extends BasePluginType>
-  extends BasePluginBlueprint<GuildPluginData<TPluginType>> {
+export interface GuildPluginBlueprint<TPluginData extends GuildPluginData<any>>
+  extends BasePluginBlueprint<TPluginData> {
   /**
    * Names of other guild plugins that are required for this plugin to function. They will be loaded before this plugin.
    */
@@ -87,14 +87,30 @@ export interface GuildPluginBlueprint<TPluginType extends BasePluginType>
   /**
    * Event listeners that are automatically registered on plugin load
    */
-  events?: Array<EventListenerBlueprint<GuildPluginData<TPluginType>, GuildEvent>>;
+  events?: Array<AnyGuildEventListenerBlueprint<TPluginData>>;
 }
+
+/**
+ * This is used in conjunction with arr[keyof arr] syntax in AnyGuildEventListenerBlueprint to create
+ * a union type of event listener blueprints for each different guild event.
+ *
+ * We can't simply do EventListenerBlueprint<GuildPluginData<TPluginType>, GuildEvent>, because then adding
+ * an event listener blueprint for a single event isn't valid in TS strict mode anymore, as technically that specific
+ * event listener blueprint doesn't accept *every* GuildEvent, just the specific one.
+ */
+type GuildEventListenerBlueprintsHelper<TPluginData extends GuildPluginData<any>> = {
+  [K in GuildEvent]: EventListenerBlueprint<TPluginData, K>;
+};
+
+export type AnyGuildEventListenerBlueprint<
+  TPluginData extends GuildPluginData<any>
+> = GuildEventListenerBlueprintsHelper<TPluginData>[keyof GuildEventListenerBlueprintsHelper<TPluginData>];
 
 /**
  * Blueprint for a plugin that can only be loaded in a global context
  */
-export interface GlobalPluginBlueprint<TPluginType extends BasePluginType>
-  extends BasePluginBlueprint<GlobalPluginData<TPluginType>> {
+export interface GlobalPluginBlueprint<TPluginData extends GlobalPluginData<any>>
+  extends BasePluginBlueprint<TPluginData> {
   /**
    * Names of other global plugins that are required for this plugin to function.
    * They will be loaded before this plugin.
@@ -104,8 +120,24 @@ export interface GlobalPluginBlueprint<TPluginType extends BasePluginType>
   /**
    * Event listeners that are automatically registered on plugin load
    */
-  events?: Array<EventListenerBlueprint<GlobalPluginData<TPluginType>>>;
+  events?: Array<AnyGlobalEventListenerBlueprint<TPluginData>>;
 }
+
+/**
+ * This is used in conjunction with arr[keyof arr] syntax in AnyGlobalEventListenerBlueprint to create
+ * a union type of event listener blueprints for each different global event (i.e. each ValidEvent).
+ *
+ * We can't simply do EventListenerBlueprint<GlobalPluginData<TPluginType>, ValidEvent>, because then adding
+ * an event listener blueprint for a single event isn't valid in TS strict mode anymore, as technically that specific
+ * event listener blueprint doesn't accept *every* ValidEvent, just the specific one.
+ */
+type GlobalEventListenerBlueprintsHelper<TPluginData extends GlobalPluginData<any>> = {
+  [K in ValidEvent]: EventListenerBlueprint<TPluginData, K>;
+};
+
+export type AnyGlobalEventListenerBlueprint<
+  TPluginData extends GlobalPluginData<any>
+> = GlobalEventListenerBlueprintsHelper<TPluginData>[keyof GlobalEventListenerBlueprintsHelper<TPluginData>];
 
 export type AnyPluginBlueprint = GuildPluginBlueprint<any> | GlobalPluginBlueprint<any>;
 
@@ -150,14 +182,16 @@ function plugin<TBlueprint extends AnyPluginBlueprint>(...args) {
  *
  * To specify `TPluginType` for additional type hints, use: `guildPlugin<TPluginType>()(blueprint)`
  */
-export function guildPlugin<TBlueprint extends GuildPluginBlueprint<any>>(blueprint: TBlueprint): TBlueprint;
+export function guildPlugin<TBlueprint extends GuildPluginBlueprint<GuildPluginData<any>>>(
+  blueprint: TBlueprint
+): TBlueprint;
 
 /**
  * Helper function that creates a plugin blueprint for a guild plugin.
  *
  * To specify `TPluginType` for additional type hints, use: `guildPlugin<TPluginType>()(name, blueprint)`
  */
-export function guildPlugin<TPartialBlueprint extends Omit<GuildPluginBlueprint<any>, "name">>(
+export function guildPlugin<TPartialBlueprint extends Omit<GuildPluginBlueprint<GuildPluginData<any>>, "name">>(
   name: string,
   blueprint: TPartialBlueprint
 ): TPartialBlueprint & { name: string };
@@ -166,7 +200,7 @@ export function guildPlugin<TPartialBlueprint extends Omit<GuildPluginBlueprint<
  * Specify `TPluginType` for type hints and return self
  */
 export function guildPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
-  GuildPluginBlueprint<TPluginType>
+  GuildPluginBlueprint<GuildPluginData<TPluginType>>
 >;
 
 export function guildPlugin(...args) {
@@ -178,14 +212,16 @@ export function guildPlugin(...args) {
  *
  * To specify `TPluginType` for additional type hints, use: `globalPlugin<TPluginType>()(blueprint)`
  */
-export function globalPlugin<TBlueprint extends GlobalPluginBlueprint<any>>(blueprint: TBlueprint): TBlueprint;
+export function globalPlugin<TBlueprint extends GlobalPluginBlueprint<GlobalPluginData<any>>>(
+  blueprint: TBlueprint
+): TBlueprint;
 
 /**
  * Helper function that creates a plugin blueprint for a global plugin.
  *
  * To specify `TPluginType` for additional type hints, use: `globalPlugin<TPluginType>()(name, blueprint)`
  */
-export function globalPlugin<TPartialBlueprint extends Omit<GlobalPluginBlueprint<any>, "name">>(
+export function globalPlugin<TPartialBlueprint extends Omit<GlobalPluginBlueprint<GlobalPluginData<any>>, "name">>(
   name: string,
   blueprint: TPartialBlueprint
 ): TPartialBlueprint & { name: string };
@@ -194,7 +230,7 @@ export function globalPlugin<TPartialBlueprint extends Omit<GlobalPluginBlueprin
  * Specify `TPluginType` for type hints and return self
  */
 export function globalPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
-  GlobalPluginBlueprint<TPluginType>
+  GlobalPluginBlueprint<GlobalPluginData<TPluginType>>
 >;
 
 export function globalPlugin(...args) {

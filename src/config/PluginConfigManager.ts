@@ -12,32 +12,36 @@ import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
 
 export interface ExtendedMatchParams extends MatchParams {
-  channelId?: string;
-  member?: Member;
-  message?: Message;
+  channelId?: string | null;
+  member?: Member | null;
+  message?: Message | null;
+}
+
+export interface PluginConfigManagerOpts<TPluginType extends BasePluginType> {
+  customOverrideMatcher?: CustomOverrideMatcher<AnyPluginData<TPluginType>>;
+  preprocessor?: ConfigPreprocessorFn<TPluginType>;
+  validator?: ConfigValidatorFn<TPluginType>;
 }
 
 export class PluginConfigManager<TPluginType extends BasePluginType> {
   private readonly levels: PermissionLevels;
   private options: PluginOptions<TPluginType>;
-  private readonly customOverrideMatcher: CustomOverrideMatcher<AnyPluginData<TPluginType>>;
-  private readonly preprocessor: ConfigPreprocessorFn<TPluginType>;
-  private readonly validator: ConfigValidatorFn<TPluginType>;
-  private pluginData: AnyPluginData<TPluginType>;
+  private readonly customOverrideMatcher?: CustomOverrideMatcher<AnyPluginData<TPluginType>>;
+  private readonly preprocessor?: ConfigPreprocessorFn<TPluginType>;
+  private readonly validator?: ConfigValidatorFn<TPluginType>;
+  private pluginData?: AnyPluginData<TPluginType>;
 
   constructor(
     defaultOptions: PluginOptions<TPluginType>,
     userOptions: PartialPluginOptions<TPluginType>,
     levels: PermissionLevels = {},
-    customOverrideMatcher?: CustomOverrideMatcher<AnyPluginData<TPluginType>>,
-    preprocessor?: ConfigPreprocessorFn<TPluginType>,
-    validator?: ConfigValidatorFn<TPluginType>
+    opts: PluginConfigManagerOpts<TPluginType> = {}
   ) {
     this.options = this.mergeOptions(defaultOptions, userOptions);
     this.levels = levels;
-    this.customOverrideMatcher = customOverrideMatcher;
-    this.preprocessor = preprocessor;
-    this.validator = validator;
+    this.customOverrideMatcher = opts.customOverrideMatcher;
+    this.preprocessor = opts.preprocessor;
+    this.validator = opts.validator;
   }
 
   public async init() {
@@ -63,7 +67,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   }
 
   protected getMemberLevel(member: Member) {
-    if (!isGuildPluginData(this.pluginData)) {
+    if (!isGuildPluginData(this.pluginData!)) {
       return null;
     }
 
@@ -116,7 +120,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     };
 
     return getMatchingPluginConfig<AnyPluginData<TPluginType>>(
-      this.pluginData,
+      this.pluginData!,
       this.options,
       finalMatchParams,
       this.customOverrideMatcher

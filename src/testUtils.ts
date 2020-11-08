@@ -36,7 +36,7 @@ export function createMockClient(): Client {
       }
 
       if (p === "getChannel") {
-        return function (channelId) {
+        return function (this: Client, channelId) {
           return this.guilds.get(this.channelGuildMap[channelId])?.channels.get(channelId);
         };
       }

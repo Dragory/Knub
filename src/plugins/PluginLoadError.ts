@@ -10,6 +10,8 @@ export class PluginLoadError extends Error {
     this.stack = originalError.stack;
 
     this.pluginName = pluginName;
-    this.guildId = isGuildContext(ctx) && ctx.guildId;
+    if (isGuildContext(ctx)) {
+      this.guildId = ctx.guildId;
+    }
   }
 }

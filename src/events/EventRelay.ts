@@ -22,17 +22,20 @@ export class EventRelay {
       this.guildListeners.set(guildId, new Map());
     }
 
-    const guildListeners = this.guildListeners.get(guildId);
+    const guildListeners = this.guildListeners.get(guildId)!;
     if (!guildListeners.has(ev)) {
       guildListeners.set(ev, new Set());
     }
 
-    guildListeners.get(ev).add(listener);
+    guildListeners.get(ev)!.add(listener as RelayListener<GuildEvent>);
     this.registerEventRelay(ev);
   }
 
   offGuildEvent<TEvent extends GuildEvent>(guildId: string, ev: TEvent, listener: RelayListener<TEvent>) {
-    this.guildListeners.get(guildId)?.get(ev)?.delete(listener);
+    this.guildListeners
+      .get(guildId)
+      ?.get(ev)
+      ?.delete(listener as RelayListener<GuildEvent>);
   }
 
   onAnyEvent<TEvent extends ValidEvent>(ev: TEvent, listener: RelayListener<TEvent>) {
@@ -40,7 +43,7 @@ export class EventRelay {
       this.anyListeners.set(ev, new Set());
     }
 
-    this.anyListeners.get(ev).add(listener);
+    this.anyListeners.get(ev)!.add(listener as RelayListener<ValidEvent>);
     this.registerEventRelay(ev);
   }
 
@@ -49,7 +52,7 @@ export class EventRelay {
       return;
     }
 
-    this.anyListeners.get(ev).delete(listener);
+    this.anyListeners.get(ev)!.delete(listener as RelayListener<ValidEvent>);
   }
 
   protected registerEventRelay(ev: ValidEvent) {
@@ -70,7 +73,7 @@ export class EventRelay {
       // Only guild events are passed to guild listeners, and only to the matching guild
       const guild = eventToGuild[ev]?.(convertedArgs as any);
       if (guild && this.guildListeners.get(guild.id)?.has(ev)) {
-        for (const listener of this.guildListeners.get(guild.id)?.get(ev).values()) {
+        for (const listener of this.guildListeners.get(guild.id)?.get(ev)!.values()!) {
           listener(convertedArgs as EventArguments[GuildEvent]);
         }
       }
@@ -78,7 +81,7 @@ export class EventRelay {
 
     // Guild events and global events are both passed to "any listeners"
     if (this.anyListeners.has(ev)) {
-      for (const listener of this.anyListeners.get(ev).values()) {
+      for (const listener of this.anyListeners.get(ev)!.values()) {
         listener(convertedArgs);
       }
     }

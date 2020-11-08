@@ -3,10 +3,10 @@
  */
 
 import {
-  Invite,
   Client,
   Emoji,
   Guild,
+  Invite,
   Member,
   Message,
   MessageContent,
@@ -26,7 +26,7 @@ export function splitIntoCleanChunks(str: string, maxChunkLength = 2000): string
     return [str];
   }
 
-  const chunks = [];
+  const chunks: string[] = [];
 
   while (str.length) {
     if (str.length <= maxChunkLength) {
@@ -92,7 +92,7 @@ export function splitMessageIntoChunks(str: string): string[] {
  */
 export async function createChunkedMessage(channel: TextableChannel, messageText: string): Promise<Message[]> {
   const chunks = splitMessageIntoChunks(messageText);
-  const messages = [];
+  const messages: Message[] = [];
 
   for (const chunk of chunks) {
     messages.push(await channel.createMessage(chunk));
@@ -136,9 +136,9 @@ export function waitForReaction(
   bot: Client,
   msg: Message,
   availableReactions: Reaction[],
-  restrictToUserId: string = null,
+  restrictToUserId?: string,
   timeout = 15000
-): Promise<Emoji> {
+): Promise<Emoji | null> {
   return new Promise((resolve) => {
     availableReactions.forEach((reaction) => msg.addReaction(reaction).catch(noop));
 
@@ -168,9 +168,9 @@ export function waitForReaction(
 export function waitForReply(
   bot: Client,
   channel: TextChannel,
-  restrictToUserId: string = null,
+  restrictToUserId?: string,
   timeout = 15000
-): Promise<Message> {
+): Promise<Message | null> {
   return new Promise((resolve) => {
     const timeoutTimer = setTimeout(() => {
       resolve(null);

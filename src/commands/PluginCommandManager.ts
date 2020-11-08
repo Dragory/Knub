@@ -24,7 +24,7 @@ export interface PluginCommandManagerOpts<TCommandContext> {
  * A module to manage and run commands for a single instance of a plugin
  */
 export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
-  private pluginData: TPluginData;
+  private pluginData: TPluginData | undefined;
   private manager: CommandManager<CommandContext<TPluginData>, CommandExtraData<TPluginData>>;
   private handlers: Map<number, CommandFn<TPluginData, any>>;
 
@@ -80,7 +80,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
 
     const command = await this.manager.findMatchingCommand(msg.content, {
       message: msg,
-      pluginData: this.pluginData,
+      pluginData: this.pluginData!,
     });
 
     if (!command) {
@@ -94,8 +94,8 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     }
 
     const extraMeta: Partial<CommandMeta<TPluginData, any>> = {};
-    if (command.config.extra?._lock) {
-      extraMeta.lock = command.config.extra._lock;
+    if (command.config!.extra?._lock) {
+      extraMeta.lock = command.config!.extra._lock;
     }
 
     await this.runCommand(msg, command, extraMeta);
@@ -107,6 +107,9 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     extraMeta?: Partial<CommandMeta<TPluginData, any>>
   ): Promise<void> {
     const handler = this.handlers.get(matchedCommand.id);
+    if (!handler) {
+      throw new Error(`Command handler for command ${matchedCommand.id} does not exist`);
+    }
 
     const valueMap = Object.entries(matchedCommand.values).reduce((map, [key, matched]) => {
       map[key] = matched.value;
@@ -117,7 +120,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
       ...extraMeta,
       args: valueMap,
       message: msg,
-      pluginData: this.pluginData,
+      pluginData: this.pluginData!,
       command: matchedCommand,
     };
 

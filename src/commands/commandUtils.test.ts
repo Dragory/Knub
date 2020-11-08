@@ -1,15 +1,17 @@
-import { ArgsFromSignatureOrArray, getCommandSignature } from "./commandUtils";
+import { ArgsFromSignatureOrArray, CommandContext, CommandExtraData, getCommandSignature } from "./commandUtils";
 import { CommandManager, isError, number, string } from "knub-command-manager";
 import assert from "assert";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
+const cmdContext = {} as CommandContext<any>;
+
 describe("commandUtils", () => {
   it("getCommandSignature() works with commands without signatures", async () => {
-    const manager = new CommandManager({ prefix: "!" });
+    const manager = new CommandManager<CommandContext<any>, CommandExtraData<any>>({ prefix: "!" });
     manager.add("foo");
-    const matchedCommand = await manager.findMatchingCommand("!foo");
-    if (isError(matchedCommand)) assert.fail();
+    const matchedCommand = await manager.findMatchingCommand("!foo", cmdContext);
+    if (isError(matchedCommand) || matchedCommand == null) assert.fail();
 
     getCommandSignature(matchedCommand);
   });

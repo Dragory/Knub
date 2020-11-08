@@ -24,11 +24,11 @@ export class CooldownManager {
 
   public isOnCooldown(key): boolean {
     if (!this.cooldowns.has(key)) return false;
-    return this.cooldowns.get(key) >= Date.now();
+    return this.cooldowns.get(key)! >= Date.now();
   }
 
   public getCooldownRemaining(key) {
     if (!this.isOnCooldown(key)) return 0;
-    return Math.max(0, Date.now() - this.cooldowns.get(key));
+    return Math.max(0, Date.now() - this.cooldowns.get(key)!);
   }
 }

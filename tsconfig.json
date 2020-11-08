@@ -12,7 +12,8 @@
     "sourceMap": true,
     "declaration": true,
     "experimentalDecorators": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "strict": true
   },
   "include": [
     "src/**/*"

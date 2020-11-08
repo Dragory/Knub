@@ -11,8 +11,7 @@ import util from "util";
  * Promise.catch() is handled separately.
  */
 export class PluginError extends Error {
-  public pluginName: string;
-  public originalError: Error;
+  public originalError?: Error;
 
   constructor(message: string | Error) {
     if (message instanceof Error) {

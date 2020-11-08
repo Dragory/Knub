@@ -21,7 +21,7 @@ export type BasePluginData<TPluginType extends BasePluginType> = {
   /**
    * Fake property used for typing purposes
    */
-  _pluginType?: TPluginType;
+  _pluginType: TPluginType;
 
   /**
    * The underlying Eris Client object

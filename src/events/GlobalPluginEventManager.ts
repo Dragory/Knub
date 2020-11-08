@@ -1,12 +1,13 @@
 import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager";
-import { EventListenerBlueprint, GlobalPluginData } from "..";
+import { GlobalPluginData } from "..";
 import { EventArguments, ValidEvent } from "./eventTypes";
-import { ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
+import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
+import { AnyGlobalEventListenerBlueprint } from "../plugins/PluginBlueprint";
 
 export class GlobalPluginEventManager<TPluginData extends GlobalPluginData<any>> extends BasePluginEventManager<
   TPluginData
 > {
-  registerEventListener(blueprint: EventListenerBlueprint<TPluginData, ValidEvent>): WrappedListener {
+  registerEventListener<T extends AnyGlobalEventListenerBlueprint<TPluginData>>(blueprint: T): WrappedListener {
     if (!this.listeners.has(blueprint.event)) {
       this.listeners.set(blueprint.event, new Set());
     }
@@ -21,16 +22,18 @@ export class GlobalPluginEventManager<TPluginData extends GlobalPluginData<any>>
       filters.unshift(ignoreBots());
     }
 
-    const filteredListener = withFilters(blueprint.event, blueprint.listener, filters);
+    const filteredListener = withFilters(blueprint.event, blueprint.listener, filters) as FilteredListener<
+      Listener<TPluginData["_pluginType"], T["event"]>
+    >;
 
-    const wrappedListener: WrappedListener = (args: EventArguments[ValidEvent]) => {
+    const wrappedListener: WrappedListener = (args: EventArguments[T["event"]]) => {
       return filteredListener({
         args,
-        pluginData: this.pluginData,
+        pluginData: this.pluginData!,
       });
     };
 
-    this.listeners.get(blueprint.event).add(wrappedListener);
+    this.listeners.get(blueprint.event)!.add(wrappedListener);
     this.eventRelay.onAnyEvent(blueprint.event, wrappedListener);
 
     return wrappedListener;
@@ -41,7 +44,7 @@ export class GlobalPluginEventManager<TPluginData extends GlobalPluginData<any>>
       return;
     }
 
-    this.listeners.get(event).delete(listener);
+    this.listeners.get(event)!.delete(listener);
     this.eventRelay.offAnyEvent(event, listener);
   }
 
@@ -52,8 +55,8 @@ export class GlobalPluginEventManager<TPluginData extends GlobalPluginData<any>>
   ): WrappedListener {
     return this.registerEventListener({
       ...opts,
-      event,
+      event: event as ValidEvent,
       listener,
-    });
+    } as AnyGlobalEventListenerBlueprint<TPluginData>);
   }
 }

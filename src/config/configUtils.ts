@@ -8,11 +8,11 @@ const splitLevelRange = (v, defaultMod): [string, number] => {
 };
 
 export interface MatchParams {
-  level?: number;
-  userId?: string;
-  memberRoles?: string[];
-  channelId?: string;
-  categoryId?: string;
+  level?: number | null;
+  userId?: string | null;
+  memberRoles?: string[] | null;
+  channelId?: string | null;
+  categoryId?: string | null;
   extra?: any;
 }
 

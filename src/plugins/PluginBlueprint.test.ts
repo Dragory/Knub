@@ -3,6 +3,7 @@ import {
   globalEventListener,
   globalPlugin,
   GlobalPluginBlueprint,
+  GlobalPluginData,
   guildCommand,
   guildEventListener,
   Knub,
@@ -28,7 +29,6 @@ import { guildPlugin, GuildPluginBlueprint } from "./PluginBlueprint";
 import { GuildPluginData, isGlobalPluginData } from "./PluginData";
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
-import { GuildEvent } from "../events/eventTypes";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
@@ -149,7 +149,8 @@ describe("PluginBlueprint", () => {
       (async () => {
         const PluginToLoad = guildPlugin("plugin-to-load", {
           events: [
-            guildEventListener(("userUpdate" as unknown) as GuildEvent, () => {
+            // @ts-expect-error: "userUpdate" is not a valid guild event, and should not be called
+            guildEventListener("userUpdate", () => {
               assert.fail("userUpdate was called in a guild event listener");
             }),
           ],
@@ -248,7 +249,7 @@ describe("PluginBlueprint", () => {
   describe("Lifecycle hooks", () => {
     it("runs plugin-supplied onLoad() function", (done) => {
       (async () => {
-        const PluginToLoad: GuildPluginBlueprint<BasePluginType> = {
+        const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "plugin-to-load",
           onLoad() {
             done();
@@ -279,7 +280,7 @@ describe("PluginBlueprint", () => {
 
     it("runs plugin-supplied onUnload() function", (done) => {
       (async () => {
-        const PluginToUnload: GuildPluginBlueprint<BasePluginType> = {
+        const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "plugin-to-unload",
           onUnload() {
             done();
@@ -718,15 +719,15 @@ describe("PluginBlueprint", () => {
   describe("Misc", () => {
     it("pluginData contains everything (guild plugin)", () => {
       return (async () => {
-        const TestPlugin: GuildPluginBlueprint<BasePluginType> = {
+        const TestPlugin: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "test-plugin",
           onLoad(pluginData) {
             assert.ok(pluginData.client != null);
-            assert.ok(pluginData.cooldowns instanceof CooldownManager);
-            assert.ok(pluginData.commands instanceof PluginCommandManager);
-            assert.ok(pluginData.config instanceof PluginConfigManager);
-            assert.ok(pluginData.events instanceof GuildPluginEventManager);
-            assert.ok(pluginData.locks instanceof LockManager);
+            assert.ok((pluginData.cooldowns as unknown) instanceof CooldownManager);
+            assert.ok((pluginData.commands as unknown) instanceof PluginCommandManager);
+            assert.ok((pluginData.config as unknown) instanceof PluginConfigManager);
+            assert.ok((pluginData.events as unknown) instanceof GuildPluginEventManager);
+            assert.ok((pluginData.locks as unknown) instanceof LockManager);
           },
         };
 
@@ -754,15 +755,15 @@ describe("PluginBlueprint", () => {
 
     it("pluginData contains everything (global plugin)", () => {
       return (async () => {
-        const TestPlugin: GlobalPluginBlueprint<BasePluginType> = {
+        const TestPlugin: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
           name: "test-plugin",
           onLoad(pluginData) {
             assert.ok(pluginData.client != null);
-            assert.ok(pluginData.cooldowns instanceof CooldownManager);
-            assert.ok(pluginData.commands instanceof PluginCommandManager);
-            assert.ok(pluginData.config instanceof PluginConfigManager);
-            assert.ok(pluginData.events instanceof GlobalPluginEventManager);
-            assert.ok(pluginData.locks instanceof LockManager);
+            assert.ok((pluginData.cooldowns as unknown) instanceof CooldownManager);
+            assert.ok((pluginData.commands as unknown) instanceof PluginCommandManager);
+            assert.ok((pluginData.config as unknown) instanceof PluginConfigManager);
+            assert.ok((pluginData.events as unknown) instanceof GlobalPluginEventManager);
+            assert.ok((pluginData.locks as unknown) instanceof LockManager);
           },
         };
 
@@ -795,7 +796,7 @@ describe("PluginBlueprint", () => {
           msgEvFnCallNum++;
         });
 
-        const PluginToUnload: GuildPluginBlueprint<BasePluginType> = {
+        const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "plugin-to-unload",
           events: [messageCreateEv],
         };

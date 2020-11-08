@@ -4,6 +4,7 @@ import {
   AnyPluginBlueprint,
   GlobalPluginBlueprint,
   GuildPluginBlueprint,
+  PluginBlueprintPublicInterface,
   ResolvedPluginBlueprintPublicInterface,
 } from "./PluginBlueprint";
 import path from "path";
@@ -53,7 +54,11 @@ export function isGlobalBlueprintByContext(
   return true;
 }
 
-export type PluginPublicInterface<T extends AnyPluginBlueprint> = ResolvedPluginBlueprintPublicInterface<T["public"]>;
+export type PluginPublicInterface<T extends AnyPluginBlueprint> = T["public"] extends PluginBlueprintPublicInterface<
+  any
+>
+  ? ResolvedPluginBlueprintPublicInterface<T["public"]>
+  : null;
 
 /**
  * Load JSON config files from a "config" folder, relative to cwd

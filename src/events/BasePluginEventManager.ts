@@ -3,7 +3,6 @@ import { EventFilter } from "./eventFilters";
 import { Awaitable } from "../utils";
 import { Lock } from "../locks/LockManager";
 import { EventArguments, ValidEvent } from "./eventTypes";
-import { EventListenerBlueprint } from "./EventListenerBlueprint";
 import { EventRelay } from "./EventRelay";
 
 export interface EventMeta<TPluginData extends AnyPluginData<any>, TArguments> {
@@ -32,7 +31,7 @@ export interface OnOpts {
  */
 export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<any>> {
   protected listeners: Map<string, Set<WrappedListener>> = new Map();
-  protected pluginData: TPluginData;
+  protected pluginData: TPluginData | undefined;
 
   constructor(protected eventRelay: EventRelay) {}
 
@@ -43,10 +42,6 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
 
     this.pluginData = pluginData;
   }
-
-  abstract registerEventListener(blueprint: EventListenerBlueprint<TPluginData>): WrappedListener;
-
-  abstract on(event: string, listener: Listener<TPluginData, any>, opts?: OnOpts): WrappedListener;
 
   abstract off(event: string, listener: WrappedListener): void;
 

@@ -1,12 +1,13 @@
 import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager";
-import { EventListenerBlueprint, GuildPluginData } from "..";
+import { GuildPluginData } from "..";
 import { EventArguments, GuildEvent } from "./eventTypes";
-import { ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
+import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
+import { AnyGuildEventListenerBlueprint } from "../plugins/PluginBlueprint";
 
 export class GuildPluginEventManager<TPluginData extends GuildPluginData<any>> extends BasePluginEventManager<
   TPluginData
 > {
-  registerEventListener(blueprint: EventListenerBlueprint<TPluginData, GuildEvent>): WrappedListener {
+  registerEventListener<T extends AnyGuildEventListenerBlueprint<TPluginData>>(blueprint: T): WrappedListener {
     if (!this.listeners.has(blueprint.event)) {
       this.listeners.set(blueprint.event, new Set());
     }
@@ -21,17 +22,19 @@ export class GuildPluginEventManager<TPluginData extends GuildPluginData<any>> e
       filters.unshift(ignoreBots());
     }
 
-    const filteredListener = withFilters(blueprint.event, blueprint.listener, filters);
+    const filteredListener = withFilters(blueprint.event, blueprint.listener, filters) as FilteredListener<
+      Listener<TPluginData["_pluginType"], T["event"]>
+    >;
 
-    const wrappedListener: WrappedListener = (args: EventArguments[GuildEvent]) => {
+    const wrappedListener: WrappedListener = (args: EventArguments[T["event"]]) => {
       return filteredListener({
         args,
-        pluginData: this.pluginData,
+        pluginData: this.pluginData!,
       });
     };
 
-    this.listeners.get(blueprint.event).add(wrappedListener);
-    this.eventRelay.onGuildEvent(this.pluginData.guild.id, blueprint.event, wrappedListener);
+    this.listeners.get(blueprint.event)!.add(wrappedListener);
+    this.eventRelay.onGuildEvent(this.pluginData!.guild.id, blueprint.event, wrappedListener);
 
     return wrappedListener;
   }
@@ -41,8 +44,8 @@ export class GuildPluginEventManager<TPluginData extends GuildPluginData<any>> e
       return;
     }
 
-    this.listeners.get(event).delete(listener);
-    this.eventRelay.offGuildEvent(this.pluginData.guild.id, event, listener);
+    this.listeners.get(event)!.delete(listener);
+    this.eventRelay.offGuildEvent(this.pluginData!.guild.id, event, listener);
   }
 
   on<TEventName extends GuildEvent>(
@@ -52,8 +55,8 @@ export class GuildPluginEventManager<TPluginData extends GuildPluginData<any>> e
   ): WrappedListener {
     return this.registerEventListener({
       ...opts,
-      event,
+      event: event as GuildEvent,
       listener,
-    });
+    } as AnyGuildEventListenerBlueprint<TPluginData>);
   }
 }

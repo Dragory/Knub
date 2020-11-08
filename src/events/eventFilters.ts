@@ -11,7 +11,7 @@ export type EventFilter = <TEventName extends ValidEvent>(
   meta: EventMeta<any, EventArguments[TEventName]>
 ) => Awaitable<boolean>;
 
-export type FilteredListener<T extends Listener<any, any>> = (...params: Parameters<T>) => ReturnType<T>;
+export type FilteredListener<T extends Listener<any, any>> = T;
 
 /**
  * Runs the specified event listener if the event passes ALL of the specified

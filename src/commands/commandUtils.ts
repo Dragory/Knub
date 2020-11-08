@@ -118,7 +118,7 @@ export function getCommandSignature(
  * allowed for DMs
  */
 export function restrictCommandSource(cmd: PluginCommandDefinition, context: CommandContext<any>): boolean {
-  let source = cmd.config.extra?.blueprint.source ?? "guild";
+  let source = cmd.config!.extra?.blueprint.source ?? "guild";
   if (!Array.isArray(source)) source = [source];
 
   if (context.message.channel instanceof PrivateChannel && source.includes("dm")) {
@@ -141,7 +141,7 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
  * permission
  */
 export function checkCommandPermission(cmd: PluginCommandDefinition, context: CommandContext<any>): boolean {
-  const permission = cmd.config.extra?.blueprint.permission;
+  const permission = cmd.config!.extra?.blueprint.permission;
 
   // No permission defined, default to "no permission"
   // If types are checked, this condition should never be true, but it's a safe-guard
@@ -163,15 +163,15 @@ export function checkCommandPermission(cmd: PluginCommandDefinition, context: Co
  * it on cooldown
  */
 export function checkCommandCooldown(cmd: PluginCommandDefinition, context: CommandContext<any>): boolean {
-  if (cmd.config.extra?.blueprint.cooldown) {
+  if (cmd.config!.extra?.blueprint.cooldown) {
     const cdKey = `${cmd.id}-${context.message.author.id}`;
 
     const cdValue =
-      typeof cmd.config.extra.blueprint.cooldown === "object"
-        ? cmd.config.extra.blueprint.cooldown.amount
-        : cmd.config.extra.blueprint.cooldown;
+      typeof cmd.config!.extra.blueprint.cooldown === "object"
+        ? cmd.config!.extra.blueprint.cooldown.amount
+        : cmd.config!.extra.blueprint.cooldown;
     const cdPermission =
-      typeof cmd.config.extra.blueprint.cooldown === "object" ? cmd.config.extra.blueprint.cooldown.permission : null;
+      typeof cmd.config!.extra.blueprint.cooldown === "object" ? cmd.config!.extra.blueprint.cooldown.permission : null;
 
     let cdApplies = true;
     if (cdPermission) {
@@ -195,10 +195,10 @@ export function checkCommandCooldown(cmd: PluginCommandDefinition, context: Comm
  * interrupt command execution if the lock gets interrupted before it
  */
 export async function checkCommandLocks(cmd: PluginCommandDefinition, context: CommandContext<any>): Promise<boolean> {
-  if (!cmd.config.extra?.blueprint.locks) {
+  if (!cmd.config!.extra?.blueprint.locks) {
     return true;
   }
 
-  const lock = (cmd.config.extra._lock = await context.pluginData.locks.acquire(cmd.config.extra.blueprint.locks));
+  const lock = (cmd.config!.extra._lock = await context.pluginData.locks.acquire(cmd.config!.extra.blueprint.locks));
   return !lock.interrupted;
 }
