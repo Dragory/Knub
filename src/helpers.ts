@@ -147,11 +147,11 @@ export function waitForReaction(
       resolve(null);
     }, timeout);
 
-    bot.on("messageReactionAdd", (evMsg, emoji, userId) => {
-      if (evMsg.id !== msg.id || userId === bot.user.id) return;
-      if (restrictToUserId && userId !== restrictToUserId) return;
+    bot.on("messageReactionAdd", (evMsg, emoji, member) => {
+      if (evMsg.id !== msg.id || member.id === bot.user.id) return;
+      if (restrictToUserId && member.id !== restrictToUserId) return;
 
-      const user = bot.users.get(userId);
+      const user = bot.users.get(member.id);
       if (user && user.bot) return;
 
       clearTimeout(timeoutTimer);
