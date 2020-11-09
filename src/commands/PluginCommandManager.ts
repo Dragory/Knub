@@ -119,7 +119,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     const meta: CommandMeta<TPluginData, any> = {
       ...extraMeta,
       args: valueMap,
-      message: msg,
+      message: msg as any,
       pluginData: this.pluginData!,
       command: matchedCommand,
     };

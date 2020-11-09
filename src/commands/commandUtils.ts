@@ -2,8 +2,8 @@ import { Client, GroupChannel, GuildChannel, Message, PrivateChannel } from "eri
 import { Awaitable } from "../utils";
 import { ICommandConfig, ICommandDefinition, IParameter, TOption, TSignature } from "knub-command-manager";
 import { Lock } from "../locks/LockManager";
-import { AnyPluginData } from "../plugins/PluginData";
-import { hasPermission } from "../helpers";
+import { AnyPluginData, GuildPluginData } from "../plugins/PluginData";
+import { GuildMessage, hasPermission } from "../helpers";
 import { CommandBlueprint } from "./CommandBlueprint";
 
 export type TSignatureOrArray<TPluginData extends AnyPluginData<any>> =
@@ -16,7 +16,7 @@ export function getDefaultPrefix(client: Client): RegExp {
 
 export interface CommandMeta<TPluginData extends AnyPluginData<any>, TArguments extends any> {
   args: TArguments;
-  message: Message;
+  message: TPluginData extends GuildPluginData<any> ? GuildMessage : Message;
   command: ICommandDefinition<any, any>;
   pluginData: TPluginData;
   lock?: Lock;

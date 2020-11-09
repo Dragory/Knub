@@ -5,6 +5,11 @@
 /** */
 export type Awaitable<T = unknown> = T | Promise<T>;
 
+export type WithRequiredProps<T, K extends keyof T> = T &
+  {
+    [PK in K]-?: Exclude<T[K], null>;
+  };
+
 export function get(obj, path, def?): any {
   let cursor = obj;
   const pathParts = path.split(".");

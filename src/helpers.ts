@@ -6,6 +6,7 @@ import {
   Client,
   Emoji,
   Guild,
+  GuildTextableChannel,
   Invite,
   Member,
   Message,
@@ -14,7 +15,7 @@ import {
   TextableChannel,
   TextChannel,
 } from "eris";
-import { get, getChannelId, getRoleId, getUserId, noop } from "./utils";
+import { get, getChannelId, getRoleId, getUserId, noop, WithRequiredProps } from "./utils";
 import { GuildPluginData } from "./plugins/PluginData";
 import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils";
 
@@ -232,3 +233,5 @@ export function getMemberLevel(pluginData: GuildPluginData<any>, member: Member)
 }
 
 export { userMentionRegex, channelMentionRegex, roleMentionRegex, snowflakeRegex } from "./utils";
+
+export type GuildMessage = WithRequiredProps<Message, "member"> & { channel: GuildTextableChannel };
