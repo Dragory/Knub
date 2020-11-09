@@ -1,3 +1,6 @@
+# 30.0.0-beta.30
+* Allow null for `PluginOverrideCriteria` properties
+
 # 30.0.0-beta.29
 * The type hint for guild command messages now properly asserts that
   the message is from a guild, and thus always has a member and its
