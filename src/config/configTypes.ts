@@ -37,17 +37,17 @@ export type PluginOverride<TPluginType extends BasePluginType> = PluginOverrideC
 };
 
 export interface PluginOverrideCriteria<TCustomOverrideCriteria> {
-  channel?: string | string[];
-  category?: string | string[];
-  level?: string | string[];
-  user?: string | string[];
-  role?: string | string[];
+  channel?: string | string[] | null;
+  category?: string | string[] | null;
+  level?: string | string[] | null;
+  user?: string | string[] | null;
+  role?: string | string[] | null;
 
-  all?: Array<PluginOverrideCriteria<TCustomOverrideCriteria>>;
-  any?: Array<PluginOverrideCriteria<TCustomOverrideCriteria>>;
-  not?: PluginOverrideCriteria<TCustomOverrideCriteria>;
+  all?: Array<PluginOverrideCriteria<TCustomOverrideCriteria>> | null;
+  any?: Array<PluginOverrideCriteria<TCustomOverrideCriteria>> | null;
+  not?: PluginOverrideCriteria<TCustomOverrideCriteria> | null;
 
-  extra?: TCustomOverrideCriteria;
+  extra?: TCustomOverrideCriteria | null;
 }
 
 export interface BasePluginConfig {
