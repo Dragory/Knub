@@ -1,3 +1,8 @@
+# 30.0.0-beta.29
+* The type hint for guild command messages now properly asserts that
+  the message is from a guild, and thus always has a member and its
+  channel is always a textable guild channel.
+
 # 30.0.0-beta.28
 * Knub is now compiled with TypeScript strict mode
   * This has resulted in some typing tweaks/changes
