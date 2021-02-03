@@ -386,7 +386,7 @@ export class Knub<
     };
   }
 
-  public async loadGuildPlugin<TPluginType extends BasePluginType>(
+  private async loadGuildPlugin<TPluginType extends BasePluginType>(
     ctx: GuildContext<TGuildConfig>,
     plugin: GuildPluginBlueprint<GuildPluginData<TPluginType>>,
     loadedAsDependency: boolean
@@ -444,7 +444,7 @@ export class Knub<
     };
   }
 
-  public async unloadGuildPlugin(ctx: GuildContext<any>, pluginName: string): Promise<void> {
+  private async unloadGuildPlugin(ctx: GuildContext<any>, pluginName: string): Promise<void> {
     const loadedPlugin = ctx.loadedPlugins.get(pluginName);
     if (!loadedPlugin) return;
 
@@ -455,7 +455,7 @@ export class Knub<
     ctx.loadedPlugins.delete(pluginName);
   }
 
-  public async reloadGuildPlugin(ctx: GuildContext<any>, pluginName: string): Promise<void> {
+  private async reloadGuildPlugin(ctx: GuildContext<any>, pluginName: string): Promise<void> {
     const loadedAsDependency = ctx.loadedPlugins.get(pluginName)!.pluginData.loadedAsDependency;
 
     await this.unloadGuildPlugin(ctx, pluginName);
@@ -464,7 +464,7 @@ export class Knub<
     await this.loadGuildPlugin(ctx, plugin, loadedAsDependency);
   }
 
-  public async loadGlobalPlugin<TPluginType extends BasePluginType>(
+  private async loadGlobalPlugin<TPluginType extends BasePluginType>(
     ctx: GlobalContext<TGlobalConfig>,
     plugin: GlobalPluginBlueprint<GlobalPluginData<TPluginType>>,
     loadedAsDependency: boolean
@@ -523,7 +523,7 @@ export class Knub<
     };
   }
 
-  public async unloadGlobalPlugin(ctx: GlobalContext<any>, pluginName: string): Promise<void> {
+  private async unloadGlobalPlugin(ctx: GlobalContext<any>, pluginName: string): Promise<void> {
     const loadedPlugin = ctx.loadedPlugins.get(pluginName);
     if (!loadedPlugin) return;
 
