@@ -298,6 +298,10 @@ export class Knub<
       this.emit("guildPluginLoaded", guildContext, pluginName);
     }
 
+    for (const loadedPlugin of guildContext.loadedPlugins.values()) {
+      await loadedPlugin.blueprint.onAfterLoad?.(loadedPlugin.pluginData);
+    }
+
     this.emit("guildLoaded", guildId);
   }
 
@@ -541,13 +545,18 @@ export class Knub<
 
   public async loadAllGlobalPlugins() {
     for (const plugin of this.globalPlugins.values()) {
-      await this.loadGlobalPlugin(this.globalContext, plugin, false);
+      const loadedPlugin = await this.loadGlobalPlugin(this.globalContext, plugin, false);
+      this.globalContext.loadedPlugins.set(plugin.name, loadedPlugin);
+    }
+
+    for (const loadedPlugin of this.globalContext.loadedPlugins.values()) {
+      await loadedPlugin.blueprint.onAfterLoad?.(loadedPlugin.pluginData);
     }
   }
 
   public async unloadAllGlobalPlugins() {
-    for (const pluginName of this.globalPlugins.keys()) {
-      await this.unloadGlobalPlugin(this.globalContext, pluginName);
+    for (const loadedPlugin of this.globalContext.loadedPlugins.values()) {
+      await this.unloadGlobalPlugin(this.globalContext, loadedPlugin.blueprint.name);
     }
   }
 

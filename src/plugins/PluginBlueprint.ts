@@ -72,6 +72,7 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
 
   onLoad?: (pluginData: TPluginData) => Awaitable<void>;
   onUnload?: (pluginData: TPluginData) => Awaitable<void>;
+  onAfterLoad?: (pluginData: TPluginData) => Awaitable<void>;
 }
 
 /**

@@ -247,7 +247,7 @@ describe("PluginBlueprint", () => {
   });
 
   describe("Lifecycle hooks", () => {
-    it("runs plugin-supplied onLoad() function", (done) => {
+    it("guildPlugin runs plugin-supplied onLoad() function", (done) => {
       (async () => {
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "plugin-to-load",
@@ -278,7 +278,31 @@ describe("PluginBlueprint", () => {
       })();
     });
 
-    it("runs plugin-supplied onUnload() function", (done) => {
+    it("globalPlugin runs plugin-supplied onLoad() function", (done) => {
+      (async () => {
+        const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+          onLoad() {
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+      })();
+    });
+
+    it("guildPlugin runs plugin-supplied onUnload() function", (done) => {
       (async () => {
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "plugin-to-unload",
@@ -308,6 +332,103 @@ describe("PluginBlueprint", () => {
 
         await sleep(30);
         client.emit("guildUnavailable", guild);
+      })();
+    });
+
+    it("globalPlugin runs plugin-supplied onUnload() function", (done) => {
+      (async () => {
+        const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+          onUnload() {
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        knub.unloadAllGlobalPlugins();
+      })();
+    });
+
+    it("guildPlugin runs plugin-supplied onAfterLoad() function after onLoad()", (done) => {
+      (async () => {
+        let onLoadCalled = false;
+
+        const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+
+          onLoad() {
+            onLoadCalled = true;
+          },
+
+          onAfterLoad() {
+            assert.strictEqual(onLoadCalled, true);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("globalPlugin runs plugin-supplied onAfterLoad() function after onLoad()", (done) => {
+      (async () => {
+        let onLoadCalled = false;
+
+        const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+
+          onLoad() {
+            onLoadCalled = true;
+          },
+
+          onAfterLoad() {
+            assert.strictEqual(onLoadCalled, true);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
       })();
     });
   });
