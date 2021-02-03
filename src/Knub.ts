@@ -314,6 +314,10 @@ export class Knub<
       return;
     }
 
+    for (const loadedPlugin of guildContext.loadedPlugins.values()) {
+      await loadedPlugin.blueprint.onBeforeUnload?.(loadedPlugin.pluginData);
+    }
+
     for (const pluginName of guildContext.loadedPlugins.keys()) {
       await this.unloadGuildPlugin(guildContext, pluginName);
       this.emit("guildPluginUnloaded", guildContext, pluginName);
@@ -555,6 +559,10 @@ export class Knub<
   }
 
   public async unloadAllGlobalPlugins() {
+    for (const loadedPlugin of this.globalContext.loadedPlugins.values()) {
+      await loadedPlugin.blueprint.onBeforeUnload?.(loadedPlugin.pluginData);
+    }
+
     for (const loadedPlugin of this.globalContext.loadedPlugins.values()) {
       await this.unloadGlobalPlugin(this.globalContext, loadedPlugin.blueprint.name);
     }

@@ -431,6 +431,81 @@ describe("PluginBlueprint", () => {
         await sleep(30);
       })();
     });
+
+    it("guildPlugin runs plugin-supplied onBeforeUnload() function before onUnload()", (done) => {
+      (async () => {
+        let onBeforeUnloadCalled = false;
+
+        const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
+          name: "plugin-to-unload",
+
+          onBeforeUnload() {
+            onBeforeUnloadCalled = true;
+          },
+
+          onUnload() {
+            assert.strictEqual(onBeforeUnloadCalled, true);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginToUnload],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-unload"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = createMockGuild(client);
+        client.emit("guildAvailable", guild);
+
+        await sleep(30);
+        client.emit("guildUnavailable", guild);
+      })();
+    });
+
+    it("globalPlugin runs plugin-supplied onBeforeUnload() function before onUnload()", (done) => {
+      (async () => {
+        let onBeforeUnloadCalled = false;
+
+        const PluginToUnload: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-to-unload",
+
+          onBeforeUnload() {
+            onBeforeUnloadCalled = true;
+          },
+
+          onUnload() {
+            assert.strictEqual(onBeforeUnloadCalled, true);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToUnload],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        knub.unloadAllGlobalPlugins();
+      })();
+    });
   });
 
   describe("Dependencies", () => {
