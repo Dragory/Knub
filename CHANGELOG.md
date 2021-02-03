@@ -1,3 +1,10 @@
+# 30.0.0-beta.31
+* **BREAKING CHANGE:** Functions for loading/unloading/reloading individual plugins are now private to the Knub class
+  * This means that you can only load, unload, or reload an entire context (guild or all global plugins) at once
+  * This was done to give plugins guarantees about load order and when their dependencies are available and in what state
+* New `onAfterLoad` hook for plugins. This is fired after all of the context's plugins have loaded.
+* Fix `onUnload` hook not being called for global plugins
+
 # 30.0.0-beta.30
 * Allow null for `PluginOverrideCriteria` properties
 
