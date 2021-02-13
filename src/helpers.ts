@@ -54,9 +54,9 @@ export function splitIntoCleanChunks(str: string, maxChunkLength = 2000): string
  * Splits a message into chunks that fit into Discord's message length limit (2000) while also retaining leading and
  * trailing line breaks, open code blocks, etc. between chunks
  */
-export function splitMessageIntoChunks(str: string): string[] {
+export function splitMessageIntoChunks(str: string, chunkLength = 1990): string[] {
   // We don't split at exactly 2000 since some of the stuff below adds extra length to the chunks
-  const chunks = splitIntoCleanChunks(str, 1990);
+  const chunks = splitIntoCleanChunks(str, chunkLength);
 
   let openCodeBlock = false;
   return chunks.map((chunk) => {
