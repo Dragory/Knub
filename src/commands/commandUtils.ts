@@ -1,6 +1,14 @@
 import { Client, GroupChannel, GuildChannel, Message, PrivateChannel } from "eris";
 import { Awaitable } from "../utils";
-import { ICommandConfig, ICommandDefinition, IParameter, TOption, TSignature } from "knub-command-manager";
+import {
+  ICommandConfig,
+  ICommandDefinition,
+  IParameter,
+  TOption,
+  toSafeSignature,
+  TSafeSignature,
+  TSignature,
+} from "knub-command-manager";
 import { Lock } from "../locks/LockManager";
 import { AnyPluginData, GuildPluginData } from "../plugins/PluginData";
 import { GuildMessage, hasPermission } from "../helpers";
@@ -29,7 +37,7 @@ export interface CommandMeta<TPluginData extends AnyPluginData<any>, TArguments 
  * that returns a string, ArgsFromSignature would return `{ name: string }`.
  */
 type ArgsFromSignature<T extends TSignature<any>> = {
-  [K in keyof T]: ParameterOrOptionType<T[K]>;
+  [K in keyof T]: T[K] extends IParameter<any> | TOption<any> ? ParameterOrOptionType<T[K]> : never;
 };
 
 /**
@@ -82,7 +90,7 @@ export function getCommandSignature(
   overrideTrigger?: string,
   overrideSignature?: TSignature<any>
 ) {
-  const signature = overrideSignature || command.signatures[0] || {};
+  const signature: TSafeSignature<any> = toSafeSignature(overrideSignature || command.signatures[0] || {});
   const signatureEntries = Object.entries(signature);
   const parameters = signatureEntries.filter(([_, param]) => param.option !== true) as Array<[string, IParameter<any>]>;
   const options = signatureEntries.filter(([_, opt]) => opt.option === true) as Array<[string, TOption<any>]>;

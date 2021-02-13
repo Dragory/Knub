@@ -185,6 +185,37 @@ describe("guildCommand() helper", () => {
         : false = true;
     });
   });
+
+  it("args type inference for multiple signatures", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const blueprint = guildCommand(
+      "cmd",
+      [
+        {
+          foo: string(),
+          bar: number(),
+        },
+        {
+          baz: number(),
+        },
+      ],
+      ({ args }) => {
+        if (args.foo != null) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const x: number = args.bar; // args.bar cannot be undefined
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const y: undefined = args.baz; // args.baz must be undefined
+        }
+
+        if (args.baz != null) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const x: number = args.baz; // args.baz cannot be undefined
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const y: undefined = args.bar; // args.bar must be undefined
+        }
+      }
+    );
+  });
 });
 
 describe("globalCommand() helper", () => {
