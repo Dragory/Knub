@@ -1,3 +1,6 @@
+# 30.0.0-beta.33
+* Fix `args` type inference for command blueprints where multiple signatures had non-overlapping properties
+
 # 30.0.0-beta.32
 * New `onBeforeUnload` hook for plugins. This is called before the context's plugins are unloaded.
 
