@@ -1,3 +1,6 @@
+# 30.0.0-beta.34
+* Add `chunkLength` parameter to `splitMessageIntoChunks()` helper function
+
 # 30.0.0-beta.33
 * Fix `args` type inference for command blueprints where multiple signatures had non-overlapping properties
 
