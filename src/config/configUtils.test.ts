@@ -599,5 +599,24 @@ describe("configUtils", () => {
       expect(matchedConfig6.value).to.equal(30);
       expect(matchedConfig7.value).to.equal(30);
     });
+
+    it("level matching against 0 works", () => {
+      const pluginOpts: PluginOptions<BasePluginType> = {
+        config: {
+          value: 5,
+        },
+        overrides: [
+          {
+            level: "<=30",
+            config: {
+              value: 20,
+            },
+          },
+        ],
+      };
+
+      const matchedConfig = getMatchingPluginConfig(null as any, pluginOpts, { level: 0 });
+      expect((matchedConfig as any).value).to.equal(20);
+    });
   });
 });

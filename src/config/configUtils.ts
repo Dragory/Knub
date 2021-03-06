@@ -111,7 +111,7 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
     // For a successful match, requires ALL of the specified level conditions to match
     if (key === "level") {
       const matchLevel = matchParams.level;
-      if (matchLevel) {
+      if (matchLevel != null) {
         const levels = Array.isArray(value) ? value : [value];
         let match = levels.length > 0; // Zero level conditions = assume user error, don't match
 
