@@ -1,3 +1,6 @@
+# 30.0.0-beta.35
+* Fix permission level 0 not matching in config level overrides
+
 # 30.0.0-beta.34
 * Add `chunkLength` parameter to `splitMessageIntoChunks()` helper function
 
