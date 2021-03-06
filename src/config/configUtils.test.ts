@@ -618,5 +618,81 @@ describe("configUtils", () => {
       const matchedConfig = getMatchingPluginConfig(null as any, pluginOpts, { level: 0 });
       expect((matchedConfig as any).value).to.equal(20);
     });
+
+    it("complex nested overrides work", () => {
+      // EITHER:
+      // - Channel is 123, roles include 456, roles do NOT include 789
+      // OR:
+      // - Channel is 111, role is 222
+      const pluginOpts: PluginOptions<BasePluginType> = {
+        config: {
+          value: 5,
+        },
+        overrides: [
+          {
+            any: [
+              {
+                all: [
+                  {
+                    channel: "123",
+                    role: "456",
+                  },
+                  {
+                    not: {
+                      role: "789",
+                    },
+                  },
+                ],
+              },
+              {
+                channel: "111",
+                role: "222",
+              },
+            ],
+            config: {
+              value: 20,
+            },
+          },
+        ],
+      };
+
+      const matchedConfig1 = getMatchingPluginConfig(null as any, pluginOpts, {});
+      expect((matchedConfig1 as any).value).to.equal(5);
+
+      // Excluded role "789" included, fail
+      const matchedConfig2 = getMatchingPluginConfig(null as any, pluginOpts, {
+        channelId: "123",
+        memberRoles: ["456", "789"],
+      });
+      expect((matchedConfig2 as any).value).to.equal(5);
+
+      // Excluded role "789" not included, pass
+      const matchedConfig3 = getMatchingPluginConfig(null as any, pluginOpts, {
+        channelId: "123",
+        memberRoles: ["456"],
+      });
+      expect((matchedConfig3 as any).value).to.equal(20);
+
+      // Required role "456" not included, fail
+      const matchedConfig4 = getMatchingPluginConfig(null as any, pluginOpts, {
+        channelId: "123",
+        memberRoles: [],
+      });
+      expect((matchedConfig4 as any).value).to.equal(5);
+
+      // Alternative condition, pass
+      const matchedConfig5 = getMatchingPluginConfig(null as any, pluginOpts, {
+        channelId: "111",
+        memberRoles: ["222"],
+      });
+      expect((matchedConfig5 as any).value).to.equal(20);
+
+      // Alternative condition with excluded role of first condition, pass
+      const matchedConfig6 = getMatchingPluginConfig(null as any, pluginOpts, {
+        channelId: "111",
+        memberRoles: ["222", "789"],
+      });
+      expect((matchedConfig6 as any).value).to.equal(20);
+    });
   });
 });
