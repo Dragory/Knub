@@ -1,3 +1,6 @@
+# 30.0.0-beta.36
+* Bumped `mocha` to `8.3.2`
+
 # 30.0.0-beta.35
 * Fix permission level 0 not matching in config level overrides
 
