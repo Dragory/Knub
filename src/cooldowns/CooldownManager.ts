@@ -29,6 +29,6 @@ export class CooldownManager {
 
   public getCooldownRemaining(key) {
     if (!this.isOnCooldown(key)) return 0;
-    return Math.max(0, Date.now() - this.cooldowns.get(key)!);
+    return Math.max(0, this.cooldowns.get(key)! - Date.now());
   }
 }
