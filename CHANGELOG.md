@@ -22,6 +22,7 @@
   * `globalEventListener()` ➔ `typedGlobalEventListener()`
   * `guildCommand()` ➔ `typedGuildCommand()`
   * `globalCommand()` ➔ `typedGlobalCommand()`
+* **BREAKING CHANGE:** Rename `baseTypeHelpers` to `baseCommandParameterTypeHelpers` to clarify their use
 
 # 30.0.0-beta.35
 * Fix permission level 0 not matching in config level overrides

@@ -83,9 +83,9 @@ This example doesn't use the type helpers used in the TypeScript example above, 
 
 ```js
 const Eris = require("eris");
-const { Knub, baseTypeHelpers } = require("knub");
+const { Knub, baseCommandParameterTypeHelpers } = require("knub");
 
-const t = baseTypeHelpers;
+const t = baseCommandParameterTypeHelpers;
 
 const MyCommand = {
   trigger: "echo",

@@ -163,7 +163,7 @@ export const baseTypeConverters = {
   },
 };
 
-export const baseTypeHelpers = {
+export const baseCommandParameterTypeHelpers = {
   // knub-command-manager defaults
   string,
   bool,
