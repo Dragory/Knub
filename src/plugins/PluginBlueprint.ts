@@ -143,35 +143,18 @@ export type AnyGlobalEventListenerBlueprint<
 
 export type AnyPluginBlueprint = GuildPluginBlueprint<any> | GlobalPluginBlueprint<any>;
 
-type PluginBlueprintCreatorIdentity<TBaseBlueprint extends AnyPluginBlueprint> = <TBlueprint extends TBaseBlueprint>(
+type PluginBlueprintCreator<TBaseBlueprint extends AnyPluginBlueprint> = <TBlueprint extends TBaseBlueprint>(
   blueprint: TBlueprint
 ) => TBlueprint;
-
-type PluginBlueprintCreatorWithName<TBaseBlueprint extends AnyPluginBlueprint> = <
-  TPartialBlueprint extends Omit<TBaseBlueprint, "name">
->(
-  name: string,
-  blueprint: TPartialBlueprint
-) => TPartialBlueprint & { name: string };
-
-type PluginBlueprintCreator<TBaseBlueprint extends AnyPluginBlueprint> = PluginBlueprintCreatorIdentity<
-  TBaseBlueprint
-> &
-  PluginBlueprintCreatorWithName<TBaseBlueprint>;
 
 function plugin<TBlueprint extends AnyPluginBlueprint>(...args) {
   if (args.length === 1) {
     // (blueprint)
     // Return blueprint
     return args[0];
-  } else if (args.length === 2) {
-    // (name, blueprint)
-    // Return blueprint
-    return {
-      ...args[1],
-      name: args[0],
-    };
-  } else if (args.length === 0) {
+  }
+
+  if (args.length === 0) {
     // No arguments, with TPluginType - return self
     return plugin as PluginBlueprintCreator<TBlueprint>;
   }
@@ -184,28 +167,18 @@ function plugin<TBlueprint extends AnyPluginBlueprint>(...args) {
  *
  * To specify `TPluginType` for additional type hints, use: `guildPlugin<TPluginType>()(blueprint)`
  */
-export function guildPlugin<TBlueprint extends GuildPluginBlueprint<GuildPluginData<any>>>(
+export function typedGuildPlugin<TBlueprint extends GuildPluginBlueprint<GuildPluginData<any>>>(
   blueprint: TBlueprint
 ): TBlueprint;
 
 /**
- * Helper function that creates a plugin blueprint for a guild plugin.
- *
- * To specify `TPluginType` for additional type hints, use: `guildPlugin<TPluginType>()(name, blueprint)`
+ * Helper function with no arguments. Specify `TPluginType` for type hints and return self.
  */
-export function guildPlugin<TPartialBlueprint extends Omit<GuildPluginBlueprint<GuildPluginData<any>>, "name">>(
-  name: string,
-  blueprint: TPartialBlueprint
-): TPartialBlueprint & { name: string };
-
-/**
- * Specify `TPluginType` for type hints and return self
- */
-export function guildPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
+export function typedGuildPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
   GuildPluginBlueprint<GuildPluginData<TPluginType>>
 >;
 
-export function guildPlugin(...args) {
+export function typedGuildPlugin(...args) {
   return plugin<GuildPluginBlueprint<any>>(...args);
 }
 
@@ -214,27 +187,17 @@ export function guildPlugin(...args) {
  *
  * To specify `TPluginType` for additional type hints, use: `globalPlugin<TPluginType>()(blueprint)`
  */
-export function globalPlugin<TBlueprint extends GlobalPluginBlueprint<GlobalPluginData<any>>>(
+export function typedGlobalPlugin<TBlueprint extends GlobalPluginBlueprint<GlobalPluginData<any>>>(
   blueprint: TBlueprint
 ): TBlueprint;
 
 /**
- * Helper function that creates a plugin blueprint for a global plugin.
- *
- * To specify `TPluginType` for additional type hints, use: `globalPlugin<TPluginType>()(name, blueprint)`
+ * Helper function with no arguments. Specify `TPluginType` for type hints and return self
  */
-export function globalPlugin<TPartialBlueprint extends Omit<GlobalPluginBlueprint<GlobalPluginData<any>>, "name">>(
-  name: string,
-  blueprint: TPartialBlueprint
-): TPartialBlueprint & { name: string };
-
-/**
- * Specify `TPluginType` for type hints and return self
- */
-export function globalPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
+export function typedGlobalPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
   GlobalPluginBlueprint<GlobalPluginData<TPluginType>>
 >;
 
-export function globalPlugin(...args) {
+export function typedGlobalPlugin(...args) {
   return plugin<GlobalPluginBlueprint<any>>(...args);
 }

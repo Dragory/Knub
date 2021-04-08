@@ -1,3 +1,28 @@
+# 30.0.0-beta.36
+* **BREAKING CHANGE:** Remove all other plugin, event, and command helper function signatures except `(signature)` and the type-helper no-argument signature
+  * In other words, **the following signatures have been removed:**
+    * `guildPlugin(name, blueprint)` / `globalPlugin(name, blueprint)`
+    * `guildEventListener(event, listener)` / `globalEventListener(event, listener)`
+    * `guildEventListener(event, options, listener)` / `globalEventListener(event, options, listener)`
+    * `guildCommand(trigger, run)` / `globalCommand(trigger, run)`
+    * `guildCommand(trigger, signature, run)` / `globalCommand(trigger, signature, run)`
+    * `guildCommand(trigger, signature, options, run)` / `globalCommand(trigger, signature, options, run)`
+  * **The following signatures remain:**
+    * `guildPlugin(blueprint)` / `globalPlugin(blueprint)`
+    * `guildPlugin<TPluginType>()(blueprint)` / `globalPlugin<TPluginType>()(blueprint)`
+    * `guildEventListener(blueprint)` / `globalEventListener(blueprint)`
+    * `guildEventListener<TPluginType>()(blueprint)` / `globalEventListener<TPluginType>()(blueprint)`
+    * `guildCommand(blueprint)` / `globalCommand(blueprint)`
+    * `guildCommand<TPluginType>()(blueprint)` / `globalCommand<TPluginType>()(blueprint)`
+  * This change was done to narrow these helper functions' role to purely a *type* helper, and make the relationship between the blueprint objects and these helper functions clearer
+* **BREAKING CHANGE:** Rename plugin, event, and command helper functions to clarify their new, narrower role
+  * `guildPlugin()` ➔ `typedGuildPlugin()`
+  * `globalPlugin()` ➔ `typedGlobalPlugin()`
+  * `guildEventListener()` ➔ `typedGuildEventListener()`
+  * `globalEventListener()` ➔ `typedGlobalEventListener()`
+  * `guildCommand()` ➔ `typedGuildCommand()`
+  * `globalCommand()` ➔ `typedGlobalCommand()`
+
 # 30.0.0-beta.35
 * Fix permission level 0 not matching in config level overrides
 

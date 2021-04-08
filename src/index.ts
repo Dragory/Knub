@@ -8,9 +8,9 @@ export { GuildPluginBlueprint, GlobalPluginBlueprint } from "./plugins/PluginBlu
 export { CommandBlueprint } from "./commands/CommandBlueprint";
 export { EventListenerBlueprint } from "./events/EventListenerBlueprint";
 
-export { guildPlugin, globalPlugin } from "./plugins/PluginBlueprint";
-export { guildCommand, globalCommand } from "./commands/CommandBlueprint";
-export { guildEventListener, globalEventListener } from "./events/EventListenerBlueprint";
+export { typedGuildPlugin, typedGlobalPlugin } from "./plugins/PluginBlueprint";
+export { typedGuildCommand, typedGlobalCommand } from "./commands/CommandBlueprint";
+export { typedGuildEventListener, typedGlobalEventListener } from "./events/EventListenerBlueprint";
 
 export { configUtils };
 export { ConfigValidationError } from "./config/ConfigValidationError";
