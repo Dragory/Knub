@@ -5,11 +5,9 @@ Knub is a JavaScript/TypeScript framework for creating Discord bots.
 A bot built on Knub consists of one or more **plugins**.
 For each **plugin context** (e.g. a Discord server ("guild")), Knub will create a new instance of each *plugin*
 that should be loaded for the context. A *plugin context* is usually just one
-server, but it can also be a group of servers.
+server, but in the future it can also be a group of servers.
 
-A *plugin* can be one of the following:
-* A plain object that conforms to the `PluginBlueprint` interface
-* A class extending `PluginClass`
+A *plugin* is simply a plain object that conforms to the `PluginBlueprint` interface.
 
 Each plugin has access to a set of utility modules for setting up commands,
 event listeners, user configuration, etc. Plugins are also able to specify
@@ -17,8 +15,9 @@ public interfaces that other plugins can use for interoperability, as well as
 plugin dependencies.
 
 The primary goals for Knub are:
-* **Automatic context-awareness** — plugin instances are restricted to their plugin context unless deliberately opted out
+* **Safety first** — Knub aims to make it easy to write safe code by default
 * **Predictability** — any "magic" within Knub should be easy to reason about, and ideally the magic is left out in the first place
+* **Automatic context-awareness** — guild plugins only have access to the context of the guild (server) they're loaded in by default
 * **Extensive built-in functionality** — for common bot requirements
 
 ## Documentation
