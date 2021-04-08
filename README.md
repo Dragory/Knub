@@ -30,56 +30,34 @@ For simplicity, the examples below only showcase a very limited subset of Knub's
 Full examples for loading per-context configuration, advanced commands, event handling, global plugins, etc.
 is coming in the near future.
 
-### JavaScript example
-```js
-const Eris = require("eris");
-const { Knub, command, plugin, baseTypeHelpers } = require("knub");
-
-const t = baseTypeHelpers;
-
-const MyCommand = command("echo", { text: t.string() }, ({ args, message }) => {
-  message.channel.createMessage(args.text);
-});
-
-const OtherCommand = command("ping", ({ message }) => {
-  message.channel.createMessage("Pong!");
-});
-
-const MyPlugin = plugin("my-plugin", {
-  commands: [
-    MyCommand,
-    OtherCommand,
-  ]
-});
-
-const client = new Eris("my-bot-token");
-const knub = new Knub(client, {
-  guildPlugins: [
-    MyPlugin,
-  ]
-});
-
-knub.run();
-```
-
 ### TypeScript example
 ```ts
 import Eris from "eris";
-import { Knub, plugin, command, BasePluginType } from "knub";
+import { Knub, typedGuildPlugin, typedGuildCommand, BasePluginType } from "knub";
 
-// Use a custom plugin type
 interface CustomPluginType extends BasePluginType {
   state: {
     counter: number;
   };
 }
 
-const CounterCommand = command<CustomPluginType>()("counter", ({ message, pluginData }) => {
-  // Type of `pluginData.state.counter` is `number`
-  message.channel.createMessage(`Counter value: ${++pluginData.state.counter}`);
+// We use a type helper, typedGuildCommand(), here to allow TypeScript to infer argument types and other types within the command object ("blueprint")
+// See the JavaScript example further below for an example that uses plain objects instead!
+const CounterCommand = typedGuildCommand<CustomPluginType>()({
+  trigger: "counter",
+  // Permission requirement must always be specified,
+  // even if explicitly to mark the command public as done here
+  permission: null,
+  run({ message, pluginData }) {
+    // Type of `pluginData.state.counter` is `number`
+    message.channel.createMessage(`Counter value: ${++pluginData.state.counter}`);
+  },
 });
 
-const CounterPlugin = plugin<CustomPluginType>()("counter-plugin", {
+// Another type helper here: typedGuildPlugin()
+const CounterPlugin = typedGuildPlugin<CustomPluginType>()({
+  name: "counter-plugin",
+
   commands: [
     CounterCommand,
   ],
@@ -94,6 +72,52 @@ const client = new Eris("my-bot-token");
 const knub = new Knub(client, {
   guildPlugins: [
     CounterPlugin,
+  ]
+});
+
+knub.run();
+```
+
+### JavaScript example
+This example doesn't use the type helpers used in the TypeScript example above, and instead uses plain objects wherever possible.
+
+```js
+const Eris = require("eris");
+const { Knub, baseTypeHelpers } = require("knub");
+
+const t = baseTypeHelpers;
+
+const MyCommand = {
+  trigger: "echo",
+  signature: {
+    text: t.string(),
+  },
+  permission: null,
+  run({ args, message }) {
+    message.channel.createMessage(args.text);
+  },
+};
+
+const OtherCommand = {
+  trigger: "ping",
+  permission: null,
+  run({ message }) {
+    message.channel.createMessage("Pong!");
+  },
+};
+
+const MyPlugin = {
+  name: "my-plugin",
+  commands: [
+    MyCommand,
+    OtherCommand,
+  ],
+};
+
+const client = new Eris("my-bot-token");
+const knub = new Knub(client, {
+  guildPlugins: [
+    MyPlugin,
   ]
 });
 
