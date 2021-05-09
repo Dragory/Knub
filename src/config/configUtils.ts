@@ -106,6 +106,7 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
 
   for (const [key, value] of Object.entries(criteria)) {
     if (key === "config") continue;
+    if (value == null) continue;
 
     // Match on level
     // For a successful match, requires ALL of the specified level conditions to match
