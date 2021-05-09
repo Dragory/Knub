@@ -16,7 +16,7 @@ import { BasePluginType } from "./pluginTypes";
 import { parseSignature } from "knub-command-manager";
 import { expect } from "chai";
 import { typedGuildPlugin, typedGlobalPlugin, GuildPluginBlueprint } from "./PluginBlueprint";
-import { GuildPluginData, isGlobalPluginData } from "./PluginData";
+import { BeforeLoadPluginData, GuildPluginData, isGlobalPluginData } from "./PluginData";
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
 import { typedGlobalEventListener, typedGuildEventListener } from "../events/EventListenerBlueprint";
@@ -41,7 +41,7 @@ describe("PluginBlueprint", () => {
 
           events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
-          onLoad(pluginData) {
+          afterLoad(pluginData) {
             setTimeout(() => {
               // The command above should be loaded
               assert.strictEqual(pluginData.commands.getAll().length, 1);
@@ -260,11 +260,11 @@ describe("PluginBlueprint", () => {
   });
 
   describe("Lifecycle hooks", () => {
-    it("typedGuildPlugin runs plugin-supplied onLoad() function", (done) => {
+    it("GuildPlugin beforeLoad()", (done) => {
       (async () => {
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "plugin-to-load",
-          onLoad() {
+          beforeLoad() {
             done();
           },
         };
@@ -291,11 +291,11 @@ describe("PluginBlueprint", () => {
       })();
     });
 
-    it("typedGlobalPlugin runs plugin-supplied onLoad() function", (done) => {
+    it("GlobalPlugin beforeLoad()", (done) => {
       (async () => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
           name: "plugin-to-load",
-          onLoad() {
+          beforeLoad() {
             done();
           },
         };
@@ -315,11 +315,66 @@ describe("PluginBlueprint", () => {
       })();
     });
 
-    it("typedGuildPlugin runs plugin-supplied onUnload() function", (done) => {
+    it("GuildPlugin afterLoad()", (done) => {
+      (async () => {
+        const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+          afterLoad() {
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("GlobalPlugin afterLoad()", (done) => {
+      (async () => {
+        const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+          afterLoad() {
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+      })();
+    });
+
+    it("GuildPlugin beforeUnload()", (done) => {
       (async () => {
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "plugin-to-unload",
-          onUnload() {
+          beforeUnload() {
             done();
           },
         };
@@ -348,11 +403,11 @@ describe("PluginBlueprint", () => {
       })();
     });
 
-    it("typedGlobalPlugin runs plugin-supplied onUnload() function", (done) => {
+    it("GlobalPlugin beforeUnload()", (done) => {
       (async () => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
           name: "plugin-to-load",
-          onUnload() {
+          beforeUnload() {
             done();
           },
         };
@@ -370,94 +425,15 @@ describe("PluginBlueprint", () => {
         client.emit("ready");
         await sleep(30);
 
-        knub.unloadAllGlobalPlugins();
+        knub.unloadGlobalContext();
       })();
     });
 
-    it("typedGuildPlugin runs plugin-supplied onAfterLoad() function after onLoad()", (done) => {
+    it("GuildPlugin afterUnload()", (done) => {
       (async () => {
-        let onLoadCalled = false;
-
-        const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
-          name: "plugin-to-load",
-
-          onLoad() {
-            onLoadCalled = true;
-          },
-
-          onAfterLoad() {
-            assert.strictEqual(onLoadCalled, true);
-            done();
-          },
-        };
-
-        const client = createMockClient();
-        const knub = new Knub(client, {
-          guildPlugins: [PluginToLoad],
-          options: {
-            getEnabledGuildPlugins() {
-              return ["plugin-to-load"];
-            },
-            logFn: noop,
-          },
-        });
-
-        knub.run();
-        client.emit("connect");
-        client.emit("ready");
-        await sleep(30);
-
-        const guild = new Guild({ id: "0" }, client);
-        client.guilds.set("0", guild);
-        client.emit("guildAvailable", guild);
-      })();
-    });
-
-    it("typedGlobalPlugin runs plugin-supplied onAfterLoad() function after onLoad()", (done) => {
-      (async () => {
-        let onLoadCalled = false;
-
-        const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
-          name: "plugin-to-load",
-
-          onLoad() {
-            onLoadCalled = true;
-          },
-
-          onAfterLoad() {
-            assert.strictEqual(onLoadCalled, true);
-            done();
-          },
-        };
-
-        const client = createMockClient();
-        const knub = new Knub(client, {
-          globalPlugins: [PluginToLoad],
-          options: {
-            logFn: noop,
-          },
-        });
-
-        knub.run();
-        client.emit("connect");
-        client.emit("ready");
-        await sleep(30);
-      })();
-    });
-
-    it("typedGuildPlugin runs plugin-supplied onBeforeUnload() function before onUnload()", (done) => {
-      (async () => {
-        let onBeforeUnloadCalled = false;
-
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "plugin-to-unload",
-
-          onBeforeUnload() {
-            onBeforeUnloadCalled = true;
-          },
-
-          onUnload() {
-            assert.strictEqual(onBeforeUnloadCalled, true);
+          afterUnload() {
             done();
           },
         };
@@ -486,19 +462,157 @@ describe("PluginBlueprint", () => {
       })();
     });
 
-    it("typedGlobalPlugin runs plugin-supplied onBeforeUnload() function before onUnload()", (done) => {
+    it("GlobalPlugin afterUnload()", (done) => {
       (async () => {
-        let onBeforeUnloadCalled = false;
+        const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+          afterUnload() {
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        knub.unloadGlobalContext();
+      })();
+    });
+
+    it("GuildPlugin afterLoad() runs beforeLoad()", (done) => {
+      (async () => {
+        let beforeLoadCalled = false;
+
+        const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+
+          beforeLoad() {
+            beforeLoadCalled = true;
+          },
+
+          afterLoad() {
+            assert.strictEqual(beforeLoadCalled, true);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("GlobalPlugin afterLoad() runs after beforeLoad()", (done) => {
+      (async () => {
+        let beforeLoadCalled = false;
+
+        const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+
+          beforeLoad() {
+            beforeLoadCalled = true;
+          },
+
+          afterLoad() {
+            assert.strictEqual(beforeLoadCalled, true);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+      })();
+    });
+
+    it("GuildPlugin beforeUnload() runs before afterUnload()", (done) => {
+      (async () => {
+        let beforeUnloadCalled = false;
+
+        const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
+          name: "plugin-to-unload",
+
+          beforeUnload() {
+            beforeUnloadCalled = true;
+          },
+
+          afterUnload() {
+            assert.strictEqual(beforeUnloadCalled, true);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginToUnload],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-unload"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = createMockGuild(client);
+        client.emit("guildAvailable", guild);
+
+        await sleep(30);
+        client.emit("guildUnavailable", guild);
+      })();
+    });
+
+    it("GlobalPlugin beforeUnload() runs before afterUnload()", (done) => {
+      (async () => {
+        let beforeUnloadCalled = false;
 
         const PluginToUnload: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
           name: "plugin-to-unload",
 
-          onBeforeUnload() {
-            onBeforeUnloadCalled = true;
+          beforeUnload() {
+            beforeUnloadCalled = true;
           },
 
-          onUnload() {
-            assert.strictEqual(onBeforeUnloadCalled, true);
+          afterUnload() {
+            assert.strictEqual(beforeUnloadCalled, true);
             done();
           },
         };
@@ -516,7 +630,246 @@ describe("PluginBlueprint", () => {
         client.emit("ready");
         await sleep(30);
 
-        knub.unloadAllGlobalPlugins();
+        knub.unloadGlobalContext();
+      })();
+    });
+
+    it("hasPlugin() and getPlugin() are missing in GuildPlugin beforeLoad()", (done) => {
+      (async () => {
+        const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+          beforeLoad(partialPluginData) {
+            assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
+            assert.strictEqual((partialPluginData as any).getPlugin, undefined);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = new Guild({ id: "0" }, client);
+        client.guilds.set("0", guild);
+        client.emit("guildAvailable", guild);
+      })();
+    });
+
+    it("hasPlugin() and getPlugin() are missing in GlobalPlugin beforeLoad()", (done) => {
+      (async () => {
+        const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+          beforeLoad(partialPluginData) {
+            assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
+            assert.strictEqual((partialPluginData as any).getPlugin, undefined);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+      })();
+    });
+
+    it("hasPlugin() and getPlugin() are missing in GuildPlugin afterUnload()", (done) => {
+      (async () => {
+        const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
+          name: "plugin-to-unload",
+          afterUnload(partialPluginData) {
+            assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
+            assert.strictEqual((partialPluginData as any).getPlugin, undefined);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginToUnload],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-unload"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = createMockGuild(client);
+        client.emit("guildAvailable", guild);
+
+        await sleep(30);
+        client.emit("guildUnavailable", guild);
+      })();
+    });
+
+    it("hasPlugin() and getPlugin() are missing in GuildPlugin afterUnload()", (done) => {
+      (async () => {
+        const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-to-load",
+          afterUnload(partialPluginData) {
+            assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
+            assert.strictEqual((partialPluginData as any).getPlugin, undefined);
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        knub.unloadGlobalContext();
+      })();
+    });
+
+    it("GuildPlugin is unavailable to other plugins during afterUnload()", (done) => {
+      (async () => {
+        let getPluginFn: any;
+        let plugin1Interface: any;
+
+        const PluginWithPublicInterface: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
+          name: "plugin-with-public-interface",
+          public: {
+            myFn() {
+              return () => {
+                assert.fail("This should not be called");
+              };
+            },
+          },
+        };
+
+        const PluginWithTests: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
+          name: "plugin-with-tests",
+          dependencies: [PluginWithPublicInterface],
+          afterLoad(pluginData) {
+            getPluginFn = pluginData.getPlugin.bind(pluginData);
+            plugin1Interface = pluginData.getPlugin(PluginWithPublicInterface);
+          },
+          afterUnload() {
+            try {
+              getPluginFn(PluginWithPublicInterface);
+              assert.fail("getPluginFn() should have failed");
+            } catch {} // eslint-disable-line no-empty
+
+            try {
+              plugin1Interface.myFn();
+              assert.fail("plugin1Interface.myFn() should have failed");
+            } catch {} // eslint-disable-line no-empty
+
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          guildPlugins: [PluginWithPublicInterface, PluginWithTests],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-with-tests"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = createMockGuild(client);
+        client.emit("guildAvailable", guild);
+
+        await sleep(30);
+        client.emit("guildUnavailable", guild);
+      })();
+    });
+
+    it("GlobalPlugin is unavailable to other plugins during afterUnload()", (done) => {
+      (async () => {
+        let getPluginFn: any;
+        let plugin1Interface: any;
+
+        const PluginWithPublicInterface: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-with-public-interface",
+          public: {
+            myFn() {
+              return () => {
+                assert.fail("This should not be called");
+              };
+            },
+          },
+        };
+
+        const PluginWithTests: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
+          name: "plugin-with-tests",
+          dependencies: [PluginWithPublicInterface],
+          afterLoad(pluginData) {
+            getPluginFn = pluginData.getPlugin.bind(pluginData);
+            plugin1Interface = pluginData.getPlugin(PluginWithPublicInterface);
+          },
+          afterUnload() {
+            try {
+              getPluginFn(PluginWithPublicInterface);
+              assert.fail("getPluginFn() should have failed");
+            } catch {} // eslint-disable-line no-empty
+
+            try {
+              plugin1Interface.myFn();
+              assert.fail("plugin1Interface.myFn() should have failed");
+            } catch {} // eslint-disable-line no-empty
+
+            done();
+          },
+        };
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [PluginWithPublicInterface, PluginWithTests],
+          options: {
+            logFn: noop,
+          },
+        });
+
+        knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        knub.unloadGlobalContext();
       })();
     });
   });
@@ -528,7 +881,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToLoad = typedGuildPlugin({
           name: "plugin-to-load",
-          onLoad(pluginData) {
+          afterLoad(pluginData) {
             setTimeout(() => {
               assert.ok(pluginData.hasPlugin(DependencyToLoad));
               assert.ok(pluginData.hasPlugin({ name: "dependency-to-load" }));
@@ -575,7 +928,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToLoad = typedGuildPlugin({
           name: "plugin-to-load",
-          onLoad(pluginData) {
+          afterLoad(pluginData) {
             setTimeout(() => {
               const instance = pluginData.getPlugin(DependencyToLoad);
               instance.ok();
@@ -636,7 +989,7 @@ describe("PluginBlueprint", () => {
             },
           },
 
-          onLoad(pluginData) {
+          afterLoad(pluginData) {
             setTimeout(() => {
               const instance = pluginData.getPlugin(DependencyToLoad);
               instance.ok();
@@ -677,12 +1030,10 @@ describe("PluginBlueprint", () => {
 
           dependencies: [DependencyToLoad, OtherDependencyToLoad],
 
-          onLoad(pluginData) {
-            setTimeout(() => {
-              assert.ok(pluginData.hasPlugin(DependencyToLoad));
-              assert.ok(pluginData.hasPlugin(OtherDependencyToLoad));
-              done();
-            }, 50);
+          afterLoad(pluginData) {
+            assert.ok(pluginData.hasPlugin(DependencyToLoad));
+            assert.ok(pluginData.hasPlugin(OtherDependencyToLoad));
+            done();
           },
         });
 
@@ -721,12 +1072,10 @@ describe("PluginBlueprint", () => {
 
           dependencies: [DependencyOne],
 
-          onLoad(pluginData) {
-            setTimeout(() => {
-              assert.ok(pluginData.hasPlugin(DependencyOne));
-              assert.ok(pluginData.hasPlugin(DependencyTwo));
-              done();
-            }, 50);
+          afterLoad(pluginData) {
+            assert.ok(pluginData.hasPlugin(DependencyOne));
+            assert.ok(pluginData.hasPlugin(DependencyTwo));
+            done();
           },
         });
 
@@ -761,16 +1110,14 @@ describe("PluginBlueprint", () => {
 
           events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
-          onLoad(pluginData) {
-            setTimeout(() => {
-              // The command above should *not* be loaded
-              assert.strictEqual(pluginData.commands.getAll().length, 0);
+          afterLoad(pluginData) {
+            // The command above should *not* be loaded
+            assert.strictEqual(pluginData.commands.getAll().length, 0);
 
-              // The event listener above should *not* be loaded, and neither should the default messageCreate listener
-              assert.strictEqual(pluginData.events.getListenerCount(), 0);
+            // The event listener above should *not* be loaded, and neither should the default messageCreate listener
+            assert.strictEqual(pluginData.events.getListenerCount(), 0);
 
-              done();
-            }, 1);
+            done();
           },
         });
 
@@ -957,7 +1304,7 @@ describe("PluginBlueprint", () => {
       return (async () => {
         const TestPlugin: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "test-plugin",
-          onLoad(pluginData) {
+          beforeLoad(pluginData) {
             assert.ok(pluginData.client != null);
             assert.ok((pluginData.cooldowns as unknown) instanceof CooldownManager);
             assert.ok((pluginData.commands as unknown) instanceof PluginCommandManager);
@@ -993,7 +1340,7 @@ describe("PluginBlueprint", () => {
       return (async () => {
         const TestPlugin: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
           name: "test-plugin",
-          onLoad(pluginData) {
+          beforeLoad(pluginData) {
             assert.ok(pluginData.client != null);
             assert.ok((pluginData.cooldowns as unknown) instanceof CooldownManager);
             assert.ok((pluginData.commands as unknown) instanceof PluginCommandManager);
@@ -1104,7 +1451,9 @@ describe("PluginBlueprint", () => {
         info: "foo",
 
         // eslint-disable-next-line
-        onLoad(pluginData) {},
+        beforeLoad(partialPluginData) {},
+        // eslint-disable-next-line
+        afterLoad(pluginData) {},
       });
 
       expect(blueprint.name).to.equal("my-plugin");
@@ -1112,7 +1461,12 @@ describe("PluginBlueprint", () => {
 
       // Test type inference
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const result: AssertEquals<Parameters<typeof blueprint.onLoad>[0], GuildPluginData<CustomPluginType>> = true;
+      const result1: AssertEquals<
+        Parameters<typeof blueprint.beforeLoad>[0],
+        BeforeLoadPluginData<GuildPluginData<CustomPluginType>>
+      > = true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const result2: AssertEquals<Parameters<typeof blueprint.afterLoad>[0], GuildPluginData<CustomPluginType>> = true;
     });
   });
 
@@ -1140,7 +1494,7 @@ describe("PluginBlueprint", () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const MainPlugin = typedGuildPlugin({
         name: "main-plugin",
-        onLoad(pluginData) {
+        afterLoad(pluginData) {
           const otherPlugin = pluginData.getPlugin(OtherPlugin);
 
           // eslint-disable-next-line @typescript-eslint/no-unused-vars

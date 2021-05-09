@@ -1,6 +1,12 @@
 import { ConfigPreprocessorFn, ConfigValidatorFn, PluginOptions } from "../config/configTypes";
 import { Awaitable } from "../utils";
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "./PluginData";
+import {
+  AfterUnloadPluginData,
+  AnyPluginData,
+  BeforeLoadPluginData,
+  GlobalPluginData,
+  GuildPluginData,
+} from "./PluginData";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { CustomOverrideMatcher } from "../config/configUtils";
@@ -70,10 +76,40 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
    */
   public?: PluginBlueprintPublicInterface<TPluginData>;
 
-  onLoad?: (pluginData: TPluginData) => Awaitable<void>;
-  onUnload?: (pluginData: TPluginData) => Awaitable<void>;
-  onAfterLoad?: (pluginData: TPluginData) => Awaitable<void>;
-  onBeforeUnload?: (pluginData: TPluginData) => Awaitable<void>;
+  /**
+   * This function is called before the plugin is loaded.
+   * At this point, there are two guarantees:
+   *
+   * 1. Other plugins haven't yet interacted with this plugin
+   * 2. Other plugins can't interact with this plugin during this function
+   *
+   * Similarly, `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable.
+   */
+  beforeLoad?: (pluginData: BeforeLoadPluginData<TPluginData>) => Awaitable<void>;
+  /**
+   * This function is called after the plugin has been loaded.
+   * At this point, make sure to consider the following:
+   *
+   * 1. Commands and event handlers are already registered.
+   *    If you need to set up dependencies for them, do it in `beforeLoad()`.
+   * 2. Other plugins are able to interact with this plugin's public interfaces
+   */
+  afterLoad?: (pluginData: TPluginData) => Awaitable<void>;
+  /**
+   * This function is called before the plugin is unloaded.
+   * At this point, make sure to consider the following:
+   *
+   * 1. Commands and event handlers are still registered.
+   *    If you need to unload their dependencies, do it in `afterUnload()`.
+   * 2. Other plugins are still able to interact with this plugin's public interfaces
+   */
+  beforeUnload?: (pluginData: TPluginData) => Awaitable<void>;
+  /**
+   * This function is called after the plugin has been unloaded.
+   * At this point, it is guaranteed that other plugins can't interact with this plugin anymore.
+   * Similarly, `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable.
+   */
+  afterUnload?: (pluginData: AfterUnloadPluginData<TPluginData>) => Awaitable<void>;
 }
 
 /**

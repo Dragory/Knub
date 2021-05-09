@@ -1,3 +1,23 @@
+# NEXT
+These changes have not been released yet
+
+* **BREAKING CHANGE:** Rename `onLoad` to `afterLoad` and `onUnload` to `afterUnload` for clarity
+* **BREAKING CHANGE:** Rename `onBeforeLoad` to `beforeLoad` and `onBeforeUnload` to `beforeUnload` for consistency with the change above
+* **BREAKING CHANGE:** `beforeLoad` has new guarantees and limitations:
+  * Other plugins haven't yet interacted with this plugin
+  * Other plugins can't interact with this plugin during this function
+  * For that reason, `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable
+* **BREAKING CHANGE:** `afterUnload` has new guarantees and limitations:
+  * Other plugins can't interact with this plugin anymore
+  * `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable
+* **BREAKING CHANGE:** Remove `guildPluginLoaded` and `guildPluginUnloaded` events
+  * Guild loads are now considered a single opaque event. Listen to the `guildLoaded` event instead and then find the plugin via Map in`knub.getLoadedGuild().loadedPlugins`.
+* Both `GuildPluginData` and `GlobalPluginData` now contain a `loaded` boolean
+  * The value is set to `true` after `beforeLoad()` but before `afterLoad()`
+  * The value is set to `false` after `beforeUnload()` but before `afterUnload()`
+  * Any persistent loops and checks should check this value and interrupt themselves if it's changed to `false`
+* In plugins that queue operations or set timeouts/intervals, you should include logic in `beforeUnload` that either interrupts or waits for these operations to finish
+
 # 30.0.0-beta.36
 * **BREAKING CHANGE:** Remove all other plugin, event, and command helper function signatures except `(signature)` and the type-helper no-argument signature
   * In other words, **the following signatures have been removed:**

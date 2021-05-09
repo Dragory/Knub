@@ -57,6 +57,7 @@ module.exports = {
     "@typescript-eslint/prefer-namespace-keyword": "error",
     "@typescript-eslint/quotes": "off",
     "@typescript-eslint/no-unused-vars": ["error", {
+      "varsIgnorePattern": "^_",
       "argsIgnorePattern": "^_"
     }],
     "@typescript-eslint/semi": [

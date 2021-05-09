@@ -24,6 +24,11 @@ export type BasePluginData<TPluginType extends BasePluginType> = {
   _pluginType: TPluginType;
 
   /**
+   * Whether the plugin has finished loading and has not been unloaded yet
+   */
+  loaded: boolean;
+
+  /**
    * The underlying Eris Client object
    */
   client: Client;
@@ -63,6 +68,15 @@ export type BasePluginData<TPluginType extends BasePluginType> = {
    */
   state: TPluginType["state"];
 };
+
+export type BeforeLoadPluginData<TPluginData extends BasePluginData<any>> = Omit<
+  TPluginData,
+  "hasPlugin" | "getPlugin"
+>;
+export type AfterUnloadPluginData<TPluginData extends BasePluginData<any>> = Omit<
+  TPluginData,
+  "hasPlugin" | "getPlugin"
+>;
 
 /**
  * PluginData for a guild context
