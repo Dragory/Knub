@@ -17,6 +17,7 @@ These changes have not been released yet
   * The value is set to `false` after `beforeUnload()` but before `afterUnload()`
   * Any persistent loops and checks should check this value and interrupt themselves if it's changed to `false`
 * In plugins that queue operations or set timeouts/intervals, you should include logic in `beforeUnload` that either interrupts or waits for these operations to finish
+* Guild loads and unloads are now properly queued, hopefully resulting in fewer race conditions
 
 # 30.0.0-beta.36
 * **BREAKING CHANGE:** Remove all other plugin, event, and command helper function signatures except `(signature)` and the type-helper no-argument signature

@@ -41,6 +41,7 @@ import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
 import { EventRelay } from "./events/EventRelay";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 import { CustomOverrideMatcher } from "./config/configUtils";
+import { Queue } from "./Queue";
 
 const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>, BaseConfig<BasePluginType>> = {
   guildPlugins: [],
@@ -70,7 +71,8 @@ export class Knub<
   protected globalPlugins: GlobalPluginMap = new Map();
 
   protected loadedGuilds: Map<string, GuildContext<TGuildConfig>> = new Map();
-  protected canLoadGuildInProgress: Set<string> = new Set();
+  // Guild loads and unloads are queued up to avoid race conditions
+  protected guildLoadQueues: Map<string, Queue> = new Map();
   protected globalContext: GlobalContext<TGlobalConfig>;
   protected globalContextLoaded = false;
 
@@ -349,47 +351,35 @@ export class Knub<
   }
 
   public async loadGuild(guildId: string): Promise<void> {
-    // Don't load the same guild twice
-    if (this.loadedGuilds.has(guildId)) {
-      return;
-    }
+    return this.getGuildLoadQueue(guildId).add(async () => {
+      if (this.loadedGuilds.has(guildId)) {
+        return;
+      }
 
-    // Only load the guild if we're actually in the guild
-    if (!this.client.guilds.has(guildId)) {
-      return;
-    }
+      // Only load the guild if we're actually in the guild
+      if (!this.client.guilds.has(guildId)) {
+        return;
+      }
 
-    if (this.canLoadGuildInProgress.has(guildId)) {
-      return;
-    }
+      const guildContext: GuildContext<TGuildConfig> = {
+        guildId,
+        // @ts-ignore: This property is always set below before it can be used by plugins
+        config: null,
+        loadedPlugins: new Map(),
+        locks: new LockManager(),
+      };
 
-    this.canLoadGuildInProgress.add(guildId);
+      try {
+        await this.loadGuildConfig(guildContext);
+        await this.loadGuildPlugins(guildContext);
+      } catch (err) {
+        await this.unloadGuild(guildId);
+        throw err;
+      }
 
-    if (!(await this.options.canLoadGuild(guildId))) {
-      this.canLoadGuildInProgress.delete(guildId);
-      return;
-    }
-
-    this.canLoadGuildInProgress.delete(guildId);
-
-    const guildContext: GuildContext<TGuildConfig> = {
-      guildId,
-      // @ts-ignore: This property is always set below before it can be used by plugins
-      config: null,
-      loadedPlugins: new Map(),
-      locks: new LockManager(),
-    };
-
-    try {
-      await this.loadGuildConfig(guildContext);
-      await this.loadGuildPlugins(guildContext);
-    } catch (err) {
-      await this.unloadGuild(guildId);
-      throw err;
-    }
-
-    this.loadedGuilds.set(guildId, guildContext);
-    this.emit("guildLoaded", guildId);
+      this.loadedGuilds.set(guildId, guildContext);
+      this.emit("guildLoaded", guildId);
+    });
   }
 
   public async reloadGuild(guildId: string): Promise<void> {
@@ -397,34 +387,37 @@ export class Knub<
     await this.loadGuild(guildId);
   }
 
-  public async unloadGuild(guildId: string) {
-    const ctx = this.getLoadedGuild(guildId);
-    if (!ctx) {
-      return;
-    }
+  public async unloadGuild(guildId: string): Promise<void> {
+    // Loads and unloads are queued up to avoid race conditions
+    return this.getGuildLoadQueue(guildId).add(async () => {
+      const ctx = this.loadedGuilds.get(guildId);
+      if (!ctx) {
+        return;
+      }
 
-    const pluginsToUnload = Array.from(ctx.loadedPlugins.entries());
+      const pluginsToUnload = Array.from(ctx.loadedPlugins.entries());
 
-    // 1. Run each plugin's beforeUnload() function
-    for (const [_, loadedPlugin] of pluginsToUnload) {
-      await loadedPlugin.blueprint.beforeUnload?.(loadedPlugin.pluginData);
-    }
+      // 1. Run each plugin's beforeUnload() function
+      for (const [_, loadedPlugin] of pluginsToUnload) {
+        await loadedPlugin.blueprint.beforeUnload?.(loadedPlugin.pluginData);
+      }
 
-    // 2. Remove event listeners and mark each plugin as unloaded
-    for (const [pluginName, loadedPlugin] of pluginsToUnload) {
-      loadedPlugin.pluginData.events.clearAllListeners();
-      loadedPlugin.pluginData.loaded = false;
-      ctx.loadedPlugins.delete(pluginName);
-    }
+      // 2. Remove event listeners and mark each plugin as unloaded
+      for (const [pluginName, loadedPlugin] of pluginsToUnload) {
+        loadedPlugin.pluginData.events.clearAllListeners();
+        loadedPlugin.pluginData.loaded = false;
+        ctx.loadedPlugins.delete(pluginName);
+      }
 
-    // 3. Run each plugin's afterUnload() function
-    for (const [_, loadedPlugin] of pluginsToUnload) {
-      const afterUnloadPluginData = this.getAfterUnloadPluginData(loadedPlugin.pluginData);
-      await loadedPlugin.blueprint.afterUnload?.(afterUnloadPluginData);
-    }
+      // 3. Run each plugin's afterUnload() function
+      for (const [_, loadedPlugin] of pluginsToUnload) {
+        const afterUnloadPluginData = this.getAfterUnloadPluginData(loadedPlugin.pluginData);
+        await loadedPlugin.blueprint.afterUnload?.(afterUnloadPluginData);
+      }
 
-    this.loadedGuilds.delete(ctx.guildId);
-    this.emit("guildUnloaded", ctx.guildId);
+      this.loadedGuilds.delete(ctx.guildId);
+      this.emit("guildUnloaded", ctx.guildId);
+    });
   }
 
   protected async unloadAllGuilds(): Promise<void> {
@@ -432,6 +425,15 @@ export class Knub<
     const unloadPromises = loadedGuilds.map((loadedGuild) => this.unloadGuild(loadedGuild.guildId));
 
     await Promise.all(unloadPromises);
+  }
+
+  protected getGuildLoadQueue(guildId: string): Queue {
+    if (!this.guildLoadQueues.has(guildId)) {
+      const queueTimeout = 60 * 1000; // 1 minute, should be plenty to allow plugins time to load/unload properly
+      this.guildLoadQueues.set(guildId, new Queue(queueTimeout));
+    }
+
+    return this.guildLoadQueues.get(guildId)!;
   }
 
   public getLoadedGuild(guildId: string): GuildContext<TGuildConfig> | undefined {
