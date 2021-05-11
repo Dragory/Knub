@@ -18,6 +18,34 @@ These changes have not been released yet
   * Any persistent loops and checks should check this value and interrupt themselves if it's changed to `false`
 * In plugins that queue operations or set timeouts/intervals, you should include logic in `beforeUnload` that either interrupts or waits for these operations to finish
 * Guild loads and unloads are now properly queued, hopefully resulting in fewer race conditions
+* **BREAKING CHANGE:** Rework how custom override criteria are defined and typed.
+  * In addition to `customOverrideCriteria`, PluginTypes now also support `customOverrideMatchParams`. This adds types for the `extra` property in `MatchParams`.
+  * Instead of a `customOverrideCriteriaMatcher` function, custom override criteria are now defined as a `customOverrideCriteriaFunctions` object.
+    This makes it statically analyzable and allows proper type checks.
+  * Before:
+    ```ts
+    {
+      // ...other plugin properties...
+      customOverrideCriteriaMatcher: (pluginData, criteria, matchParams) => {
+        if (criteria.targetUserId && matchParams.extra.targetUserId !== criteria.targetUserId) return false;
+        if (criteria.targetChannelId && matchParams.extra.targetChannelId !== criteria.targetChannelId) return false;
+        return true;
+      }
+    }
+    ```
+
+    After:
+    ```ts
+    {
+      // ...other plugin properties...
+      customOverrideCriteriaFunctions: {
+        // `matchParams.extra` has types from the `PluginType.customOverrideMatchParams`
+        // `value` has its type from the matching property in `PluginType.customOverrideCriteria`
+        targetUserId: (pluginData, matchParams, value) => matchParams.extra.targetUserId === value,
+        targetChannelId: (pluginData, matchParams, value) => matchParams.extra.targetChannelId === value
+      }
+    }
+    ```
 
 # 30.0.0-beta.36
 * **BREAKING CHANGE:** Remove all other plugin, event, and command helper function signatures except `(signature)` and the type-helper no-argument signature
