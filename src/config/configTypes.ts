@@ -55,12 +55,12 @@ export type CustomOverrideCriteriaFunctions<TPluginData extends AnyPluginData<an
   [KCriterion in keyof TPluginData["_pluginType"]["customOverrideCriteria"]]: (
     pluginData: TPluginData,
     matchParams: MatchParams<TPluginData["_pluginType"]["customOverrideMatchParams"]>,
-    value: NonNullable<TPluginData["_pluginType"]["customOverrideCriteria"][KCriterion]>,
+    value: NonNullable<TPluginData["_pluginType"]["customOverrideCriteria"][KCriterion]>
   ) => boolean;
 };
 
 export interface BasePluginConfig {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export type ConfigValidatorFn<TPluginType extends BasePluginType> = (

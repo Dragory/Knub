@@ -23,7 +23,7 @@ export class PluginError extends Error {
     }
   }
 
-  public [util.inspect.custom](_depth, _options) {
-    return `PluginError: ${this.stack}`;
+  public [util.inspect.custom](_depth: number, _options: any): string {
+    return `PluginError: ${this.stack ?? "<no stack>"}`;
   }
 }

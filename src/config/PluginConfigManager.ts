@@ -1,9 +1,10 @@
 import {
   ConfigPreprocessorFn,
-  ConfigValidatorFn, CustomOverrideCriteriaFunctions,
+  ConfigValidatorFn,
+  CustomOverrideCriteriaFunctions,
   PartialPluginOptions,
   PermissionLevels,
-  PluginOptions
+  PluginOptions,
 } from "./configTypes";
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { Channel, GuildChannel, Member, Message, User } from "eris";
@@ -44,7 +45,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     this.validator = opts.validator;
   }
 
-  public async init() {
+  public async init(): Promise<void> {
     if (this.preprocessor) {
       this.options = await this.preprocessor(this.options);
     }
@@ -66,7 +67,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     };
   }
 
-  protected getMemberLevel(member: Member) {
+  protected getMemberLevel(member: Member): number | null {
     if (!isGuildPluginData(this.pluginData!)) {
       return null;
     }
@@ -74,7 +75,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     return getMemberLevel(this.levels, member, this.pluginData.guild);
   }
 
-  public setPluginData(pluginData: AnyPluginData<TPluginType>) {
+  public setPluginData(pluginData: AnyPluginData<TPluginType>): void {
     if (this.pluginData) {
       throw new Error("Plugin data already set");
     }
@@ -119,11 +120,11 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       memberRoles,
     };
 
-    return getMatchingPluginConfig<AnyPluginData<TPluginType>>(
+    return getMatchingPluginConfig<TPluginType, AnyPluginData<TPluginType>>(
       this.pluginData!,
       this.options,
       finalMatchParams,
-      this.customOverrideCriteriaFunctions,
+      this.customOverrideCriteriaFunctions
     );
   }
 

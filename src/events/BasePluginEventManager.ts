@@ -30,12 +30,12 @@ export interface OnOpts {
  * functions and, by default, restricts events to the plugin's guilds.
  */
 export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<any>> {
-  protected listeners: Map<string, Set<WrappedListener>> = new Map();
+  protected listeners: Map<string, Set<WrappedListener>> = new Map<string, Set<WrappedListener>>();
   protected pluginData: TPluginData | undefined;
 
   constructor(protected eventRelay: EventRelay) {}
 
-  public setPluginData(pluginData: TPluginData) {
+  public setPluginData(pluginData: TPluginData): void {
     if (this.pluginData) {
       throw new Error("Plugin data already set");
     }
@@ -45,7 +45,7 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
 
   abstract off(event: string, listener: WrappedListener): void;
 
-  public getListenerCount() {
+  public getListenerCount(): number {
     let count = 0;
     for (const listeners of this.listeners.values()) {
       count += listeners.size;
@@ -53,7 +53,7 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
     return count;
   }
 
-  public clearAllListeners() {
+  public clearAllListeners(): void {
     for (const [event, listeners] of this.listeners.entries()) {
       for (const listener of listeners) {
         this.off(event, listener);

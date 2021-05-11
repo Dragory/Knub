@@ -1,17 +1,15 @@
-import {
-  CustomOverrideCriteriaFunctions,
-  PluginOptions, PluginOverride,
-} from "./configTypes";
+import { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "./configTypes";
 import { AnyPluginData } from "../plugins/PluginData";
 import { typedKeys } from "../utils";
+import { BasePluginType } from "../plugins/pluginTypes";
 
 const levelRangeRegex = /^([<>=!]+)(\d+)$/;
-const splitLevelRange = (v, defaultMod): [string, number] => {
+const splitLevelRange = (v: string, defaultMod: string): [string, number] => {
   const match = levelRangeRegex.exec(v);
   return match ? [match[1], parseInt(match[2], 10)] : [defaultMod, parseInt(v, 10)];
 };
 
-export interface MatchParams<TExtra extends {} = {}> {
+export interface MatchParams<TExtra extends Record<string, unknown> = Record<string, unknown>> {
   level?: number | null;
   userId?: string | null;
   memberRoles?: string[] | null;
@@ -32,8 +30,8 @@ export interface MatchParams<TExtra extends {} = {}> {
  * @param {T} sources
  * @returns {T}
  */
-export function mergeConfig<T extends {}>(...sources: any[]): T {
-  const target = {} as T;
+export function mergeConfig<T extends Record<string, unknown>>(...sources: any[]): T {
+  const target = {} as Record<string, unknown>;
 
   for (const source of sources) {
     for (const [key, value] of Object.entries(source)) {
@@ -55,35 +53,41 @@ export function mergeConfig<T extends {}>(...sources: any[]): T {
     }
   }
 
-  return target;
+  return target as T;
 }
 
 /**
  * Returns matching plugin options for the specified matchParams based on overrides
  */
 export function getMatchingPluginConfig<
-  TPluginData extends AnyPluginData<any>,
+  TPluginType extends BasePluginType,
+  TPluginData extends AnyPluginData<TPluginType> = AnyPluginData<TPluginType>,
   // Inferred type, should not be overridden
   TPluginOptions extends PluginOptions<TPluginData["_pluginType"]> = PluginOptions<TPluginData["_pluginType"]>
 >(
   pluginData: TPluginData,
   pluginOptions: TPluginOptions,
   matchParams: MatchParams<TPluginData["_pluginType"]["customOverrideMatchParams"]>,
-  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>,
+  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>
 ): TPluginData["_pluginType"]["config"] {
   let result: TPluginData["_pluginType"]["config"] = mergeConfig(pluginOptions.config || {});
 
   const overrides = pluginOptions.overrides || [];
   for (const override of overrides) {
-    const matches =
-      evaluateOverrideCriteria<TPluginData>(pluginData, override, matchParams, customOverrideCriteriaFunctions);
+    const matches = evaluateOverrideCriteria<TPluginData>(
+      pluginData,
+      override,
+      matchParams,
+      customOverrideCriteriaFunctions
+    );
 
     if (matches) {
       result = mergeConfig(result, override.config);
     }
   }
 
-  return result as TPluginData["_pluginType"]["config"];
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return result;
 }
 
 /**
@@ -93,15 +97,14 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
   pluginData: TPluginData,
   criteria: PluginOverride<TPluginData["_pluginType"]>,
   matchParams: MatchParams,
-  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>,
+  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>
 ): boolean {
   // Note: Despite the naming here, this does *not* imply any one criterion matching means the entire criteria block
   // matches. When matching of one criterion fails, the command returns immediately. This variable is here purely so
   // a block with no criteria evaluates to false.
   let matchedOne = false;
 
-  criteriaLoop:
-  for (const key of typedKeys(criteria)) {
+  criteriaLoop: for (const key of typedKeys(criteria)) {
     if (key === "config") continue;
     if (criteria[key] == null) continue;
 
@@ -269,7 +272,7 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
       const value = criteria[key]!;
       for (const customKey of typedKeys(value)) {
         if (customOverrideCriteriaFunctions?.[customKey] == null) {
-          throw new Error(`Unknown custom override criteria: ${customKey}`);
+          throw new Error(`Unknown custom override criteria: ${String(customKey)}`);
         }
 
         const match = customOverrideCriteriaFunctions?.[customKey](pluginData, matchParams, value[customKey]);

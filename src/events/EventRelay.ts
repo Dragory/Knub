@@ -11,13 +11,13 @@ type AnyListenerMap = Map<ValidEvent, Set<RelayListener<ValidEvent>>>;
  * Guild events are a subset of all events, that apply to a specific guild.
  */
 export class EventRelay {
-  protected guildListeners: GuildListenerMap = new Map();
-  protected anyListeners: AnyListenerMap = new Map();
+  protected guildListeners: GuildListenerMap = new Map() as GuildListenerMap;
+  protected anyListeners: AnyListenerMap = new Map() as AnyListenerMap;
   protected registeredRelays: Set<ValidEvent> = new Set();
 
   constructor(protected client: Client) {}
 
-  onGuildEvent<TEvent extends GuildEvent>(guildId: string, ev: TEvent, listener: RelayListener<TEvent>) {
+  onGuildEvent<TEvent extends GuildEvent>(guildId: string, ev: TEvent, listener: RelayListener<TEvent>): void {
     if (!this.guildListeners.has(guildId)) {
       this.guildListeners.set(guildId, new Map());
     }
@@ -31,14 +31,14 @@ export class EventRelay {
     this.registerEventRelay(ev);
   }
 
-  offGuildEvent<TEvent extends GuildEvent>(guildId: string, ev: TEvent, listener: RelayListener<TEvent>) {
+  offGuildEvent<TEvent extends GuildEvent>(guildId: string, ev: TEvent, listener: RelayListener<TEvent>): void {
     this.guildListeners
       .get(guildId)
       ?.get(ev)
       ?.delete(listener as RelayListener<GuildEvent>);
   }
 
-  onAnyEvent<TEvent extends ValidEvent>(ev: TEvent, listener: RelayListener<TEvent>) {
+  onAnyEvent<TEvent extends ValidEvent>(ev: TEvent, listener: RelayListener<TEvent>): void {
     if (!this.anyListeners.has(ev)) {
       this.anyListeners.set(ev, new Set());
     }
@@ -47,7 +47,7 @@ export class EventRelay {
     this.registerEventRelay(ev);
   }
 
-  offAnyEvent<TEvent extends ValidEvent>(ev: TEvent, listener: RelayListener<TEvent>) {
+  offAnyEvent<TEvent extends ValidEvent>(ev: TEvent, listener: RelayListener<TEvent>): void {
     if (!this.anyListeners.has(ev)) {
       return;
     }
@@ -55,7 +55,7 @@ export class EventRelay {
     this.anyListeners.get(ev)!.delete(listener as RelayListener<ValidEvent>);
   }
 
-  protected registerEventRelay(ev: ValidEvent) {
+  protected registerEventRelay(ev: ValidEvent): void {
     if (this.registeredRelays.has(ev)) {
       return;
     }
@@ -66,14 +66,14 @@ export class EventRelay {
     });
   }
 
-  protected relayEvent(ev: ValidEvent, args) {
+  protected relayEvent(ev: ValidEvent, args: any[]): void {
     const convertedArgs = fromErisArgs[ev](...args);
 
     if (isGuildEvent(ev)) {
       // Only guild events are passed to guild listeners, and only to the matching guild
       const guild = eventToGuild[ev]?.(convertedArgs as any);
       if (guild && this.guildListeners.get(guild.id)?.has(ev)) {
-        for (const listener of this.guildListeners.get(guild.id)?.get(ev)!.values()!) {
+        for (const listener of this.guildListeners.get(guild.id)!.get(ev)!.values()!) {
           listener(convertedArgs as EventArguments[GuildEvent]);
         }
       }

@@ -73,6 +73,14 @@ module.exports = {
     "no-redeclare": "off",
     "@typescript-eslint/no-redeclare": "error",
 
+    "@typescript-eslint/explicit-module-boundary-types": ["error", {
+      allowArgumentsExplicitlyTypedAsAny: true,
+    }],
+    "@typescript-eslint/no-misused-promises": ["error", {
+      checksVoidReturn: false,
+    }],
+    "@typescript-eslint/prefer-regexp-exec": "off",
+
     "arrow-parens": [
       "off",
       "as-needed",

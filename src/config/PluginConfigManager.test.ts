@@ -2,10 +2,21 @@ import { assert, expect } from "chai";
 import { PluginConfigManager } from "./PluginConfigManager";
 import { sleep } from "../testUtils";
 import { ConfigValidationError } from "./ConfigValidationError";
+import { BasePluginType } from "../plugins/pluginTypes";
 
 describe("PluginConfigManager", () => {
   it("merge user config with default config", () => {
-    const configManager = new PluginConfigManager(
+    interface PluginType extends BasePluginType {
+      config: {
+        can_do: boolean;
+        nested: {
+          one: number;
+          two: number;
+        };
+      };
+    }
+
+    const configManager = new PluginConfigManager<PluginType>(
       {
         config: {
           can_do: false,

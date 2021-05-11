@@ -6,14 +6,17 @@ import {
   Client,
   Emoji,
   Guild,
+  GuildChannel,
   GuildTextableChannel,
   Invite,
   Member,
   Message,
   MessageContent,
   MessageFile,
+  Role,
   TextableChannel,
   TextChannel,
+  User,
 } from "eris";
 import { get, getChannelId, getRoleId, getUserId, noop, WithRequiredProps } from "./utils";
 import { GuildPluginData } from "./plugins/PluginData";
@@ -109,24 +112,24 @@ export async function createChunkedMessage(channel: TextableChannel, messageText
  */
 export type Reaction = string;
 
-export function resolveUser(bot: Client, str: string) {
+export function resolveUser(bot: Client, str: string): User | undefined {
   const userId = getUserId(str);
-  return userId && bot.users.get(userId);
+  return userId ? bot.users.get(userId) : undefined;
 }
 
-export function resolveMember(guild: Guild, str: string) {
+export function resolveMember(guild: Guild, str: string): Member | undefined {
   const memberId = getUserId(str);
-  return memberId && guild.members.get(memberId);
+  return memberId ? guild.members.get(memberId) : undefined;
 }
 
-export function resolveChannel(guild: Guild, str: string) {
+export function resolveChannel(guild: Guild, str: string): GuildChannel | undefined {
   const channelId = getChannelId(str);
-  return channelId && guild.channels.get(channelId);
+  return channelId ? guild.channels.get(channelId) : undefined;
 }
 
-export function resolveRole(guild: Guild, str: string) {
+export function resolveRole(guild: Guild, str: string): Role | undefined {
   const roleId = getRoleId(str);
-  return roleId && guild.roles.get(roleId);
+  return roleId ? guild.roles.get(roleId) : undefined;
 }
 
 /**
@@ -191,7 +194,7 @@ export function waitForReply(
 /**
  * Shorthand for sending a message to the same channel as another message
  */
-export function reply(msg: Message, content: MessageContent, file: MessageFile) {
+export function reply(msg: Message, content: MessageContent, file: MessageFile): Promise<Message> {
   return msg.channel.createMessage(content, file);
 }
 
@@ -219,16 +222,17 @@ export function disableCodeBlocks(str: string): string {
 /**
  * Returns the full invite link for an invite object
  */
-export function getInviteLink(inv: Invite) {
+export function getInviteLink(inv: Invite): string {
   return `https://discord.gg/${inv.code}`;
 }
 
-export function hasPermission(config: any, permission: string) {
+export function hasPermission(config: any, permission: string): boolean {
   return get(config, permission) === true;
 }
 
-export function getMemberLevel(pluginData: GuildPluginData<any>, member: Member) {
-  const levels = pluginData.fullConfig.levels || {};
+export function getMemberLevel(pluginData: GuildPluginData<any>, member: Member): number {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
+  const levels = pluginData.fullConfig.levels ?? {};
   return _getMemberLevel(levels, member, pluginData.guild);
 }
 

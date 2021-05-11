@@ -8,8 +8,8 @@ import { BasePluginType } from "./plugins/pluginTypes";
 
 type StatusMessageFn = (channel: TextableChannel, body: string) => void;
 
-export type GuildPluginMap = Map<string, GuildPluginBlueprint<any>>;
-export type GlobalPluginMap = Map<string, GlobalPluginBlueprint<any>>;
+export type GuildPluginMap = Map<string, GuildPluginBlueprint<GuildPluginData<any>>>;
+export type GlobalPluginMap = Map<string, GlobalPluginBlueprint<GlobalPluginData<any>>>;
 
 export type LogFn = (level, ...args) => void;
 

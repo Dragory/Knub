@@ -3,7 +3,7 @@ type AnyFn = (...args: any[]) => any;
 
 const DEFAULT_TIMEOUT = 10 * 1000;
 
-export class Queue<TQueueFunction extends Function = AnyFn> {
+export class Queue<TQueueFunction extends AnyFn = AnyFn> {
   protected running = false;
   protected queue: InternalQueueFn[] = [];
   protected timeout: number;
@@ -34,9 +34,9 @@ export class Queue<TQueueFunction extends Function = AnyFn> {
     }
 
     const fn = this.queue.shift()!;
-    new Promise((resolve) => {
+    void new Promise((resolve) => {
       // Either fn() completes or the timeout is reached
-      fn().then(resolve);
+      void fn().then(resolve);
       setTimeout(resolve, this.timeout);
     }).then(() => this.next());
   }

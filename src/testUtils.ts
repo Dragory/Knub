@@ -1,10 +1,10 @@
 import { noop } from "./utils";
-import { Client, Collection, Guild, Message, Shard, TextChannel, User } from "eris";
+import { Client, Collection, Guild, Message, Shard, ShardManager, TextChannel, User } from "eris";
 import events = require("events");
 
 const EventEmitter = events.EventEmitter;
 
-function persist(that, prop, initial) {
+function persist<T, TProp extends keyof T>(that: T, prop: TProp, initial: T[TProp]) {
   if (!that[prop]) {
     that[prop] = initial;
   }
@@ -16,11 +16,11 @@ export function createMockClient(): Client {
   return new Proxy<Client>(new EventEmitter() as Client, {
     get(target, p: string) {
       if (target[p]) {
-        return target[p];
+        return target[p] as unknown;
       }
 
       if (p === "shards") {
-        return persist(target, p, new Collection(Shard));
+        return persist(target, p, new Collection(Shard) as ShardManager);
       }
 
       if (p === "users") {
@@ -36,7 +36,7 @@ export function createMockClient(): Client {
       }
 
       if (p === "getChannel") {
-        return function (this: Client, channelId) {
+        return function (this: Client, channelId: string) {
           return this.guilds.get(this.channelGuildMap[channelId])?.channels.get(channelId);
         };
       }
@@ -51,7 +51,7 @@ export function sleep(ms: number): Promise<void> {
 }
 
 let mockGuildId = 10000;
-export function createMockGuild(client, data = {}): Guild {
+export function createMockGuild(client: Client, data = {}): Guild {
   const id = (++mockGuildId).toString();
   const mockGuild = new Guild(
     {
@@ -68,7 +68,7 @@ export function createMockGuild(client, data = {}): Guild {
 }
 
 let mockUserId = 20000;
-export function createMockUser(client, data = {}): User {
+export function createMockUser(client: Client, data = {}): User {
   const id = (++mockUserId).toString();
   const mockUser = new User(
     {
@@ -86,7 +86,8 @@ export function createMockUser(client, data = {}): User {
 }
 
 let mockChannelId = 30000;
-export function createMockTextChannel(client, guildId, data = {}): TextChannel {
+export function createMockTextChannel(client: Client, guildId: string, data = {}): TextChannel {
+  const guild = client.guilds.get(guildId)!;
   const id = (++mockChannelId).toString();
   const mockTextChannel = new TextChannel(
     {
@@ -96,11 +97,11 @@ export function createMockTextChannel(client, guildId, data = {}): TextChannel {
       name: `mock-channel-${id}`,
       ...data,
     },
-    client,
+    guild,
     0
   );
 
-  client.guilds.get(guildId).channels.add(mockTextChannel);
+  guild.channels.add(mockTextChannel);
   client.channelGuildMap[mockTextChannel.id] = guildId;
 
   return mockTextChannel;

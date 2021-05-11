@@ -10,6 +10,7 @@ import {
 import path from "path";
 import _fs from "fs";
 import { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types";
+import { KeyOfMap } from "../utils";
 
 const fs = _fs.promises;
 
@@ -33,6 +34,7 @@ export function getMemberLevel(levels: PermissionLevels, member: PartialMember, 
 }
 
 export function isGuildContext(ctx: AnyContext<any, any>): ctx is GuildContext<any> {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   return (ctx as any).guildId != null;
 }
 
@@ -63,7 +65,7 @@ export type PluginPublicInterface<T extends AnyPluginBlueprint> = T["public"] ex
 /**
  * Load JSON config files from a "config" folder, relative to cwd
  */
-export async function defaultGetConfig(key) {
+export async function defaultGetConfig(key: string): Promise<any> {
   const configFile = key ? `${key}.json` : "global.json";
   const configPath = path.join("config", configFile);
 
@@ -74,7 +76,7 @@ export async function defaultGetConfig(key) {
   }
 
   const json = await fs.readFile(configPath, { encoding: "utf8" });
-  return JSON.parse(json);
+  return JSON.parse(json); // eslint-disable-line @typescript-eslint/no-unsafe-return
 }
 
 /**
@@ -83,7 +85,7 @@ export async function defaultGetConfig(key) {
 export function defaultGetEnabledGuildPlugins(
   ctx: AnyContext<BaseConfig<any>, BaseConfig<any>>,
   guildPlugins: GuildPluginMap
-) {
+): Array<KeyOfMap<GuildPluginMap>> {
   const plugins = ctx.config.plugins ?? {};
   return Array.from(guildPlugins.keys()).filter((pluginName) => {
     return plugins[pluginName]?.enabled !== false;

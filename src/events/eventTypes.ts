@@ -34,8 +34,8 @@ import {
  * @see https://github.com/abalabahaha/eris/blob/27bb9cd02ae990606ab50b32ac186da53d8ca45a/index.d.ts#L836
  */
 export interface KnownEvents {
-  ready: {};
-  disconnect: {};
+  ready: Record<string, never>;
+  disconnect: Record<string, never>;
   callCreate: {
     call: Call;
   };
@@ -278,6 +278,7 @@ export function isGuildEvent(ev: ValidEvent): ev is GuildEvent {
   return !globalEvents.includes(ev as any);
 }
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /**
  * Each property is a function that converts Eris event listener arguments to
  * Knub's event argument object.
@@ -342,3 +343,4 @@ export const fromErisArgs: FromErisArgsObj = {
   warn: (message, id) => ({ message, id }),
   debug: (message, id) => ({ message, id }),
 };
+/* eslint-enable @typescript-eslint/no-unsafe-assignment */

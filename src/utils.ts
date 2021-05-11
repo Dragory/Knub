@@ -10,13 +10,16 @@ export type WithRequiredProps<T, K extends keyof T> = T &
     [PK in K]-?: Exclude<T[K], null>;
   };
 
-export function get(obj, path, def?): any {
+export function get<TObj extends any>(obj: TObj, path: string, def?: any): unknown {
   let cursor = obj;
   const pathParts = path.split(".");
   for (const part of pathParts) {
-    cursor = cursor[part];
-    if (cursor === undefined) return def;
-    if (cursor == null) return null;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const value = cursor[part];
+    if (value === undefined) return def;
+    if (value == null) return null;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    cursor = value;
   }
   return cursor;
 }
@@ -26,7 +29,7 @@ export const channelMentionRegex = /^<#([0-9]+)>$/;
 export const roleMentionRegex = /^<@&([0-9]+)>$/;
 export const snowflakeRegex = /^[1-9][0-9]{5,19}$/;
 
-export function getUserId(str: string) {
+export function getUserId(str: string): string | null {
   str = str.trim();
 
   if (str.match(snowflakeRegex)) {
@@ -42,7 +45,7 @@ export function getUserId(str: string) {
   return null;
 }
 
-export function getChannelId(str: string) {
+export function getChannelId(str: string): string | null {
   str = str.trim();
 
   if (str.match(snowflakeRegex)) {
@@ -58,7 +61,7 @@ export function getChannelId(str: string) {
   return null;
 }
 
-export function getRoleId(str: string) {
+export function getRoleId(str: string): string | null {
   str = str.trim();
 
   if (str.match(snowflakeRegex)) {
@@ -74,6 +77,9 @@ export function getRoleId(str: string) {
   return null;
 }
 
-export const noop = () => {}; // eslint-disable-line @typescript-eslint/no-empty-function
+export const noop = (): void => {}; // eslint-disable-line @typescript-eslint/no-empty-function
 
-export const typedKeys = Object.keys as unknown as <T = {}>(o: T) => Array<keyof T>;
+export const typedKeys = (Object.keys as unknown) as <T = Record<string, unknown>>(o: T) => Array<keyof T>;
+
+// From https://stackoverflow.com/a/60737746/316944
+export type KeyOfMap<M extends Map<unknown, unknown>> = M extends Map<infer K, unknown> ? K : never;

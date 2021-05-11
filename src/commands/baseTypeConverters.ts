@@ -9,13 +9,18 @@ import {
 import { disableCodeBlocks } from "../helpers";
 import { getChannelId, getRoleId, getUserId } from "../utils";
 import { Channel, GuildChannel, Member, Role, TextChannel, User, VoiceChannel } from "eris";
+import { AnyPluginData } from "../plugins/PluginData";
+import { CommandContext } from "./commandUtils";
+
+// TODO: Remove eslint-disable below after `this: void` has been added to the functions in knub-command-manager
+/* eslint-disable @typescript-eslint/unbound-method */
 
 export const baseTypeConverters = {
   ...defaultTypeConverters,
 
   boolean: defaultTypeConverters.bool,
 
-  number(value) {
+  number(value: string): number {
     const result = parseFloat(value);
     if (Number.isNaN(result)) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid number`);
@@ -24,7 +29,7 @@ export const baseTypeConverters = {
     return result;
   },
 
-  user(value, { pluginData: { client } }): User {
+  user(value: string, { pluginData: { client } }: CommandContext<AnyPluginData<any>>): User {
     const userId = getUserId(value);
     if (!userId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid user`);
@@ -38,7 +43,7 @@ export const baseTypeConverters = {
     return user;
   },
 
-  member(value, { message, pluginData: { client } }): Member {
+  member(value: string, { message, pluginData: { client } }: CommandContext<AnyPluginData<any>>): Member {
     if (!(message.channel instanceof GuildChannel)) {
       throw new TypeConversionError(`Type 'Member' can only be used in guilds`);
     }
@@ -61,7 +66,7 @@ export const baseTypeConverters = {
     return member;
   },
 
-  channel(value, { message }): Channel {
+  channel(value: string, { message }: CommandContext<AnyPluginData<any>>): Channel {
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
@@ -80,7 +85,7 @@ export const baseTypeConverters = {
     return channel;
   },
 
-  textChannel(value, { message }): TextChannel {
+  textChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): TextChannel {
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
@@ -103,7 +108,7 @@ export const baseTypeConverters = {
     return channel;
   },
 
-  voiceChannel(value, { message }): VoiceChannel {
+  voiceChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): VoiceChannel {
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
@@ -126,7 +131,7 @@ export const baseTypeConverters = {
     return channel;
   },
 
-  role(value, { message }): Role {
+  role(value: string, { message }: CommandContext<AnyPluginData<any>>): Role {
     if (!(message.channel instanceof GuildChannel)) {
       throw new TypeConversionError(`Type 'Role' can only be used in guilds`);
     }
@@ -144,7 +149,7 @@ export const baseTypeConverters = {
     return role;
   },
 
-  userId(value) {
+  userId(value: string): string {
     const userId = getUserId(value);
     if (!userId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid user`);
@@ -153,7 +158,7 @@ export const baseTypeConverters = {
     return userId;
   },
 
-  channelId(value) {
+  channelId(value: string): string {
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);

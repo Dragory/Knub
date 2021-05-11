@@ -2,7 +2,7 @@ import {
   ConfigPreprocessorFn,
   ConfigValidatorFn,
   CustomOverrideCriteriaFunctions,
-  PluginOptions
+  PluginOptions,
 } from "../config/configTypes";
 import { Awaitable } from "../utils";
 import {
@@ -191,6 +191,7 @@ function plugin<TBlueprint extends AnyPluginBlueprint>(...args) {
   if (args.length === 1) {
     // (blueprint)
     // Return blueprint
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return args[0];
   }
 
@@ -218,7 +219,8 @@ export function typedGuildPlugin<TPluginType extends BasePluginType>(): PluginBl
   GuildPluginBlueprint<GuildPluginData<TPluginType>>
 >;
 
-export function typedGuildPlugin(...args) {
+export function typedGuildPlugin(...args: any[]): any {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return plugin<GuildPluginBlueprint<any>>(...args);
 }
 
@@ -238,6 +240,7 @@ export function typedGlobalPlugin<TPluginType extends BasePluginType>(): PluginB
   GlobalPluginBlueprint<GlobalPluginData<TPluginType>>
 >;
 
-export function typedGlobalPlugin(...args) {
+export function typedGlobalPlugin(...args: any[]): any {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return plugin<GlobalPluginBlueprint<any>>(...args);
 }

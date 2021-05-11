@@ -1,31 +1,35 @@
 import Timeout = NodeJS.Timeout;
+import { noop } from "../utils";
 
 const DEFAULT_LOCK_TIMEOUT = 10 * 1000;
 const LOCK_GC_TIMEOUT = 120 * 1000;
+
+type ResolveFn = (...args: any[]) => any;
 
 export class Lock {
   public unlockPromise: Promise<Lock>;
   public interrupted: boolean;
 
-  protected resolve;
+  protected resolve: ResolveFn = noop;
 
   constructor(oldLocks: Lock[] = [], lockTimeout = DEFAULT_LOCK_TIMEOUT) {
     // A new lock can be built by combining the state from previous locks
     // For now, this means if any of the old locks was interrupted, the new one is as well
     this.interrupted = oldLocks.some((l) => l && l.interrupted);
 
-    this.unlockPromise = new Promise((resolve) => {
+    this.unlockPromise = new Promise<Lock>((resolve: ResolveFn) => {
       this.resolve = resolve;
     });
 
     setTimeout(() => this.unlock(), lockTimeout);
   }
 
-  public unlock() {
+  public unlock(): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     this.resolve(this);
   }
 
-  public interrupt() {
+  public interrupt(): void {
     this.interrupted = true;
     this.unlock();
   }
@@ -37,12 +41,12 @@ export class LockManager {
   protected lockGCTimeouts: Map<string, Timeout>;
 
   constructor(lockTimeout = DEFAULT_LOCK_TIMEOUT) {
-    this.locks = new Map();
+    this.locks = new Map<string, Promise<Lock>>();
     this.lockTimeout = lockTimeout;
-    this.lockGCTimeouts = new Map();
+    this.lockGCTimeouts = new Map<string, Timeout>();
   }
 
-  public acquire(keys: string | string[], lockTimeout?: number) {
+  public acquire(keys: string | string[], lockTimeout?: number): Promise<Lock> {
     if (!Array.isArray(keys)) keys = [keys];
     if (lockTimeout == null) lockTimeout = this.lockTimeout;
 
@@ -83,7 +87,7 @@ export class LockManager {
     return newLockPromise;
   }
 
-  public setLockTimeout(ms: number) {
+  public setLockTimeout(ms: number): void {
     this.lockTimeout = ms;
   }
 }

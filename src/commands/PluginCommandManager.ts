@@ -16,7 +16,7 @@ import { Client, Message } from "eris";
 import { AnyPluginData } from "../plugins/PluginData";
 import { CommandBlueprint } from "./CommandBlueprint";
 
-export interface PluginCommandManagerOpts<TCommandContext> {
+export interface PluginCommandManagerOpts {
   prefix?: string | RegExp;
 }
 
@@ -28,15 +28,15 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
   private manager: CommandManager<CommandContext<TPluginData>, CommandExtraData<TPluginData>>;
   private handlers: Map<number, CommandFn<TPluginData, any>>;
 
-  constructor(client: Client, opts: PluginCommandManagerOpts<CommandContext<TPluginData>> = {}) {
+  constructor(client: Client, opts: PluginCommandManagerOpts = {}) {
     this.manager = new CommandManager<CommandContext<TPluginData>, CommandExtraData<TPluginData>>({
       prefix: opts.prefix ?? getDefaultPrefix(client),
     });
 
-    this.handlers = new Map();
+    this.handlers = new Map<number, CommandFn<TPluginData, any>>();
   }
 
-  public setPluginData(pluginData: TPluginData) {
+  public setPluginData(pluginData: TPluginData): void {
     if (this.pluginData) {
       throw new Error("Plugin data already set");
     }
@@ -44,7 +44,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     this.pluginData = pluginData;
   }
 
-  public add(blueprint: CommandBlueprint<TPluginData, any>) {
+  public add(blueprint: CommandBlueprint<TPluginData, any>): void {
     const preFilters = Array.from(blueprint.config?.preFilters ?? []);
     preFilters.unshift(restrictCommandSource, checkCommandPermission);
 
@@ -64,7 +64,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     this.handlers.set(command.id, blueprint.run);
   }
 
-  public remove(id: number) {
+  public remove(id: number): void {
     this.manager.remove(id);
     this.handlers.delete(id);
   }
@@ -89,7 +89,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
 
     if (isError(command)) {
       const usageLine = getCommandSignature(command.command);
-      msg.channel.createMessage(`${command.error}\nUsage: \`${usageLine}\``);
+      void msg.channel.createMessage(`${command.error}\nUsage: \`${usageLine}\``);
       return;
     }
 
@@ -112,6 +112,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     }
 
     const valueMap = Object.entries(matchedCommand.values).reduce((map, [key, matched]) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       map[key] = matched.value;
       return map;
     }, {});
@@ -119,6 +120,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     const meta: CommandMeta<TPluginData, any> = {
       ...extraMeta,
       args: valueMap,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       message: msg as any,
       pluginData: this.pluginData!,
       command: matchedCommand,

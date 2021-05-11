@@ -57,6 +57,9 @@ export function withAnyFilter<T extends Listener<any, any>>(
   return wrapped as FilteredListener<T>;
 }
 
+// eslint-disable-next-line max-len
+/* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-member-access */
+
 export function onlyGuild(): EventFilter {
   return (event, { args, pluginData }) => {
     if (!isGuildPluginData(pluginData)) {

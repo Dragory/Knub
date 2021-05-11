@@ -2,7 +2,7 @@ import { BasePluginConfig } from "../config/configTypes";
 
 export interface BasePluginType {
   config: BasePluginConfig;
-  customOverrideCriteria: unknown;
-  customOverrideMatchParams: unknown;
+  customOverrideCriteria: Record<string, unknown>;
+  customOverrideMatchParams: Record<string, unknown>;
   state: any;
 }

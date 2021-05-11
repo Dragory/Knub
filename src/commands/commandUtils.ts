@@ -13,6 +13,7 @@ import { Lock } from "../locks/LockManager";
 import { AnyPluginData, GuildPluginData } from "../plugins/PluginData";
 import { GuildMessage, hasPermission } from "../helpers";
 import { CommandBlueprint } from "./CommandBlueprint";
+import { BasePluginType } from "../plugins/pluginTypes";
 
 export type TSignatureOrArray<TPluginData extends AnyPluginData<any>> =
   | TSignature<CommandContext<TPluginData>>
@@ -89,7 +90,7 @@ export function getCommandSignature(
   command: PluginCommandDefinition,
   overrideTrigger?: string,
   overrideSignature?: TSignature<any>
-) {
+): string {
   const signature: TSafeSignature<any> = toSafeSignature(overrideSignature || command.signatures[0] || {});
   const signatureEntries = Object.entries(signature);
   const parameters = signatureEntries.filter(([_, param]) => param.option !== true) as Array<[string, IParameter<any>]>;
@@ -116,7 +117,9 @@ export function getCommandSignature(
       ? command.originalTriggers[0]
       : command.originalTriggers[0].source;
 
-  const usageLine = `${prefix}${trigger} ${paramStrings.join(" ")} ${optStrings.join(" ")}`.replace(/\s+/g, " ").trim();
+  const usageLine = `${String(prefix)}${trigger} ${paramStrings.join(" ")} ${optStrings.join(" ")}`
+    .replace(/\s+/g, " ")
+    .trim();
 
   return usageLine;
 }
@@ -148,7 +151,10 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
  * Command pre-filter to restrict the command by specifying a required
  * permission
  */
-export function checkCommandPermission(cmd: PluginCommandDefinition, context: CommandContext<any>): boolean {
+export function checkCommandPermission<
+  TPluginType extends BasePluginType,
+  TPluginData extends AnyPluginData<TPluginType>
+>(cmd: PluginCommandDefinition, context: CommandContext<TPluginData>): boolean {
   const permission = cmd.config!.extra?.blueprint.permission;
 
   // No permission defined, default to "no permission"
@@ -170,7 +176,10 @@ export function checkCommandPermission(cmd: PluginCommandDefinition, context: Co
  * Command post-filter to check if the command's on cooldown and, if not, to put
  * it on cooldown
  */
-export function checkCommandCooldown(cmd: PluginCommandDefinition, context: CommandContext<any>): boolean {
+export function checkCommandCooldown<
+  TPluginType extends BasePluginType,
+  TPluginData extends AnyPluginData<TPluginType>
+>(cmd: PluginCommandDefinition, context: CommandContext<TPluginData>): boolean {
   if (cmd.config!.extra?.blueprint.cooldown) {
     const cdKey = `${cmd.id}-${context.message.author.id}`;
 
@@ -202,7 +211,10 @@ export function checkCommandCooldown(cmd: PluginCommandDefinition, context: Comm
  * Command post-filter to wait for and trigger any locks the command has, and to
  * interrupt command execution if the lock gets interrupted before it
  */
-export async function checkCommandLocks(cmd: PluginCommandDefinition, context: CommandContext<any>): Promise<boolean> {
+export async function checkCommandLocks<
+  TPluginType extends BasePluginType,
+  TPluginData extends AnyPluginData<TPluginType>
+>(cmd: PluginCommandDefinition, context: CommandContext<TPluginData>): Promise<boolean> {
   if (!cmd.config!.extra?.blueprint.locks) {
     return true;
   }
