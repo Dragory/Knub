@@ -75,3 +75,5 @@ export function getRoleId(str: string) {
 }
 
 export const noop = () => {}; // eslint-disable-line @typescript-eslint/no-empty-function
+
+export const typedKeys = Object.keys as unknown as <T = {}>(o: T) => Array<keyof T>;

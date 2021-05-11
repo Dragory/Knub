@@ -1,8 +1,9 @@
 import { expect } from "chai";
-import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
+import { getMatchingPluginConfig, mergeConfig } from "./configUtils";
 import { PluginOptions } from "../index";
 import { BasePluginType } from "../plugins/pluginTypes";
 import { GuildPluginData } from "../plugins/PluginData";
+import { CustomOverrideCriteriaFunctions } from "./configTypes";
 
 describe("configUtils", () => {
   describe("mergeConfig", () => {
@@ -228,8 +229,11 @@ describe("configUtils", () => {
           value: number;
         };
         customOverrideCriteria: {
-          targetUserId?: string;
-          targetChannelId?: string;
+          bestPlant?: string;
+          worstPlant?: string;
+        };
+        customOverrideMatchParams: {
+          plantsInPreferenceOrder?: string[];
         };
       }
 
@@ -240,7 +244,7 @@ describe("configUtils", () => {
         overrides: [
           {
             extra: {
-              targetUserId: "1234",
+              bestPlant: "ficus",
             },
             config: {
               value: 10,
@@ -248,7 +252,7 @@ describe("configUtils", () => {
           },
           {
             extra: {
-              targetUserId: "5678",
+              bestPlant: "daisy",
             },
             config: {
               value: 20,
@@ -256,8 +260,8 @@ describe("configUtils", () => {
           },
           {
             extra: {
-              targetUserId: "5678",
-              targetChannelId: "9000",
+              bestPlant: "rose",
+              worstPlant: "pine",
             },
             config: {
               value: 30,
@@ -266,14 +270,11 @@ describe("configUtils", () => {
         ],
       };
 
-      const customResolver = (
-        pluginData,
-        criteria: CustomPluginType["customOverrideCriteria"],
-        matchParams: MatchParams
-      ): boolean => {
-        if (criteria.targetUserId && matchParams.extra.targetUserId !== criteria.targetUserId) return false;
-        if (criteria.targetChannelId && matchParams.extra.targetChannelId !== criteria.targetChannelId) return false;
-        return true;
+      const first = <T>(arr: T[] | undefined): T | undefined => arr ? arr[0] : undefined;
+      const last = <T>(arr: T[] | undefined): T | undefined => arr && arr.length ? arr[arr.length - 1] : undefined;
+      const customOverrideCriteriaFunctions: CustomOverrideCriteriaFunctions<GuildPluginData<CustomPluginType>> = {
+        bestPlant: (pluginData, matchParams, value) => first(matchParams.extra?.plantsInPreferenceOrder) === value,
+        worstPlant: (pluginData, matchParams, value) => last(matchParams.extra?.plantsInPreferenceOrder) === value,
       };
 
       const matchedConfig1 = getMatchingPluginConfig<GuildPluginData<CustomPluginType>>(
@@ -281,41 +282,40 @@ describe("configUtils", () => {
         customPluginOptions,
         {
           extra: {
-            targetUserId: "1234",
+            plantsInPreferenceOrder: ["ficus", "daisy", "rose", "pine"],
           },
         },
-        customResolver
+        customOverrideCriteriaFunctions,
       );
       const matchedConfig2 = getMatchingPluginConfig<GuildPluginData<CustomPluginType>>(
         null as any,
         customPluginOptions,
         {
           extra: {
-            targetUserId: "5678",
+            plantsInPreferenceOrder: ["daisy", "ficus", "rose", "pine"],
           },
         },
-        customResolver
+        customOverrideCriteriaFunctions,
       );
       const matchedConfig3 = getMatchingPluginConfig<GuildPluginData<CustomPluginType>>(
         null as any,
         customPluginOptions,
         {
           extra: {
-            targetUserId: "0001",
+            plantsInPreferenceOrder: ["pine", "daisy", "rose", "ficus"],
           },
         },
-        customResolver
+        customOverrideCriteriaFunctions,
       );
       const matchedConfig4 = getMatchingPluginConfig<GuildPluginData<CustomPluginType>>(
         null as any,
         customPluginOptions,
         {
           extra: {
-            targetUserId: "5678",
-            targetChannelId: "9000",
+            plantsInPreferenceOrder: ["rose", "daisy", "ficus", "pine"],
           },
         },
-        customResolver
+        customOverrideCriteriaFunctions,
       );
 
       expect(matchedConfig1.value).to.equal(10);
@@ -386,7 +386,7 @@ describe("configUtils", () => {
       expect((matchedConfig as any).value).to.equal(5);
     });
 
-    it("false when an unknown condition is present", () => {
+    it("errors when an unknown condition is present", () => {
       const pluginOpts: PluginOptions<BasePluginType> = {
         config: {
           value: 5,
@@ -402,10 +402,12 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig = getMatchingPluginConfig(null as any, pluginOpts, {
-        userId: "500",
-      });
-      expect((matchedConfig as any).value).to.equal(5);
+      try {
+        getMatchingPluginConfig(null as any, pluginOpts, {
+          userId: "500",
+        });
+        expect.fail("No error was thrown");
+      } catch {} // eslint-disable-line no-empty
     });
 
     it("'all' special criterion", () => {

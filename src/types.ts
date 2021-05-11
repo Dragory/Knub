@@ -13,7 +13,7 @@ export type GlobalPluginMap = Map<string, GlobalPluginBlueprint<any>>;
 
 export type LogFn = (level, ...args) => void;
 
-export interface KnubOptions<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> {
+export interface KnubOptions<TGuildConfig extends BaseConfig<any>> {
   autoInitGuilds?: boolean;
   getConfig: (id: string) => Awaitable<any>;
   getEnabledGuildPlugins?: (ctx: GuildContext<TGuildConfig>, plugins: GuildPluginMap) => Awaitable<string[]>;
@@ -24,10 +24,10 @@ export interface KnubOptions<TGuildConfig extends BaseConfig<any>, TGlobalConfig
   [key: string]: any;
 }
 
-export interface KnubArgs<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> {
+export interface KnubArgs<TGuildConfig extends BaseConfig<any>> {
   guildPlugins: Array<GuildPluginBlueprint<any>>;
   globalPlugins: Array<GlobalPluginBlueprint<any>>;
-  options: Partial<KnubOptions<TGuildConfig, TGlobalConfig>>;
+  options: Partial<KnubOptions<TGuildConfig>>;
 }
 
 export interface LoadedGuildPlugin<TPluginType extends BasePluginType> {

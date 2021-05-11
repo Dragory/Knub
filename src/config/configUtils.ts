@@ -1,5 +1,9 @@
-import { PluginOptions, PluginOverrideCriteria } from "./configTypes";
+import {
+  CustomOverrideCriteriaFunctions,
+  PluginOptions, PluginOverride,
+} from "./configTypes";
 import { AnyPluginData } from "../plugins/PluginData";
+import { typedKeys } from "../utils";
 
 const levelRangeRegex = /^([<>=!]+)(\d+)$/;
 const splitLevelRange = (v, defaultMod): [string, number] => {
@@ -7,13 +11,13 @@ const splitLevelRange = (v, defaultMod): [string, number] => {
   return match ? [match[1], parseInt(match[2], 10)] : [defaultMod, parseInt(v, 10)];
 };
 
-export interface MatchParams {
+export interface MatchParams<TExtra extends {} = {}> {
   level?: number | null;
   userId?: string | null;
   memberRoles?: string[] | null;
   channelId?: string | null;
   categoryId?: string | null;
-  extra?: any;
+  extra?: TExtra;
 }
 
 /**
@@ -55,15 +59,6 @@ export function mergeConfig<T extends {}>(...sources: any[]): T {
 }
 
 /**
- * Match override criteria `criteria` against `matchParams`. Return `true` if the criteria matches matchParams.
- */
-export type CustomOverrideMatcher<TPluginData extends AnyPluginData<any>> = (
-  pluginData: TPluginData,
-  criteria: TPluginData["_pluginType"]["customOverrideCriteria"],
-  matchParams: MatchParams
-) => boolean;
-
-/**
  * Returns matching plugin options for the specified matchParams based on overrides
  */
 export function getMatchingPluginConfig<
@@ -73,14 +68,15 @@ export function getMatchingPluginConfig<
 >(
   pluginData: TPluginData,
   pluginOptions: TPluginOptions,
-  matchParams: MatchParams,
-  customOverrideMatcher?: CustomOverrideMatcher<TPluginData>
+  matchParams: MatchParams<TPluginData["_pluginType"]["customOverrideMatchParams"]>,
+  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>,
 ): TPluginData["_pluginType"]["config"] {
   let result: TPluginData["_pluginType"]["config"] = mergeConfig(pluginOptions.config || {});
 
   const overrides = pluginOptions.overrides || [];
   for (const override of overrides) {
-    const matches = evaluateOverrideCriteria<TPluginData>(pluginData, override, matchParams, customOverrideMatcher);
+    const matches =
+      evaluateOverrideCriteria<TPluginData>(pluginData, override, matchParams, customOverrideCriteriaFunctions);
 
     if (matches) {
       result = mergeConfig(result, override.config);
@@ -95,22 +91,24 @@ export function getMatchingPluginConfig<
  */
 export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>(
   pluginData: TPluginData,
-  criteria: PluginOverrideCriteria<TPluginData["_pluginType"]["customOverrideCriteria"]>,
+  criteria: PluginOverride<TPluginData["_pluginType"]>,
   matchParams: MatchParams,
-  customOverrideMatcher?: CustomOverrideMatcher<TPluginData>
+  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>,
 ): boolean {
   // Note: Despite the naming here, this does *not* imply any one criterion matching means the entire criteria block
   // matches. When matching of one criterion fails, the command returns immediately. This variable is here purely so
   // a block with no criteria evaluates to false.
   let matchedOne = false;
 
-  for (const [key, value] of Object.entries(criteria)) {
+  criteriaLoop:
+  for (const key of typedKeys(criteria)) {
     if (key === "config") continue;
-    if (value == null) continue;
+    if (criteria[key] == null) continue;
 
     // Match on level
     // For a successful match, requires ALL of the specified level conditions to match
     if (key === "level") {
+      const value = criteria[key]!;
       const matchLevel = matchParams.level;
       if (matchLevel != null) {
         const levels = Array.isArray(value) ? value : [value];
@@ -139,6 +137,7 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
     // Match on channel
     // For a successful match, requires ANY of the specified channels to match
     if (key === "channel") {
+      const value = criteria[key]!;
       const matchChannel = matchParams.channelId;
       if (matchChannel) {
         const channels = Array.isArray(value) ? value : [value];
@@ -160,6 +159,7 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
     // Match on category
     // For a successful match, requires ANY of the specified categories to match
     if (key === "category") {
+      const value = criteria[key]!;
       const matchCategory = matchParams.categoryId;
       if (matchCategory) {
         const categories = Array.isArray(value) ? value : [value];
@@ -181,6 +181,7 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
     // Match on role
     // For a successful match, requires ALL specified roles to match
     if (key === "role") {
+      const value = criteria[key]!;
       const matchRoles = matchParams.memberRoles;
       if (matchRoles) {
         const roles = Array.isArray(value) ? value : [value];
@@ -202,6 +203,7 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
     // Match on user ID
     // For a successful match, requires ANY of the specified user IDs to match
     if (key === "user") {
+      const value = criteria[key]!;
       const matchUser = matchParams.userId;
       if (matchUser) {
         const users = Array.isArray(value) ? value : [value];
@@ -220,14 +222,9 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
       continue;
     }
 
-    // Custom override criteria
-    if (key === "extra" && customOverrideMatcher) {
-      if (!customOverrideMatcher(pluginData, value, matchParams)) return false;
-      matchedOne = true;
-      continue;
-    }
-
     if (key === "all") {
+      const value = criteria[key]!;
+
       // Empty set of criteria -> false
       if (value.length === 0) return false;
 
@@ -242,6 +239,8 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
     }
 
     if (key === "any") {
+      const value = criteria[key]!;
+
       // Empty set of criteria -> false
       if (value.length === 0) return false;
 
@@ -256,6 +255,8 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
     }
 
     if (key === "not") {
+      const value = criteria[key]!;
+
       const match = evaluateOverrideCriteria<TPluginData>(pluginData, value, matchParams);
       if (match) return false;
 
@@ -263,8 +264,24 @@ export function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>
       continue;
     }
 
-    // Unknown condition -> never match
-    return false;
+    // Custom override criteria
+    if (key === "extra") {
+      const value = criteria[key]!;
+      for (const customKey of typedKeys(value)) {
+        if (customOverrideCriteriaFunctions?.[customKey] == null) {
+          throw new Error(`Unknown custom override criteria: ${customKey}`);
+        }
+
+        const match = customOverrideCriteriaFunctions?.[customKey](pluginData, matchParams, value[customKey]);
+        if (!match) return false;
+
+        matchedOne = true;
+        continue criteriaLoop;
+      }
+    }
+
+    // Unknown condition -> error
+    throw new Error(`Unknown override criteria: ${key}`);
   }
 
   return matchedOne;

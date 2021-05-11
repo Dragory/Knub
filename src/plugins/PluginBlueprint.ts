@@ -1,4 +1,9 @@
-import { ConfigPreprocessorFn, ConfigValidatorFn, PluginOptions } from "../config/configTypes";
+import {
+  ConfigPreprocessorFn,
+  ConfigValidatorFn,
+  CustomOverrideCriteriaFunctions,
+  PluginOptions
+} from "../config/configTypes";
 import { Awaitable } from "../utils";
 import {
   AfterUnloadPluginData,
@@ -9,7 +14,6 @@ import {
 } from "./PluginData";
 import { CommandBlueprint } from "../commands/CommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
-import { CustomOverrideMatcher } from "../config/configUtils";
 import { BasePluginType } from "./pluginTypes";
 import { GuildEvent, ValidEvent } from "../events/eventTypes";
 
@@ -53,7 +57,7 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
   /**
    * If this plugin includes any custom overrides, this function evaluates them
    */
-  customOverrideMatcher?: CustomOverrideMatcher<TPluginData>;
+  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>;
 
   /**
    * Preprocesses the plugin's config after it's been merged with the default options

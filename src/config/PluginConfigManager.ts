@@ -1,11 +1,11 @@
 import {
   ConfigPreprocessorFn,
-  ConfigValidatorFn,
+  ConfigValidatorFn, CustomOverrideCriteriaFunctions,
   PartialPluginOptions,
   PermissionLevels,
-  PluginOptions,
+  PluginOptions
 } from "./configTypes";
-import { CustomOverrideMatcher, getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
+import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { Channel, GuildChannel, Member, Message, User } from "eris";
 import { getMemberLevel } from "../plugins/pluginUtils";
 import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
@@ -18,7 +18,7 @@ export interface ExtendedMatchParams extends MatchParams {
 }
 
 export interface PluginConfigManagerOpts<TPluginType extends BasePluginType> {
-  customOverrideMatcher?: CustomOverrideMatcher<AnyPluginData<TPluginType>>;
+  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<AnyPluginData<TPluginType>>;
   preprocessor?: ConfigPreprocessorFn<TPluginType>;
   validator?: ConfigValidatorFn<TPluginType>;
 }
@@ -26,7 +26,7 @@ export interface PluginConfigManagerOpts<TPluginType extends BasePluginType> {
 export class PluginConfigManager<TPluginType extends BasePluginType> {
   private readonly levels: PermissionLevels;
   private options: PluginOptions<TPluginType>;
-  private readonly customOverrideMatcher?: CustomOverrideMatcher<AnyPluginData<TPluginType>>;
+  private readonly customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<AnyPluginData<TPluginType>>;
   private readonly preprocessor?: ConfigPreprocessorFn<TPluginType>;
   private readonly validator?: ConfigValidatorFn<TPluginType>;
   private pluginData?: AnyPluginData<TPluginType>;
@@ -39,7 +39,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   ) {
     this.options = this.mergeOptions(defaultOptions, userOptions);
     this.levels = levels;
-    this.customOverrideMatcher = opts.customOverrideMatcher;
+    this.customOverrideCriteriaFunctions = opts.customOverrideCriteriaFunctions;
     this.preprocessor = opts.preprocessor;
     this.validator = opts.validator;
   }
@@ -123,7 +123,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       this.pluginData!,
       this.options,
       finalMatchParams,
-      this.customOverrideMatcher
+      this.customOverrideCriteriaFunctions,
     );
   }
 

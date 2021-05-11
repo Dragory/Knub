@@ -1169,8 +1169,8 @@ describe("PluginBlueprint", () => {
             },
           },
 
-          customOverrideMatcher: (pluginData, criteria, matchParams) => {
-            return matchParams.userId === criteria.myUserOverride;
+          customOverrideCriteriaFunctions: {
+            myUserOverride: (pluginData, matchParams, value) => matchParams.userId === value,
           },
 
           commands: [

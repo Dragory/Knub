@@ -1,6 +1,8 @@
 import { DeepPartial } from "ts-essentials";
 import { BasePluginType } from "../plugins/pluginTypes";
 import { Awaitable } from "../utils";
+import { MatchParams } from "./configUtils";
+import { AnyPluginData } from "../plugins/PluginData";
 
 export interface PermissionLevels {
   [roleOrUserId: string]: number;
@@ -30,11 +32,10 @@ export interface PluginOptions<TPluginType extends BasePluginType> {
   replaceDefaultOverrides?: boolean;
 }
 
-export type PluginOverride<TPluginType extends BasePluginType> = PluginOverrideCriteria<
-  TPluginType["customOverrideCriteria"]
-> & {
+export interface PluginOverride<TPluginType extends BasePluginType>
+  extends PluginOverrideCriteria<TPluginType["customOverrideCriteria"]> {
   config?: DeepPartial<TPluginType["config"]>;
-};
+}
 
 export interface PluginOverrideCriteria<TCustomOverrideCriteria> {
   channel?: string | string[] | null;
@@ -49,6 +50,14 @@ export interface PluginOverrideCriteria<TCustomOverrideCriteria> {
 
   extra?: TCustomOverrideCriteria | null;
 }
+
+export type CustomOverrideCriteriaFunctions<TPluginData extends AnyPluginData<any>> = {
+  [KCriterion in keyof TPluginData["_pluginType"]["customOverrideCriteria"]]: (
+    pluginData: TPluginData,
+    matchParams: MatchParams<TPluginData["_pluginType"]["customOverrideMatchParams"]>,
+    value: NonNullable<TPluginData["_pluginType"]["customOverrideCriteria"][KCriterion]>,
+  ) => boolean;
+};
 
 export interface BasePluginConfig {
   [key: string]: any;

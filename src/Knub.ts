@@ -40,10 +40,9 @@ import { ConfigValidationError } from "./config/ConfigValidationError";
 import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
 import { EventRelay } from "./events/EventRelay";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
-import { CustomOverrideMatcher } from "./config/configUtils";
 import { Queue } from "./Queue";
 
-const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>, BaseConfig<BasePluginType>> = {
+const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>> = {
   guildPlugins: [],
   globalPlugins: [],
   options: {},
@@ -76,14 +75,14 @@ export class Knub<
   protected globalContext: GlobalContext<TGlobalConfig>;
   protected globalContextLoaded = false;
 
-  protected options: KnubOptions<TGuildConfig, TGlobalConfig>;
+  protected options: KnubOptions<TGuildConfig>;
 
   protected log: LogFn = defaultLogFn;
 
-  constructor(client: Client, userArgs: Partial<KnubArgs<TGuildConfig, TGlobalConfig>>) {
+  constructor(client: Client, userArgs: Partial<KnubArgs<TGuildConfig>>) {
     super();
 
-    const args: KnubArgs<TGuildConfig, TGlobalConfig> = {
+    const args: KnubArgs<TGuildConfig> = {
       ...defaultKnubArgs,
       ...userArgs,
     };
@@ -121,7 +120,7 @@ export class Knub<
       this.guildPlugins.set(guildPlugin.name, guildPlugin);
     }
 
-    const defaultOptions: KnubOptions<TGuildConfig, TGlobalConfig> = {
+    const defaultOptions: KnubOptions<TGuildConfig> = {
       getConfig: defaultGetConfig,
       getEnabledGuildPlugins: defaultGetEnabledGuildPlugins,
       canLoadGuild: () => true,
@@ -225,7 +224,7 @@ export class Knub<
       get(ctx.config, `plugins.${plugin.name}`) || {},
       ctx.config.levels || {},
       {
-        customOverrideMatcher: (plugin.customOverrideMatcher as unknown) as CustomOverrideMatcher<AnyPluginData<any>>,
+        customOverrideCriteriaFunctions: plugin.customOverrideCriteriaFunctions,
         preprocessor: plugin.configPreprocessor,
         validator: plugin.configValidator,
       }
@@ -242,6 +241,7 @@ export class Knub<
     }
 
     return {
+      _pluginType: undefined as any,
       loaded: false,
       client: this.client,
       config: configManager,
