@@ -14,17 +14,17 @@ module.exports = {
   ],
   "extends": [
     'eslint:recommended',
-    'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-requiring-type-checking',
   ],
   "overrides": [
     { "files": "*.ts" }
   ],
   "rules": {
+    "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/adjacent-overload-signatures": "error",
     "@typescript-eslint/array-type": ["error", { default: "array-simple" }],
     "@typescript-eslint/ban-types": "error",
-    "@typescript-eslint/class-name-casing": "error",
     "@typescript-eslint/consistent-type-assertions": "off",
     "@typescript-eslint/indent": "off",
     "@typescript-eslint/interface-name-prefix": "off",
@@ -69,13 +69,25 @@ module.exports = {
     "@typescript-eslint/unified-signatures": "off",
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
+
+    "no-redeclare": "off",
+    "@typescript-eslint/no-redeclare": "error",
+
     "arrow-parens": [
       "off",
       "as-needed",
     ],
-    "@typescript-eslint/camelcase": ["error", {
-      "properties": "never",
-    }],
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        selector: "classProperty",
+        format: null,
+      },
+      {
+        selector: "class",
+        format: ["PascalCase"],
+      },
+    ],
     "comma-dangle": "off",
     "complexity": "off",
     "constructor-super": "error",
@@ -115,7 +127,6 @@ module.exports = {
     "no-multiple-empty-lines": "off",
     "no-new-func": "error",
     "no-new-wrappers": "error",
-    "no-redeclare": "error",
     "no-return-await": "error",
     "no-sequences": "error",
     "no-shadow": [
