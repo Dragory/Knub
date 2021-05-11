@@ -2,13 +2,39 @@
 /dist
 desktop.ini
 
-# IntelliJ
-**/.idea/workspace.xml
-**/.idea/tasks.xml
-**/.idea/usage.statistics.xml
-**/.idea/shelf
-**/.idea/dataSources*
-
 # Debug scripts
 *.debug.js
 *.debug.ts
+
+# IntelliJ
+
+# User-specific stuff
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+# AWS User-specific
+.idea/**/aws.xml
+
+# Generated files
+.idea/**/contentModel.xml
+
+# Sensitive or high-churn files
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+
+# File-based project format
+*.iws
+
+# Editor-based Rest Client
+.idea/httpRequests
+
+# Environment-specific linter configuration
+.idea/jsLinters/eslint.xml
