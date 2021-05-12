@@ -87,7 +87,6 @@ export function createMockUser(client: Client, data = {}): User {
 
 let mockChannelId = 30000;
 export function createMockTextChannel(client: Client, guildId: string, data = {}): TextChannel {
-  const guild = client.guilds.get(guildId)!;
   const id = (++mockChannelId).toString();
   const mockTextChannel = new TextChannel(
     {
@@ -97,10 +96,12 @@ export function createMockTextChannel(client: Client, guildId: string, data = {}
       name: `mock-channel-${id}`,
       ...data,
     },
-    guild,
+    // @ts-ignore Error in types, should be Client not Guild
+    client,
     0
   );
 
+  const guild = client.guilds.get(guildId)!;
   guild.channels.add(mockTextChannel);
   client.channelGuildMap[mockTextChannel.id] = guildId;
 
