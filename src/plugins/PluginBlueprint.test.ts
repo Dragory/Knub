@@ -257,6 +257,112 @@ describe("PluginBlueprint", () => {
         client.emit("messageCreate", message);
       })();
     });
+
+    it("command permissions", async () => {
+      const infoCmdCallUsers: string[] = [];
+      const serverCmdCallUsers: string[] = [];
+
+      interface PluginType extends BasePluginType {
+        config: {
+          can_use_info_cmd: boolean;
+          can_use_server_cmd: boolean;
+        };
+      }
+
+      const TestPlugin = typedGuildPlugin<PluginType>()({
+        name: "test-plugin",
+
+        defaultOptions: {
+          config: {
+            can_use_info_cmd: false,
+            can_use_server_cmd: false,
+          },
+        },
+
+        commands: [
+          typedGuildCommand({
+            trigger: "info",
+            permission: "can_use_info_cmd",
+            run({ message }) {
+              infoCmdCallUsers.push(message.author.id);
+            },
+          }),
+          typedGuildCommand({
+            trigger: "server",
+            permission: "can_use_server_cmd",
+            run({ message }) {
+              serverCmdCallUsers.push(message.author.id);
+            },
+          }),
+        ],
+      });
+
+      const client = createMockClient();
+      const user1 = createMockUser(client);
+      const user2 = createMockUser(client);
+
+      const knub = new Knub(client, {
+        guildPlugins: [TestPlugin],
+        options: {
+          getEnabledGuildPlugins() {
+            return ["test-plugin"];
+          },
+          getConfig() {
+            return {
+              prefix: "!",
+              plugins: {
+                "test-plugin": {
+                  overrides: [
+                    {
+                      user: user1.id,
+                      config: {
+                        can_use_info_cmd: true,
+                      },
+                    },
+                    {
+                      user: user2.id,
+                      config: {
+                        can_use_server_cmd: true,
+                      },
+                    },
+                  ],
+                },
+              },
+            };
+          },
+          logFn: noop,
+        },
+      });
+
+      void knub.run();
+      client.emit("connect");
+      client.emit("ready");
+      await sleep(30);
+
+      const guild = createMockGuild(client);
+      client.emit("guildAvailable", guild);
+      await sleep(30);
+
+      const channel = createMockTextChannel(client, guild.id);
+
+      // !info
+      const infoFromUser1Msg = createMockMessage(client, channel.id, user1, { content: "!info" });
+      client.emit("messageCreate", infoFromUser1Msg);
+      await sleep(30);
+      const infoFromUser2Msg = createMockMessage(client, channel.id, user2, { content: "!info" });
+      client.emit("messageCreate", infoFromUser2Msg);
+      await sleep(30);
+
+      const serverFromUser1Msg = createMockMessage(client, channel.id, user1, { content: "!server" });
+      client.emit("messageCreate", serverFromUser1Msg);
+      await sleep(30);
+      const serverFromUser2Msg = createMockMessage(client, channel.id, user2, { content: "!server" });
+      client.emit("messageCreate", serverFromUser2Msg);
+      await sleep(30);
+
+      assert.deepStrictEqual(infoCmdCallUsers, [user1.id]);
+      assert.deepStrictEqual(serverCmdCallUsers, [user2.id]);
+    });
   });
 
   describe("Lifecycle hooks", () => {
@@ -1164,7 +1270,7 @@ describe("PluginBlueprint", () => {
   });
 
   describe("Custom overrides", () => {
-    it("Custom overrides work", () => {
+    it("Synchronous custom overrides", () => {
       return (async () => {
         let commandTriggers = 0;
 
@@ -1217,6 +1323,99 @@ describe("PluginBlueprint", () => {
                       {
                         extra: {
                           myUserOverride: user1.id,
+                        },
+                        config: {
+                          can_do: true,
+                        },
+                      },
+                    ],
+                  },
+                },
+              };
+            },
+            logFn: noop,
+          },
+        });
+
+        void knub.run();
+        client.emit("connect");
+        client.emit("ready");
+        await sleep(30);
+
+        const guild = createMockGuild(client);
+        client.emit("guildAvailable", guild);
+        await sleep(30);
+
+        const channel = createMockTextChannel(client, guild.id);
+
+        const message1 = createMockMessage(client, channel.id, user1, { content: "!foo" });
+        client.emit("messageCreate", message1);
+        await sleep(30);
+
+        const message2 = createMockMessage(client, channel.id, user2, { content: "!foo" });
+        client.emit("messageCreate", message2);
+        await sleep(30);
+
+        assert.equal(commandTriggers, 1);
+      })();
+    });
+
+    it("Asynchronous custom overrides", () => {
+      return (async () => {
+        let commandTriggers = 0;
+
+        interface PluginType extends BasePluginType {
+          customOverrideCriteria: {
+            myAsyncUserOverride: string;
+          };
+        }
+
+        const TestPlugin = typedGuildPlugin<PluginType>()({
+          name: "test-plugin",
+
+          defaultOptions: {
+            config: {
+              can_do: false,
+            },
+          },
+
+          customOverrideCriteriaFunctions: {
+            myAsyncUserOverride: async (pluginData, matchParams, value) => {
+              await sleep(50);
+              return matchParams.userId === value;
+            },
+          },
+
+          commands: [
+            typedGuildCommand({
+              trigger: "foo",
+              permission: "can_do",
+              run() {
+                commandTriggers++;
+              },
+            }),
+          ],
+        });
+
+        const client = createMockClient();
+        const user1 = createMockUser(client);
+        const user2 = createMockUser(client);
+
+        const knub = new Knub(client, {
+          guildPlugins: [TestPlugin],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["test-plugin"];
+            },
+            getConfig() {
+              return {
+                prefix: "!",
+                plugins: {
+                  "test-plugin": {
+                    overrides: [
+                      {
+                        extra: {
+                          myAsyncUserOverride: user1.id,
                         },
                         config: {
                           can_do: true,

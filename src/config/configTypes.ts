@@ -56,7 +56,7 @@ export type CustomOverrideCriteriaFunctions<TPluginData extends AnyPluginData<an
     pluginData: TPluginData,
     matchParams: MatchParams<TPluginData["_pluginType"]["customOverrideMatchParams"]>,
     value: NonNullable<TPluginData["_pluginType"]["customOverrideCriteria"][KCriterion]>
-  ) => boolean;
+  ) => Awaitable<boolean>;
 };
 
 export interface BasePluginConfig {

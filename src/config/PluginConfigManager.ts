@@ -87,7 +87,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     return this.options.config;
   }
 
-  public getMatchingConfig(matchParams: ExtendedMatchParams): TPluginType["config"] {
+  public getMatchingConfig(matchParams: ExtendedMatchParams): Promise<TPluginType["config"]> {
     const message = matchParams.message;
 
     // Passed userId -> passed member's id -> passed message's author's id
@@ -128,7 +128,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     );
   }
 
-  public getForMessage(msg: Message): TPluginType["config"] {
+  public getForMessage(msg: Message): Promise<TPluginType["config"]> {
     const level = msg.member ? this.getMemberLevel(msg.member) : null;
     return this.getMatchingConfig({
       level,
@@ -139,20 +139,20 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     });
   }
 
-  public getForChannel(channel: Channel): TPluginType["config"] {
+  public getForChannel(channel: Channel): Promise<TPluginType["config"]> {
     return this.getMatchingConfig({
       channelId: channel.id,
       categoryId: (channel as GuildChannel).parentID,
     });
   }
 
-  public getForUser(user: User): TPluginType["config"] {
+  public getForUser(user: User): Promise<TPluginType["config"]> {
     return this.getMatchingConfig({
       userId: user.id,
     });
   }
 
-  public getForMember(member: Member): TPluginType["config"] {
+  public getForMember(member: Member): Promise<TPluginType["config"]> {
     const level = this.getMemberLevel(member);
     return this.getMatchingConfig({
       level,

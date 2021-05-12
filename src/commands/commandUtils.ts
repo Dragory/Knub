@@ -151,10 +151,10 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
  * Command pre-filter to restrict the command by specifying a required
  * permission
  */
-export function checkCommandPermission<
+export async function checkCommandPermission<
   TPluginType extends BasePluginType,
   TPluginData extends AnyPluginData<TPluginType>
->(cmd: PluginCommandDefinition, context: CommandContext<TPluginData>): boolean {
+>(cmd: PluginCommandDefinition, context: CommandContext<TPluginData>): Promise<boolean> {
   const permission = cmd.config!.extra?.blueprint.permission;
 
   // No permission defined, default to "no permission"
@@ -163,7 +163,7 @@ export function checkCommandPermission<
 
   // If permission isn't set to a `null`, check it matches
   if (permission) {
-    const config = context.pluginData.config.getForMessage(context.message);
+    const config = await context.pluginData.config.getForMessage(context.message);
     if (!hasPermission(config, permission)) {
       return false;
     }
@@ -176,10 +176,10 @@ export function checkCommandPermission<
  * Command post-filter to check if the command's on cooldown and, if not, to put
  * it on cooldown
  */
-export function checkCommandCooldown<
+export async function checkCommandCooldown<
   TPluginType extends BasePluginType,
   TPluginData extends AnyPluginData<TPluginType>
->(cmd: PluginCommandDefinition, context: CommandContext<TPluginData>): boolean {
+>(cmd: PluginCommandDefinition, context: CommandContext<TPluginData>): Promise<boolean> {
   if (cmd.config!.extra?.blueprint.cooldown) {
     const cdKey = `${cmd.id}-${context.message.author.id}`;
 
@@ -192,7 +192,7 @@ export function checkCommandCooldown<
 
     let cdApplies = true;
     if (cdPermission) {
-      const config = context.pluginData.config.getForMessage(context.message);
+      const config = await context.pluginData.config.getForMessage(context.message);
       cdApplies = hasPermission(config, cdPermission);
     }
 

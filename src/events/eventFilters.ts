@@ -4,11 +4,12 @@ import { GroupChannel, PrivateChannel } from "eris";
 import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils";
 import { EventArguments, ValidEvent } from "./eventTypes";
 import { hasPermission, resolveMember } from "../helpers";
-import { isGuildPluginData } from "../plugins/PluginData";
+import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
+import { BasePluginType } from "../plugins/pluginTypes";
 
 export type EventFilter = <TEventName extends ValidEvent>(
   event: TEventName,
-  meta: EventMeta<any, EventArguments[TEventName]>
+  meta: EventMeta<AnyPluginData<BasePluginType>, EventArguments[TEventName]>
 ) => Awaitable<boolean>;
 
 export type FilteredListener<T extends Listener<any, any>> = T;
@@ -88,13 +89,13 @@ export function onlyGroup(): EventFilter {
 let evCdKeyNum = 1;
 export function cooldown(timeMs: number, permission?: string): EventFilter {
   const cdKey = `event-${evCdKeyNum++}`;
-  return (event, { args, pluginData }) => {
+  return async (event, { args, pluginData }) => {
     let cdApplies = true;
     if (permission) {
       const user = eventToUser[event as string]?.(args);
       const channel = eventToChannel[event as string]?.(args);
       const msg = eventToMessage[event as string]?.(args);
-      const config = pluginData.config.getMatchingConfig({
+      const config = await pluginData.config.getMatchingConfig({
         channelId: channel?.id,
         userId: user?.id,
         message: msg,
@@ -114,13 +115,13 @@ export function cooldown(timeMs: number, permission?: string): EventFilter {
 }
 
 export function requirePermission(permission: string): EventFilter {
-  return (event, { args, pluginData }) => {
+  return async (event, { args, pluginData }) => {
     const user = eventToUser[event as string]?.(args) ?? null;
     const member = user && isGuildPluginData(pluginData) ? resolveMember(pluginData.guild, user.id) : null;
     const config = member
-      ? pluginData.config.getForMember(member)
+      ? await pluginData.config.getForMember(member)
       : user
-      ? pluginData.config.getForUser(user)
+      ? await pluginData.config.getForUser(user)
       : pluginData.config.get();
 
     return hasPermission(config, permission);

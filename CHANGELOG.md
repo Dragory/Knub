@@ -46,6 +46,10 @@ These changes have not been released yet
       }
     }
     ```
+* **BREAKING CHANGE:** Override criteria can now be resolved asynchronously.
+  * This means that all calls to `PluginData.config.get*` (`PluginConfigManager.get*`) now return promises,
+    except plain `PluginData.config.get()` which does no override matching.
+  * Custom override criteria functions can now also return `Promise<boolean>` in addition to `boolean`
 
 # 30.0.0-beta.36
 * **BREAKING CHANGE:** Remove all other plugin, event, and command helper function signatures except `(signature)` and the type-helper no-argument signature

@@ -41,7 +41,7 @@ describe("PluginConfigManager", () => {
     expect(configManager.get().nested.two).to.equal(30);
   });
 
-  it("merge user overrides with default overrides", () => {
+  it("merge user overrides with default overrides", async () => {
     const configManager = new PluginConfigManager(
       {
         config: {
@@ -75,12 +75,12 @@ describe("PluginConfigManager", () => {
     );
 
     expect(configManager.get().can_do).to.equal(false);
-    expect(configManager.getMatchingConfig({ level: 20 }).can_do).to.equal(true);
-    expect(configManager.getMatchingConfig({ level: 40 }).can_do).to.equal(false);
-    expect(configManager.getMatchingConfig({ level: 50 }).can_do).to.equal(false);
+    expect((await configManager.getMatchingConfig({ level: 20 })).can_do).to.equal(true);
+    expect((await configManager.getMatchingConfig({ level: 40 })).can_do).to.equal(false);
+    expect((await configManager.getMatchingConfig({ level: 50 })).can_do).to.equal(false);
   });
 
-  it("replace default overrides", () => {
+  it("replace default overrides", async () => {
     const configManager = new PluginConfigManager(
       {
         config: {
@@ -109,8 +109,8 @@ describe("PluginConfigManager", () => {
     );
 
     expect(configManager.get().can_do).to.equal(false);
-    expect(configManager.getMatchingConfig({ level: 50 }).can_do).to.equal(false);
-    expect(configManager.getMatchingConfig({ level: 100 }).can_do).to.equal(true);
+    expect((await configManager.getMatchingConfig({ level: 50 })).can_do).to.equal(false);
+    expect((await configManager.getMatchingConfig({ level: 100 })).can_do).to.equal(true);
   });
 
   it("Preprocessors", async () => {
