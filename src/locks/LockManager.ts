@@ -25,7 +25,6 @@ export class Lock {
   }
 
   public unlock(): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     this.resolve(this);
   }
 
