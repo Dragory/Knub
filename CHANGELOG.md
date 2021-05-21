@@ -1,6 +1,5 @@
-# NEXT
-These changes have not been released yet
-
+# 30.0.0-beta.37
+* **BREAKING CHANGE:** Knub now supports and expects Eris ^0.15.1
 * **BREAKING CHANGE:** Rename `onLoad` to `afterLoad` and `onUnload` to `afterUnload` for clarity
 * **BREAKING CHANGE:** Rename `onBeforeLoad` to `beforeLoad` and `onBeforeUnload` to `beforeUnload` for consistency with the change above
 * **BREAKING CHANGE:** `beforeLoad` has new guarantees and limitations:
@@ -51,6 +50,7 @@ These changes have not been released yet
     except plain `PluginData.config.get()` which does no override matching.
   * Custom override criteria functions can now also return `Promise<boolean>` in addition to `boolean`
 * Fix bug in `CooldownManager` that caused `getCooldownRemaining()` to always return 0 ([#7](https://github.com/Dragory/Knub/pull/7))
+* Remove `GuildMessage` helper type. Use `Message<GuildTextableChannel>` instead.
 
 # 30.0.0-beta.36
 * **BREAKING CHANGE:** Remove all other plugin, event, and command helper function signatures except `(signature)` and the type-helper no-argument signature
