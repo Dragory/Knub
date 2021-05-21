@@ -4,9 +4,9 @@ import { EventArguments, ValidEvent } from "./eventTypes";
 import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
 import { AnyGlobalEventListenerBlueprint } from "../plugins/PluginBlueprint";
 
-export class GlobalPluginEventManager<TPluginData extends GlobalPluginData<any>> extends BasePluginEventManager<
-  TPluginData
-> {
+export class GlobalPluginEventManager<
+  TPluginData extends GlobalPluginData<any>
+> extends BasePluginEventManager<TPluginData> {
   registerEventListener<T extends AnyGlobalEventListenerBlueprint<TPluginData>>(blueprint: T): WrappedListener {
     if (!this.listeners.has(blueprint.event)) {
       this.listeners.set(blueprint.event, new Set());
@@ -28,6 +28,8 @@ export class GlobalPluginEventManager<TPluginData extends GlobalPluginData<any>>
 
     const wrappedListener: WrappedListener = (args: EventArguments[T["event"]]) => {
       return filteredListener({
+        // @ts-ignore TS is having trouble inferring this correctly. We know TPluginData extends GlobalPluginData, which
+        // means that args should be EventArguments[T["event"]], which it is as per the type annotation above.
         args,
         pluginData: this.pluginData!,
       });

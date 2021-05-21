@@ -1,4 +1,4 @@
-import { Client, GroupChannel, GuildChannel, Message, PrivateChannel } from "eris";
+import { Client, GroupChannel, GuildChannel, GuildTextableChannel, Message, PrivateChannel } from "eris";
 import { Awaitable } from "../utils";
 import {
   ICommandConfig,
@@ -11,7 +11,7 @@ import {
 } from "knub-command-manager";
 import { Lock } from "../locks/LockManager";
 import { AnyPluginData, GuildPluginData } from "../plugins/PluginData";
-import { GuildMessage, hasPermission } from "../helpers";
+import { hasPermission } from "../helpers";
 import { CommandBlueprint } from "./CommandBlueprint";
 import { BasePluginType } from "../plugins/pluginTypes";
 
@@ -23,9 +23,13 @@ export function getDefaultPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user.id}> `);
 }
 
+export type ContextualCommandMessage<TPluginData extends AnyPluginData<any>> = TPluginData extends GuildPluginData<any>
+  ? Message<GuildTextableChannel>
+  : Message;
+
 export interface CommandMeta<TPluginData extends AnyPluginData<any>, TArguments extends any> {
   args: TArguments;
-  message: TPluginData extends GuildPluginData<any> ? GuildMessage : Message;
+  message: ContextualCommandMessage<TPluginData>;
   command: ICommandDefinition<any, any>;
   pluginData: TPluginData;
   lock?: Lock;

@@ -3,22 +3,25 @@
  */
 
 import {
+  AnyChannel,
   Client,
-  Emoji,
   Guild,
   GuildChannel,
-  GuildTextableChannel,
   Invite,
   Member,
   Message,
   MessageContent,
   MessageFile,
+  PartialEmoji,
+  PossiblyUncachedGuild,
+  PossiblyUncachedTextableChannel,
   Role,
   TextableChannel,
   TextChannel,
+  Uncached,
   User,
 } from "eris";
-import { get, getChannelId, getRoleId, getUserId, noop, WithRequiredProps } from "./utils";
+import { get, getChannelId, getRoleId, getUserId, noop } from "./utils";
 import { GuildPluginData } from "./plugins/PluginData";
 import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils";
 
@@ -142,7 +145,7 @@ export function waitForReaction(
   availableReactions: Reaction[],
   restrictToUserId?: string,
   timeout = 15000
-): Promise<Emoji | null> {
+): Promise<PartialEmoji | null> {
   return new Promise((resolve) => {
     availableReactions.forEach((reaction) => msg.addReaction(reaction).catch(noop));
 
@@ -174,7 +177,7 @@ export function waitForReply(
   channel: TextChannel,
   restrictToUserId?: string,
   timeout = 15000
-): Promise<Message | null> {
+): Promise<Message<PossiblyUncachedTextableChannel> | null> {
   return new Promise((resolve) => {
     const timeoutTimer = setTimeout(() => {
       resolve(null);
@@ -238,4 +241,22 @@ export function getMemberLevel(pluginData: GuildPluginData<any>, member: Member)
 
 export { userMentionRegex, channelMentionRegex, roleMentionRegex, snowflakeRegex } from "./utils";
 
-export type GuildMessage = WithRequiredProps<Message, "member"> & { channel: GuildTextableChannel };
+export function valueIsUncached(anything: any | Uncached): anything is Uncached {
+  if (anything == null) {
+    return false;
+  }
+  const propNames = Object.getOwnPropertyNames(anything);
+  return propNames.length === 1 && propNames[0] === "id";
+}
+
+export function guildIsCached(guild: PossiblyUncachedGuild): guild is Guild {
+  return !valueIsUncached(guild);
+}
+
+export function userIsCached(user: User | Uncached): user is User {
+  return !valueIsUncached(user);
+}
+
+export function channelIsCached<T extends AnyChannel>(channel: T | Uncached): channel is T {
+  return !valueIsUncached(channel);
+}

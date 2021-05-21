@@ -1,12 +1,12 @@
 import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager";
 import { GuildPluginData } from "..";
-import { EventArguments, GuildEvent } from "./eventTypes";
+import { GuildEvent, GuildEventArguments } from "./eventTypes";
 import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
 import { AnyGuildEventListenerBlueprint } from "../plugins/PluginBlueprint";
 
-export class GuildPluginEventManager<TPluginData extends GuildPluginData<any>> extends BasePluginEventManager<
-  TPluginData
-> {
+export class GuildPluginEventManager<
+  TPluginData extends GuildPluginData<any>
+> extends BasePluginEventManager<TPluginData> {
   registerEventListener<T extends AnyGuildEventListenerBlueprint<TPluginData>>(blueprint: T): WrappedListener {
     if (!this.listeners.has(blueprint.event)) {
       this.listeners.set(blueprint.event, new Set());
@@ -23,11 +23,13 @@ export class GuildPluginEventManager<TPluginData extends GuildPluginData<any>> e
     }
 
     const filteredListener = withFilters(blueprint.event, blueprint.listener, filters) as FilteredListener<
-      Listener<TPluginData["_pluginType"], T["event"]>
+      Listener<TPluginData, T["event"]>
     >;
 
-    const wrappedListener: WrappedListener = (args: EventArguments[T["event"]]) => {
+    const wrappedListener: WrappedListener = (args: GuildEventArguments[T["event"]]) => {
       return filteredListener({
+        // @ts-ignore TS is having trouble inferring this correctly. We know TPluginData extends GuildPluginData, which
+        // means that args should be GuildEventArguments[T["event"]], which it is as per the type annotation above.
         args,
         pluginData: this.pluginData!,
       });

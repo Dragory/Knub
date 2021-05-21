@@ -1,37 +1,48 @@
 import {
   AnyChannel,
   AnyGuildChannel,
+  AnyVoiceChannel,
   Call,
   Emoji,
   FriendSuggestionReasons,
   GroupChannel,
   Guild,
+  GuildTextableChannel,
   Invite,
-  InviteWithMetadata,
   Member,
   MemberPartial,
   Message,
   OldCall,
+  OldGroupChannel,
   OldGuild,
   OldGuildChannel,
+  OldGuildTextChannel,
+  OldGuildVoiceChannel,
+  OldMember,
   OldMessage,
   OldRole,
   OldVoiceState,
   PartialEmoji,
+  PartialUser,
+  PossiblyUncachedGuild,
   PossiblyUncachedMessage,
+  PossiblyUncachedTextableChannel,
   Presence,
+  PrivateChannel,
   RawPacket,
+  RawRESTRequest,
   Relationship,
   Role,
   TextableChannel,
   UnavailableGuild,
+  Uncached,
   User,
-  VoiceChannel,
+  WebhookData,
 } from "eris";
 
 /**
  * Known event types and their arguments. Based on Eris types.
- * @see https://github.com/abalabahaha/eris/blob/27bb9cd02ae990606ab50b32ac186da53d8ca45a/index.d.ts#L836
+ * @see https://github.com/abalabahaha/eris/blob/0.15.1/index.d.ts#L493
  */
 export interface KnownEvents {
   ready: Record<string, never>;
@@ -68,19 +79,26 @@ export interface KnownEvents {
     channel: GroupChannel;
     user: User;
   };
-  channelUpdate: {
-    channel: AnyGuildChannel;
-    oldChannel: OldGuildChannel;
+  channelUpdate:
+    | {
+        channel: AnyGuildChannel;
+        oldChannel: OldGuildChannel | OldGuildTextChannel | OldGuildVoiceChannel;
+      }
+    | {
+        channel: GroupChannel;
+        oldChannel: OldGroupChannel;
+      };
+  connect: {
+    id: number;
+  };
+  shardPreReady: {
+    id: number;
   };
   friendSuggestionCreate: {
     user: User;
     reasons: FriendSuggestionReasons;
   };
   friendSuggestionDelete: {
-    user: User;
-  };
-  guildAvailable: {
-    guild: Guild;
     user: User;
   };
   guildBanAdd: {
@@ -91,19 +109,19 @@ export interface KnownEvents {
     guild: Guild;
     user: User;
   };
-  guildDelete: {
-    guild: Guild;
-  };
-  guildUnavailable: {
+  guildAvailable: {
     guild: Guild;
   };
   guildCreate: {
     guild: Guild;
   };
+  guildDelete: {
+    guild: PossiblyUncachedGuild;
+  };
   guildEmojisUpdate: {
-    guild: Guild;
+    guild: PossiblyUncachedGuild;
     emojis: Emoji[];
-    oldEmojis: Emoji[];
+    oldEmojis: Emoji[] | null;
   };
   guildMemberAdd: {
     guild: Guild;
@@ -120,7 +138,7 @@ export interface KnownEvents {
   guildMemberUpdate: {
     guild: Guild;
     member: Member;
-    oldMember: { roles: string[]; nick?: string };
+    oldMember: OldMember | null;
   };
   guildRoleCreate: {
     guild: Guild;
@@ -135,6 +153,12 @@ export interface KnownEvents {
     role: Role;
     oldRole: OldRole;
   };
+  guildUnavailable: {
+    guild: Guild;
+  };
+  unavailableGuildCreate: {
+    guild: UnavailableGuild;
+  };
   guildUpdate: {
     guild: Guild;
     oldGuild: OldGuild;
@@ -145,14 +169,14 @@ export interface KnownEvents {
   };
   inviteCreate: {
     guild: Guild;
-    invite: Invite & InviteWithMetadata;
+    invite: Invite;
   };
   inviteDelete: {
     guild: Guild;
-    invite: Invite & InviteWithMetadata;
+    invite: Invite;
   };
   messageCreate: {
-    message: Message;
+    message: Message<PossiblyUncachedTextableChannel>;
   };
   messageDelete: {
     message: PossiblyUncachedMessage;
@@ -169,27 +193,26 @@ export interface KnownEvents {
   };
   messageReactionAdd: {
     message: PossiblyUncachedMessage;
-    emoji: Emoji;
-    member: Member | { id: string };
+    emoji: PartialEmoji;
+    member: Member | Uncached;
   };
   messageReactionRemove: {
     message: PossiblyUncachedMessage;
-    emoji: Emoji;
-    member: Member | { id: string };
+    emoji: PartialEmoji;
+    userID: string;
   };
   messageUpdate: {
-    message: Message;
-    oldMessage?: OldMessage;
+    message: Message<PossiblyUncachedTextableChannel>;
+    oldMessage: OldMessage | null;
   };
   presenceUpdate: {
     other: Member | Relationship;
-    oldPresence?: Presence;
+    oldPresence: Presence | null;
+  };
+  rawREST: {
+    request: RawRESTRequest;
   };
   rawWS: {
-    packet: RawPacket;
-    id: number;
-  };
-  unknown: {
     packet: RawPacket;
     id: number;
   };
@@ -203,29 +226,33 @@ export interface KnownEvents {
     relationship: Relationship;
     oldRelationship: { type: number };
   };
-  typingStart: {
-    channel: TextableChannel;
-    user: User;
-  };
-  unavailableGuildCreate: {
-    guild: UnavailableGuild;
-  };
+  typingStart:
+    | {
+        channel: GuildTextableChannel | Uncached;
+        user: User | Uncached;
+        member: Member;
+      }
+    | {
+        channel: PrivateChannel | Uncached;
+        user: User | Uncached;
+        member: null;
+      };
   userUpdate: {
     user: User;
-    oldUser: { username: string; discriminator: string; avatar?: string };
+    oldUser: PartialUser | null;
   };
   voiceChannelJoin: {
     member: Member;
-    newChannel: VoiceChannel;
+    newChannel: AnyVoiceChannel;
   };
   voiceChannelLeave: {
     member: Member;
-    oldChannel: VoiceChannel;
+    oldChannel: AnyVoiceChannel;
   };
   voiceChannelSwitch: {
     member: Member;
-    newChannel: VoiceChannel;
-    oldChannel: VoiceChannel;
+    newChannel: AnyVoiceChannel;
+    oldChannel: AnyVoiceChannel;
   };
   voiceStateUpdate: {
     member: Member;
@@ -239,9 +266,55 @@ export interface KnownEvents {
     message: string;
     id: number;
   };
+  webhooksUpdate: {
+    data: WebhookData;
+  };
+  shardReady: {
+    id: number;
+  };
+  shardResume: {
+    id: number;
+  };
+  shardDisconnect: {
+    err: Error | undefined;
+    id: number;
+  };
+  end: Record<string, never>;
+  start: Record<string, never>;
+  pong: {
+    latency: number;
+  };
+  speakingStart: {
+    userID: string;
+  };
+  speakingStop: {
+    userID: string;
+  };
+  userDisconnect: {
+    userID: string;
+  };
+  unknown: {
+    packet: RawPacket;
+  };
+}
+
+export interface KnownGuildEvents extends KnownEvents {
+  channelUpdate: {
+    channel: AnyGuildChannel;
+    oldChannel: OldGuildChannel | OldGuildTextChannel | OldGuildVoiceChannel;
+  };
+  messageCreate: {
+    message: Message<GuildTextableChannel | Uncached>;
+  };
+  typingStart: {
+    channel: GuildTextableChannel | Uncached;
+    user: User | Uncached;
+    member: Member;
+  };
 }
 
 export type EventArguments = KnownEvents;
+export type GuildEventArguments = KnownGuildEvents;
 
 type FromErisArgsObj = {
   [P in keyof KnownEvents]: (...args: any[]) => KnownEvents[P];
@@ -299,14 +372,15 @@ export const fromErisArgs: FromErisArgsObj = {
   channelRecipientAdd: (channel, user) => ({ channel, user }),
   channelRecipientRemove: (channel, user) => ({ channel, user }),
   channelUpdate: (channel, oldChannel) => ({ channel, oldChannel }),
+  connect: (id) => ({ id }),
+  shardPreReady: (id) => ({ id }),
   friendSuggestionCreate: (user, reasons) => ({ user, reasons }),
   friendSuggestionDelete: (user) => ({ user }),
-  guildAvailable: (guild, user) => ({ guild, user }),
   guildBanAdd: (guild, user) => ({ guild, user }),
   guildBanRemove: (guild, user) => ({ guild, user }),
-  guildDelete: (guild) => ({ guild }),
-  guildUnavailable: (guild) => ({ guild }),
+  guildAvailable: (guild) => ({ guild }),
   guildCreate: (guild) => ({ guild }),
+  guildDelete: (guild) => ({ guild }),
   guildEmojisUpdate: (guild, emojis, oldEmojis) => ({ guild, emojis, oldEmojis }),
   guildMemberAdd: (guild, member) => ({ guild, member }),
   guildMemberChunk: (guild, members) => ({ guild, members }),
@@ -315,6 +389,8 @@ export const fromErisArgs: FromErisArgsObj = {
   guildRoleCreate: (guild, role) => ({ guild, role }),
   guildRoleDelete: (guild, role) => ({ guild, role }),
   guildRoleUpdate: (guild, role, oldRole) => ({ guild, role, oldRole }),
+  guildUnavailable: (guild) => ({ guild }),
+  unavailableGuildCreate: (guild) => ({ guild }),
   guildUpdate: (guild, oldGuild) => ({ guild, oldGuild }),
   hello: (trace, id) => ({ trace, id }),
   inviteCreate: (guild, invite) => ({ guild, invite }),
@@ -325,16 +401,15 @@ export const fromErisArgs: FromErisArgsObj = {
   messageReactionRemoveEmoji: (message, emoji) => ({ message, emoji }),
   messageDeleteBulk: (messages) => ({ messages }),
   messageReactionAdd: (message, emoji, member) => ({ message, emoji, member }),
-  messageReactionRemove: (message, emoji, member) => ({ message, emoji, member }),
+  messageReactionRemove: (message, emoji, userID) => ({ message, emoji, userID }),
   messageUpdate: (message, oldMessage) => ({ message, oldMessage }),
   presenceUpdate: (other, oldPresence) => ({ other, oldPresence }),
+  rawREST: (request) => ({ request }),
   rawWS: (packet, id) => ({ packet, id }),
-  unknown: (packet, id) => ({ packet, id }),
   relationshipAdd: (relationship) => ({ relationship }),
   relationshipRemove: (relationship) => ({ relationship }),
   relationshipUpdate: (relationship, oldRelationship) => ({ relationship, oldRelationship }),
-  typingStart: (channel, user) => ({ channel, user }),
-  unavailableGuildCreate: (guild) => ({ guild }),
+  typingStart: (channel, user, member) => ({ channel, user, member }),
   userUpdate: (user, oldUser) => ({ user, oldUser }),
   voiceChannelJoin: (member, newChannel) => ({ member, newChannel }),
   voiceChannelLeave: (member, oldChannel) => ({ member, oldChannel }),
@@ -342,5 +417,16 @@ export const fromErisArgs: FromErisArgsObj = {
   voiceStateUpdate: (member, oldState) => ({ member, oldState }),
   warn: (message, id) => ({ message, id }),
   debug: (message, id) => ({ message, id }),
+  webhooksUpdate: (data) => ({ data }),
+  shardReady: (id) => ({ id }),
+  shardResume: (id) => ({ id }),
+  shardDisconnect: (err, id) => ({ err, id }),
+  end: () => ({}),
+  start: () => ({}),
+  pong: (latency) => ({ latency }),
+  speakingStart: (userID) => ({ userID }),
+  speakingStop: (userID) => ({ userID }),
+  userDisconnect: (userID) => ({ userID }),
+  unknown: (packet, id) => ({ packet, id }),
 };
 /* eslint-enable @typescript-eslint/no-unsafe-assignment */

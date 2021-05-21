@@ -47,7 +47,7 @@
     "typescript": "^4.2.4"
   },
   "peerDependencies": {
-    "eris": "^0.14.0"
+    "eris": "^0.15.1"
   },
   "files": [
     "/dist"

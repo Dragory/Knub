@@ -7,7 +7,7 @@ import {
   PluginOptions,
 } from "./configTypes";
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
-import { Channel, GuildChannel, Member, Message, User } from "eris";
+import { Channel, GuildChannel, Member, Message, Uncached, User } from "eris";
 import { getMemberLevel } from "../plugins/pluginUtils";
 import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
@@ -146,7 +146,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     });
   }
 
-  public getForUser(user: User): Promise<TPluginType["config"]> {
+  public getForUser(user: User | Uncached): Promise<TPluginType["config"]> {
     return this.getMatchingConfig({
       userId: user.id,
     });

@@ -7,14 +7,16 @@ import {
   CommandExtraData,
   CommandFn,
   CommandMeta,
+  ContextualCommandMessage,
   getCommandSignature,
   getDefaultPrefix,
   PluginCommandDefinition,
   restrictCommandSource,
 } from "./commandUtils";
-import { Client, Message } from "eris";
+import { Client, Message, PossiblyUncachedTextableChannel } from "eris";
 import { AnyPluginData } from "../plugins/PluginData";
 import { CommandBlueprint } from "./CommandBlueprint";
+import { channelIsCached } from "../helpers";
 
 export interface PluginCommandManagerOpts {
   prefix?: string | RegExp;
@@ -73,13 +75,17 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     return this.manager.getAll();
   }
 
-  public async runFromMessage(msg: Message): Promise<void> {
+  public async runFromMessage(msg: Message<PossiblyUncachedTextableChannel>): Promise<void> {
     if (msg.content == null || msg.content.trim() === "") {
       return;
     }
 
+    if (!channelIsCached(msg.channel)) {
+      return;
+    }
+
     const command = await this.manager.findMatchingCommand(msg.content, {
-      message: msg,
+      message: msg as Message,
       pluginData: this.pluginData!,
     });
 
@@ -98,11 +104,11 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
       extraMeta.lock = command.config!.extra._lock;
     }
 
-    await this.runCommand(msg, command, extraMeta);
+    await this.runCommand(msg as ContextualCommandMessage<TPluginData>, command, extraMeta);
   }
 
   private async runCommand(
-    msg: Message,
+    msg: ContextualCommandMessage<TPluginData>,
     matchedCommand: IMatchedCommand<CommandContext<TPluginData>, CommandExtraData<TPluginData>>,
     extraMeta?: Partial<CommandMeta<TPluginData, any>>
   ): Promise<void> {

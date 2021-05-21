@@ -1,8 +1,8 @@
-import { AnyPluginData } from "../plugins/PluginData";
+import { AnyPluginData, GuildPluginData } from "../plugins/PluginData";
 import { EventFilter } from "./eventFilters";
 import { Awaitable } from "../utils";
 import { Lock } from "../locks/LockManager";
-import { EventArguments, ValidEvent } from "./eventTypes";
+import { EventArguments, GuildEventArguments, ValidEvent } from "./eventTypes";
 import { EventRelay } from "./EventRelay";
 
 export interface EventMeta<TPluginData extends AnyPluginData<any>, TArguments> {
@@ -14,7 +14,10 @@ export interface EventMeta<TPluginData extends AnyPluginData<any>, TArguments> {
 }
 
 export type Listener<TPluginData extends AnyPluginData<any>, TEventName extends ValidEvent> = (
-  meta: EventMeta<TPluginData, EventArguments[TEventName]>
+  meta: EventMeta<
+    TPluginData,
+    TPluginData extends GuildPluginData<any> ? GuildEventArguments[TEventName] : EventArguments[TEventName]
+  >
 ) => Awaitable<void>;
 
 export type WrappedListener = (args: any) => Awaitable<void>;

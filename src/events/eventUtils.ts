@@ -1,20 +1,20 @@
-import { Channel, Guild, GuildChannel, Member, Message, User } from "eris";
+import { Channel, Guild, GuildChannel, Member, Message, Uncached, User } from "eris";
 import { KnownEvents } from "./eventTypes";
 
 type EventToGuild = {
-  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Guild | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Guild | Uncached | undefined;
 };
 
 type EventToUser = {
-  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => User | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => User | Uncached | undefined;
 };
 
 type EventToChannel = {
-  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Channel | { id: string } | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Channel | Uncached | undefined;
 };
 
 type EventToMessage = {
-  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Message | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Message<any> | undefined;
 };
 
 export const eventToGuild: EventToGuild = {
@@ -64,9 +64,6 @@ export const eventToUser: EventToUser = {
   messageDelete: ({ message }) => (message as Message).author,
   messageDeleteBulk: () => undefined,
   messageReactionAdd: ({ member }) => {
-    return member instanceof Member ? member.user : undefined;
-  },
-  messageReactionRemove: ({ member }) => {
     return member instanceof Member ? member.user : undefined;
   },
   messageUpdate: ({ message }) => message.author,
