@@ -27,7 +27,9 @@
     ]
   },
   "dependencies": {
+    "@types/node-fetch": "^2.5.10",
     "knub-command-manager": "^9.1.0",
+    "node-fetch": "^2.6.1",
     "ts-essentials": "^6.0.7"
   },
   "devDependencies": {

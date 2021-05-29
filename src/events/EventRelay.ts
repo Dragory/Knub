@@ -1,6 +1,6 @@
-import { Client } from "eris";
+import { Client, Constants, RawPacket } from "eris";
 import { EventArguments, fromErisArgs, GuildEvent, isGuildEvent, ValidEvent } from "./eventTypes";
-import { eventToGuild } from "./eventUtils";
+import { eventToGuild, UnknownEventConverter, unknownEventConverters } from "./eventUtils";
 
 export type RelayListener<TEvent extends ValidEvent> = (args: EventArguments[TEvent]) => any;
 type GuildListenerMap = Map<string, Map<GuildEvent, Set<RelayListener<GuildEvent>>>>;
@@ -15,7 +15,30 @@ export class EventRelay {
   protected anyListeners: AnyListenerMap = new Map() as AnyListenerMap;
   protected registeredRelays: Set<ValidEvent> = new Set();
 
-  constructor(protected client: Client) {}
+  constructor(protected client: Client) {
+    this.client.on("rawWS", (packet) => this.onRawWS(packet));
+  }
+
+  onRawWS(packet: RawPacket): void {
+    // By parsing raw packets, we can add support for new events before Eris supports them officially
+    // This should be used extremely sparingly due to potential compatibility problems later
+    const event = this.rawPacketToEvent(packet);
+    if (event) {
+      this.relayEvent(event[0], event[1]);
+    }
+  }
+
+  rawPacketToEvent(packet: RawPacket): ReturnType<UnknownEventConverter> {
+    if (packet.op !== Constants.GatewayOPCodes.EVENT) {
+      return null;
+    }
+
+    if (packet.t && unknownEventConverters[packet.t]) {
+      return unknownEventConverters[packet.t](this.client, packet);
+    }
+
+    return null;
+  }
 
   onGuildEvent<TEvent extends GuildEvent>(guildId: string, ev: TEvent, listener: RelayListener<TEvent>): void {
     if (!this.guildListeners.has(guildId)) {

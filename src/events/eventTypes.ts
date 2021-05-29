@@ -3,10 +3,12 @@ import {
   AnyGuildChannel,
   AnyVoiceChannel,
   Call,
+  Channel,
   Emoji,
   FriendSuggestionReasons,
   GroupChannel,
   Guild,
+  GuildChannel,
   GuildTextableChannel,
   Invite,
   Member,
@@ -39,6 +41,63 @@ import {
   User,
   WebhookData,
 } from "eris";
+
+export interface Interaction {
+  id: string;
+  application_id: string;
+  type: InteractionType;
+  data?: ApplicationCommandInteractionData;
+  guild_id?: string;
+  guild?: Guild | Uncached;
+  channel_id?: string;
+  channel?: Channel | Uncached;
+  member?: Member | Uncached;
+  user?: User | Uncached;
+  token: string;
+  version: 1;
+  message?: Message;
+}
+
+enum InteractionType {
+  Ping = 1,
+  ApplicationCommand,
+  MessageComponent,
+}
+
+interface ApplicationCommandInteractionData {
+  id: string;
+  name: string;
+  resolved?: ApplicationCommandInteractionDataResolved;
+  options?: ApplicationCommandInteractionDataOption[];
+  custom_id: string;
+  component_type: number;
+}
+
+interface ApplicationCommandInteractionDataResolved {
+  users?: Record<string, User>;
+  members?: Record<string, Partial<Member>>;
+  roles?: Record<string, Role>;
+  channels?: Pick<GuildChannel, "id" | "name" | "type">; // TODO: permission_overwrites / permissionOverwrites
+}
+
+interface ApplicationCommandInteractionDataOption {
+  name: string;
+  type: ApplicationCommandOptionType;
+  value?: any;
+  options?: ApplicationCommandInteractionDataOption[];
+}
+
+enum ApplicationCommandOptionType {
+  SUB_COMMAND = 1,
+  SUB_COMMAND_GROUP = 2,
+  STRING = 3,
+  INTEGER = 4,
+  BOOLEAN = 5,
+  USER = 6,
+  CHANNEL = 7,
+  ROLE = 8,
+  MENTIONABLE = 9,
+}
 
 /**
  * Known event types and their arguments. Based on Eris types.
@@ -296,6 +355,10 @@ export interface KnownEvents {
   unknown: {
     packet: RawPacket;
   };
+
+  __interactionCreate: {
+    interaction: Interaction;
+  };
 }
 
 export interface KnownGuildEvents extends KnownEvents {
@@ -428,5 +491,6 @@ export const fromErisArgs: FromErisArgsObj = {
   speakingStop: (userID) => ({ userID }),
   userDisconnect: (userID) => ({ userID }),
   unknown: (packet, id) => ({ packet, id }),
+  __interactionCreate: (interaction) => ({ interaction }),
 };
 /* eslint-enable @typescript-eslint/no-unsafe-assignment */

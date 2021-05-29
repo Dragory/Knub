@@ -1,5 +1,5 @@
-import { Channel, Guild, GuildChannel, Member, Message, Uncached, User } from "eris";
-import { KnownEvents } from "./eventTypes";
+import { Channel, Client, Guild, GuildChannel, Member, Message, RawPacket, Uncached, User } from "eris";
+import { Interaction, KnownEvents } from "./eventTypes";
 
 type EventToGuild = {
   [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Guild | Uncached | undefined;
@@ -51,6 +51,7 @@ export const eventToGuild: EventToGuild = {
   voiceChannelSwitch: ({ member }) => member.guild,
   voiceStateUpdate: ({ member }) => member.guild,
   unavailableGuildCreate: () => undefined,
+  __interactionCreate: ({ interaction }) => interaction.guild,
 };
 
 export const eventToUser: EventToUser = {
@@ -71,6 +72,7 @@ export const eventToUser: EventToUser = {
   typingStart: ({ user }) => user,
   userUpdate: ({ user }) => user,
   voiceStateUpdate: ({ member }) => member.user,
+  __interactionCreate: ({ interaction }) => interaction.user ?? (interaction.member as Member)?.user,
 };
 
 export const eventToChannel: EventToChannel = {
@@ -91,6 +93,7 @@ export const eventToChannel: EventToChannel = {
   voiceChannelJoin: ({ newChannel }) => newChannel,
   voiceChannelLeave: ({ oldChannel }) => oldChannel,
   voiceChannelSwitch: ({ newChannel }) => newChannel,
+  __interactionCreate: ({ interaction }) => interaction.channel,
 };
 
 export const eventToMessage: EventToMessage = {
@@ -101,4 +104,91 @@ export const eventToMessage: EventToMessage = {
   messageReactionRemove: ({ message }) => (message instanceof Message ? message : undefined),
   messageReactionRemoveAll: ({ message }) => (message instanceof Message ? message : undefined),
   messageUpdate: ({ message }) => message,
+  __interactionCreate: ({ interaction }) => interaction.message,
+};
+
+// Any events created from raw packets must be prefixed with __ to avoid future naming conflicts with Eris events
+export type UnknownEventConverter = (
+  client: Client,
+  packet: RawPacket
+) => [keyof KnownEvents & `__${string}`, any[]] | null;
+export const unknownEventConverters: Record<string, UnknownEventConverter> = {
+  INTERACTION_CREATE(client, packet) {
+    const data = packet.d as Readonly<Interaction>;
+    const interaction: Interaction = {
+      id: data.id,
+      application_id: data.application_id,
+      type: data.type,
+      data: data.data,
+      guild_id: data.guild_id,
+      channel_id: data.channel_id,
+      token: data.token,
+      version: data.version,
+    };
+
+    if (data.guild_id) {
+      interaction.guild = client.guilds.get(data.guild_id) ?? { id: data.guild_id };
+    }
+
+    if (data.channel_id) {
+      if (client.privateChannels.has(data.channel_id)) {
+        interaction.channel = client.privateChannels.get(data.channel_id);
+      } else if (client.groupChannels.has(data.channel_id)) {
+        interaction.channel = client.groupChannels.get(data.channel_id);
+      } else {
+        const channelGuildId = client.channelGuildMap[data.channel_id];
+        const guild = channelGuildId ? client.guilds.get(channelGuildId) : undefined;
+        interaction.channel = guild?.channels.get(data.channel_id);
+      }
+
+      if (!interaction.channel) {
+        interaction.channel = { id: data.channel_id };
+      }
+    }
+
+    if (data.user) {
+      let user = client.users.get(data.user.id);
+      if (!user) {
+        user = client.users.add(data.user as User);
+      }
+      interaction.user = user;
+    }
+
+    if (data.member && interaction.guild instanceof Guild) {
+      let member = interaction.guild.members.get(data.member.id);
+      if (!member) {
+        data.member.id = (data.member as Member).user.id;
+        member = interaction.guild.members.add(data.member as Member);
+      }
+      interaction.member = member;
+    }
+
+    if (interaction.data?.resolved) {
+      if (interaction.data.resolved.users) {
+        for (const [userId, userData] of Object.entries(interaction.data.resolved.users)) {
+          let user = client.users.get(userId);
+          if (!user) {
+            user = client.users.add(userData);
+          }
+          interaction.data.resolved.users[userId] = user;
+        }
+      }
+
+      if (interaction.data.resolved.members) {
+        if (!(interaction.guild instanceof Guild)) {
+          delete interaction.data.resolved.members;
+        } else {
+          for (const [memberId, partialMemberData] of Object.entries(interaction.data.resolved.members)) {
+            let member = interaction.guild.members.get(memberId);
+            if (!member) {
+              member = interaction.guild.members.add(partialMemberData as Member);
+            }
+            interaction.data.resolved.members[memberId] = member;
+          }
+        }
+      }
+    }
+
+    return ["__interactionCreate", [interaction]];
+  },
 };
