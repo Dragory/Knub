@@ -1,11 +1,11 @@
 import { EventMeta, Listener } from "./BasePluginEventManager";
 import { Awaitable } from "../utils";
-import { GroupChannel, PrivateChannel, User } from "eris";
 import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils";
 import { EventArguments, KnownEvents, ValidEvent } from "./eventTypes";
-import { hasPermission, resolveMember } from "../helpers";
+import { hasPermission } from "../helpers";
 import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
+import { DMChannel, User } from "discord.js";
 
 export type EventFilter = <TEventName extends ValidEvent>(
   event: TEventName,
@@ -75,14 +75,7 @@ export function onlyGuild(): EventFilter {
 export function onlyDM(): EventFilter {
   return (event, { args }) => {
     const channel = eventToChannel[event as keyof KnownEvents]?.(args as any) ?? null;
-    return Boolean(channel && channel instanceof PrivateChannel);
-  };
-}
-
-export function onlyGroup(): EventFilter {
-  return (event, { args }) => {
-    const channel = eventToChannel[event as keyof KnownEvents]?.(args as any) ?? null;
-    return Boolean(channel && channel instanceof GroupChannel);
+    return Boolean(channel && channel instanceof DMChannel);
   };
 }
 
@@ -117,7 +110,7 @@ export function cooldown(timeMs: number, permission?: string): EventFilter {
 export function requirePermission(permission: string): EventFilter {
   return async (event, { args, pluginData }) => {
     const user = eventToUser[event as keyof KnownEvents]?.(args as any) ?? null;
-    const member = user && isGuildPluginData(pluginData) ? resolveMember(pluginData.guild, user.id) : null;
+    const member = user && isGuildPluginData(pluginData) ? pluginData.guild.members.resolve(user.id) : null;
     const config = member
       ? await pluginData.config.getForMember(member)
       : user
@@ -138,7 +131,7 @@ export function ignoreBots(): EventFilter {
 export function ignoreSelf(): EventFilter {
   return (event, { args, pluginData }) => {
     const user = eventToUser[event as keyof KnownEvents]?.(args as any) ?? null;
-    return !user || user.id !== pluginData.client.user.id;
+    return !user || user.id !== pluginData.client.user!.id;
   };
 }
 

@@ -8,7 +8,7 @@ import {
 } from "knub-command-manager";
 import { disableCodeBlocks } from "../helpers";
 import { getChannelId, getRoleId, getUserId } from "../utils";
-import { Channel, GuildChannel, Member, Role, TextChannel, User, VoiceChannel } from "eris";
+import { Channel, GuildChannel, GuildMember, Role, TextChannel, User, VoiceChannel } from "discord.js";
 import { AnyPluginData } from "../plugins/PluginData";
 import { CommandContext } from "./commandUtils";
 
@@ -35,7 +35,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid user`);
     }
 
-    const user = client.users.get(userId);
+    const user = client.users.cache.get(userId);
     if (!user) {
       throw new TypeConversionError(`Could not find user for user id \`${userId}\``);
     }
@@ -43,7 +43,7 @@ export const baseTypeConverters = {
     return user;
   },
 
-  member(value: string, { message, pluginData: { client } }: CommandContext<AnyPluginData<any>>): Member {
+  member(value: string, { message, pluginData: { client } }: CommandContext<AnyPluginData<any>>): GuildMember {
     if (!(message.channel instanceof GuildChannel)) {
       throw new TypeConversionError(`Type 'Member' can only be used in guilds`);
     }
@@ -53,12 +53,12 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid user id`);
     }
 
-    const user = client.users.get(userId);
+    const user = client.users.cache.get(userId);
     if (!user) {
       throw new TypeConversionError(`Could not find user for user id \`${userId}\``);
     }
 
-    const member = message.channel.guild.members.get(user.id);
+    const member = message.channel.guild.members.cache.get(user.id);
     if (!member) {
       throw new TypeConversionError(`Could not find guild member for user id \`${userId}\``);
     }
@@ -77,7 +77,7 @@ export const baseTypeConverters = {
     }
 
     const guild = message.channel.guild;
-    const channel = guild.channels.get(channelId);
+    const channel = guild.channels.cache.get(channelId);
     if (!channel) {
       throw new TypeConversionError(`Could not find channel for channel id \`${channelId}\``);
     }
@@ -96,7 +96,7 @@ export const baseTypeConverters = {
     }
 
     const guild = message.channel.guild;
-    const channel = guild.channels.get(channelId);
+    const channel = guild.channels.cache.get(channelId);
     if (!channel) {
       throw new TypeConversionError(`Could not find channel for channel id \`${channelId}\``);
     }
@@ -119,7 +119,7 @@ export const baseTypeConverters = {
     }
 
     const guild = message.channel.guild;
-    const channel = guild.channels.get(channelId);
+    const channel = guild.channels.cache.get(channelId);
     if (!channel) {
       throw new TypeConversionError(`Could not find channel for channel id \`${channelId}\``);
     }
@@ -141,7 +141,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid role`);
     }
 
-    const role = message.channel.guild.roles.get(roleId);
+    const role = message.channel.guild.roles.cache.get(roleId);
     if (!role) {
       throw new TypeConversionError(`Could not find role for role id \`${roleId}\``);
     }
@@ -178,7 +178,7 @@ export const baseCommandParameterTypeHelpers = {
   // knub-command-manager also has a number() helper, but we have slightly different error handling here
   number: createTypeHelper<number>(baseTypeConverters.number),
   user: createTypeHelper<User>(baseTypeConverters.user),
-  member: createTypeHelper<Member>(baseTypeConverters.member),
+  member: createTypeHelper<GuildMember>(baseTypeConverters.member),
   channel: createTypeHelper<Channel>(baseTypeConverters.channel),
   textChannel: createTypeHelper<TextChannel>(baseTypeConverters.textChannel),
   voiceChannel: createTypeHelper<VoiceChannel>(baseTypeConverters.voiceChannel),

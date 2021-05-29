@@ -29,7 +29,7 @@ export interface OnOpts {
 }
 
 /**
- * A wrapper for the Eris event emitter that passes plugin data to the listener
+ * A wrapper for the d.js event emitter that passes plugin data to the listener
  * functions and, by default, restricts events to the plugin's guilds.
  */
 export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<any>> {

@@ -1,6 +1,19 @@
 import { noop } from "./utils";
-import { Client, Collection, Guild, Message, Shard, ShardManager, TextChannel, User } from "eris";
 import events = require("events");
+import {
+  Channel,
+  Client,
+  Constants,
+  DMChannel,
+  Guild,
+  GuildManager,
+  Message,
+  NewsChannel,
+  TextChannel,
+  User,
+  UserManager,
+  WebSocketManager,
+} from "discord.js";
 
 const EventEmitter = events.EventEmitter;
 
@@ -12,32 +25,42 @@ function persist<T, TProp extends keyof T>(that: T, prop: TProp, initial: T[TPro
   return that[prop];
 }
 
-export function createMockClient(): Client {
-  return new Proxy<Client>(new EventEmitter() as Client, {
+function createMockWebSocketManager(): WebSocketManager {
+  return new Proxy<WebSocketManager>(new EventEmitter() as WebSocketManager, {
     get(target, p: string) {
       if (target[p]) {
         return target[p] as unknown;
       }
 
-      if (p === "shards") {
-        return persist(target, p, new Collection(Shard) as ShardManager);
+      return noop;
+    },
+  });
+}
+
+export function createMockClient(): Client {
+  return new Proxy<Client>(new EventEmitter() as Client, {
+    get(target, p: string, proxy) {
+      if (target[p]) {
+        return target[p] as unknown;
+      }
+
+      if (p === "ws") {
+        return persist(target, p, createMockWebSocketManager());
       }
 
       if (p === "users") {
-        return persist(target, p, new Collection(User));
+        return persist(target, p, new UserManager(proxy));
       }
 
       if (p === "guilds") {
-        return persist(target, p, new Collection(Guild));
+        return persist(target, p, new GuildManager(proxy));
       }
 
-      if (p === "channelGuildMap") {
-        return persist(target, p, {});
-      }
-
-      if (p === "getChannel") {
-        return function (this: Client, channelId: string) {
-          return this.guilds.get(this.channelGuildMap[channelId])?.channels.get(channelId);
+      if (p === "options") {
+        return {
+          messageCacheMaxSize: 1024 * 1024,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          intents: null as any,
         };
       }
 
@@ -53,16 +76,11 @@ export function sleep(ms: number): Promise<void> {
 let mockGuildId = 10000;
 export function createMockGuild(client: Client, data = {}): Guild {
   const id = (++mockGuildId).toString();
-  const mockGuild = new Guild(
-    {
-      id,
-      name: `Mock Guild #${id}`,
-      ...data,
-    },
-    client
-  );
-
-  client.guilds.add(mockGuild);
+  const mockGuild = client.guilds.add({
+    id,
+    name: `Mock Guild #${id}`,
+    ...data,
+  });
 
   return mockGuild;
 }
@@ -70,17 +88,12 @@ export function createMockGuild(client: Client, data = {}): Guild {
 let mockUserId = 20000;
 export function createMockUser(client: Client, data = {}): User {
   const id = (++mockUserId).toString();
-  const mockUser = new User(
-    {
-      id,
-      username: `mockuser_${id}`,
-      discriminator: "0001",
-      ...data,
-    },
-    client
-  );
-
-  client.users.add(mockUser);
+  const mockUser = client.users.add({
+    id,
+    username: `mockuser_${id}`,
+    discriminator: "0001",
+    ...data,
+  });
 
   return mockUser;
 }
@@ -88,36 +101,47 @@ export function createMockUser(client: Client, data = {}): User {
 let mockChannelId = 30000;
 export function createMockTextChannel(client: Client, guildId: string, data = {}): TextChannel {
   const id = (++mockChannelId).toString();
-  const mockTextChannel = new TextChannel(
-    {
-      id,
-      type: 0,
-      guild_id: guildId,
-      name: `mock-channel-${id}`,
-      ...data,
-    },
-    // @ts-ignore Error in types, should be Client not Guild
-    client,
-    0
+  const guild = client.guilds.cache.get(guildId)!;
+
+  /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
+  const mockTextChannel = guild.channels.add(
+    (Channel as any).create(
+      client,
+      {
+        id,
+        guild,
+        type: Constants.ChannelTypes.TEXT,
+        name: `mock-channel-${id}`,
+        ...data,
+      },
+      guild
+    )
   );
+  /* eslint-enable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
 
-  const guild = client.guilds.get(guildId)!;
-  guild.channels.add(mockTextChannel);
-  client.channelGuildMap[mockTextChannel.id] = guildId;
-
-  return mockTextChannel;
+  return mockTextChannel as TextChannel;
 }
 
 let mockMessageId = 40000;
-export function createMockMessage(client: Client, channelId: string, author: User, data = {}): Message {
-  return new Message(
+export function createMockMessage(
+  client: Client,
+  channel: TextChannel | DMChannel | NewsChannel,
+  author: User,
+  data = {}
+): Message {
+  const message = new Message(
+    client,
     {
       id: (++mockMessageId).toString(),
-      channel_id: channelId,
+      channel_id: channel.id,
       mentions: [],
       author,
       ...data,
     },
-    client
+    channel
   );
+
+  message.channel = channel;
+
+  return message;
 }

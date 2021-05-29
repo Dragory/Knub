@@ -2,28 +2,10 @@
  * @file Public helper functions/types
  */
 
-import {
-  AnyChannel,
-  Client,
-  Guild,
-  GuildChannel,
-  Invite,
-  Member,
-  Message,
-  MessageContent,
-  MessageFile,
-  PartialEmoji,
-  PossiblyUncachedGuild,
-  PossiblyUncachedTextableChannel,
-  Role,
-  TextableChannel,
-  TextChannel,
-  Uncached,
-  User,
-} from "eris";
-import { get, getChannelId, getRoleId, getUserId, noop } from "./utils";
+import { get } from "./utils";
 import { GuildPluginData } from "./plugins/PluginData";
 import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils";
+import { Client, GuildMember, Invite, Message, TextBasedChannelFields, TextChannel } from "discord.js";
 
 /**
  * Splits a string into chunks, preferring to split at newlines if possible
@@ -97,75 +79,15 @@ export function splitMessageIntoChunks(str: string, chunkLength = 1990): string[
  * Sends a message to the specified channel, splitting it into multiple shorter messages if the message text goes over
  * the Discord message length limit (2000)
  */
-export async function createChunkedMessage(channel: TextableChannel, messageText: string): Promise<Message[]> {
+export async function createChunkedMessage(channel: TextBasedChannelFields, messageText: string): Promise<Message[]> {
   const chunks = splitMessageIntoChunks(messageText);
   const messages: Message[] = [];
 
   for (const chunk of chunks) {
-    messages.push(await channel.createMessage(chunk));
+    messages.push(await channel.send(chunk));
   }
 
   return messages;
-}
-
-/**
- * For unicode emoji, the unicode char/string itself.
- * For custom emoji, a string in the format `"emojiName:emojiID"`.
- * @see https://abal.moe/Eris/docs/Message#function-addReaction
- */
-export type Reaction = string;
-
-export function resolveUser(bot: Client, str: string): User | undefined {
-  const userId = getUserId(str);
-  return userId ? bot.users.get(userId) : undefined;
-}
-
-export function resolveMember(guild: Guild, str: string): Member | undefined {
-  const memberId = getUserId(str);
-  return memberId ? guild.members.get(memberId) : undefined;
-}
-
-export function resolveChannel(guild: Guild, str: string): GuildChannel | undefined {
-  const channelId = getChannelId(str);
-  return channelId ? guild.channels.get(channelId) : undefined;
-}
-
-export function resolveRole(guild: Guild, str: string): Role | undefined {
-  const roleId = getRoleId(str);
-  return roleId ? guild.roles.get(roleId) : undefined;
-}
-
-/**
- * Returns a promise that resolves when one of the specified reactions are used on the spcified message, optionally
- * restricted to reactions by a specific user only
- */
-export function waitForReaction(
-  bot: Client,
-  msg: Message,
-  availableReactions: Reaction[],
-  restrictToUserId?: string,
-  timeout = 15000
-): Promise<PartialEmoji | null> {
-  return new Promise((resolve) => {
-    availableReactions.forEach((reaction) => msg.addReaction(reaction).catch(noop));
-
-    const timeoutTimer = setTimeout(() => {
-      msg.removeReactions().catch(noop);
-      resolve(null);
-    }, timeout);
-
-    bot.on("messageReactionAdd", (evMsg, emoji, member) => {
-      if (evMsg.id !== msg.id || member.id === bot.user.id) return;
-      if (restrictToUserId && member.id !== restrictToUserId) return;
-
-      const user = bot.users.get(member.id);
-      if (user && user.bot) return;
-
-      clearTimeout(timeoutTimer);
-      msg.removeReactions().catch(noop);
-      resolve(emoji);
-    });
-  });
 }
 
 /**
@@ -173,32 +95,25 @@ export function waitForReaction(
  * a specific user only
  */
 export function waitForReply(
-  bot: Client,
+  client: Client,
   channel: TextChannel,
   restrictToUserId?: string,
   timeout = 15000
-): Promise<Message<PossiblyUncachedTextableChannel> | null> {
+): Promise<Message | null> {
   return new Promise((resolve) => {
     const timeoutTimer = setTimeout(() => {
       resolve(null);
     }, timeout);
 
-    bot.on("messageCreate", (msg) => {
+    client.on("message", (msg) => {
       if (!msg.channel || msg.channel.id !== channel.id) return;
-      if (msg.author && msg.author.id === bot.user.id) return;
+      if (msg.author && msg.author.id === client.user!.id) return;
       if (restrictToUserId && (!msg.author || msg.author.id !== restrictToUserId)) return;
 
       clearTimeout(timeoutTimer);
       resolve(msg);
     });
   });
-}
-
-/**
- * Shorthand for sending a message to the same channel as another message
- */
-export function reply(msg: Message, content: MessageContent, file: MessageFile): Promise<Message> {
-  return msg.channel.createMessage(content, file);
 }
 
 /**
@@ -233,30 +148,10 @@ export function hasPermission(config: Record<string, unknown>, permission: strin
   return get(config, permission) === true;
 }
 
-export function getMemberLevel(pluginData: GuildPluginData<any>, member: Member): number {
+export function getMemberLevel(pluginData: GuildPluginData<any>, member: GuildMember): number {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
   const levels = pluginData.fullConfig.levels ?? {};
   return _getMemberLevel(levels, member, pluginData.guild);
 }
 
 export { userMentionRegex, channelMentionRegex, roleMentionRegex, snowflakeRegex } from "./utils";
-
-export function valueIsUncached(anything: any | Uncached): anything is Uncached {
-  if (anything == null) {
-    return false;
-  }
-  const propNames = Object.getOwnPropertyNames(anything);
-  return propNames.length === 1 && propNames[0] === "id";
-}
-
-export function guildIsCached(guild: PossiblyUncachedGuild): guild is Guild {
-  return !valueIsUncached(guild);
-}
-
-export function userIsCached(user: User | Uncached): user is User {
-  return !valueIsUncached(user);
-}
-
-export function channelIsCached<T extends AnyChannel>(channel: T | Uncached): channel is T {
-  return !valueIsUncached(channel);
-}

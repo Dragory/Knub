@@ -8,6 +8,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "mocha --exit -r ts-node/register src/**/*.test.ts -- --trace-warnings",
+    "test-debug": "mocha --exit -r ts-node/register -g \"command permissions\" src/**/*.test.ts -- --trace-warnings",
     "lint": "eslint src",
     "build": "shx touch dist && shx rm -r dist && tsc --sourceMap false && shx cp .npmignore dist/",
     "preversion": "npm run test",
@@ -27,6 +28,8 @@
     ]
   },
   "dependencies": {
+    "discord-api-types": "^0.18.1",
+    "discord.js": "github:monbrey/discord.js#9da6f1cd9763fffcc506cfbd7926190365c875c3",
     "knub-command-manager": "^9.1.0",
     "ts-essentials": "^6.0.7"
   },
@@ -45,9 +48,6 @@
     "shx": "^0.3.3",
     "ts-node": "^8.10.2",
     "typescript": "^4.2.4"
-  },
-  "peerDependencies": {
-    "eris": "^0.15.1"
   },
   "files": [
     "/dist"

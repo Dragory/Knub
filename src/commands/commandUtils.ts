@@ -1,4 +1,4 @@
-import { Client, GroupChannel, GuildChannel, GuildTextableChannel, Message, PrivateChannel } from "eris";
+import { Client, GuildChannel, Message, DMChannel } from "discord.js";
 import { Awaitable } from "../utils";
 import {
   ICommandConfig,
@@ -14,17 +14,18 @@ import { AnyPluginData, GuildPluginData } from "../plugins/PluginData";
 import { hasPermission } from "../helpers";
 import { CommandBlueprint } from "./CommandBlueprint";
 import { BasePluginType } from "../plugins/pluginTypes";
+import { GuildMessage } from "../types";
 
 export type TSignatureOrArray<TPluginData extends AnyPluginData<any>> =
   | TSignature<CommandContext<TPluginData>>
   | Array<TSignature<CommandContext<TPluginData>>>;
 
 export function getDefaultPrefix(client: Client): RegExp {
-  return new RegExp(`<@!?${client.user.id}> `);
+  return new RegExp(`<@!?${client.user!.id}> `);
 }
 
 export type ContextualCommandMessage<TPluginData extends AnyPluginData<any>> = TPluginData extends GuildPluginData<any>
-  ? Message<GuildTextableChannel>
+  ? GuildMessage
   : Message;
 
 export interface CommandMeta<TPluginData extends AnyPluginData<any>, TArguments extends any> {
@@ -136,11 +137,7 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
   let source = cmd.config!.extra?.blueprint.source ?? "guild";
   if (!Array.isArray(source)) source = [source];
 
-  if (context.message.channel instanceof PrivateChannel && source.includes("dm")) {
-    return true;
-  }
-
-  if (context.message.channel instanceof GroupChannel && source.includes("group")) {
+  if (context.message.channel instanceof DMChannel && source.includes("dm")) {
     return true;
   }
 

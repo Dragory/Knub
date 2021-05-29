@@ -1,6 +1,6 @@
-import { Client } from "eris";
-import { EventArguments, fromErisArgs, GuildEvent, isGuildEvent, ValidEvent } from "./eventTypes";
+import { EventArguments, ExtendedClientEvents, fromDjsArgs, GuildEvent, isGuildEvent, ValidEvent } from "./eventTypes";
 import { eventToGuild } from "./eventUtils";
+import { Client, ClientEvents } from "discord.js";
 
 export type RelayListener<TEvent extends ValidEvent> = (args: EventArguments[TEvent]) => any;
 type GuildListenerMap = Map<string, Map<GuildEvent, Set<RelayListener<GuildEvent>>>>;
@@ -61,17 +61,18 @@ export class EventRelay {
     }
 
     this.registeredRelays.add(ev);
-    this.client.on(ev, (...args) => {
+    this.client.on(ev as keyof ClientEvents, (...args) => {
       this.relayEvent(ev, args);
     });
   }
 
-  protected relayEvent(ev: ValidEvent, args: any[]): void {
-    const convertedArgs = fromErisArgs[ev](...args);
+  protected relayEvent(ev: ValidEvent, args: ExtendedClientEvents[ValidEvent]): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-assignment
+    const convertedArgs = (fromDjsArgs[ev] as any)?.(...args);
 
     if (isGuildEvent(ev)) {
       // Only guild events are passed to guild listeners, and only to the matching guild
-      const guild = eventToGuild[ev]?.(convertedArgs as any);
+      const guild = eventToGuild[ev]?.(convertedArgs);
       if (guild && this.guildListeners.get(guild.id)?.has(ev)) {
         for (const listener of this.guildListeners.get(guild.id)!.get(ev)!.values()!) {
           listener(convertedArgs as EventArguments[GuildEvent]);

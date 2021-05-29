@@ -1,4 +1,4 @@
-import { TextableChannel } from "eris";
+import { GuildMember, Message, TextBasedChannelFields, TextChannel } from "discord.js";
 import { BaseConfig } from "./config/configTypes";
 import { LockManager } from "./locks/LockManager";
 import { GlobalPluginBlueprint, GuildPluginBlueprint } from "./plugins/PluginBlueprint";
@@ -6,7 +6,7 @@ import { GlobalPluginData, GuildPluginData } from "./plugins/PluginData";
 import { Awaitable } from "./utils";
 import { BasePluginType } from "./plugins/pluginTypes";
 
-type StatusMessageFn = (channel: TextableChannel, body: string) => void;
+type StatusMessageFn = (channel: TextBasedChannelFields, body: string) => void;
 
 export type GuildPluginMap = Map<string, GuildPluginBlueprint<GuildPluginData<any>>>;
 export type GlobalPluginMap = Map<string, GlobalPluginBlueprint<GlobalPluginData<any>>>;
@@ -57,3 +57,8 @@ export interface GlobalContext<TGlobalConfig extends BaseConfig<any>> extends Ba
 export type AnyContext<TGuildConfig extends BaseConfig<any>, TGlobalConfig extends BaseConfig<any>> =
   | GuildContext<TGuildConfig>
   | GlobalContext<TGlobalConfig>;
+
+export interface GuildMessage extends Message {
+  channel: TextChannel;
+  member: GuildMember;
+}

@@ -2,7 +2,7 @@ import { number, string } from "knub-command-manager";
 import { expect } from "chai";
 import { BasePluginType } from "..";
 import { typedGuildCommand, typedGlobalCommand } from "./CommandBlueprint";
-import { GuildTextableChannel, PrivateChannel, Textable } from "eris";
+import { DMChannel, TextChannel } from "discord.js";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
@@ -67,9 +67,9 @@ describe("typedGuildCommand() helper", () => {
 
         // Make sure message.channel is always a textable guild channel and cannot be a private channel
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result2: Textable & PrivateChannel extends typeof message.channel
+        const result2: DMChannel extends typeof message.channel
           ? false
-          : GuildTextableChannel extends typeof message.channel
+          : TextChannel extends typeof message.channel
           ? true
           : false = true;
       },
@@ -170,8 +170,8 @@ describe("typedGlobalCommand() helper", () => {
         // If the message is not necessarily a guild message, the channel can be a private channel
         // as well as a guild channel.
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result2: Textable & PrivateChannel extends typeof message.channel
-          ? GuildTextableChannel extends typeof message.channel
+        const result2: DMChannel extends typeof message.channel
+          ? TextChannel extends typeof message.channel
             ? true
             : false
           : false = true;

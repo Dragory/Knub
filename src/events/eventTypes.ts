@@ -1,340 +1,164 @@
 import {
-  AnyChannel,
-  AnyGuildChannel,
-  AnyVoiceChannel,
-  Call,
-  Emoji,
-  FriendSuggestionReasons,
-  GroupChannel,
+  ApplicationCommand,
+  Channel,
+  ClientEvents,
+  CloseEvent,
+  Collection,
+  DMChannel,
   Guild,
-  GuildTextableChannel,
+  GuildBan,
+  GuildChannel,
+  GuildEmoji,
+  GuildMember,
+  Interaction,
+  InvalidRequestWarningData,
   Invite,
-  Member,
-  MemberPartial,
   Message,
-  OldCall,
-  OldGroupChannel,
-  OldGuild,
-  OldGuildChannel,
-  OldGuildTextChannel,
-  OldGuildVoiceChannel,
-  OldMember,
-  OldMessage,
-  OldRole,
-  OldVoiceState,
-  PartialEmoji,
+  MessageReaction,
+  PartialDMChannel,
+  PartialGuildMember,
+  PartialMessage,
   PartialUser,
-  PossiblyUncachedGuild,
-  PossiblyUncachedMessage,
-  PossiblyUncachedTextableChannel,
   Presence,
-  PrivateChannel,
-  RawPacket,
-  RawRESTRequest,
-  Relationship,
+  RateLimitData,
   Role,
-  TextableChannel,
-  UnavailableGuild,
-  Uncached,
+  Snowflake,
+  Speaking,
+  TextChannel,
   User,
-  WebhookData,
-} from "eris";
+  VoiceState,
+} from "discord.js";
+import { GuildMessage } from "../types";
 
+export type ExtendedClientEvents = ClientEvents & { raw: any[] };
+
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /**
- * Known event types and their arguments. Based on Eris types.
- * @see https://github.com/abalabahaha/eris/blob/0.15.1/index.d.ts#L493
+ * Each property is a function that converts DJS event listener arguments to Knub's event argument object.
+ * @see https://github.com/discordjs/discord.js/blob/e300518597955abf4bf3c3d2634b47b9b3964274/typings/index.d.ts#L2591
  */
-export interface KnownEvents {
-  ready: Record<string, never>;
-  disconnect: Record<string, never>;
-  callCreate: {
-    call: Call;
-  };
-  callRing: {
-    call: Call;
-  };
-  callDelete: {
-    call: Call;
-  };
-  callUpdate: {
-    call: Call;
-    oldCall: OldCall;
-  };
-  channelCreate: {
-    channel: AnyChannel;
-  };
-  channelDelete: {
-    channel: AnyChannel;
-  };
-  channelPinUpdate: {
-    channel: TextableChannel;
-    timestamp: number;
-    oldTimestamp: number;
-  };
-  channelRecipientAdd: {
-    channel: GroupChannel;
-    user: User;
-  };
-  channelRecipientRemove: {
-    channel: GroupChannel;
-    user: User;
-  };
-  channelUpdate:
-    | {
-        channel: AnyGuildChannel;
-        oldChannel: OldGuildChannel | OldGuildTextChannel | OldGuildVoiceChannel;
-      }
-    | {
-        channel: GroupChannel;
-        oldChannel: OldGroupChannel;
-      };
-  connect: {
-    id: number;
-  };
-  shardPreReady: {
-    id: number;
-  };
-  friendSuggestionCreate: {
-    user: User;
-    reasons: FriendSuggestionReasons;
-  };
-  friendSuggestionDelete: {
-    user: User;
-  };
-  guildBanAdd: {
-    guild: Guild;
-    user: User;
-  };
-  guildBanRemove: {
-    guild: Guild;
-    user: User;
-  };
-  guildAvailable: {
-    guild: Guild;
-  };
-  guildCreate: {
-    guild: Guild;
-  };
-  guildDelete: {
-    guild: PossiblyUncachedGuild;
-  };
-  guildEmojisUpdate: {
-    guild: PossiblyUncachedGuild;
-    emojis: Emoji[];
-    oldEmojis: Emoji[] | null;
-  };
-  guildMemberAdd: {
-    guild: Guild;
-    member: Member;
-  };
-  guildMemberChunk: {
-    guild: Guild;
-    members: Member[];
-  };
-  guildMemberRemove: {
-    guild: Guild;
-    member: Member | MemberPartial;
-  };
-  guildMemberUpdate: {
-    guild: Guild;
-    member: Member;
-    oldMember: OldMember | null;
-  };
-  guildRoleCreate: {
-    guild: Guild;
-    role: Role;
-  };
-  guildRoleDelete: {
-    guild: Guild;
-    role: Role;
-  };
-  guildRoleUpdate: {
-    guild: Guild;
-    role: Role;
-    oldRole: OldRole;
-  };
-  guildUnavailable: {
-    guild: Guild;
-  };
-  unavailableGuildCreate: {
-    guild: UnavailableGuild;
-  };
-  guildUpdate: {
-    guild: Guild;
-    oldGuild: OldGuild;
-  };
-  hello: {
-    trace: string[];
-    id: number;
-  };
-  inviteCreate: {
-    guild: Guild;
-    invite: Invite;
-  };
-  inviteDelete: {
-    guild: Guild;
-    invite: Invite;
-  };
-  messageCreate: {
-    message: Message<PossiblyUncachedTextableChannel>;
-  };
-  messageDelete: {
-    message: PossiblyUncachedMessage;
-  };
-  messageReactionRemoveAll: {
-    message: PossiblyUncachedMessage;
-  };
-  messageReactionRemoveEmoji: {
-    message: PossiblyUncachedMessage;
-    emoji: PartialEmoji;
-  };
-  messageDeleteBulk: {
-    messages: PossiblyUncachedMessage[];
-  };
-  messageReactionAdd: {
-    message: PossiblyUncachedMessage;
-    emoji: PartialEmoji;
-    member: Member | Uncached;
-  };
-  messageReactionRemove: {
-    message: PossiblyUncachedMessage;
-    emoji: PartialEmoji;
-    userID: string;
-  };
-  messageUpdate: {
-    message: Message<PossiblyUncachedTextableChannel>;
-    oldMessage: OldMessage | null;
-  };
-  presenceUpdate: {
-    other: Member | Relationship;
-    oldPresence: Presence | null;
-  };
-  rawREST: {
-    request: RawRESTRequest;
-  };
-  rawWS: {
-    packet: RawPacket;
-    id: number;
-  };
-  relationshipAdd: {
-    relationship: Relationship;
-  };
-  relationshipRemove: {
-    relationship: Relationship;
-  };
-  relationshipUpdate: {
-    relationship: Relationship;
-    oldRelationship: { type: number };
-  };
-  typingStart:
-    | {
-        channel: GuildTextableChannel | Uncached;
-        user: User | Uncached;
-        member: Member;
-      }
-    | {
-        channel: PrivateChannel | Uncached;
-        user: User | Uncached;
-        member: null;
-      };
-  userUpdate: {
-    user: User;
-    oldUser: PartialUser | null;
-  };
-  voiceChannelJoin: {
-    member: Member;
-    newChannel: AnyVoiceChannel;
-  };
-  voiceChannelLeave: {
-    member: Member;
-    oldChannel: AnyVoiceChannel;
-  };
-  voiceChannelSwitch: {
-    member: Member;
-    newChannel: AnyVoiceChannel;
-    oldChannel: AnyVoiceChannel;
-  };
-  voiceStateUpdate: {
-    member: Member;
-    oldState: OldVoiceState;
-  };
-  warn: {
-    message: string;
-    id: number;
-  };
-  debug: {
-    message: string;
-    id: number;
-  };
-  webhooksUpdate: {
-    data: WebhookData;
-  };
-  shardReady: {
-    id: number;
-  };
-  shardResume: {
-    id: number;
-  };
-  shardDisconnect: {
-    err: Error | undefined;
-    id: number;
-  };
-  end: Record<string, never>;
-  start: Record<string, never>;
-  pong: {
-    latency: number;
-  };
-  speakingStart: {
-    userID: string;
-  };
-  speakingStop: {
-    userID: string;
-  };
-  userDisconnect: {
-    userID: string;
-  };
-  unknown: {
-    packet: RawPacket;
-  };
-}
+export const fromDjsArgs = {
+  applicationCommandCreate: (command: ApplicationCommand) => ({ command }),
+  applicationCommandDelete: (command: ApplicationCommand) => ({ command }),
+  applicationCommandUpdate: (oldCommand: ApplicationCommand | null, newCommand: ApplicationCommand) => ({
+    oldCommand,
+    newCommand,
+  }),
+  channelCreate: (channel: GuildChannel) => ({ channel }),
+  channelDelete: (channel: DMChannel | GuildChannel) => ({ channel }),
+  channelPinsUpdate: (channel: Channel | PartialDMChannel, date: Date) => ({ channel, date }),
+  channelUpdate: (oldChannel: Channel, newChannel: Channel) => ({ oldChannel, newChannel }),
+  debug: (message: string) => ({ message }),
+  warn: (message: string) => ({ message }),
+  emojiCreate: (emoji: GuildEmoji) => ({ emoji }),
+  emojiDelete: (emoji: GuildEmoji) => ({ emoji }),
+  emojiUpdate: (oldEmoji: GuildEmoji, newEmoji: GuildEmoji) => ({ oldEmoji, newEmoji }),
+  error: (error: Error) => ({ error }),
+  guildBanAdd: (ban: GuildBan) => ({ ban }),
+  guildBanRemove: (ban: GuildBan) => ({ ban }),
+  guildCreate: (guild: Guild) => ({ guild }),
+  guildDelete: (guild: Guild) => ({ guild }),
+  guildUnavailable: (guild: Guild) => ({ guild }),
+  guildIntegrationsUpdate: (guild: Guild) => ({ guild }),
+  guildMemberAdd: (member: GuildMember) => ({ member }),
+  guildMemberAvailable: (member: GuildMember | PartialGuildMember) => ({ member }),
+  guildMemberRemove: (member: GuildMember | PartialGuildMember) => ({ member }),
+  guildMembersChunk: (
+    members: Collection<Snowflake, GuildMember>,
+    guild: Guild,
+    data: { count: number; index: number; nonce: string | undefined }
+  ) => ({ members, guild, data }),
+  guildMemberSpeaking: (member: GuildMember | PartialGuildMember, speaking: Readonly<Speaking>) => ({
+    member,
+    speaking,
+  }),
+  guildMemberUpdate: (oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) => ({
+    oldMember,
+    newMember,
+  }),
+  guildUpdate: (oldGuild: Guild, newGuild: Guild) => ({ oldGuild, newGuild }),
+  inviteCreate: (invite: Invite) => ({ invite }),
+  inviteDelete: (invite: Invite) => ({ invite }),
+  message: (message: Message) => ({ message }),
+  messageDelete: (message: Message | PartialMessage) => ({ message }),
+  messageReactionRemoveAll: (message: Message | PartialMessage) => ({ message }),
+  messageReactionRemoveEmoji: (reaction: MessageReaction) => ({ reaction }),
+  messageDeleteBulk: (messages: Collection<Snowflake, Message | PartialMessage>) => ({ messages }),
+  messageReactionAdd: (reaction: MessageReaction, user: User | PartialUser) => ({ reaction, user }),
+  messageReactionRemove: (reaction: MessageReaction, user: User | PartialUser) => ({ reaction, user }),
+  messageUpdate: (oldMessage: Message | PartialMessage, newMessage: Message | PartialMessage) => ({
+    oldMessage,
+    newMessage,
+  }),
+  presenceUpdate: (oldPresence: Presence | undefined, newPresence: Presence) => ({ oldPresence, newPresence }),
+  rateLimit: (rateLimitData: RateLimitData) => ({ rateLimitData }),
+  invalidRequestWarning: (invalidRequestWarningData: InvalidRequestWarningData) => ({ invalidRequestWarningData }),
+  ready: () => ({}),
+  invalidated: () => ({}),
+  roleCreate: (role: Role) => ({ role }),
+  roleDelete: (role: Role) => ({ role }),
+  roleUpdate: (oldRole: Role, newRole: Role) => ({ oldRole, newRole }),
+  typingStart: (channel: Channel | PartialDMChannel, user: User | PartialUser) => ({ channel, user }),
+  userUpdate: (oldUser: User | PartialUser, newUser: User) => ({ oldUser, newUser }),
+  voiceStateUpdate: (oldState: VoiceState, newState: VoiceState) => ({ oldState, newState }),
+  webhookUpdate: (channel: TextChannel) => ({ channel }),
+  interaction: (interaction: Interaction) => ({ interaction }),
+  shardDisconnect: (closeEvent: CloseEvent, shardID: number) => ({ closeEvent, shardID }),
+  shardError: (error: Error, shardID: number) => ({ error, shardID }),
+  shardReady: (shardID: number, unavailableGuilds: Set<Snowflake> | undefined) => ({ shardID, unavailableGuilds }),
+  shardReconnecting: (shardID: number) => ({ shardID }),
+  shardResume: (shardID: number, replayedEvents: number) => ({ shardID, replayedEvents }),
+  raw: (...rawArgs: any[]) => ({ rawArgs }),
+};
+/* eslint-enable @typescript-eslint/explicit-module-boundary-types */
+
+// Validate the above types against DJS types
+type ValidFromDjsArgs = {
+  [key in keyof ExtendedClientEvents]: (...args: ExtendedClientEvents[key]) => unknown;
+};
+type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const fromDjsArgsIsValid: AssertEquals<typeof fromDjsArgs, ValidFromDjsArgs> = true;
+
+// Extended event types
+export type KnownEvents = {
+  [key in keyof typeof fromDjsArgs]: ReturnType<typeof fromDjsArgs[key]>;
+};
 
 export interface KnownGuildEvents extends KnownEvents {
   channelUpdate: {
-    channel: AnyGuildChannel;
-    oldChannel: OldGuildChannel | OldGuildTextChannel | OldGuildVoiceChannel;
+    oldChannel: GuildChannel;
+    newChannel: GuildChannel;
   };
-  messageCreate: {
-    message: Message<GuildTextableChannel | Uncached>;
+  channelDelete: {
+    channel: GuildChannel;
+  };
+  message: {
+    message: GuildMessage;
   };
   typingStart: {
-    channel: GuildTextableChannel | Uncached;
-    user: User | Uncached;
-    member: Member;
+    channel: GuildChannel;
+    user: User | PartialUser;
   };
 }
 
 export type EventArguments = KnownEvents;
 export type GuildEventArguments = KnownGuildEvents;
 
-type FromErisArgsObj = {
-  [P in keyof KnownEvents]: (...args: any[]) => KnownEvents[P];
-};
-
 export const globalEvents = [
-  "callCreate",
-  "callRing",
-  "callDelete",
-  "callUpdate",
   "debug",
-  "disconnect",
-  "friendSuggestionCreate",
-  "friendSuggestionDelete",
-  "guildAvailable",
+  "shardDisconnect",
+  "shardError",
+  "shardReady",
+  "shardReconnecting",
+  "shardResume",
+  "guildCreate",
   "guildUnavailable",
-  "hello",
-  "rawWS",
+  "error",
+  "rateLimit",
+  "invalidRequestWarning",
   "ready",
-  "unknown",
+  "invalidated",
   "userUpdate",
   "warn",
 ] as const;
@@ -350,83 +174,3 @@ export function isGlobalEvent(ev: ValidEvent): ev is GlobalEvent {
 export function isGuildEvent(ev: ValidEvent): ev is GuildEvent {
   return !globalEvents.includes(ev as any);
 }
-
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/**
- * Each property is a function that converts Eris event listener arguments to
- * Knub's event argument object.
- *
- * @see the EventListeners interface at the following link for Eris types:
- * @see https://github.com/abalabahaha/eris/blob/27bb9cd02ae990606ab50b32ac186da53d8ca45a/index.d.ts#L836
- */
-export const fromErisArgs: FromErisArgsObj = {
-  ready: () => ({}),
-  disconnect: () => ({}),
-  callCreate: (call) => ({ call }),
-  callRing: (call) => ({ call }),
-  callDelete: (call) => ({ call }),
-  callUpdate: (call, oldCall) => ({ call, oldCall }),
-  channelCreate: (channel) => ({ channel }),
-  channelDelete: (channel) => ({ channel }),
-  channelPinUpdate: (channel, timestamp, oldTimestamp) => ({ channel, timestamp, oldTimestamp }),
-  channelRecipientAdd: (channel, user) => ({ channel, user }),
-  channelRecipientRemove: (channel, user) => ({ channel, user }),
-  channelUpdate: (channel, oldChannel) => ({ channel, oldChannel }),
-  connect: (id) => ({ id }),
-  shardPreReady: (id) => ({ id }),
-  friendSuggestionCreate: (user, reasons) => ({ user, reasons }),
-  friendSuggestionDelete: (user) => ({ user }),
-  guildBanAdd: (guild, user) => ({ guild, user }),
-  guildBanRemove: (guild, user) => ({ guild, user }),
-  guildAvailable: (guild) => ({ guild }),
-  guildCreate: (guild) => ({ guild }),
-  guildDelete: (guild) => ({ guild }),
-  guildEmojisUpdate: (guild, emojis, oldEmojis) => ({ guild, emojis, oldEmojis }),
-  guildMemberAdd: (guild, member) => ({ guild, member }),
-  guildMemberChunk: (guild, members) => ({ guild, members }),
-  guildMemberRemove: (guild, member) => ({ guild, member }),
-  guildMemberUpdate: (guild, member, oldMember) => ({ guild, member, oldMember }),
-  guildRoleCreate: (guild, role) => ({ guild, role }),
-  guildRoleDelete: (guild, role) => ({ guild, role }),
-  guildRoleUpdate: (guild, role, oldRole) => ({ guild, role, oldRole }),
-  guildUnavailable: (guild) => ({ guild }),
-  unavailableGuildCreate: (guild) => ({ guild }),
-  guildUpdate: (guild, oldGuild) => ({ guild, oldGuild }),
-  hello: (trace, id) => ({ trace, id }),
-  inviteCreate: (guild, invite) => ({ guild, invite }),
-  inviteDelete: (guild, invite) => ({ guild, invite }),
-  messageCreate: (message) => ({ message }),
-  messageDelete: (message) => ({ message }),
-  messageReactionRemoveAll: (message) => ({ message }),
-  messageReactionRemoveEmoji: (message, emoji) => ({ message, emoji }),
-  messageDeleteBulk: (messages) => ({ messages }),
-  messageReactionAdd: (message, emoji, member) => ({ message, emoji, member }),
-  messageReactionRemove: (message, emoji, userID) => ({ message, emoji, userID }),
-  messageUpdate: (message, oldMessage) => ({ message, oldMessage }),
-  presenceUpdate: (other, oldPresence) => ({ other, oldPresence }),
-  rawREST: (request) => ({ request }),
-  rawWS: (packet, id) => ({ packet, id }),
-  relationshipAdd: (relationship) => ({ relationship }),
-  relationshipRemove: (relationship) => ({ relationship }),
-  relationshipUpdate: (relationship, oldRelationship) => ({ relationship, oldRelationship }),
-  typingStart: (channel, user, member) => ({ channel, user, member }),
-  userUpdate: (user, oldUser) => ({ user, oldUser }),
-  voiceChannelJoin: (member, newChannel) => ({ member, newChannel }),
-  voiceChannelLeave: (member, oldChannel) => ({ member, oldChannel }),
-  voiceChannelSwitch: (member, newChannel, oldChannel) => ({ member, newChannel, oldChannel }),
-  voiceStateUpdate: (member, oldState) => ({ member, oldState }),
-  warn: (message, id) => ({ message, id }),
-  debug: (message, id) => ({ message, id }),
-  webhooksUpdate: (data) => ({ data }),
-  shardReady: (id) => ({ id }),
-  shardResume: (id) => ({ id }),
-  shardDisconnect: (err, id) => ({ err, id }),
-  end: () => ({}),
-  start: () => ({}),
-  pong: (latency) => ({ latency }),
-  speakingStart: (userID) => ({ userID }),
-  speakingStop: (userID) => ({ userID }),
-  userDisconnect: (userID) => ({ userID }),
-  unknown: (packet, id) => ({ packet, id }),
-};
-/* eslint-enable @typescript-eslint/no-unsafe-assignment */

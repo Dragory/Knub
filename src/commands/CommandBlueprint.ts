@@ -2,7 +2,7 @@ import { CommandFn, PluginCommandConfig, TSignatureOrArray } from "./commandUtil
 import { BasePluginType } from "../plugins/pluginTypes";
 import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../plugins/PluginData";
 
-type CommandSource = "guild" | "group" | "dm";
+type CommandSource = "guild" | "dm";
 
 export interface CommandBlueprint<
   TPluginData extends AnyPluginData<any>,

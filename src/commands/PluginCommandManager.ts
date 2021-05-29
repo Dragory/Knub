@@ -13,10 +13,9 @@ import {
   PluginCommandDefinition,
   restrictCommandSource,
 } from "./commandUtils";
-import { Client, Message, PossiblyUncachedTextableChannel } from "eris";
+import { Client, Message } from "discord.js";
 import { AnyPluginData } from "../plugins/PluginData";
 import { CommandBlueprint } from "./CommandBlueprint";
-import { channelIsCached } from "../helpers";
 
 export interface PluginCommandManagerOpts {
   prefix?: string | RegExp;
@@ -75,17 +74,13 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     return this.manager.getAll();
   }
 
-  public async runFromMessage(msg: Message<PossiblyUncachedTextableChannel>): Promise<void> {
+  public async runFromMessage(msg: Message): Promise<void> {
     if (msg.content == null || msg.content.trim() === "") {
       return;
     }
 
-    if (!channelIsCached(msg.channel)) {
-      return;
-    }
-
     const command = await this.manager.findMatchingCommand(msg.content, {
-      message: msg as Message,
+      message: msg,
       pluginData: this.pluginData!,
     });
 
@@ -95,7 +90,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
 
     if (isError(command)) {
       const usageLine = getCommandSignature(command.command);
-      void msg.channel.createMessage(`${command.error}\nUsage: \`${usageLine}\``);
+      void msg.channel.send(`${command.error}\nUsage: \`${usageLine}\``);
       return;
     }
 

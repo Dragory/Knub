@@ -1,4 +1,3 @@
-import { Client, Guild } from "eris";
 import { PluginCommandManager } from "../commands/PluginCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { LockManager } from "../locks/LockManager";
@@ -9,6 +8,7 @@ import { BasePluginType } from "./pluginTypes";
 import { AnyPluginBlueprint } from "./PluginBlueprint";
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
+import { Client, Guild } from "discord.js";
 
 export type HasPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => boolean;
 export type GetPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => PluginPublicInterface<T>;
@@ -29,7 +29,7 @@ export type BasePluginData<TPluginType extends BasePluginType> = {
   loaded: boolean;
 
   /**
-   * The underlying Eris Client object
+   * The underlying d.js Client object
    */
   client: Client;
 

@@ -1,4 +1,4 @@
-import { Client, Guild } from "eris";
+import { Client, Guild } from "discord.js";
 import { EventEmitter } from "events";
 import { BaseConfig } from "./config/configTypes";
 import { get } from "./utils";
@@ -129,7 +129,7 @@ export class Knub<
       customArgumentTypes: {},
 
       sendErrorMessageFn(channel, body) {
-        void channel.createMessage({
+        void channel.send({
           embed: {
             description: body,
             color: parseInt("ee4400", 16),
@@ -138,7 +138,7 @@ export class Knub<
       },
 
       sendSuccessMessageFn(channel, body) {
-        void channel.createMessage({
+        void channel.send({
           embed: {
             description: body,
             color: parseInt("1ac600", 16),
@@ -154,12 +154,12 @@ export class Knub<
     }
   }
 
-  public async run(): Promise<void> {
+  public initialize(): void {
     const loadErrorInterval = setInterval(() => {
       this.log("info", "Still connecting...");
     }, 30 * 1000);
 
-    this.client.once("connect", () => {
+    this.client.once("shardReady", () => {
       clearInterval(loadErrorInterval);
       this.log("info", "Bot connected!");
     });
@@ -177,14 +177,11 @@ export class Knub<
       this.emit("loadingFinished");
     });
 
-    this.client.on("guildCreate", (guild: Guild) => {
-      this.log("info", `Joined guild: ${guild.id}`);
-      void this.loadGuild(guild.id);
-    });
-
-    this.client.on("guildAvailable", (guild: Guild) => {
-      this.log("info", `Guild available: ${guild.id}`);
-      void this.loadGuild(guild.id);
+    this.client.ws.on("GUILD_CREATE", (data: { id: string }) => {
+      setImmediate(() => {
+        this.log("info", `Guild available: ${data.id}`);
+        void this.loadGuild(data.id);
+      });
     });
 
     this.client.on("guildUnavailable", (guild: Guild) => {
@@ -192,13 +189,16 @@ export class Knub<
       void this.unloadGuild(guild.id);
     });
 
-    await this.client.connect();
+    this.client.on("guildDelete", (guild: Guild) => {
+      this.log("info", `Left guild: ${guild.id}`);
+      void this.unloadGuild(guild.id);
+    });
   }
 
   public async stop(): Promise<void> {
     await this.unloadAllGuilds();
     await this.unloadGlobalContext();
-    this.client.disconnect({ reconnect: false });
+    this.client.destroy();
   }
 
   public getAvailablePlugins(): GuildPluginMap {
@@ -352,7 +352,7 @@ export class Knub<
   }
 
   protected async loadAllAvailableGuilds(): Promise<void> {
-    const guilds: Guild[] = Array.from(this.client.guilds.values());
+    const guilds: Guild[] = Array.from(this.client.guilds.cache.values());
     const loadPromises = guilds.map((guild) => this.loadGuild(guild.id));
 
     await Promise.all(loadPromises);
@@ -365,7 +365,7 @@ export class Knub<
       }
 
       // Only load the guild if we're actually in the guild
-      if (!this.client.guilds.has(guildId)) {
+      if (!this.client.guilds.cache.has(guildId)) {
         return;
       }
 
@@ -481,7 +481,7 @@ export class Knub<
         GuildPluginData<any>
       >;
       preloadPluginData.context = "guild";
-      preloadPluginData.guild = this.client.guilds.get(ctx.guildId)!;
+      preloadPluginData.guild = this.client.guilds.cache.get(ctx.guildId)!;
 
       preloadPluginData.events = new GuildPluginEventManager(this.eventRelay);
       preloadPluginData.commands = new PluginCommandManager(this.client, {
@@ -522,7 +522,7 @@ export class Knub<
         }
 
         // Initialize messageCreate event listener for commands
-        fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
+        fullPluginData.events.on("message", ({ args: { message }, pluginData: _pluginData }) => {
           return _pluginData.commands.runFromMessage(message);
         });
       }
@@ -634,8 +634,8 @@ export class Knub<
         }
       }
 
-      // Initialize messageCreate event listener for commands
-      fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
+      // Initialize message event listener for commands
+      fullPluginData.events.on("message", ({ args: { message }, pluginData: _pluginData }) => {
         return _pluginData.commands.runFromMessage(message);
       });
 

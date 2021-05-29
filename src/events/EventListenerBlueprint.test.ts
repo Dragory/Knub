@@ -1,38 +1,31 @@
 import { typedGlobalEventListener, typedGuildEventListener } from "./EventListenerBlueprint";
-import {
-  AnyGuildChannel,
-  GroupChannel,
-  GuildTextableChannel,
-  Member,
-  Message,
-  PossiblyUncachedTextableChannel,
-  Uncached,
-} from "eris";
 import { BasePluginType } from "../plugins/pluginTypes";
 import { expect } from "chai";
+import { GuildMessage } from "../types";
+import { Channel, DMChannel, GuildChannel, Message } from "discord.js";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
 describe("typedGuildEventListener() helper", () => {
   it("(blueprint)", () => {
     const blueprint1 = typedGuildEventListener({
-      event: "messageCreate",
+      event: "message",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
 
-    expect(blueprint1.event).to.equal("messageCreate");
+    expect(blueprint1.event).to.equal("message");
     expect(blueprint1.listener).to.not.equal(undefined);
     expect(blueprint1.allowSelf).to.equal(undefined);
   });
 
   it("(blueprint) guild event argument inference", () => {
     typedGuildEventListener({
-      event: "messageCreate",
+      event: "message",
       listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result: AssertEquals<typeof args, { message: Message<GuildTextableChannel | Uncached> }> = true;
+        const result: AssertEquals<typeof args, { message: GuildMessage }> = true;
       },
     });
 
@@ -42,7 +35,7 @@ describe("typedGuildEventListener() helper", () => {
       listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result: AssertEquals<typeof args, { channel: AnyGuildChannel }> = true;
+        const result: AssertEquals<typeof args, { oldChannel: GuildChannel; newChannel: GuildChannel }> = true;
       },
     });
 
@@ -51,7 +44,7 @@ describe("typedGuildEventListener() helper", () => {
       listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result: AssertEquals<typeof args, { member: Member }> = true;
+        const result: AssertEquals<typeof args, { channel: GuildChannel }> = true;
       },
     });
   });
@@ -64,12 +57,12 @@ describe("typedGuildEventListener() helper", () => {
 
   it("<TPluginType>()(blueprint)", () => {
     const blueprint = typedGuildEventListener<CustomPluginType>()({
-      event: "messageCreate",
+      event: "message",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
 
-    expect(blueprint.event).to.equal("messageCreate");
+    expect(blueprint.event).to.equal("message");
     expect(blueprint.listener).to.not.equal(undefined);
     expect(blueprint.allowSelf).to.equal(undefined);
   });
@@ -78,23 +71,23 @@ describe("typedGuildEventListener() helper", () => {
 describe("typedGlobalEventListener() helper", () => {
   it("(blueprint)", () => {
     const blueprint = typedGlobalEventListener({
-      event: "messageCreate",
+      event: "message",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
 
-    expect(blueprint.event).to.equal("messageCreate");
+    expect(blueprint.event).to.equal("message");
     expect(blueprint.listener).to.not.equal(undefined);
     expect(blueprint.allowSelf).to.equal(undefined);
   });
 
   it("(blueprint) guild event argument inference", () => {
     typedGlobalEventListener({
-      event: "messageCreate",
+      event: "message",
       listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result: AssertEquals<typeof args, { message: Message<PossiblyUncachedTextableChannel> }> = true;
+        const result: AssertEquals<typeof args, { message: Message }> = true;
       },
     });
 
@@ -104,7 +97,7 @@ describe("typedGlobalEventListener() helper", () => {
       listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result: AssertEquals<typeof args, { channel: AnyGuildChannel | GroupChannel }> = true;
+        const result: AssertEquals<typeof args, { oldChannel: Channel; newChannel: Channel }> = true;
       },
     });
 
@@ -113,7 +106,7 @@ describe("typedGlobalEventListener() helper", () => {
       listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result: AssertEquals<typeof args, { member: Member | null }> = true;
+        const result: AssertEquals<typeof args, { channel: Channel | DMChannel }> = true;
       },
     });
   });
@@ -126,12 +119,12 @@ describe("typedGlobalEventListener() helper", () => {
 
   it("<TPluginType>()(blueprint)", () => {
     const blueprint = typedGlobalEventListener<CustomPluginType>()({
-      event: "messageCreate",
+      event: "message",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
 
-    expect(blueprint.event).to.equal("messageCreate");
+    expect(blueprint.event).to.equal("message");
     expect(blueprint.listener).to.not.equal(undefined);
     expect(blueprint.allowSelf).to.equal(undefined);
   });

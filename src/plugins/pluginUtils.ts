@@ -1,5 +1,4 @@
 import { BaseConfig, PermissionLevels } from "../config/configTypes";
-import { Guild, Member } from "eris";
 import {
   AnyPluginBlueprint,
   GlobalPluginBlueprint,
@@ -11,21 +10,21 @@ import path from "path";
 import _fs from "fs";
 import { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types";
 import { KeyOfMap } from "../utils";
+import { Guild, GuildMember, PartialGuildMember } from "discord.js";
 
 const fs = _fs.promises;
 
-interface PartialMember {
-  id: Member["id"];
-  roles: Member["roles"];
-}
-
-export function getMemberLevel(levels: PermissionLevels, member: PartialMember, guild: Guild): number {
+export function getMemberLevel(
+  levels: PermissionLevels,
+  member: GuildMember | PartialGuildMember,
+  guild: Guild
+): number {
   if (guild.ownerID === member.id) {
     return 99999;
   }
 
   for (const [id, level] of Object.entries(levels)) {
-    if (member.id === id || (member.roles && member.roles.includes(id))) {
+    if (member.id === id || (member.roles && member.roles?.cache.has(id))) {
       return level;
     }
   }
@@ -56,11 +55,8 @@ export function isGlobalBlueprintByContext(
   return true;
 }
 
-export type PluginPublicInterface<T extends AnyPluginBlueprint> = T["public"] extends PluginBlueprintPublicInterface<
-  any
->
-  ? ResolvedPluginBlueprintPublicInterface<T["public"]>
-  : null;
+export type PluginPublicInterface<T extends AnyPluginBlueprint> =
+  T["public"] extends PluginBlueprintPublicInterface<any> ? ResolvedPluginBlueprintPublicInterface<T["public"]> : null;
 
 /**
  * Load JSON config files from a "config" folder, relative to cwd

@@ -7,14 +7,14 @@ import {
   PluginOptions,
 } from "./configTypes";
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
-import { Channel, GuildChannel, Member, Message, Uncached, User } from "eris";
 import { getMemberLevel } from "../plugins/pluginUtils";
 import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
+import { Channel, GuildChannel, GuildMember, Message, PartialUser, User } from "discord.js";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string | null;
-  member?: Member | null;
+  member?: GuildMember | null;
   message?: Message | null;
 }
 
@@ -67,7 +67,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     };
   }
 
-  protected getMemberLevel(member: Member): number | null {
+  protected getMemberLevel(member: GuildMember): number | null {
     if (!isGuildPluginData(this.pluginData!)) {
       return null;
     }
@@ -110,7 +110,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const level = matchParams?.level ?? (member && this.getMemberLevel(member)) ?? null;
 
     // Passed roles -> passed member's roles
-    const memberRoles = matchParams.memberRoles || (member && member.roles);
+    const memberRoles = matchParams.memberRoles || (member && member.roles.cache.keyArray());
 
     const finalMatchParams: MatchParams = {
       level,
@@ -135,7 +135,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       userId: msg.author.id,
       channelId: msg.channel.id,
       categoryId: (msg.channel as GuildChannel).parentID,
-      memberRoles: msg.member ? msg.member.roles : [],
+      memberRoles: msg.member ? msg.member.roles.cache.keyArray() : [],
     });
   }
 
@@ -146,18 +146,18 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     });
   }
 
-  public getForUser(user: User | Uncached): Promise<TPluginType["config"]> {
+  public getForUser(user: User | PartialUser): Promise<TPluginType["config"]> {
     return this.getMatchingConfig({
       userId: user.id,
     });
   }
 
-  public getForMember(member: Member): Promise<TPluginType["config"]> {
+  public getForMember(member: GuildMember): Promise<TPluginType["config"]> {
     const level = this.getMemberLevel(member);
     return this.getMatchingConfig({
       level,
       userId: member.user.id,
-      memberRoles: member.roles,
+      memberRoles: member.roles.cache.keyArray(),
     });
   }
 }
