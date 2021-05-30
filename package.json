@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "discord-api-types": "^0.18.1",
-    "discord.js": "github:monbrey/discord.js#9da6f1cd9763fffcc506cfbd7926190365c875c3",
+    "discord.js": "github:monbrey/discord.js#9c42f571093b2565df28b756fdca4ac59cad0fe3",
     "knub-command-manager": "^9.1.0",
     "ts-essentials": "^6.0.7"
   },
