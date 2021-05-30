@@ -1,3 +1,11 @@
+# 30.0.0-beta.38
+* **BREAKING CHANGE:** As an experiment, this release of Knub uses **discord.js** instead of **Eris**
+  * This means many events have different names and objects behave differently. This is *not* a drop-in replacement for beta.37.
+  * The specific d.js version used is a PR with support for message components. This will be switched to a pinned master branch release once the PR is merged.
+    * Version: `monbrey/discord.js#9c42f571093b2565df28b756fdca4ac59cad0fe3`
+  * Many `resolveX` helpers have been removed in favor of d.js's `resolve()` functions on Manager objects
+  * `waitForReaction` helper has been removed in favor of using buttons. More helpers for buttons to follow.
+
 # 30.0.0-beta.37
 * **BREAKING CHANGE:** Knub now supports and expects Eris ^0.15.1
 * **BREAKING CHANGE:** Rename `onLoad` to `afterLoad` and `onUnload` to `afterUnload` for clarity
