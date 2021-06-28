@@ -28,8 +28,9 @@
     ]
   },
   "dependencies": {
+    "@discordjs/voice": "^0.5.1",
     "discord-api-types": "^0.18.1",
-    "discord.js": "github:monbrey/discord.js#9c42f571093b2565df28b756fdca4ac59cad0fe3",
+    "discord.js": "^13.0.0-dev.e37ef3af2151e556527ccd8e98ec531bdcc0ed70",
     "knub-command-manager": "^9.1.0",
     "ts-essentials": "^6.0.7"
   },
