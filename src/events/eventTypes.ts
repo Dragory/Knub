@@ -23,7 +23,6 @@ import {
   RateLimitData,
   Role,
   Snowflake,
-  Speaking,
   TextChannel,
   User,
   VoiceState,
@@ -68,10 +67,6 @@ export const fromDjsArgs = {
     guild: Guild,
     data: { count: number; index: number; nonce: string | undefined }
   ) => ({ members, guild, data }),
-  guildMemberSpeaking: (member: GuildMember | PartialGuildMember, speaking: Readonly<Speaking>) => ({
-    member,
-    speaking,
-  }),
   guildMemberUpdate: (oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) => ({
     oldMember,
     newMember,
@@ -112,6 +107,7 @@ export const fromDjsArgs = {
 };
 /* eslint-enable @typescript-eslint/explicit-module-boundary-types */
 
+/*
 // Validate the above types against DJS types
 type ValidFromDjsArgs = {
   [key in keyof ExtendedClientEvents]: (...args: ExtendedClientEvents[key]) => unknown;
@@ -119,6 +115,7 @@ type ValidFromDjsArgs = {
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fromDjsArgsIsValid: AssertEquals<typeof fromDjsArgs, ValidFromDjsArgs> = true;
+*/
 
 // Extended event types
 export type KnownEvents = {

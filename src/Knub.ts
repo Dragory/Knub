@@ -130,19 +130,23 @@ export class Knub<
 
       sendErrorMessageFn(channel, body) {
         void channel.send({
-          embed: {
-            description: body,
-            color: parseInt("ee4400", 16),
-          },
+          embeds: [
+            {
+              description: body,
+              color: parseInt("ee4400", 16),
+            },
+          ],
         });
       },
 
       sendSuccessMessageFn(channel, body) {
         void channel.send({
-          embed: {
-            description: body,
-            color: parseInt("1ac600", 16),
-          },
+          embeds: [
+            {
+              description: body,
+              color: parseInt("1ac600", 16),
+            },
+          ],
         });
       },
     };
@@ -365,7 +369,7 @@ export class Knub<
       }
 
       // Only load the guild if we're actually in the guild
-      if (!this.client.guilds.cache.has(guildId)) {
+      if (!this.client.guilds.resolve(guildId as any)) {
         return;
       }
 
@@ -481,7 +485,7 @@ export class Knub<
         GuildPluginData<any>
       >;
       preloadPluginData.context = "guild";
-      preloadPluginData.guild = this.client.guilds.cache.get(ctx.guildId)!;
+      preloadPluginData.guild = this.client.guilds.resolve(ctx.guildId as any)!;
 
       preloadPluginData.events = new GuildPluginEventManager(this.eventRelay);
       preloadPluginData.commands = new PluginCommandManager(this.client, {

@@ -24,7 +24,7 @@ export function getMemberLevel(
   }
 
   for (const [id, level] of Object.entries(levels)) {
-    if (member.id === id || (member.roles && member.roles?.cache.has(id))) {
+    if (member.id === id || (member.roles && member.roles?.cache.has(id as any))) {
       return level;
     }
   }
