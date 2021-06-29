@@ -23,7 +23,10 @@ import {
   RateLimitData,
   Role,
   Snowflake,
+  StageInstance,
   TextChannel,
+  ThreadChannel,
+  ThreadMember,
   User,
   VoiceState,
 } from "discord.js";
@@ -98,6 +101,25 @@ export const fromDjsArgs = {
   voiceStateUpdate: (oldState: VoiceState, newState: VoiceState) => ({ oldState, newState }),
   webhookUpdate: (channel: TextChannel) => ({ channel }),
   interaction: (interaction: Interaction) => ({ interaction }),
+  stageInstanceCreate: (stageInstance: StageInstance) => ({ stageInstance }),
+  stageInstanceDelete: (stageInstance: StageInstance) => ({ stageInstance }),
+  // eslint-disable-next-line max-len
+  stageInstanceUpdate: (oldStageInstance: StageInstance, newStageInstance: StageInstance) => ({
+    oldStageInstance,
+    newStageInstance,
+  }),
+  threadCreate: (thread: ThreadChannel) => ({ thread }),
+  threadDelete: (thread: ThreadChannel) => ({ thread }),
+  threadListSync: (threads: Collection<Snowflake, ThreadChannel>) => {
+    threads;
+  },
+  // eslint-disable-next-line max-len
+  threadMembersUpdate: (
+    oldMembers: Collection<Snowflake, ThreadMember>,
+    newMembers: Collection<Snowflake, ThreadMember>
+  ) => ({ oldMembers, newMembers }),
+  threadMemberUpdate: (oldMember: ThreadMember, newMember: ThreadMember) => ({ oldMember, newMember }),
+  threadUpdate: (oldThread: ThreadChannel, newThread: ThreadChannel) => ({ oldThread, newThread }),
   shardDisconnect: (closeEvent: CloseEvent, shardID: number) => ({ closeEvent, shardID }),
   shardError: (error: Error, shardID: number) => ({ error, shardID }),
   shardReady: (shardID: number, unavailableGuilds: Set<Snowflake> | undefined) => ({ shardID, unavailableGuilds }),
