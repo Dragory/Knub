@@ -8,7 +8,7 @@ import {
 } from "knub-command-manager";
 import { disableCodeBlocks } from "../helpers";
 import { getChannelId, getRoleId, getUserId } from "../utils";
-import { Channel, GuildChannel, GuildMember, Role, TextChannel, User, VoiceChannel } from "discord.js";
+import { Channel, GuildChannel, GuildMember, Role, Snowflake, TextChannel, User, VoiceChannel } from "discord.js";
 import { AnyPluginData } from "../plugins/PluginData";
 import { CommandContext } from "./commandUtils";
 
@@ -35,7 +35,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid user`);
     }
 
-    const user = client.users.cache.get(userId as any);
+    const user = client.users.cache.get(userId as Snowflake);
     if (!user) {
       throw new TypeConversionError(`Could not find user for user id \`${userId}\``);
     }
@@ -53,7 +53,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid user id`);
     }
 
-    const user = client.users.cache.get(userId as any);
+    const user = client.users.cache.get(userId as Snowflake);
     if (!user) {
       throw new TypeConversionError(`Could not find user for user id \`${userId}\``);
     }
@@ -77,7 +77,7 @@ export const baseTypeConverters = {
     }
 
     const guild = message.channel.guild;
-    const channel = guild.channels.cache.get(channelId as any);
+    const channel = guild.channels.cache.get(channelId as Snowflake);
     if (!channel) {
       throw new TypeConversionError(`Could not find channel for channel id \`${channelId}\``);
     }
@@ -96,7 +96,7 @@ export const baseTypeConverters = {
     }
 
     const guild = message.channel.guild;
-    const channel = guild.channels.cache.get(channelId as any);
+    const channel = guild.channels.cache.get(channelId as Snowflake);
     if (!channel) {
       throw new TypeConversionError(`Could not find channel for channel id \`${channelId}\``);
     }
@@ -119,7 +119,7 @@ export const baseTypeConverters = {
     }
 
     const guild = message.channel.guild;
-    const channel = guild.channels.cache.get(channelId as any);
+    const channel = guild.channels.cache.get(channelId as Snowflake);
     if (!channel) {
       throw new TypeConversionError(`Could not find channel for channel id \`${channelId}\``);
     }
@@ -141,7 +141,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid role`);
     }
 
-    const role = message.channel.guild.roles.cache.get(roleId as any);
+    const role = message.channel.guild.roles.cache.get(roleId as Snowflake);
     if (!role) {
       throw new TypeConversionError(`Could not find role for role id \`${roleId}\``);
     }

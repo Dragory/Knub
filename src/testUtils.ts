@@ -9,6 +9,7 @@ import {
   GuildManager,
   Message,
   NewsChannel,
+  Snowflake,
   TextChannel,
   User,
   UserManager,
@@ -101,7 +102,7 @@ export function createMockUser(client: Client, data = {}): User {
 let mockChannelId = 30000;
 export function createMockTextChannel(client: Client, guildId: string, data = {}): TextChannel {
   const id = (++mockChannelId).toString();
-  const guild = client.guilds.cache.get(guildId as any)!;
+  const guild = client.guilds.cache.get(guildId as Snowflake)!;
 
   /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
   const mockTextChannel = guild.channels.add(
