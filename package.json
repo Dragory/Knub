@@ -30,7 +30,7 @@
   "dependencies": {
     "@discordjs/voice": "^0.5.1",
     "discord-api-types": "^0.18.1",
-    "discord.js": "^13.0.0-dev.edab5af.1624996138",
+    "discord.js": "^13.0.0-dev.64f093f.1625054868",
     "knub-command-manager": "^9.1.0",
     "ts-essentials": "^6.0.7"
   },
