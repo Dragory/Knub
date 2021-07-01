@@ -44,6 +44,17 @@ export const eventToGuild: EventToGuild = {
   typingStart: ({ channel }) => (channel as TextChannel)?.guild,
   voiceStateUpdate: ({ oldState, newState }) => newState?.guild ?? oldState?.guild,
   interaction: ({ interaction }) => interaction.guild ?? undefined,
+  threadCreate: ({ thread }) => thread.guild,
+  threadDelete: ({ thread }) => thread.guild,
+  threadUpdate: ({ oldThread, newThread }) => newThread.guild ?? oldThread.guild,
+  threadMemberUpdate: ({ oldMember, newMember }) =>
+    newMember.guildMember?.guild ?? oldMember.guildMember?.guild ?? undefined,
+  threadMembersUpdate: ({ oldMembers, newMembers }) =>
+    newMembers.first()?.guildMember?.guild ?? oldMembers.first()?.guildMember?.guild ?? undefined,
+  stageInstanceCreate: ({ stageInstance }) => stageInstance.guild ?? undefined,
+  stageInstanceDelete: ({ stageInstance }) => stageInstance.guild ?? undefined,
+  stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
+    newStageInstance.guild ?? oldStageInstance.guild ?? undefined,
 };
 
 export const eventToUser: EventToUser = {
@@ -77,6 +88,15 @@ export const eventToChannel: EventToChannel = {
   typingStart: ({ channel }) => channel,
   voiceStateUpdate: ({ oldState, newState }) => newState?.channel ?? oldState?.channel ?? undefined,
   interaction: ({ interaction }) => interaction.channel ?? undefined,
+  threadCreate: ({ thread }) => thread,
+  threadDelete: ({ thread }) => thread,
+  threadUpdate: ({ oldThread, newThread }) => newThread ?? oldThread,
+  threadMembersUpdate: ({ oldMembers, newMembers }) =>
+    newMembers.first()?.thread ?? oldMembers.first()?.thread ?? undefined,
+  stageInstanceCreate: ({ stageInstance }) => stageInstance.channel ?? undefined,
+  stageInstanceDelete: ({ stageInstance }) => stageInstance.channel ?? undefined,
+  stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
+    newStageInstance.channel ?? oldStageInstance.channel ?? undefined,
 };
 
 export const eventToMessage: EventToMessage = {

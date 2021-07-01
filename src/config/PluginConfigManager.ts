@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
 import {
   ConfigPreprocessorFn,
   ConfigValidatorFn,
@@ -110,7 +111,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const level = matchParams?.level ?? (member && this.getMemberLevel(member)) ?? null;
 
     // Passed roles -> passed member's roles
-    const memberRoles = matchParams.memberRoles || (member && member.roles.cache.keyArray());
+    const memberRoles = matchParams.memberRoles ?? (member && member.roles?.cache.keyArray()) ?? [];
 
     const finalMatchParams: MatchParams = {
       level,

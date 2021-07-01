@@ -79,7 +79,7 @@ export function getRoleId(str: string): string | null {
 
 export const noop = (): void => {}; // eslint-disable-line @typescript-eslint/no-empty-function
 
-export const typedKeys = (Object.keys as unknown) as <T = Record<string, unknown>>(o: T) => Array<keyof T>;
+export const typedKeys = Object.keys as unknown as <T = Record<string, unknown>>(o: T) => Array<keyof T>;
 
 // From https://stackoverflow.com/a/60737746/316944
 export type KeyOfMap<M extends Map<unknown, unknown>> = M extends Map<infer K, unknown> ? K : never;

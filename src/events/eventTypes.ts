@@ -103,7 +103,6 @@ export const fromDjsArgs = {
   interaction: (interaction: Interaction) => ({ interaction }),
   stageInstanceCreate: (stageInstance: StageInstance) => ({ stageInstance }),
   stageInstanceDelete: (stageInstance: StageInstance) => ({ stageInstance }),
-  // eslint-disable-next-line max-len
   stageInstanceUpdate: (oldStageInstance: StageInstance, newStageInstance: StageInstance) => ({
     oldStageInstance,
     newStageInstance,
@@ -113,7 +112,6 @@ export const fromDjsArgs = {
   threadListSync: (threads: Collection<Snowflake, ThreadChannel>) => {
     threads;
   },
-  // eslint-disable-next-line max-len
   threadMembersUpdate: (
     oldMembers: Collection<Snowflake, ThreadMember>,
     newMembers: Collection<Snowflake, ThreadMember>
