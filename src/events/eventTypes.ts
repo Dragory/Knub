@@ -109,9 +109,7 @@ export const fromDjsArgs = {
   }),
   threadCreate: (thread: ThreadChannel) => ({ thread }),
   threadDelete: (thread: ThreadChannel) => ({ thread }),
-  threadListSync: (threads: Collection<Snowflake, ThreadChannel>) => {
-    threads;
-  },
+  threadListSync: (threads: Collection<Snowflake, ThreadChannel>) => ({ threads }),
   threadMembersUpdate: (
     oldMembers: Collection<Snowflake, ThreadMember>,
     newMembers: Collection<Snowflake, ThreadMember>

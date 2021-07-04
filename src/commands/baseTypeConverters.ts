@@ -101,7 +101,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`Could not find channel for channel id \`${channelId}\``);
     }
 
-    if (!channel.isText) {
+    if (!channel.isText()) {
       throw new TypeConversionError(`Channel \`${channel.name}\` is not a text channel`);
     }
 
