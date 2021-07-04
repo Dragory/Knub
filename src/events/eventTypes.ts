@@ -77,7 +77,7 @@ export const fromDjsArgs = {
   guildUpdate: (oldGuild: Guild, newGuild: Guild) => ({ oldGuild, newGuild }),
   inviteCreate: (invite: Invite) => ({ invite }),
   inviteDelete: (invite: Invite) => ({ invite }),
-  message: (message: Message) => ({ message }),
+  messageCreate: (message: Message) => ({ message }),
   messageDelete: (message: Message | PartialMessage) => ({ message }),
   messageReactionRemoveAll: (message: Message | PartialMessage) => ({ message }),
   messageReactionRemoveEmoji: (reaction: MessageReaction) => ({ reaction }),
@@ -150,7 +150,7 @@ export interface KnownGuildEvents extends KnownEvents {
   channelDelete: {
     channel: GuildChannel;
   };
-  message: {
+  messageCreate: {
     message: GuildMessage;
   };
   typingStart: {

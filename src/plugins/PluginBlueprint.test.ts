@@ -39,7 +39,7 @@ describe("PluginBlueprint", () => {
 
           commands: [typedGuildCommand({ trigger: "foo", permission: null, run: noop })],
 
-          events: [typedGuildEventListener({ event: "message", listener: noop })],
+          events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
           afterLoad(pluginData) {
             setTimeout(() => {
@@ -92,7 +92,7 @@ describe("PluginBlueprint", () => {
 
           events: [
             typedGuildEventListener({
-              event: "message",
+              event: "messageCreate",
               listener({ pluginData, args }) {
                 assert.strictEqual(pluginData.guild.id, args.message.channel.guild.id);
                 guildCounts[pluginData.guild.id]++;
@@ -228,7 +228,7 @@ describe("PluginBlueprint", () => {
           name: "plugin-to-load",
           events: [
             typedGlobalEventListener({
-              event: "message",
+              event: "messageCreate",
               listener({ pluginData, args }) {
                 assert.ok(isGlobalPluginData(pluginData));
                 assert.strictEqual((args.message.channel as TextChannel).guild.id, guild.id);
@@ -1218,7 +1218,7 @@ describe("PluginBlueprint", () => {
 
           commands: [typedGuildCommand({ trigger: "foo", permission: null, run: noop })],
 
-          events: [typedGuildEventListener({ event: "message", listener: noop })],
+          events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
           afterLoad(pluginData) {
             // The command above should *not* be loaded
@@ -1574,7 +1574,7 @@ describe("PluginBlueprint", () => {
         let msgEvFnCallNum = 0;
 
         const messageEv = typedGuildEventListener({
-          event: "message",
+          event: "messageCreate",
           listener() {
             msgEvFnCallNum++;
           },

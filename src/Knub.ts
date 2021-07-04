@@ -526,7 +526,7 @@ export class Knub<
         }
 
         // Initialize messageCreate event listener for commands
-        fullPluginData.events.on("message", ({ args: { message }, pluginData: _pluginData }) => {
+        fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
           return _pluginData.commands.runFromMessage(message);
         });
       }
@@ -639,7 +639,7 @@ export class Knub<
       }
 
       // Initialize message event listener for commands
-      fullPluginData.events.on("message", ({ args: { message }, pluginData: _pluginData }) => {
+      fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
         return _pluginData.commands.runFromMessage(message);
       });
 

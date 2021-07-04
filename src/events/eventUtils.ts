@@ -33,7 +33,7 @@ export const eventToGuild: EventToGuild = {
   roleCreate: ({ role }) => role.guild,
   roleDelete: ({ role }) => role.guild,
   roleUpdate: ({ newRole }) => newRole.guild,
-  message: ({ message }) => (message.channel as TextChannel).guild,
+  messageCreate: ({ message }) => (message.channel as TextChannel).guild,
   messageDelete: ({ message }) => (message.channel as TextChannel).guild,
   messageDeleteBulk: ({ messages }) => (messages.first()?.channel as TextChannel)?.guild,
   messageReactionAdd: ({ reaction }) => (reaction.message.channel as TextChannel)?.guild,
@@ -63,7 +63,7 @@ export const eventToUser: EventToUser = {
   guildMemberAdd: ({ member }) => member.user,
   guildMemberRemove: ({ member }) => member.user ?? undefined,
   guildMemberUpdate: ({ newMember }) => newMember.user,
-  message: ({ message }) => message.author,
+  messageCreate: ({ message }) => message.author,
   messageDelete: ({ message }) => (message as Message).author,
   messageReactionAdd: ({ user }) => user,
   messageUpdate: ({ newMessage }) => newMessage.author ?? undefined,
@@ -75,7 +75,7 @@ export const eventToUser: EventToUser = {
 };
 
 export const eventToChannel: EventToChannel = {
-  message: ({ message }) => message.channel,
+  messageCreate: ({ message }) => message.channel,
   messageDelete: ({ message }) => message.channel,
   messageDeleteBulk: ({ messages }) => messages.first()?.channel,
   messageReactionAdd: ({ reaction }) => reaction.message.channel,
@@ -100,7 +100,7 @@ export const eventToChannel: EventToChannel = {
 };
 
 export const eventToMessage: EventToMessage = {
-  message: ({ message }) => message,
+  messageCreate: ({ message }) => message,
   messageDelete: ({ message }) => (message instanceof Message ? message : undefined),
   messageDeleteBulk: ({ messages }) => {
     const message = messages.first();
