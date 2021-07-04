@@ -19,7 +19,7 @@ export function getMemberLevel(
   member: GuildMember | PartialGuildMember,
   guild: Guild
 ): number {
-  if (guild.ownerID === member.id) {
+  if (guild.ownerId === member.id) {
     return 99999;
   }
 
