@@ -43,7 +43,7 @@ export const eventToGuild: EventToGuild = {
   presenceUpdate: ({ newPresence }) => newPresence.member?.guild,
   typingStart: ({ channel }) => (channel as TextChannel)?.guild,
   voiceStateUpdate: ({ oldState, newState }) => newState?.guild ?? oldState?.guild,
-  interaction: ({ interaction }) => interaction.guild ?? undefined,
+  interactionCreate: ({ interaction }) => interaction.guild ?? undefined,
   threadCreate: ({ thread }) => thread.guild,
   threadDelete: ({ thread }) => thread.guild,
   threadUpdate: ({ oldThread, newThread }) => newThread.guild ?? oldThread.guild,
@@ -71,7 +71,7 @@ export const eventToUser: EventToUser = {
   typingStart: ({ user }) => user,
   userUpdate: ({ newUser }) => newUser,
   voiceStateUpdate: ({ newState }) => newState.member?.user,
-  interaction: ({ interaction }) => interaction.user ?? undefined,
+  interactionCreate: ({ interaction }) => interaction.user ?? undefined,
 };
 
 export const eventToChannel: EventToChannel = {
@@ -87,7 +87,7 @@ export const eventToChannel: EventToChannel = {
   channelUpdate: ({ newChannel }) => newChannel,
   typingStart: ({ channel }) => channel,
   voiceStateUpdate: ({ oldState, newState }) => newState?.channel ?? oldState?.channel ?? undefined,
-  interaction: ({ interaction }) => interaction.channel ?? undefined,
+  interactionCreate: ({ interaction }) => interaction.channel ?? undefined,
   threadCreate: ({ thread }) => thread,
   threadDelete: ({ thread }) => thread,
   threadUpdate: ({ oldThread, newThread }) => newThread ?? oldThread,
@@ -110,5 +110,6 @@ export const eventToMessage: EventToMessage = {
   messageReactionRemove: ({ reaction }) => (reaction.message instanceof Message ? reaction.message : undefined),
   messageReactionRemoveAll: ({ message }) => (message instanceof Message ? message : undefined),
   messageUpdate: ({ newMessage }) => (newMessage instanceof Message ? newMessage : undefined),
-  interaction: ({ interaction }) => (interaction.isMessageComponent() ? (interaction.message as Message) : undefined),
+  interactionCreate: ({ interaction }) =>
+    interaction.isMessageComponent() ? (interaction.message as Message) : undefined,
 };
