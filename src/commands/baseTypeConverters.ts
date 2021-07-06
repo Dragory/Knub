@@ -85,7 +85,7 @@ export const baseTypeConverters = {
     return channel;
   },
 
-  textChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): TextChannel & ThreadChannel {
+  textChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): TextChannel | ThreadChannel {
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
@@ -105,7 +105,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`Channel \`${channel.name}\` is not a text channel`);
     }
 
-    return channel as TextChannel & ThreadChannel;
+    return channel as TextChannel | ThreadChannel;
   },
 
   voiceChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): VoiceChannel {
