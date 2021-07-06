@@ -43,6 +43,7 @@ import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
 import { EventRelay } from "./events/EventRelay";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 import { Queue } from "./Queue";
+import { GatewayGuildCreateDispatchData } from "discord-api-types";
 
 const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>> = {
   guildPlugins: [],
@@ -181,13 +182,9 @@ export class Knub<
       this.emit("loadingFinished");
     });
 
-    this.client.ws.on("GUILD_CREATE", (data: any) => {
+    this.client.ws.on("GUILD_CREATE", (data: GatewayGuildCreateDispatchData) => {
       setImmediate(() => {
-        // eslint-disable-next-line max-len
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions
         this.log("info", `Guild available: ${data.id}`);
-        // eslint-disable-next-line max-len
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions
         void this.loadGuild(data.id);
       });
     });

@@ -101,8 +101,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const channelId = matchParams.channelId || (message && message.channel && message.channel.id);
 
     // Passed category id -> passed message's channel's category id
-    const categoryId =
-      matchParams.categoryId || (message?.channel && (message.channel as GuildChannel).parentId);
+    const categoryId = matchParams.categoryId || (message?.channel && (message.channel as GuildChannel).parentId);
 
     // Passed member -> passed message's member
     const member = matchParams.member || (message && message.member);
@@ -111,7 +110,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const level = matchParams?.level ?? (member && this.getMemberLevel(member)) ?? null;
 
     // Passed roles -> passed member's roles
-    const memberRoles = matchParams.memberRoles ?? member?.roles.cache.keyArray() ?? [];
+    const memberRoles = matchParams.memberRoles ?? member?.roles?.cache?.keyArray() ?? [];
 
     const finalMatchParams: MatchParams = {
       level,

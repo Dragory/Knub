@@ -180,7 +180,7 @@ export const baseCommandParameterTypeHelpers = {
   user: createTypeHelper<User>(baseTypeConverters.user),
   member: createTypeHelper<GuildMember>(baseTypeConverters.member),
   channel: createTypeHelper<Channel>(baseTypeConverters.channel),
-  textChannel: createTypeHelper<TextChannel>(baseTypeConverters.textChannel),
+  textChannel: createTypeHelper<TextChannel | ThreadChannel>(baseTypeConverters.textChannel),
   voiceChannel: createTypeHelper<VoiceChannel>(baseTypeConverters.voiceChannel),
   role: createTypeHelper<Role>(baseTypeConverters.role),
   userId: createTypeHelper<string>(baseTypeConverters.userId),
