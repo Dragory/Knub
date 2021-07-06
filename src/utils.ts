@@ -2,6 +2,8 @@
  * @file Internal utility functions/types
  */
 
+import { Snowflake } from "discord.js";
+
 /** */
 export type Awaitable<T = unknown> = T | Promise<T>;
 
@@ -29,48 +31,48 @@ export const channelMentionRegex = /^<#([0-9]+)>$/;
 export const roleMentionRegex = /^<@&([0-9]+)>$/;
 export const snowflakeRegex = /^[1-9][0-9]{5,19}$/;
 
-export function getUserId(str: string): string | null {
+export function getUserId(str: string): Snowflake | null {
   str = str.trim();
 
   if (str.match(snowflakeRegex)) {
     // User ID
-    return str;
+    return str as Snowflake;
   } else {
     const mentionMatch = str.match(userMentionRegex);
     if (mentionMatch) {
-      return mentionMatch[1];
+      return mentionMatch[1] as Snowflake;
     }
   }
 
   return null;
 }
 
-export function getChannelId(str: string): string | null {
+export function getChannelId(str: string): Snowflake | null {
   str = str.trim();
 
   if (str.match(snowflakeRegex)) {
     // Channel ID
-    return str;
+    return str as Snowflake;
   } else {
     const mentionMatch = str.match(channelMentionRegex);
     if (mentionMatch) {
-      return mentionMatch[1];
+      return mentionMatch[1] as Snowflake;
     }
   }
 
   return null;
 }
 
-export function getRoleId(str: string): string | null {
+export function getRoleId(str: string): Snowflake | null {
   str = str.trim();
 
   if (str.match(snowflakeRegex)) {
     // Role ID
-    return str;
+    return str as Snowflake;
   } else {
     const mentionMatch = str.match(roleMentionRegex);
     if (mentionMatch) {
-      return mentionMatch[1];
+      return mentionMatch[1] as Snowflake;
     }
   }
 

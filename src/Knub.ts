@@ -181,9 +181,13 @@ export class Knub<
       this.emit("loadingFinished");
     });
 
-    this.client.ws.on("GUILD_CREATE", (data: { id: string }) => {
+    this.client.ws.on("GUILD_CREATE", (data: any) => {
       setImmediate(() => {
+        // eslint-disable-next-line max-len
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions
         this.log("info", `Guild available: ${data.id}`);
+        // eslint-disable-next-line max-len
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions
         void this.loadGuild(data.id);
       });
     });

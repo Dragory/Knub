@@ -2,7 +2,7 @@ import { typedGlobalEventListener, typedGuildEventListener } from "./EventListen
 import { BasePluginType } from "../plugins/pluginTypes";
 import { expect } from "chai";
 import { GuildMessage } from "../types";
-import { Channel, DMChannel, GuildChannel, Message } from "discord.js";
+import { Channel, GuildChannel, Message, PartialDMChannel } from "discord.js";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
@@ -106,7 +106,7 @@ describe("typedGlobalEventListener() helper", () => {
       listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result: AssertEquals<typeof args, { channel: Channel | DMChannel }> = true;
+        const result: AssertEquals<typeof args, { channel: Channel | PartialDMChannel }> = true;
       },
     });
   });

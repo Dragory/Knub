@@ -47,6 +47,7 @@ export const eventToGuild: EventToGuild = {
   threadCreate: ({ thread }) => thread.guild,
   threadDelete: ({ thread }) => thread.guild,
   threadUpdate: ({ oldThread, newThread }) => newThread.guild ?? oldThread.guild,
+  threadListSync: ({ threads }) => threads.first()?.guild ?? undefined,
   threadMemberUpdate: ({ oldMember, newMember }) =>
     newMember.guildMember?.guild ?? oldMember.guildMember?.guild ?? undefined,
   threadMembersUpdate: ({ oldMembers, newMembers }) =>
