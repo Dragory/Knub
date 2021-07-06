@@ -2,14 +2,14 @@ import { typedGlobalEventListener, typedGuildEventListener } from "./EventListen
 import { BasePluginType } from "../plugins/pluginTypes";
 import { expect } from "chai";
 import { GuildMessage } from "../types";
-import { Channel, DMChannel, GuildChannel, Message } from "discord.js";
+import { Channel, GuildChannel, Message, PartialDMChannel } from "discord.js";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
 describe("typedGuildEventListener() helper", () => {
   it("(blueprint)", () => {
     const blueprint1 = typedGuildEventListener({
-      event: "message",
+      event: "messageCreate",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
@@ -21,7 +21,7 @@ describe("typedGuildEventListener() helper", () => {
 
   it("(blueprint) guild event argument inference", () => {
     typedGuildEventListener({
-      event: "message",
+      event: "messageCreate",
       listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -57,7 +57,7 @@ describe("typedGuildEventListener() helper", () => {
 
   it("<TPluginType>()(blueprint)", () => {
     const blueprint = typedGuildEventListener<CustomPluginType>()({
-      event: "message",
+      event: "messageCreate",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
@@ -71,7 +71,7 @@ describe("typedGuildEventListener() helper", () => {
 describe("typedGlobalEventListener() helper", () => {
   it("(blueprint)", () => {
     const blueprint = typedGlobalEventListener({
-      event: "message",
+      event: "messageCreate",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
@@ -83,7 +83,7 @@ describe("typedGlobalEventListener() helper", () => {
 
   it("(blueprint) guild event argument inference", () => {
     typedGlobalEventListener({
-      event: "message",
+      event: "messageCreate",
       listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -106,7 +106,7 @@ describe("typedGlobalEventListener() helper", () => {
       listener({ args }) {
         // Test type inference
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const result: AssertEquals<typeof args, { channel: Channel | DMChannel }> = true;
+        const result: AssertEquals<typeof args, { channel: Channel | PartialDMChannel }> = true;
       },
     });
   });
@@ -119,7 +119,7 @@ describe("typedGlobalEventListener() helper", () => {
 
   it("<TPluginType>()(blueprint)", () => {
     const blueprint = typedGlobalEventListener<CustomPluginType>()({
-      event: "message",
+      event: "messageCreate",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });

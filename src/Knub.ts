@@ -43,6 +43,7 @@ import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
 import { EventRelay } from "./events/EventRelay";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 import { Queue } from "./Queue";
+import { GatewayGuildCreateDispatchData } from "discord-api-types";
 
 const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>> = {
   guildPlugins: [],
@@ -130,19 +131,23 @@ export class Knub<
 
       sendErrorMessageFn(channel, body) {
         void channel.send({
-          embed: {
-            description: body,
-            color: parseInt("ee4400", 16),
-          },
+          embeds: [
+            {
+              description: body,
+              color: parseInt("ee4400", 16),
+            },
+          ],
         });
       },
 
       sendSuccessMessageFn(channel, body) {
         void channel.send({
-          embed: {
-            description: body,
-            color: parseInt("1ac600", 16),
-          },
+          embeds: [
+            {
+              description: body,
+              color: parseInt("1ac600", 16),
+            },
+          ],
         });
       },
     };
@@ -177,7 +182,7 @@ export class Knub<
       this.emit("loadingFinished");
     });
 
-    this.client.ws.on("GUILD_CREATE", (data: { id: string }) => {
+    this.client.ws.on("GUILD_CREATE", (data: GatewayGuildCreateDispatchData) => {
       setImmediate(() => {
         this.log("info", `Guild available: ${data.id}`);
         void this.loadGuild(data.id);
@@ -365,7 +370,7 @@ export class Knub<
       }
 
       // Only load the guild if we're actually in the guild
-      if (!this.client.guilds.cache.has(guildId)) {
+      if (!this.client.guilds.resolve(guildId as any)) {
         return;
       }
 
@@ -481,7 +486,7 @@ export class Knub<
         GuildPluginData<any>
       >;
       preloadPluginData.context = "guild";
-      preloadPluginData.guild = this.client.guilds.cache.get(ctx.guildId)!;
+      preloadPluginData.guild = this.client.guilds.resolve(ctx.guildId as any)!;
 
       preloadPluginData.events = new GuildPluginEventManager(this.eventRelay);
       preloadPluginData.commands = new PluginCommandManager(this.client, {
@@ -522,7 +527,7 @@ export class Knub<
         }
 
         // Initialize messageCreate event listener for commands
-        fullPluginData.events.on("message", ({ args: { message }, pluginData: _pluginData }) => {
+        fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
           return _pluginData.commands.runFromMessage(message);
         });
       }
@@ -635,7 +640,7 @@ export class Knub<
       }
 
       // Initialize message event listener for commands
-      fullPluginData.events.on("message", ({ args: { message }, pluginData: _pluginData }) => {
+      fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
         return _pluginData.commands.runFromMessage(message);
       });
 

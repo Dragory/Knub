@@ -23,8 +23,10 @@ import {
   RateLimitData,
   Role,
   Snowflake,
-  Speaking,
+  StageInstance,
   TextChannel,
+  ThreadChannel,
+  ThreadMember,
   User,
   VoiceState,
 } from "discord.js";
@@ -68,10 +70,6 @@ export const fromDjsArgs = {
     guild: Guild,
     data: { count: number; index: number; nonce: string | undefined }
   ) => ({ members, guild, data }),
-  guildMemberSpeaking: (member: GuildMember | PartialGuildMember, speaking: Readonly<Speaking>) => ({
-    member,
-    speaking,
-  }),
   guildMemberUpdate: (oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) => ({
     oldMember,
     newMember,
@@ -79,7 +77,7 @@ export const fromDjsArgs = {
   guildUpdate: (oldGuild: Guild, newGuild: Guild) => ({ oldGuild, newGuild }),
   inviteCreate: (invite: Invite) => ({ invite }),
   inviteDelete: (invite: Invite) => ({ invite }),
-  message: (message: Message) => ({ message }),
+  messageCreate: (message: Message) => ({ message }),
   messageDelete: (message: Message | PartialMessage) => ({ message }),
   messageReactionRemoveAll: (message: Message | PartialMessage) => ({ message }),
   messageReactionRemoveEmoji: (reaction: MessageReaction) => ({ reaction }),
@@ -102,7 +100,22 @@ export const fromDjsArgs = {
   userUpdate: (oldUser: User | PartialUser, newUser: User) => ({ oldUser, newUser }),
   voiceStateUpdate: (oldState: VoiceState, newState: VoiceState) => ({ oldState, newState }),
   webhookUpdate: (channel: TextChannel) => ({ channel }),
-  interaction: (interaction: Interaction) => ({ interaction }),
+  interactionCreate: (interaction: Interaction) => ({ interaction }),
+  stageInstanceCreate: (stageInstance: StageInstance) => ({ stageInstance }),
+  stageInstanceDelete: (stageInstance: StageInstance) => ({ stageInstance }),
+  stageInstanceUpdate: (oldStageInstance: StageInstance, newStageInstance: StageInstance) => ({
+    oldStageInstance,
+    newStageInstance,
+  }),
+  threadCreate: (thread: ThreadChannel) => ({ thread }),
+  threadDelete: (thread: ThreadChannel) => ({ thread }),
+  threadListSync: (threads: Collection<Snowflake, ThreadChannel>) => ({ threads }),
+  threadMembersUpdate: (
+    oldMembers: Collection<Snowflake, ThreadMember>,
+    newMembers: Collection<Snowflake, ThreadMember>
+  ) => ({ oldMembers, newMembers }),
+  threadMemberUpdate: (oldMember: ThreadMember, newMember: ThreadMember) => ({ oldMember, newMember }),
+  threadUpdate: (oldThread: ThreadChannel, newThread: ThreadChannel) => ({ oldThread, newThread }),
   shardDisconnect: (closeEvent: CloseEvent, shardID: number) => ({ closeEvent, shardID }),
   shardError: (error: Error, shardID: number) => ({ error, shardID }),
   shardReady: (shardID: number, unavailableGuilds: Set<Snowflake> | undefined) => ({ shardID, unavailableGuilds }),
@@ -112,6 +125,7 @@ export const fromDjsArgs = {
 };
 /* eslint-enable @typescript-eslint/explicit-module-boundary-types */
 
+/*
 // Validate the above types against DJS types
 type ValidFromDjsArgs = {
   [key in keyof ExtendedClientEvents]: (...args: ExtendedClientEvents[key]) => unknown;
@@ -119,6 +133,7 @@ type ValidFromDjsArgs = {
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fromDjsArgsIsValid: AssertEquals<typeof fromDjsArgs, ValidFromDjsArgs> = true;
+*/
 
 // Extended event types
 export type KnownEvents = {
@@ -133,7 +148,7 @@ export interface KnownGuildEvents extends KnownEvents {
   channelDelete: {
     channel: GuildChannel;
   };
-  message: {
+  messageCreate: {
     message: GuildMessage;
   };
   typingStart: {

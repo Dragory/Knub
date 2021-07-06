@@ -144,9 +144,8 @@ type GuildEventListenerBlueprintsHelper<TPluginData extends GuildPluginData<any>
   [K in GuildEvent]: EventListenerBlueprint<TPluginData, K>;
 };
 
-export type AnyGuildEventListenerBlueprint<
-  TPluginData extends GuildPluginData<any>
-> = GuildEventListenerBlueprintsHelper<TPluginData>[keyof GuildEventListenerBlueprintsHelper<TPluginData>];
+export type AnyGuildEventListenerBlueprint<TPluginData extends GuildPluginData<any>> =
+  GuildEventListenerBlueprintsHelper<TPluginData>[keyof GuildEventListenerBlueprintsHelper<TPluginData>];
 
 /**
  * Blueprint for a plugin that can only be loaded in a global context
@@ -177,9 +176,8 @@ type GlobalEventListenerBlueprintsHelper<TPluginData extends GlobalPluginData<an
   [K in ValidEvent]: EventListenerBlueprint<TPluginData, K>;
 };
 
-export type AnyGlobalEventListenerBlueprint<
-  TPluginData extends GlobalPluginData<any>
-> = GlobalEventListenerBlueprintsHelper<TPluginData>[keyof GlobalEventListenerBlueprintsHelper<TPluginData>];
+export type AnyGlobalEventListenerBlueprint<TPluginData extends GlobalPluginData<any>> =
+  GlobalEventListenerBlueprintsHelper<TPluginData>[keyof GlobalEventListenerBlueprintsHelper<TPluginData>];
 
 export type AnyPluginBlueprint = GuildPluginBlueprint<any> | GlobalPluginBlueprint<any>;
 
