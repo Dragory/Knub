@@ -44,7 +44,7 @@ export const baseTypeConverters = {
   },
 
   member(value: string, { message, pluginData: { client } }: CommandContext<AnyPluginData<any>>): GuildMember {
-    if (message.channel.type === "dm") {
+    if (message.channel.type === "DM") {
       throw new TypeConversionError(`Type 'Member' can only be used in guilds`);
     }
 
@@ -72,7 +72,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
     }
 
-    if (message.channel.type === "dm") {
+    if (message.channel.type === "DM") {
       throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
     }
 
@@ -91,7 +91,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
     }
 
-    if (message.channel.type === "dm") {
+    if (message.channel.type === "DM") {
       throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
     }
 
@@ -114,7 +114,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
     }
 
-    if (message.channel.type === "dm") {
+    if (message.channel.type === "DM") {
       throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
     }
 
@@ -132,7 +132,7 @@ export const baseTypeConverters = {
   },
 
   role(value: string, { message }: CommandContext<AnyPluginData<any>>): Role {
-    if (message.channel.type === "dm") {
+    if (message.channel.type === "DM") {
       throw new TypeConversionError(`Type 'Role' can only be used in guilds`);
     }
 

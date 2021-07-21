@@ -137,7 +137,7 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
   let source = cmd.config!.extra?.blueprint.source ?? "guild";
   if (!Array.isArray(source)) source = [source];
 
-  if (context.message.channel.type === "dm" && source.includes("dm")) {
+  if (context.message.channel.type === "DM" && source.includes("dm")) {
     return true;
   }
 

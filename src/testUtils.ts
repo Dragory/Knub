@@ -9,6 +9,7 @@ import {
   GuildManager,
   Message,
   NewsChannel,
+  Options,
   Snowflake,
   TextChannel,
   User,
@@ -59,9 +60,9 @@ export function createMockClient(): Client {
 
       if (p === "options") {
         return {
-          messageCacheMaxSize: 1024 * 1024,
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           intents: null as any,
+          makeCache: Options.cacheEverything(),
         };
       }
 
@@ -76,42 +77,43 @@ export function sleep(ms: number): Promise<void> {
 
 let mockGuildId = 10000;
 export function createMockGuild(client: Client, data = {}): Guild {
-  const id = (++mockGuildId).toString();
-  const mockGuild = client.guilds.add({
+  const id = (++mockGuildId).toString() as Snowflake;
+  const mockGuild = client.guilds.cache.set(id, {
     id,
     name: `Mock Guild #${id}`,
     ...data,
-  });
+  } as any);
 
-  return mockGuild;
+  return mockGuild.get(id)!;
 }
 
 let mockUserId = 20000;
 export function createMockUser(client: Client, data = {}): User {
-  const id = (++mockUserId).toString();
-  const mockUser = client.users.add({
+  const id = (++mockUserId).toString() as Snowflake;
+  const mockUser = client.users.cache.set(id, {
     id,
     username: `mockuser_${id}`,
     discriminator: "0001",
     ...data,
-  });
+  } as any);
 
-  return mockUser;
+  return mockUser.get(id)!;
 }
 
 let mockChannelId = 30000;
 export function createMockTextChannel(client: Client, guildId: Snowflake, data = {}): TextChannel {
-  const id = (++mockChannelId).toString();
+  const id = (++mockChannelId).toString() as Snowflake;
   const guild = client.guilds.cache.get(guildId)!;
 
   /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
-  const mockTextChannel = guild.channels.add(
+  const mockTextChannel = guild.channels.cache.set(
+    id,
     (Channel as any).create(
       client,
       {
         id,
         guild,
-        type: Constants.ChannelTypes.TEXT,
+        type: Constants.ChannelTypes.GUILD_TEXT,
         name: `mock-channel-${id}`,
         ...data,
       },
@@ -120,7 +122,7 @@ export function createMockTextChannel(client: Client, guildId: Snowflake, data =
   );
   /* eslint-enable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
 
-  return mockTextChannel as TextChannel;
+  return mockTextChannel.get(id) as TextChannel;
 }
 
 let mockMessageId = 40000;
