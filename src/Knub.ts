@@ -134,7 +134,7 @@ export class Knub<
           embeds: [
             {
               description: body,
-              color: parseInt("ee4400", 16),
+              color: 0xee4400,
             },
           ],
         });
@@ -145,7 +145,7 @@ export class Knub<
           embeds: [
             {
               description: body,
-              color: parseInt("1ac600", 16),
+              color: 0x1ac600,
             },
           ],
         });
