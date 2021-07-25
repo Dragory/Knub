@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "discord-api-types": "^0.21.0-next.ab1951b.1626870574",
-    "discord.js": "^13.0.0-dev.07017a9.1626869177",
+    "discord.js": "^13.0.0-dev.4886ae2.1627214570",
     "knub-command-manager": "^9.1.0",
     "ts-essentials": "^6.0.7"
   },
