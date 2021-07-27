@@ -56,6 +56,12 @@ export const eventToGuild: EventToGuild = {
   stageInstanceDelete: ({ stageInstance }) => stageInstance.guild ?? undefined,
   stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
     newStageInstance.guild ?? oldStageInstance.guild ?? undefined,
+  emojiCreate: ({ emoji }) => emoji.guild,
+  emojiDelete: ({ emoji }) => emoji.guild,
+  emojiUpdate: ({ newEmoji }) => newEmoji.guild,
+  stickerCreate: ({ sticker }) => sticker.guild ?? undefined,
+  stickerDelete: ({ sticker }) => sticker.guild ?? undefined,
+  stickerUpdate: ({ oldSticker, newSticker }) => newSticker.guild ?? oldSticker.guild ?? undefined,
 };
 
 export const eventToUser: EventToUser = {

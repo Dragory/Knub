@@ -67,13 +67,13 @@ export const baseTypeConverters = {
   },
 
   channel(value: string, { message }: CommandContext<AnyPluginData<any>>): Channel {
+    if (message.channel.type === "DM") {
+      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
+    }
+
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
-    }
-
-    if (message.channel.type === "DM") {
-      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
     }
 
     const guild = message.channel.guild;
@@ -86,13 +86,13 @@ export const baseTypeConverters = {
   },
 
   textChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): TextChannel | ThreadChannel {
+    if (message.channel.type === "DM") {
+      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
+    }
+
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
-    }
-
-    if (message.channel.type === "DM") {
-      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
     }
 
     const guild = message.channel.guild;
@@ -109,13 +109,13 @@ export const baseTypeConverters = {
   },
 
   voiceChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): VoiceChannel {
+    if (message.channel.type === "DM") {
+      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
+    }
+
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
-    }
-
-    if (message.channel.type === "DM") {
-      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
     }
 
     const guild = message.channel.guild;

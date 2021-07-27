@@ -1,4 +1,4 @@
-import { Client, Guild } from "discord.js";
+import { Client, Guild, Snowflake } from "discord.js";
 import { EventEmitter } from "events";
 import { BaseConfig } from "./config/configTypes";
 import { get } from "./utils";
@@ -363,14 +363,14 @@ export class Knub<
     await Promise.all(loadPromises);
   }
 
-  public async loadGuild(guildId: string): Promise<void> {
+  public async loadGuild(guildId: Snowflake): Promise<void> {
     return this.getGuildLoadQueue(guildId).add(async () => {
       if (this.loadedGuilds.has(guildId)) {
         return;
       }
 
       // Only load the guild if we're actually in the guild
-      if (!this.client.guilds.resolve(guildId as any)) {
+      if (!this.client.guilds.resolve(guildId)) {
         return;
       }
 
@@ -395,12 +395,12 @@ export class Knub<
     });
   }
 
-  public async reloadGuild(guildId: string): Promise<void> {
+  public async reloadGuild(guildId: Snowflake): Promise<void> {
     await this.unloadGuild(guildId);
     await this.loadGuild(guildId);
   }
 
-  public async unloadGuild(guildId: string): Promise<void> {
+  public async unloadGuild(guildId: Snowflake): Promise<void> {
     // Loads and unloads are queued up to avoid race conditions
     return this.getGuildLoadQueue(guildId).add(async () => {
       const ctx = this.loadedGuilds.get(guildId);
@@ -440,7 +440,7 @@ export class Knub<
     await Promise.all(unloadPromises);
   }
 
-  protected getGuildLoadQueue(guildId: string): Queue {
+  protected getGuildLoadQueue(guildId: Snowflake): Queue {
     if (!this.guildLoadQueues.has(guildId)) {
       const queueTimeout = 60 * 1000; // 1 minute, should be plenty to allow plugins time to load/unload properly
       this.guildLoadQueues.set(guildId, new Queue(queueTimeout));
@@ -449,7 +449,7 @@ export class Knub<
     return this.guildLoadQueues.get(guildId)!;
   }
 
-  public getLoadedGuild(guildId: string): GuildContext<TGuildConfig> | undefined {
+  public getLoadedGuild(guildId: Snowflake): GuildContext<TGuildConfig> | undefined {
     return this.loadedGuilds.get(guildId);
   }
 
@@ -486,7 +486,7 @@ export class Knub<
         GuildPluginData<any>
       >;
       preloadPluginData.context = "guild";
-      preloadPluginData.guild = this.client.guilds.resolve(ctx.guildId as any)!;
+      preloadPluginData.guild = this.client.guilds.resolve(ctx.guildId)!;
 
       preloadPluginData.events = new GuildPluginEventManager(this.eventRelay);
       preloadPluginData.commands = new PluginCommandManager(this.client, {
