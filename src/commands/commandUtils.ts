@@ -141,7 +141,7 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
     return true;
   }
 
-  if (context.message.channel && source.includes("guild")) {
+  if (context.message.channel.type !== "DM" && source.includes("guild")) {
     return true;
   }
 
