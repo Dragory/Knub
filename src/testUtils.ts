@@ -77,7 +77,7 @@ export function sleep(ms: number): Promise<void> {
 
 let mockGuildId = 10000;
 export function createMockGuild(client: Client, data = {}): Guild {
-  const id = (++mockGuildId).toString() as Snowflake;
+  const id = (++mockGuildId).toString();
   const mockGuild = client.guilds.cache.set(id, {
     id,
     name: `Mock Guild #${id}`,
@@ -89,7 +89,7 @@ export function createMockGuild(client: Client, data = {}): Guild {
 
 let mockUserId = 20000;
 export function createMockUser(client: Client, data = {}): User {
-  const id = (++mockUserId).toString() as Snowflake;
+  const id = (++mockUserId).toString();
   const mockUser = client.users.cache.set(id, {
     id,
     username: `mockuser_${id}`,
@@ -102,7 +102,7 @@ export function createMockUser(client: Client, data = {}): User {
 
 let mockChannelId = 30000;
 export function createMockTextChannel(client: Client, guildId: Snowflake, data = {}): TextChannel {
-  const id = (++mockChannelId).toString() as Snowflake;
+  const id = (++mockChannelId).toString();
   const guild = client.guilds.cache.get(guildId)!;
 
   /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */

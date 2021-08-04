@@ -110,7 +110,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const level = matchParams?.level ?? (member && this.getMemberLevel(member)) ?? null;
 
     // Passed roles -> passed member's roles
-    const memberRoles = matchParams.memberRoles ?? member?.roles?.cache?.keyArray() ?? [];
+    const memberRoles = matchParams.memberRoles ?? [...(member?.roles?.cache?.keys() ?? [])];
 
     const finalMatchParams: MatchParams = {
       level,
@@ -135,7 +135,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       userId: msg.author.id,
       channelId: msg.channel.id,
       categoryId: (msg.channel as GuildChannel).parentId,
-      memberRoles: msg.member ? msg.member.roles.cache.keyArray() : [],
+      memberRoles: msg.member ? [...msg.member.roles.cache.keys()] : [],
     });
   }
 
@@ -157,7 +157,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     return this.getMatchingConfig({
       level,
       userId: member.user.id,
-      memberRoles: member.roles.cache.keyArray(),
+      memberRoles: [...member.roles.cache.keys()],
     });
   }
 }
