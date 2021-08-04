@@ -138,6 +138,7 @@ export function createMockMessage(
       id: (++mockMessageId).toString(),
       channel_id: channel.id,
       mentions: [],
+      // @ts-ignore FIXME
       author,
       ...data,
     },
