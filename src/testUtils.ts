@@ -132,20 +132,14 @@ export function createMockMessage(
   author: User,
   data = {}
 ): Message {
-  const message = new Message(
-    client,
-    {
-      id: (++mockMessageId).toString(),
-      channel_id: channel.id,
-      mentions: [],
-      // @ts-ignore FIXME
-      author,
-      ...data,
-    },
-    channel
-  );
-
-  message.channel = channel;
+  const message = new Message(client, {
+    id: (++mockMessageId).toString(),
+    channel_id: channel.id,
+    mentions: [],
+    // @ts-ignore FIXME
+    author,
+    ...data,
+  });
 
   return message;
 }
