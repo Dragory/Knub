@@ -1,11 +1,11 @@
 import { CooldownManager, GlobalPluginBlueprint, GlobalPluginData, Knub, LockManager } from "../index";
 import {
   createMockClient,
-  createMockGuild,
-  createMockMessage,
+  createMockGuild, createMockMember,
+  createMockMessage, createMockRole,
   createMockTextChannel,
   createMockUser,
-  sleep,
+  sleep
 } from "../testUtils";
 import * as assert from "assert";
 import { noop } from "../utils";
@@ -260,11 +260,13 @@ describe("PluginBlueprint", () => {
     it("command permissions", async () => {
       const infoCmdCallUsers: string[] = [];
       const serverCmdCallUsers: string[] = [];
+      const pingCmdCallUsers: string[] = [];
 
       interface PluginType extends BasePluginType {
         config: {
           can_use_info_cmd: boolean;
           can_use_server_cmd: boolean;
+          can_use_ping_cmd: boolean;
         };
       }
 
@@ -275,6 +277,7 @@ describe("PluginBlueprint", () => {
           config: {
             can_use_info_cmd: false,
             can_use_server_cmd: false,
+            can_use_ping_cmd: false,
           },
         },
 
@@ -293,12 +296,25 @@ describe("PluginBlueprint", () => {
               serverCmdCallUsers.push(message.author.id);
             },
           }),
+          typedGuildCommand({
+            trigger: "ping",
+            permission: "can_use_ping_cmd",
+            run({ message }) {
+              pingCmdCallUsers.push(message.author.id);
+            },
+          }),
         ],
       });
 
       const client = createMockClient();
+      const guild = createMockGuild(client);
+
       const user1 = createMockUser(client);
       const user2 = createMockUser(client);
+      const user3 = createMockUser(client);
+
+      const role = createMockRole(guild);
+      const member3 = createMockMember(guild, user3, { roles: [role.id] });
 
       const knub = new Knub(client, {
         guildPlugins: [TestPlugin],
@@ -324,6 +340,12 @@ describe("PluginBlueprint", () => {
                         can_use_server_cmd: true,
                       },
                     },
+                    {
+                      role: role.id,
+                      config: {
+                        can_use_ping_cmd: true,
+                      },
+                    }
                   ],
                 },
               },
@@ -336,31 +358,41 @@ describe("PluginBlueprint", () => {
       knub.initialize();
       client.emit("connect");
       client.emit("ready", client);
-      await sleep(30);
+      await sleep(10);
 
-      const guild = createMockGuild(client);
       client.ws.emit("GUILD_CREATE", guild);
-      await sleep(30);
+      await sleep(10);
+
 
       const channel = createMockTextChannel(client, guild.id);
 
       // !info
       const infoFromUser1Msg = createMockMessage(client, channel, user1, { content: "!info" });
       client.emit("messageCreate", infoFromUser1Msg);
-      await sleep(30);
+      await sleep(10);
       const infoFromUser2Msg = createMockMessage(client, channel, user2, { content: "!info" });
       client.emit("messageCreate", infoFromUser2Msg);
-      await sleep(30);
+      await sleep(10);
 
+      // !server
       const serverFromUser1Msg = createMockMessage(client, channel, user1, { content: "!server" });
       client.emit("messageCreate", serverFromUser1Msg);
-      await sleep(30);
+      await sleep(10);
       const serverFromUser2Msg = createMockMessage(client, channel, user2, { content: "!server" });
       client.emit("messageCreate", serverFromUser2Msg);
-      await sleep(30);
+      await sleep(10);
+
+      // !ping
+      const pingFromUser1Msg = createMockMessage(client, channel, user1, { content: "!ping" });
+      client.emit("messageCreate", pingFromUser1Msg);
+      await sleep(10);
+      const pingFromUser3Msg = createMockMessage(client, channel, user3, { content: "!ping" });
+      client.emit("messageCreate", pingFromUser3Msg);
+      await sleep(10);
 
       assert.deepStrictEqual(infoCmdCallUsers, [user1.id]);
       assert.deepStrictEqual(serverCmdCallUsers, [user2.id]);
+      assert.deepStrictEqual(pingCmdCallUsers, [user3.id]);
     });
   });
 

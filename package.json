@@ -7,6 +7,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "test-files": "mocha --exit -r ts-node/register",
     "test": "mocha --exit -r ts-node/register src/**/*.test.ts -- --trace-warnings",
     "test-debug": "mocha --exit -r ts-node/register -g \"command permissions\" src/**/*.test.ts -- --trace-warnings",
     "lint": "eslint src",

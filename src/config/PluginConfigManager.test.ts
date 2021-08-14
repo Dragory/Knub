@@ -1,8 +1,16 @@
 import { assert, expect } from "chai";
 import { PluginConfigManager } from "./PluginConfigManager";
-import { sleep } from "../testUtils";
+import {
+  createMockClient,
+  createMockGuild,
+  createMockMember, createMockMessage, createMockRole,
+  createMockTextChannel,
+  createMockUser,
+  sleep
+} from "../testUtils";
 import { ConfigValidationError } from "./ConfigValidationError";
 import { BasePluginType } from "../plugins/pluginTypes";
+import { GuildPluginData } from "../plugins/PluginData";
 
 describe("PluginConfigManager", () => {
   it("merge user config with default config", () => {
@@ -217,5 +225,133 @@ describe("PluginConfigManager", () => {
     }
 
     assert.fail("Config validator was not called");
+  });
+
+  it("getMatchingConfig(): user", async () => {
+    interface PluginType extends BasePluginType {
+      config: {
+        works: boolean,
+      },
+    }
+
+    const client = createMockClient();
+    const guild = createMockGuild(client);
+    const user = createMockUser(client);
+    const member = createMockMember(guild, user);
+    const channel = createMockTextChannel(client, guild.id);
+    const message = createMockMessage(client, channel, user);
+
+    const configManager = new PluginConfigManager<PluginType>({
+      config: {
+        works: false,
+      },
+      overrides: [{
+        user: user.id,
+        config: {
+          works: true,
+        },
+      }],
+    }, {});
+    configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
+
+    expect(configManager.get().works).to.equal(false);
+    expect((await configManager.getMatchingConfig({ userId: user.id })).works).to.equal(true);
+    expect((await configManager.getMatchingConfig({ member })).works).to.equal(true);
+    expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
+  });
+
+  it("getMatchingConfig(): channel", async () => {
+    interface PluginType extends BasePluginType {
+      config: {
+        works: boolean,
+      },
+    }
+
+    const client = createMockClient();
+    const guild = createMockGuild(client);
+    const user = createMockUser(client);
+    const channel = createMockTextChannel(client, guild.id);
+    const message = createMockMessage(client, channel, user);
+
+    const configManager = new PluginConfigManager<PluginType>({
+      config: {
+        works: false,
+      },
+      overrides: [{
+        channel: channel.id,
+        config: {
+          works: true,
+        },
+      }],
+    }, {});
+
+    expect(configManager.get().works).to.equal(false);
+    expect((await configManager.getMatchingConfig({ channelId: channel.id })).works).to.equal(true);
+    expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
+  });
+
+  it("getMatchingConfig(): category", async () => {
+    interface PluginType extends BasePluginType {
+      config: {
+        works: boolean,
+      },
+    }
+
+    const categoryId = "12345";
+    const client = createMockClient();
+    const guild = createMockGuild(client);
+    const user = createMockUser(client);
+    const channel = createMockTextChannel(client, guild.id, { parent_id: categoryId });
+    const message = createMockMessage(client, channel, user);
+
+    const configManager = new PluginConfigManager<PluginType>({
+      config: {
+        works: false,
+      },
+      overrides: [{
+        category: categoryId,
+        config: {
+          works: true,
+        },
+      }],
+    }, {});
+
+    expect(configManager.get().works).to.equal(false);
+    expect((await configManager.getMatchingConfig({ categoryId })).works).to.equal(true);
+    expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
+  });
+
+  it("getMatchingConfig(): roles", async () => {
+    interface PluginType extends BasePluginType {
+      config: {
+        works: boolean,
+      },
+    }
+
+    const client = createMockClient();
+    const guild = createMockGuild(client);
+    const user = createMockUser(client);
+    const role = createMockRole(guild);
+    const member = createMockMember(guild, user, { roles: [role.id] });
+    const channel = createMockTextChannel(client, guild.id);
+    const message = createMockMessage(client, channel, user);
+
+    const configManager = new PluginConfigManager<PluginType>({
+      config: {
+        works: false,
+      },
+      overrides: [{
+        role: role.id,
+        config: {
+          works: true,
+        },
+      }],
+    }, {});
+    configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
+
+    expect(configManager.get().works).to.equal(false);
+    expect((await configManager.getMatchingConfig({ memberRoles: [role.id] })).works).to.equal(true);
+    expect((await configManager.getMatchingConfig({ member })).works).to.equal(true);
+    expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
 });

@@ -13,12 +13,12 @@ import {
   GuildMemberManager,
   Message,
   NewsChannel,
-  Options,
+  Options, Role, RoleManager,
   Snowflake,
   TextChannel,
   User,
   UserManager,
-  WebSocketManager,
+  WebSocketManager
 } from "discord.js";
 
 const EventEmitter = events.EventEmitter;
@@ -96,6 +96,11 @@ export function createMockGuild(client: Client, data = {}): Guild {
   const mockGuild = client.guilds.cache.get(id)!;
   mockGuild.members = new GuildMemberManager(mockGuild);
   mockGuild.channels = new GuildChannelManager(mockGuild);
+  mockGuild.roles = new RoleManager(mockGuild);
+
+  // Add everyone role
+  mockGuild.roles.cache.set(mockGuild.id, createMockRole(mockGuild, { name: "everyone" }, mockGuild.id));
+
   return mockGuild;
 }
 
@@ -115,8 +120,8 @@ export function createMockUser(client: Client, data = {}): User {
   return mockUser.get(id)!;
 }
 
-export function createMockMember(guild: Guild, user: User): GuildMember {
-  guild.members.cache.set(user.id, new GuildMember(guild.client, { user }, guild));
+export function createMockMember(guild: Guild, user: User, data = {}): GuildMember {
+  guild.members.cache.set(user.id, new GuildMember(guild.client, { user, ...data }, guild));
   return guild.members.cache.get(user.id)!;
 }
 
@@ -163,4 +168,15 @@ export function createMockMessage(
   });
 
   return message;
+}
+
+let mockRoleId = 50000;
+export function createMockRole(guild: Guild, data = {}, overrideId: string | null = null): Role {
+  const id = overrideId || (++mockRoleId).toString();
+  guild.roles.cache.set(id, new Role(guild.client, {
+    id,
+    permissions: "0",
+    ...data,
+  } as any, guild));
+  return guild.roles.cache.get(id)!;
 }
