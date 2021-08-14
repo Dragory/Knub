@@ -1,3 +1,7 @@
+# 30.0.0-beta.39
+* **BREAKING CHANGE:** Knub now uses discord.js v13 and requires Node v16.6+
+* Lots of discord.js fixes from @Dark
+
 # 30.0.0-beta.38
 * **BREAKING CHANGE:** As an experiment, this release of Knub uses **discord.js** instead of **Eris**
   * This means many events have different names and objects behave differently. This is *not* a drop-in replacement for beta.37.
