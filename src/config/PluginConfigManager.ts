@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
 import {
   ConfigPreprocessorFn,
   ConfigValidatorFn,
@@ -100,8 +101,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const channelId = matchParams.channelId || (message && message.channel && message.channel.id);
 
     // Passed category id -> passed message's channel's category id
-    const categoryId =
-      matchParams.categoryId || (message && message.channel && (message.channel as GuildChannel).parentID);
+    const categoryId = matchParams.categoryId || (message?.channel && (message.channel as GuildChannel).parentId);
 
     // Passed member -> passed message's member
     const member = matchParams.member || (message && message.member);
@@ -110,7 +110,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const level = matchParams?.level ?? (member && this.getMemberLevel(member)) ?? null;
 
     // Passed roles -> passed member's roles
-    const memberRoles = matchParams.memberRoles || (member && member.roles.cache.keyArray());
+    const memberRoles = matchParams.memberRoles ?? [...(member?.roles?.cache?.keys() ?? [])];
 
     const finalMatchParams: MatchParams = {
       level,
@@ -134,15 +134,15 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       level,
       userId: msg.author.id,
       channelId: msg.channel.id,
-      categoryId: (msg.channel as GuildChannel).parentID,
-      memberRoles: msg.member ? msg.member.roles.cache.keyArray() : [],
+      categoryId: (msg.channel as GuildChannel).parentId,
+      memberRoles: msg.member ? [...msg.member.roles.cache.keys()] : [],
     });
   }
 
   public getForChannel(channel: Channel): Promise<TPluginType["config"]> {
     return this.getMatchingConfig({
       channelId: channel.id,
-      categoryId: (channel as GuildChannel).parentID,
+      categoryId: (channel as GuildChannel).parentId,
     });
   }
 
@@ -157,7 +157,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     return this.getMatchingConfig({
       level,
       userId: member.user.id,
-      memberRoles: member.roles.cache.keyArray(),
+      memberRoles: [...member.roles.cache.keys()],
     });
   }
 }

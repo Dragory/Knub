@@ -28,8 +28,8 @@
     ]
   },
   "dependencies": {
-    "discord-api-types": "^0.18.1",
-    "discord.js": "github:monbrey/discord.js#9c42f571093b2565df28b756fdca4ac59cad0fe3",
+    "discord-api-types": "^0.22.0",
+    "discord.js": "^13.0.1",
     "knub-command-manager": "^9.1.0",
     "ts-essentials": "^6.0.7"
   },

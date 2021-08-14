@@ -9,7 +9,7 @@ describe("Event filters", () => {
     const guild = {};
 
     // Accepts same guild
-    const result1 = filter("message", {
+    const result1 = filter("messageCreate", {
       args: {
         message: {
           channel: {
@@ -26,7 +26,7 @@ describe("Event filters", () => {
 
     // Rejects different guild
     const guild2 = {};
-    const result2 = filter("message", {
+    const result2 = filter("messageCreate", {
       args: {
         message: {
           channel: {
@@ -42,7 +42,7 @@ describe("Event filters", () => {
     assert.ok(!result2);
 
     // Rejects global plugins
-    const result3 = filter("message", {
+    const result3 = filter("messageCreate", {
       args: {
         message: {
           channel: {

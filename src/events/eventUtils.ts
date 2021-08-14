@@ -33,7 +33,7 @@ export const eventToGuild: EventToGuild = {
   roleCreate: ({ role }) => role.guild,
   roleDelete: ({ role }) => role.guild,
   roleUpdate: ({ newRole }) => newRole.guild,
-  message: ({ message }) => (message.channel as TextChannel).guild,
+  messageCreate: ({ message }) => (message.channel as TextChannel).guild,
   messageDelete: ({ message }) => (message.channel as TextChannel).guild,
   messageDeleteBulk: ({ messages }) => (messages.first()?.channel as TextChannel)?.guild,
   messageReactionAdd: ({ reaction }) => (reaction.message.channel as TextChannel)?.guild,
@@ -43,7 +43,25 @@ export const eventToGuild: EventToGuild = {
   presenceUpdate: ({ newPresence }) => newPresence.member?.guild,
   typingStart: ({ channel }) => (channel as TextChannel)?.guild,
   voiceStateUpdate: ({ oldState, newState }) => newState?.guild ?? oldState?.guild,
-  interaction: ({ interaction }) => interaction.guild ?? undefined,
+  interactionCreate: ({ interaction }) => interaction.guild ?? undefined,
+  threadCreate: ({ thread }) => thread.guild,
+  threadDelete: ({ thread }) => thread.guild,
+  threadUpdate: ({ oldThread, newThread }) => newThread.guild ?? oldThread.guild,
+  threadListSync: ({ threads }) => threads.first()?.guild ?? undefined,
+  threadMemberUpdate: ({ oldMember, newMember }) =>
+    newMember.guildMember?.guild ?? oldMember.guildMember?.guild ?? undefined,
+  threadMembersUpdate: ({ oldMembers, newMembers }) =>
+    newMembers.first()?.guildMember?.guild ?? oldMembers.first()?.guildMember?.guild ?? undefined,
+  stageInstanceCreate: ({ stageInstance }) => stageInstance.guild ?? undefined,
+  stageInstanceDelete: ({ stageInstance }) => stageInstance.guild ?? undefined,
+  stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
+    newStageInstance.guild ?? oldStageInstance.guild ?? undefined,
+  emojiCreate: ({ emoji }) => emoji.guild,
+  emojiDelete: ({ emoji }) => emoji.guild,
+  emojiUpdate: ({ newEmoji }) => newEmoji.guild,
+  stickerCreate: ({ sticker }) => sticker.guild ?? undefined,
+  stickerDelete: ({ sticker }) => sticker.guild ?? undefined,
+  stickerUpdate: ({ oldSticker, newSticker }) => newSticker.guild ?? oldSticker.guild ?? undefined,
 };
 
 export const eventToUser: EventToUser = {
@@ -52,7 +70,7 @@ export const eventToUser: EventToUser = {
   guildMemberAdd: ({ member }) => member.user,
   guildMemberRemove: ({ member }) => member.user ?? undefined,
   guildMemberUpdate: ({ newMember }) => newMember.user,
-  message: ({ message }) => message.author,
+  messageCreate: ({ message }) => message.author,
   messageDelete: ({ message }) => (message as Message).author,
   messageReactionAdd: ({ user }) => user,
   messageUpdate: ({ newMessage }) => newMessage.author ?? undefined,
@@ -60,11 +78,11 @@ export const eventToUser: EventToUser = {
   typingStart: ({ user }) => user,
   userUpdate: ({ newUser }) => newUser,
   voiceStateUpdate: ({ newState }) => newState.member?.user,
-  interaction: ({ interaction }) => interaction.user ?? undefined,
+  interactionCreate: ({ interaction }) => interaction.user ?? undefined,
 };
 
 export const eventToChannel: EventToChannel = {
-  message: ({ message }) => message.channel,
+  messageCreate: ({ message }) => message.channel,
   messageDelete: ({ message }) => message.channel,
   messageDeleteBulk: ({ messages }) => messages.first()?.channel,
   messageReactionAdd: ({ reaction }) => reaction.message.channel,
@@ -76,11 +94,20 @@ export const eventToChannel: EventToChannel = {
   channelUpdate: ({ newChannel }) => newChannel,
   typingStart: ({ channel }) => channel,
   voiceStateUpdate: ({ oldState, newState }) => newState?.channel ?? oldState?.channel ?? undefined,
-  interaction: ({ interaction }) => interaction.channel ?? undefined,
+  interactionCreate: ({ interaction }) => interaction.channel ?? undefined,
+  threadCreate: ({ thread }) => thread,
+  threadDelete: ({ thread }) => thread,
+  threadUpdate: ({ oldThread, newThread }) => newThread ?? oldThread,
+  threadMembersUpdate: ({ oldMembers, newMembers }) =>
+    newMembers.first()?.thread ?? oldMembers.first()?.thread ?? undefined,
+  stageInstanceCreate: ({ stageInstance }) => stageInstance.channel ?? undefined,
+  stageInstanceDelete: ({ stageInstance }) => stageInstance.channel ?? undefined,
+  stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
+    newStageInstance.channel ?? oldStageInstance.channel ?? undefined,
 };
 
 export const eventToMessage: EventToMessage = {
-  message: ({ message }) => message,
+  messageCreate: ({ message }) => message,
   messageDelete: ({ message }) => (message instanceof Message ? message : undefined),
   messageDeleteBulk: ({ messages }) => {
     const message = messages.first();
@@ -90,5 +117,6 @@ export const eventToMessage: EventToMessage = {
   messageReactionRemove: ({ reaction }) => (reaction.message instanceof Message ? reaction.message : undefined),
   messageReactionRemoveAll: ({ message }) => (message instanceof Message ? message : undefined),
   messageUpdate: ({ newMessage }) => (newMessage instanceof Message ? newMessage : undefined),
-  interaction: ({ interaction }) => (interaction.isMessageComponent() ? (interaction.message as Message) : undefined),
+  interactionCreate: ({ interaction }) =>
+    interaction.isMessageComponent() ? (interaction.message as Message) : undefined,
 };

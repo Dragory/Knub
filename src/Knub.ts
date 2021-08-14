@@ -1,4 +1,4 @@
-import { Client, Guild } from "discord.js";
+import { Client, Guild, Snowflake } from "discord.js";
 import { EventEmitter } from "events";
 import { BaseConfig } from "./config/configTypes";
 import { get } from "./utils";
@@ -43,6 +43,7 @@ import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
 import { EventRelay } from "./events/EventRelay";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 import { Queue } from "./Queue";
+import { GatewayGuildCreateDispatchData } from "discord-api-types";
 
 const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>> = {
   guildPlugins: [],
@@ -130,19 +131,23 @@ export class Knub<
 
       sendErrorMessageFn(channel, body) {
         void channel.send({
-          embed: {
-            description: body,
-            color: parseInt("ee4400", 16),
-          },
+          embeds: [
+            {
+              description: body,
+              color: 0xee4400,
+            },
+          ],
         });
       },
 
       sendSuccessMessageFn(channel, body) {
         void channel.send({
-          embed: {
-            description: body,
-            color: parseInt("1ac600", 16),
-          },
+          embeds: [
+            {
+              description: body,
+              color: 0x1ac600,
+            },
+          ],
         });
       },
     };
@@ -177,7 +182,7 @@ export class Knub<
       this.emit("loadingFinished");
     });
 
-    this.client.ws.on("GUILD_CREATE", (data: { id: string }) => {
+    this.client.ws.on("GUILD_CREATE", (data: GatewayGuildCreateDispatchData) => {
       setImmediate(() => {
         this.log("info", `Guild available: ${data.id}`);
         void this.loadGuild(data.id);
@@ -358,14 +363,14 @@ export class Knub<
     await Promise.all(loadPromises);
   }
 
-  public async loadGuild(guildId: string): Promise<void> {
+  public async loadGuild(guildId: Snowflake): Promise<void> {
     return this.getGuildLoadQueue(guildId).add(async () => {
       if (this.loadedGuilds.has(guildId)) {
         return;
       }
 
       // Only load the guild if we're actually in the guild
-      if (!this.client.guilds.cache.has(guildId)) {
+      if (!this.client.guilds.resolve(guildId)) {
         return;
       }
 
@@ -390,12 +395,12 @@ export class Knub<
     });
   }
 
-  public async reloadGuild(guildId: string): Promise<void> {
+  public async reloadGuild(guildId: Snowflake): Promise<void> {
     await this.unloadGuild(guildId);
     await this.loadGuild(guildId);
   }
 
-  public async unloadGuild(guildId: string): Promise<void> {
+  public async unloadGuild(guildId: Snowflake): Promise<void> {
     // Loads and unloads are queued up to avoid race conditions
     return this.getGuildLoadQueue(guildId).add(async () => {
       const ctx = this.loadedGuilds.get(guildId);
@@ -435,7 +440,7 @@ export class Knub<
     await Promise.all(unloadPromises);
   }
 
-  protected getGuildLoadQueue(guildId: string): Queue {
+  protected getGuildLoadQueue(guildId: Snowflake): Queue {
     if (!this.guildLoadQueues.has(guildId)) {
       const queueTimeout = 60 * 1000; // 1 minute, should be plenty to allow plugins time to load/unload properly
       this.guildLoadQueues.set(guildId, new Queue(queueTimeout));
@@ -444,7 +449,7 @@ export class Knub<
     return this.guildLoadQueues.get(guildId)!;
   }
 
-  public getLoadedGuild(guildId: string): GuildContext<TGuildConfig> | undefined {
+  public getLoadedGuild(guildId: Snowflake): GuildContext<TGuildConfig> | undefined {
     return this.loadedGuilds.get(guildId);
   }
 
@@ -481,7 +486,7 @@ export class Knub<
         GuildPluginData<any>
       >;
       preloadPluginData.context = "guild";
-      preloadPluginData.guild = this.client.guilds.cache.get(ctx.guildId)!;
+      preloadPluginData.guild = this.client.guilds.resolve(ctx.guildId)!;
 
       preloadPluginData.events = new GuildPluginEventManager(this.eventRelay);
       preloadPluginData.commands = new PluginCommandManager(this.client, {
@@ -522,7 +527,7 @@ export class Knub<
         }
 
         // Initialize messageCreate event listener for commands
-        fullPluginData.events.on("message", ({ args: { message }, pluginData: _pluginData }) => {
+        fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
           return _pluginData.commands.runFromMessage(message);
         });
       }
@@ -635,7 +640,7 @@ export class Knub<
       }
 
       // Initialize message event listener for commands
-      fullPluginData.events.on("message", ({ args: { message }, pluginData: _pluginData }) => {
+      fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
         return _pluginData.commands.runFromMessage(message);
       });
 

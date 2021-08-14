@@ -1,4 +1,4 @@
-import { GuildMember, Message, TextBasedChannelFields, TextChannel } from "discord.js";
+import { GuildMember, Message, Snowflake, TextBasedChannelFields, TextChannel } from "discord.js";
 import { BaseConfig } from "./config/configTypes";
 import { LockManager } from "./locks/LockManager";
 import { GlobalPluginBlueprint, GuildPluginBlueprint } from "./plugins/PluginBlueprint";
@@ -46,7 +46,7 @@ interface BaseContext<TConfig extends BaseConfig<any>> {
 }
 
 export interface GuildContext<TGuildConfig extends BaseConfig<any>> extends BaseContext<TGuildConfig> {
-  guildId: string;
+  guildId: Snowflake;
   loadedPlugins: Map<string, LoadedGuildPlugin<any>>;
 }
 

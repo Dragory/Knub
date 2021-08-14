@@ -1,4 +1,4 @@
-import { Client, GuildChannel, Message, DMChannel } from "discord.js";
+import { Client, Message } from "discord.js";
 import { Awaitable } from "../utils";
 import {
   ICommandConfig,
@@ -137,11 +137,11 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
   let source = cmd.config!.extra?.blueprint.source ?? "guild";
   if (!Array.isArray(source)) source = [source];
 
-  if (context.message.channel instanceof DMChannel && source.includes("dm")) {
+  if (context.message.channel.type === "DM" && source.includes("dm")) {
     return true;
   }
 
-  if (context.message.channel instanceof GuildChannel && source.includes("guild")) {
+  if (context.message.channel.type !== "DM" && source.includes("guild")) {
     return true;
   }
 

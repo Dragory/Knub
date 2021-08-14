@@ -8,7 +8,7 @@ import {
 } from "knub-command-manager";
 import { disableCodeBlocks } from "../helpers";
 import { getChannelId, getRoleId, getUserId } from "../utils";
-import { Channel, GuildChannel, GuildMember, Role, TextChannel, User, VoiceChannel } from "discord.js";
+import { Channel, GuildMember, Role, TextChannel, ThreadChannel, User, VoiceChannel } from "discord.js";
 import { AnyPluginData } from "../plugins/PluginData";
 import { CommandContext } from "./commandUtils";
 
@@ -44,7 +44,7 @@ export const baseTypeConverters = {
   },
 
   member(value: string, { message, pluginData: { client } }: CommandContext<AnyPluginData<any>>): GuildMember {
-    if (!(message.channel instanceof GuildChannel)) {
+    if (message.channel.type === "DM") {
       throw new TypeConversionError(`Type 'Member' can only be used in guilds`);
     }
 
@@ -67,13 +67,13 @@ export const baseTypeConverters = {
   },
 
   channel(value: string, { message }: CommandContext<AnyPluginData<any>>): Channel {
+    if (message.channel.type === "DM") {
+      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
+    }
+
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
-    }
-
-    if (!(message.channel instanceof GuildChannel)) {
-      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
     }
 
     const guild = message.channel.guild;
@@ -85,14 +85,14 @@ export const baseTypeConverters = {
     return channel;
   },
 
-  textChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): TextChannel {
+  textChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): TextChannel | ThreadChannel {
+    if (message.channel.type === "DM") {
+      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
+    }
+
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
-    }
-
-    if (!(message.channel instanceof GuildChannel)) {
-      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
     }
 
     const guild = message.channel.guild;
@@ -101,21 +101,21 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`Could not find channel for channel id \`${channelId}\``);
     }
 
-    if (!(channel instanceof TextChannel)) {
+    if (!channel.isText()) {
       throw new TypeConversionError(`Channel \`${channel.name}\` is not a text channel`);
     }
 
-    return channel;
+    return channel as TextChannel | ThreadChannel;
   },
 
   voiceChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): VoiceChannel {
+    if (message.channel.type === "DM") {
+      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
+    }
+
     const channelId = getChannelId(value);
     if (!channelId) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid channel`);
-    }
-
-    if (!(message.channel instanceof GuildChannel)) {
-      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
     }
 
     const guild = message.channel.guild;
@@ -132,7 +132,7 @@ export const baseTypeConverters = {
   },
 
   role(value: string, { message }: CommandContext<AnyPluginData<any>>): Role {
-    if (!(message.channel instanceof GuildChannel)) {
+    if (message.channel.type === "DM") {
       throw new TypeConversionError(`Type 'Role' can only be used in guilds`);
     }
 
@@ -180,7 +180,7 @@ export const baseCommandParameterTypeHelpers = {
   user: createTypeHelper<User>(baseTypeConverters.user),
   member: createTypeHelper<GuildMember>(baseTypeConverters.member),
   channel: createTypeHelper<Channel>(baseTypeConverters.channel),
-  textChannel: createTypeHelper<TextChannel>(baseTypeConverters.textChannel),
+  textChannel: createTypeHelper<TextChannel | ThreadChannel>(baseTypeConverters.textChannel),
   voiceChannel: createTypeHelper<VoiceChannel>(baseTypeConverters.voiceChannel),
   role: createTypeHelper<Role>(baseTypeConverters.role),
   userId: createTypeHelper<string>(baseTypeConverters.userId),

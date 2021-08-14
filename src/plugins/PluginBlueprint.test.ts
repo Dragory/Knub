@@ -39,7 +39,7 @@ describe("PluginBlueprint", () => {
 
           commands: [typedGuildCommand({ trigger: "foo", permission: null, run: noop })],
 
-          events: [typedGuildEventListener({ event: "message", listener: noop })],
+          events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
           afterLoad(pluginData) {
             setTimeout(() => {
@@ -68,7 +68,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -92,7 +92,7 @@ describe("PluginBlueprint", () => {
 
           events: [
             typedGuildEventListener({
-              event: "message",
+              event: "messageCreate",
               listener({ pluginData, args }) {
                 assert.strictEqual(pluginData.guild.id, args.message.channel.guild.id);
                 guildCounts[pluginData.guild.id]++;
@@ -113,7 +113,7 @@ describe("PluginBlueprint", () => {
 
         void knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         client.ws.emit("GUILD_CREATE", guild0);
@@ -172,7 +172,7 @@ describe("PluginBlueprint", () => {
 
         void knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild0 = createMockGuild(client);
@@ -211,7 +211,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const user = createMockUser(client);
@@ -228,7 +228,7 @@ describe("PluginBlueprint", () => {
           name: "plugin-to-load",
           events: [
             typedGlobalEventListener({
-              event: "message",
+              event: "messageCreate",
               listener({ pluginData, args }) {
                 assert.ok(isGlobalPluginData(pluginData));
                 assert.strictEqual((args.message.channel as TextChannel).guild.id, guild.id);
@@ -247,7 +247,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const user = createMockUser(client);
@@ -335,7 +335,7 @@ describe("PluginBlueprint", () => {
 
       knub.initialize();
       client.emit("connect");
-      client.emit("ready");
+      client.emit("ready", client);
       await sleep(30);
 
       const guild = createMockGuild(client);
@@ -387,7 +387,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -414,7 +414,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
       })();
     });
@@ -441,7 +441,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -468,7 +468,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
       })();
     });
@@ -495,7 +495,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -525,7 +525,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         void knub.unloadGlobalContext();
@@ -554,7 +554,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -584,7 +584,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         void knub.unloadGlobalContext();
@@ -621,7 +621,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -656,7 +656,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
       })();
     });
@@ -691,7 +691,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -729,7 +729,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         void knub.unloadGlobalContext();
@@ -762,7 +762,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -793,7 +793,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
       })();
     });
@@ -824,7 +824,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -858,7 +858,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         void knub.unloadGlobalContext();
@@ -918,7 +918,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -979,7 +979,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         void knub.unloadGlobalContext();
@@ -1017,7 +1017,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -1061,7 +1061,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -1123,7 +1123,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -1162,7 +1162,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -1203,7 +1203,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -1218,7 +1218,7 @@ describe("PluginBlueprint", () => {
 
           commands: [typedGuildCommand({ trigger: "foo", permission: null, run: noop })],
 
-          events: [typedGuildEventListener({ event: "message", listener: noop })],
+          events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
           afterLoad(pluginData) {
             // The command above should *not* be loaded
@@ -1249,7 +1249,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -1328,7 +1328,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -1421,7 +1421,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -1489,7 +1489,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         client.ws.emit("GUILD_CREATE", guild);
@@ -1531,7 +1531,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
@@ -1564,7 +1564,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
       })();
     });
@@ -1574,7 +1574,7 @@ describe("PluginBlueprint", () => {
         let msgEvFnCallNum = 0;
 
         const messageEv = typedGuildEventListener({
-          event: "message",
+          event: "messageCreate",
           listener() {
             msgEvFnCallNum++;
           },
@@ -1598,7 +1598,7 @@ describe("PluginBlueprint", () => {
 
         knub.initialize();
         client.emit("connect");
-        client.emit("ready");
+        client.emit("ready", client);
         await sleep(30);
 
         const guild = createMockGuild(client);
