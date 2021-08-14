@@ -2,11 +2,15 @@ import { noop } from "./utils";
 import events = require("events");
 import {
   Channel,
+  ChannelManager,
   Client,
   Constants,
   DMChannel,
   Guild,
+  GuildChannelManager,
   GuildManager,
+  GuildMember,
+  GuildMemberManager,
   Message,
   NewsChannel,
   Options,
@@ -66,6 +70,10 @@ export function createMockClient(): Client {
         };
       }
 
+      if (p === "channels") {
+        return persist(target, p, new ChannelManager(proxy, []));
+      }
+
       return noop;
     },
   });
@@ -78,26 +86,38 @@ export function sleep(ms: number): Promise<void> {
 let mockGuildId = 10000;
 export function createMockGuild(client: Client, data = {}): Guild {
   const id = (++mockGuildId).toString();
-  const mockGuild = client.guilds.cache.set(id, {
+  client.guilds.cache.set(id, {
     id,
+    client,
     name: `Mock Guild #${id}`,
     ...data,
-  } as any);
+  } as Guild);
 
-  return mockGuild.get(id)!;
+  const mockGuild = client.guilds.cache.get(id)!;
+  mockGuild.members = new GuildMemberManager(mockGuild);
+  mockGuild.channels = new GuildChannelManager(mockGuild);
+  return mockGuild;
 }
 
 let mockUserId = 20000;
 export function createMockUser(client: Client, data = {}): User {
   const id = (++mockUserId).toString();
-  const mockUser = client.users.cache.set(id, {
+  const mockUser = client.users.cache.set(
     id,
-    username: `mockuser_${id}`,
-    discriminator: "0001",
-    ...data,
-  } as any);
+    new User(client, {
+      id,
+      username: `mockuser_${id}`,
+      discriminator: "0001",
+      ...data,
+    })
+  );
 
   return mockUser.get(id)!;
+}
+
+export function createMockMember(guild: Guild, user: User): GuildMember {
+  guild.members.cache.set(user.id, new GuildMember(guild.client, { user }, guild));
+  return guild.members.cache.get(user.id)!;
 }
 
 let mockChannelId = 30000;
@@ -106,7 +126,7 @@ export function createMockTextChannel(client: Client, guildId: Snowflake, data =
   const guild = client.guilds.cache.get(guildId)!;
 
   /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
-  const mockTextChannel = guild.channels.cache.set(
+  guild.channels.cache.set(
     id,
     (Channel as any).create(
       client,
@@ -120,9 +140,10 @@ export function createMockTextChannel(client: Client, guildId: Snowflake, data =
       guild
     )
   );
-  /* eslint-enable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
 
-  return mockTextChannel.get(id) as TextChannel;
+  const mockChannel = guild.channels.cache.get(id)! as TextChannel;
+  client.channels.cache.set(id, mockChannel);
+  return mockChannel;
 }
 
 let mockMessageId = 40000;
@@ -136,7 +157,7 @@ export function createMockMessage(
     id: (++mockMessageId).toString(),
     channel_id: channel.id,
     mentions: [],
-    // @ts-ignore FIXME
+    // @ts-ignore
     author,
     ...data,
   });

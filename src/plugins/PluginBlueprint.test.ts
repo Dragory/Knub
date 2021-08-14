@@ -130,10 +130,10 @@ describe("PluginBlueprint", () => {
         const guild1Message1 = createMockMessage(client, guild1Channel, user1, { content: "foo" });
         const guild1Message2 = createMockMessage(client, guild1Channel, user1, { content: "bar" });
 
-        client.emit("message", guild0Message1);
-        client.emit("message", guild0Message2);
-        client.emit("message", guild1Message1);
-        client.emit("message", guild1Message2);
+        client.emit("messageCreate", guild0Message1);
+        client.emit("messageCreate", guild0Message2);
+        client.emit("messageCreate", guild1Message1);
+        client.emit("messageCreate", guild1Message2);
         await sleep(30);
 
         assert.strictEqual(guildCounts[guild0.id], 2);
@@ -253,7 +253,7 @@ describe("PluginBlueprint", () => {
         const user = createMockUser(client);
         const channel = createMockTextChannel(client, guild.id);
         const message = createMockMessage(client, channel, user);
-        client.emit("message", message);
+        client.emit("messageCreate", message);
       })();
     });
 
@@ -346,17 +346,17 @@ describe("PluginBlueprint", () => {
 
       // !info
       const infoFromUser1Msg = createMockMessage(client, channel, user1, { content: "!info" });
-      client.emit("message", infoFromUser1Msg);
+      client.emit("messageCreate", infoFromUser1Msg);
       await sleep(30);
       const infoFromUser2Msg = createMockMessage(client, channel, user2, { content: "!info" });
-      client.emit("message", infoFromUser2Msg);
+      client.emit("messageCreate", infoFromUser2Msg);
       await sleep(30);
 
       const serverFromUser1Msg = createMockMessage(client, channel, user1, { content: "!server" });
-      client.emit("message", serverFromUser1Msg);
+      client.emit("messageCreate", serverFromUser1Msg);
       await sleep(30);
       const serverFromUser2Msg = createMockMessage(client, channel, user2, { content: "!server" });
-      client.emit("message", serverFromUser2Msg);
+      client.emit("messageCreate", serverFromUser2Msg);
       await sleep(30);
 
       assert.deepStrictEqual(infoCmdCallUsers, [user1.id]);
@@ -1338,11 +1338,11 @@ describe("PluginBlueprint", () => {
         const channel = createMockTextChannel(client, guild.id);
 
         const message1 = createMockMessage(client, channel, user1, { content: "!foo" });
-        client.emit("message", message1);
+        client.emit("messageCreate", message1);
         await sleep(30);
 
         const message2 = createMockMessage(client, channel, user2, { content: "!foo" });
-        client.emit("message", message2);
+        client.emit("messageCreate", message2);
         await sleep(30);
 
         assert.equal(commandTriggers, 1);
@@ -1431,11 +1431,11 @@ describe("PluginBlueprint", () => {
         const channel = createMockTextChannel(client, guild.id);
 
         const message1 = createMockMessage(client, channel, user1, { content: "!foo" });
-        client.emit("message", message1);
+        client.emit("messageCreate", message1);
         await sleep(30);
 
         const message2 = createMockMessage(client, channel, user2, { content: "!foo" });
-        client.emit("message", message2);
+        client.emit("messageCreate", message2);
         await sleep(30);
 
         assert.equal(commandTriggers, 1);
@@ -1498,7 +1498,7 @@ describe("PluginBlueprint", () => {
         const channel = createMockTextChannel(client, guild.id);
         const user = createMockUser(client);
         const msg = createMockMessage(client, channel, user, { content: "!foo bar" });
-        client.emit("message", msg);
+        client.emit("messageCreate", msg);
       })();
     });
   });
@@ -1609,14 +1609,14 @@ describe("PluginBlueprint", () => {
         const author = createMockUser(client);
 
         const msg = createMockMessage(client, textChannel, author, { content: "hi!" });
-        client.emit("message", msg);
+        client.emit("messageCreate", msg);
         await sleep(30);
 
         client.emit("guildUnavailable", guild);
         await sleep(30);
 
         const msg2 = createMockMessage(client, textChannel, author, { content: "hi!" });
-        client.emit("message", msg2);
+        client.emit("messageCreate", msg2);
         await sleep(30);
 
         assert.strictEqual(msgEvFnCallNum, 1);

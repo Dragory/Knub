@@ -14,7 +14,7 @@ describe("typedGuildEventListener() helper", () => {
       listener() {},
     });
 
-    expect(blueprint1.event).to.equal("message");
+    expect(blueprint1.event).to.equal("messageCreate");
     expect(blueprint1.listener).to.not.equal(undefined);
     expect(blueprint1.allowSelf).to.equal(undefined);
   });
@@ -62,7 +62,7 @@ describe("typedGuildEventListener() helper", () => {
       listener() {},
     });
 
-    expect(blueprint.event).to.equal("message");
+    expect(blueprint.event).to.equal("messageCreate");
     expect(blueprint.listener).to.not.equal(undefined);
     expect(blueprint.allowSelf).to.equal(undefined);
   });
@@ -76,7 +76,7 @@ describe("typedGlobalEventListener() helper", () => {
       listener() {},
     });
 
-    expect(blueprint.event).to.equal("message");
+    expect(blueprint.event).to.equal("messageCreate");
     expect(blueprint.listener).to.not.equal(undefined);
     expect(blueprint.allowSelf).to.equal(undefined);
   });
@@ -124,7 +124,7 @@ describe("typedGlobalEventListener() helper", () => {
       listener() {},
     });
 
-    expect(blueprint.event).to.equal("message");
+    expect(blueprint.event).to.equal("messageCreate");
     expect(blueprint.listener).to.not.equal(undefined);
     expect(blueprint.allowSelf).to.equal(undefined);
   });
