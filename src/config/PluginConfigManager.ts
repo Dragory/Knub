@@ -110,7 +110,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const level = matchParams?.level ?? (member && this.getMemberLevel(member)) ?? null;
 
     // Passed roles -> passed member's roles
-    const memberRoles = matchParams.memberRoles ?? [...(member?.roles?.cache?.keys() ?? [])];
+    const memberRoles = matchParams.memberRoles ?? [...(member?.roles.cache.keys() ?? [])];
 
     const finalMatchParams: MatchParams = {
       level,
