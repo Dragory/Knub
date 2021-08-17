@@ -3,10 +3,13 @@ import { PluginConfigManager } from "./PluginConfigManager";
 import {
   createMockClient,
   createMockGuild,
-  createMockMember, createMockMessage, createMockRole,
+  createMockMember,
+  createMockMessage,
+  createMockRole,
   createMockTextChannel,
+  createMockThread,
   createMockUser,
-  sleep
+  sleep,
 } from "../testUtils";
 import { ConfigValidationError } from "./ConfigValidationError";
 import { BasePluginType } from "../plugins/pluginTypes";
@@ -230,8 +233,8 @@ describe("PluginConfigManager", () => {
   it("getMatchingConfig(): user", async () => {
     interface PluginType extends BasePluginType {
       config: {
-        works: boolean,
-      },
+        works: boolean;
+      };
     }
 
     const client = createMockClient();
@@ -241,17 +244,22 @@ describe("PluginConfigManager", () => {
     const channel = createMockTextChannel(client, guild.id);
     const message = createMockMessage(client, channel, user);
 
-    const configManager = new PluginConfigManager<PluginType>({
-      config: {
-        works: false,
-      },
-      overrides: [{
-        user: user.id,
+    const configManager = new PluginConfigManager<PluginType>(
+      {
         config: {
-          works: true,
+          works: false,
         },
-      }],
-    }, {});
+        overrides: [
+          {
+            user: user.id,
+            config: {
+              works: true,
+            },
+          },
+        ],
+      },
+      {}
+    );
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
 
     expect(configManager.get().works).to.equal(false);
@@ -263,8 +271,8 @@ describe("PluginConfigManager", () => {
   it("getMatchingConfig(): channel", async () => {
     interface PluginType extends BasePluginType {
       config: {
-        works: boolean,
-      },
+        works: boolean;
+      };
     }
 
     const client = createMockClient();
@@ -273,28 +281,68 @@ describe("PluginConfigManager", () => {
     const channel = createMockTextChannel(client, guild.id);
     const message = createMockMessage(client, channel, user);
 
-    const configManager = new PluginConfigManager<PluginType>({
-      config: {
-        works: false,
-      },
-      overrides: [{
-        channel: channel.id,
+    const configManager = new PluginConfigManager<PluginType>(
+      {
         config: {
-          works: true,
+          works: false,
         },
-      }],
-    }, {});
+        overrides: [
+          {
+            channel: channel.id,
+            config: {
+              works: true,
+            },
+          },
+        ],
+      },
+      {}
+    );
 
     expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ channelId: channel.id })).works).to.equal(true);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
 
+  it("getMatchingConfig(): channel of thread message", async () => {
+    interface PluginType extends BasePluginType {
+      config: {
+        works: boolean;
+      };
+    }
+
+    const client = createMockClient();
+    const guild = createMockGuild(client);
+    const user = createMockUser(client);
+    const channel = createMockTextChannel(client, guild.id);
+    const thread = createMockThread(channel);
+    const message = createMockMessage(client, thread, user);
+
+    const configManager = new PluginConfigManager<PluginType>(
+      {
+        config: {
+          works: false,
+        },
+        overrides: [
+          {
+            channel: channel.id,
+            config: {
+              works: true,
+            },
+          },
+        ],
+      },
+      {}
+    );
+
+    expect(configManager.get().works).to.equal(false);
+    expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
+  });
+
   it("getMatchingConfig(): category", async () => {
     interface PluginType extends BasePluginType {
       config: {
-        works: boolean,
-      },
+        works: boolean;
+      };
     }
 
     const categoryId = "12345";
@@ -304,28 +352,69 @@ describe("PluginConfigManager", () => {
     const channel = createMockTextChannel(client, guild.id, { parent_id: categoryId });
     const message = createMockMessage(client, channel, user);
 
-    const configManager = new PluginConfigManager<PluginType>({
-      config: {
-        works: false,
-      },
-      overrides: [{
-        category: categoryId,
+    const configManager = new PluginConfigManager<PluginType>(
+      {
         config: {
-          works: true,
+          works: false,
         },
-      }],
-    }, {});
+        overrides: [
+          {
+            category: categoryId,
+            config: {
+              works: true,
+            },
+          },
+        ],
+      },
+      {}
+    );
 
     expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ categoryId })).works).to.equal(true);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
 
+  it("getMatchingConfig(): category of thread message", async () => {
+    interface PluginType extends BasePluginType {
+      config: {
+        works: boolean;
+      };
+    }
+
+    const categoryId = "12345";
+    const client = createMockClient();
+    const guild = createMockGuild(client);
+    const user = createMockUser(client);
+    const channel = createMockTextChannel(client, guild.id, { parent_id: categoryId });
+    const thread = createMockThread(channel);
+    const message = createMockMessage(client, thread, user);
+
+    const configManager = new PluginConfigManager<PluginType>(
+      {
+        config: {
+          works: false,
+        },
+        overrides: [
+          {
+            category: categoryId,
+            config: {
+              works: true,
+            },
+          },
+        ],
+      },
+      {}
+    );
+
+    expect(configManager.get().works).to.equal(false);
+    expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
+  });
+
   it("getMatchingConfig(): roles", async () => {
     interface PluginType extends BasePluginType {
       config: {
-        works: boolean,
-      },
+        works: boolean;
+      };
     }
 
     const client = createMockClient();
@@ -336,17 +425,22 @@ describe("PluginConfigManager", () => {
     const channel = createMockTextChannel(client, guild.id);
     const message = createMockMessage(client, channel, user);
 
-    const configManager = new PluginConfigManager<PluginType>({
-      config: {
-        works: false,
-      },
-      overrides: [{
-        role: role.id,
+    const configManager = new PluginConfigManager<PluginType>(
+      {
         config: {
-          works: true,
+          works: false,
         },
-      }],
-    }, {});
+        overrides: [
+          {
+            role: role.id,
+            config: {
+              works: true,
+            },
+          },
+        ],
+      },
+      {}
+    );
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
 
     expect(configManager.get().works).to.equal(false);

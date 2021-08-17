@@ -7,19 +7,24 @@ import {
   Constants,
   DMChannel,
   Guild,
+  GuildChannel,
   GuildChannelManager,
   GuildManager,
   GuildMember,
   GuildMemberManager,
   Message,
   NewsChannel,
-  Options, Role, RoleManager,
+  Options,
+  Role,
+  RoleManager,
   Snowflake,
   TextChannel,
+  ThreadChannel,
   User,
   UserManager,
-  WebSocketManager
+  WebSocketManager,
 } from "discord.js";
+import { ChannelType } from "discord-api-types";
 
 const EventEmitter = events.EventEmitter;
 
@@ -154,7 +159,7 @@ export function createMockTextChannel(client: Client, guildId: Snowflake, data =
 let mockMessageId = 40000;
 export function createMockMessage(
   client: Client,
-  channel: TextChannel | DMChannel | NewsChannel,
+  channel: TextChannel | DMChannel | NewsChannel | ThreadChannel,
   author: User,
   data = {}
 ): Message {
@@ -173,10 +178,38 @@ export function createMockMessage(
 let mockRoleId = 50000;
 export function createMockRole(guild: Guild, data = {}, overrideId: string | null = null): Role {
   const id = overrideId || (++mockRoleId).toString();
-  guild.roles.cache.set(id, new Role(guild.client, {
+  guild.roles.cache.set(
     id,
-    permissions: "0",
-    ...data,
-  } as any, guild));
+    new Role(
+      guild.client,
+      {
+        id,
+        permissions: "0",
+        ...data,
+      } as any,
+      guild
+    )
+  );
   return guild.roles.cache.get(id)!;
+}
+
+let mockThreadId = 60000;
+export function createMockThread(channel: NewsChannel | GuildChannel): ThreadChannel {
+  const id = (++mockThreadId).toString();
+  channel.guild.channels.cache.set(
+    id,
+    new ThreadChannel(
+      channel.guild,
+      {
+        id,
+        type: ChannelType.GuildPublicThread,
+        parent_id: channel.id,
+      },
+      channel.client
+    )
+  );
+
+  const mockThread = channel.guild.channels.cache.get(id)! as ThreadChannel;
+  channel.client.channels.cache.set(id, mockThread);
+  return mockThread;
 }

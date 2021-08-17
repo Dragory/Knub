@@ -97,11 +97,17 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       (matchParams.member && matchParams.member.id) ||
       (message && message.author && message.author.id);
 
-    // Passed channelId -> passed message's channel id
-    const channelId = matchParams.channelId || (message && message.channel && message.channel.id);
+    // Passed channelId -> passed message's thread's parent id -> passed message's channel id
+    const channelId =
+      matchParams.channelId ||
+      (message?.channel?.isThread?.() && message.channel.parentId) ||
+      (message && message.channel && message.channel.id);
 
-    // Passed category id -> passed message's channel's category id
-    const categoryId = matchParams.categoryId || (message?.channel && (message.channel as GuildChannel).parentId);
+    // Passed category id -> passed message's thread's channel's category id -> passed message's channel's category id
+    const categoryId =
+      matchParams.categoryId ||
+      (message?.channel?.isThread?.() && message.channel.parent?.parentId) ||
+      (message?.channel && (message.channel as GuildChannel).parentId);
 
     // Passed member -> passed message's member
     const member = matchParams.member || (message && message.member);
