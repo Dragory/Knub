@@ -15,6 +15,8 @@ export interface MatchParams<TExtra extends Record<string, unknown> = Record<str
   memberRoles?: string[] | null;
   channelId?: string | null;
   categoryId?: string | null;
+  threadId?: string | null;
+  isThread?: boolean | null;
   extra?: TExtra;
 }
 
@@ -172,6 +174,42 @@ export async function evaluateOverrideCriteria<TPluginData extends AnyPluginData
           match = match || matchCategory === categoryId;
         }
 
+        if (!match) return false;
+      } else {
+        return false;
+      }
+
+      matchedOne = true;
+      continue;
+    }
+
+    // Match on thread
+    // For a successful match, requires ANY of the specified threads to match
+    if (key === "thread") {
+      const value = criteria[key]!;
+      const matchThread = matchParams.threadId;
+      if (matchThread) {
+        const threads = Array.isArray(value) ? value : [value];
+        let match = false;
+
+        for (const threadId of threads) {
+          match = match || matchThread === threadId;
+        }
+
+        if (!match) return false;
+      } else {
+        return false;
+      }
+
+      matchedOne = true;
+      continue;
+    }
+
+    // Match on whether this is a thread (of any kind)
+    if (key === "is_thread") {
+      const value = criteria[key]!;
+      if (value != null) {
+        const match = matchParams.threadId != null;
         if (!match) return false;
       } else {
         return false;

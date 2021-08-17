@@ -43,6 +43,9 @@ export interface PluginOverrideCriteria<TCustomOverrideCriteria> {
   level?: string | string[] | null;
   user?: string | string[] | null;
   role?: string | string[] | null;
+  thread?: string | string[] | null;
+  is_thread?: boolean | null;
+  thread_type?: "public" | "private" | null;
 
   all?: Array<PluginOverrideCriteria<TCustomOverrideCriteria>> | null;
   any?: Array<PluginOverrideCriteria<TCustomOverrideCriteria>> | null;

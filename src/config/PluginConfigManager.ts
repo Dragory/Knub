@@ -109,6 +109,12 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       (message?.channel?.isThread?.() && message.channel.parent?.parentId) ||
       (message?.channel && (message.channel as GuildChannel).parentId);
 
+    // Passed thread id -> passed message's thread id
+    const threadId = matchParams.threadId || (message?.channel?.isThread?.() && message.channel.id) || null;
+
+    // Passed value -> whether message's channel is a thread
+    const isThread = matchParams.isThread ?? message?.channel?.isThread?.() ?? null;
+
     // Passed member -> passed message's member
     const member = matchParams.member || (message && message.member);
 
@@ -123,6 +129,8 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       userId,
       channelId,
       categoryId,
+      threadId,
+      isThread,
       memberRoles,
     };
 

@@ -410,6 +410,76 @@ describe("PluginConfigManager", () => {
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
 
+  it("getMatchingConfig(): thread", async () => {
+    interface PluginType extends BasePluginType {
+      config: {
+        works: boolean;
+      };
+    }
+
+    const client = createMockClient();
+    const guild = createMockGuild(client);
+    const user = createMockUser(client);
+    const channel = createMockTextChannel(client, guild.id);
+    const thread = createMockThread(channel);
+    const message = createMockMessage(client, thread, user);
+
+    const configManager = new PluginConfigManager<PluginType>(
+      {
+        config: {
+          works: false,
+        },
+        overrides: [
+          {
+            thread: thread.id,
+            config: {
+              works: true,
+            },
+          },
+        ],
+      },
+      {}
+    );
+
+    expect(configManager.get().works).to.equal(false);
+    expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
+  });
+
+  it("getMatchingConfig(): is_thread", async () => {
+    interface PluginType extends BasePluginType {
+      config: {
+        works: boolean;
+      };
+    }
+
+    const client = createMockClient();
+    const guild = createMockGuild(client);
+    const user = createMockUser(client);
+    const channel = createMockTextChannel(client, guild.id);
+    const thread = createMockThread(channel);
+    const message = createMockMessage(client, thread, user);
+
+    const configManager = new PluginConfigManager<PluginType>(
+      {
+        config: {
+          works: false,
+        },
+        overrides: [
+          {
+            is_thread: true,
+            config: {
+              works: true,
+            },
+          },
+        ],
+      },
+      {}
+    );
+
+    expect(configManager.get().works).to.equal(false);
+    expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
+  });
+
   it("getMatchingConfig(): roles", async () => {
     interface PluginType extends BasePluginType {
       config: {
