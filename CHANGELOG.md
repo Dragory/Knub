@@ -1,3 +1,10 @@
+# 30.0.0-beta.40
+* New overrides:
+  * `thread` — Match on thread ID
+  * `is_thread` — Match on whether a given message is in a thread
+* `channel` and `category` overrides now support messages within threads
+  * A thread message's `channel` is the thread's parent channel and its `category` is the parent channel's category
+
 # 30.0.0-beta.39
 * **BREAKING CHANGE:** Knub now uses discord.js v13 and requires Node v16.6+
 * Lots of discord.js fixes from @Dark
