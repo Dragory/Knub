@@ -293,20 +293,21 @@ export class Knub<
     };
   }
 
-  protected resolveDependencies(
+  protected async resolveDependencies(
     plugin: AnyPluginBlueprint,
     resolvedDependencies: Set<string> = new Set()
-  ): Set<string> {
+  ): Promise<Set<string>> {
     if (!plugin.dependencies) {
       return resolvedDependencies;
     }
 
-    for (const dependency of plugin.dependencies()) {
+    const dependencies = await plugin.dependencies();
+    for (const dependency of dependencies) {
       if (!resolvedDependencies.has(dependency.name)) {
         resolvedDependencies.add(dependency.name);
 
         // Resolve transitive dependencies
-        this.resolveDependencies(dependency, resolvedDependencies);
+        await this.resolveDependencies(dependency, resolvedDependencies);
       }
     }
 
@@ -466,7 +467,7 @@ export class Knub<
     const enabledPlugins = await this.options.getEnabledGuildPlugins!(ctx, this.guildPlugins);
     const dependencies: Set<string> = new Set();
     for (const pluginName of enabledPlugins) {
-      this.resolveDependencies(this.guildPlugins.get(pluginName)!, dependencies);
+      await this.resolveDependencies(this.guildPlugins.get(pluginName)!, dependencies);
     }
 
     // Reverse the order of dependencies so transitive dependencies get loaded first

@@ -125,7 +125,7 @@ export interface GuildPluginBlueprint<TPluginData extends GuildPluginData<any>>
    * Function that returns other plugins that are required for this plugin to function.
    * They will be loaded before this plugin.
    */
-  dependencies?: () => Array<GuildPluginBlueprint<any>>;
+  dependencies?: () => Array<GuildPluginBlueprint<any>> | Promise<Array<GuildPluginBlueprint<any>>>;
 
   /**
    * Event listeners that are automatically registered on plugin load
@@ -157,7 +157,7 @@ export interface GlobalPluginBlueprint<TPluginData extends GlobalPluginData<any>
    * Function that returns other plugins that are required for this plugin to function.
    * They will be loaded before this plugin.
    */
-  dependencies?: () => Array<GlobalPluginBlueprint<any>>;
+  dependencies?: () => Array<GlobalPluginBlueprint<any>> | Promise<Array<GlobalPluginBlueprint<any>>>;
 
   /**
    * Event listeners that are automatically registered on plugin load
