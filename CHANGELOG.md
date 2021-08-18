@@ -1,3 +1,6 @@
+# 30.0.0-beta.42
+* `PluginBlueprint.dependencies` can now also return a Promise
+
 # 30.0.0-beta.41
 * **BREAKING CHANGE:** `PluginBlueprint.dependencies` is now a function that returns an array of dependencies
   * This should better accomodate circular dependencies
