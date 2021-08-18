@@ -1,3 +1,7 @@
+# 30.0.0-beta.41
+* **BREAKING CHANGE:** `PluginBlueprint.dependencies` is now a function that returns an array of dependencies
+  * This should better accomodate circular dependencies
+
 # 30.0.0-beta.40
 * New overrides:
   * `thread` — Match on thread ID
