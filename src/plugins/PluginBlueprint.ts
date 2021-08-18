@@ -122,9 +122,10 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
 export interface GuildPluginBlueprint<TPluginData extends GuildPluginData<any>>
   extends BasePluginBlueprint<TPluginData> {
   /**
-   * Names of other guild plugins that are required for this plugin to function. They will be loaded before this plugin.
+   * Function that returns other plugins that are required for this plugin to function.
+   * They will be loaded before this plugin.
    */
-  dependencies?: Array<GuildPluginBlueprint<any>>;
+  dependencies?: () => Array<GuildPluginBlueprint<any>>;
 
   /**
    * Event listeners that are automatically registered on plugin load
@@ -153,10 +154,10 @@ export type AnyGuildEventListenerBlueprint<TPluginData extends GuildPluginData<a
 export interface GlobalPluginBlueprint<TPluginData extends GlobalPluginData<any>>
   extends BasePluginBlueprint<TPluginData> {
   /**
-   * Names of other global plugins that are required for this plugin to function.
+   * Function that returns other plugins that are required for this plugin to function.
    * They will be loaded before this plugin.
    */
-  dependencies?: Array<GlobalPluginBlueprint<any>>;
+  dependencies?: () => Array<GlobalPluginBlueprint<any>>;
 
   /**
    * Event listeners that are automatically registered on plugin load

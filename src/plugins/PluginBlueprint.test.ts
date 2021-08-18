@@ -1,11 +1,13 @@
 import { CooldownManager, GlobalPluginBlueprint, GlobalPluginData, Knub, LockManager } from "../index";
 import {
   createMockClient,
-  createMockGuild, createMockMember,
-  createMockMessage, createMockRole,
+  createMockGuild,
+  createMockMember,
+  createMockMessage,
+  createMockRole,
   createMockTextChannel,
   createMockUser,
-  sleep
+  sleep,
 } from "../testUtils";
 import * as assert from "assert";
 import { noop } from "../utils";
@@ -314,7 +316,7 @@ describe("PluginBlueprint", () => {
       const user3 = createMockUser(client);
 
       const role = createMockRole(guild);
-      const member3 = createMockMember(guild, user3, { roles: [role.id] });
+      const _member3 = createMockMember(guild, user3, { roles: [role.id] });
 
       const knub = new Knub(client, {
         guildPlugins: [TestPlugin],
@@ -345,7 +347,7 @@ describe("PluginBlueprint", () => {
                       config: {
                         can_use_ping_cmd: true,
                       },
-                    }
+                    },
                   ],
                 },
               },
@@ -362,7 +364,6 @@ describe("PluginBlueprint", () => {
 
       client.ws.emit("GUILD_CREATE", guild);
       await sleep(10);
-
 
       const channel = createMockTextChannel(client, guild.id);
 
@@ -915,7 +916,7 @@ describe("PluginBlueprint", () => {
 
         const PluginWithTests: GuildPluginBlueprint<GuildPluginData<BasePluginType>> = {
           name: "plugin-with-tests",
-          dependencies: [PluginWithPublicInterface],
+          dependencies: () => [PluginWithPublicInterface],
           afterLoad(pluginData) {
             getPluginFn = pluginData.getPlugin.bind(pluginData);
             plugin1Interface = pluginData.getPlugin(PluginWithPublicInterface);
@@ -979,7 +980,7 @@ describe("PluginBlueprint", () => {
 
         const PluginWithTests: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>> = {
           name: "plugin-with-tests",
-          dependencies: [PluginWithPublicInterface],
+          dependencies: () => [PluginWithPublicInterface],
           afterLoad(pluginData) {
             getPluginFn = pluginData.getPlugin.bind(pluginData);
             plugin1Interface = pluginData.getPlugin(PluginWithPublicInterface);
@@ -1172,7 +1173,7 @@ describe("PluginBlueprint", () => {
         const PluginToLoad = typedGuildPlugin({
           name: "plugin-to-load",
 
-          dependencies: [DependencyToLoad, OtherDependencyToLoad],
+          dependencies: () => [DependencyToLoad, OtherDependencyToLoad],
 
           afterLoad(pluginData) {
             assert.ok(pluginData.hasPlugin(DependencyToLoad));
@@ -1207,13 +1208,13 @@ describe("PluginBlueprint", () => {
         const DependencyTwo = typedGuildPlugin({ name: "dependency-two" });
         const DependencyOne = typedGuildPlugin({
           name: "dependency-one",
-          dependencies: [DependencyTwo],
+          dependencies: () => [DependencyTwo],
         });
 
         const PluginToLoad = typedGuildPlugin({
           name: "plugin-to-load",
 
-          dependencies: [DependencyOne],
+          dependencies: () => [DependencyOne],
 
           afterLoad(pluginData) {
             assert.ok(pluginData.hasPlugin(DependencyOne));
@@ -1265,7 +1266,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToLoad = typedGuildPlugin({
           name: "plugin-to-load",
-          dependencies: [Dependency],
+          dependencies: () => [Dependency],
         });
 
         const client = createMockClient();

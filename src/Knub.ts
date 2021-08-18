@@ -301,7 +301,7 @@ export class Knub<
       return resolvedDependencies;
     }
 
-    for (const dependency of plugin.dependencies) {
+    for (const dependency of plugin.dependencies()) {
       if (!resolvedDependencies.has(dependency.name)) {
         resolvedDependencies.add(dependency.name);
 
