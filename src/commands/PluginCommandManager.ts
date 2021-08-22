@@ -32,6 +32,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
   constructor(client: Client, opts: PluginCommandManagerOpts = {}) {
     this.manager = new CommandManager<CommandContext<TPluginData>, CommandExtraData<TPluginData>>({
       prefix: opts.prefix ?? getDefaultPrefix(client),
+      optionPrefixes: ["-", "--", "—"],
     });
 
     this.handlers = new Map<number, CommandFn<TPluginData, any>>();
