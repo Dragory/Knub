@@ -459,7 +459,7 @@ export class Knub<
 
   protected getGuildLoadQueue(guildId: Snowflake): Queue {
     if (!this.guildLoadQueues.has(guildId)) {
-      const queueTimeout = 60 * 1000; // 1 minute, should be plenty to allow plugins time to load/unload properly
+      const queueTimeout = 60 * 5 * 1000; // 5 minutes, should be plenty to allow plugins time to load/unload properly
       this.guildLoadQueues.set(guildId, new Queue(queueTimeout));
     }
 
