@@ -1,3 +1,6 @@
+# 30.0.0-beta.43
+* Fix bug where errors during guild loading did not result in the partial guild being unloaded
+
 # 30.0.0-beta.42
 * `PluginBlueprint.dependencies` can now also return a Promise
 
