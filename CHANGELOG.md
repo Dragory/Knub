@@ -1,3 +1,7 @@
+# 30.0.0-beta.44
+* Increase guild load queue timeout
+* Add plugin load time performance stats
+
 # 30.0.0-beta.43
 * Fix bug where errors during guild loading did not result in the partial guild being unloaded
 
