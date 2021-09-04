@@ -49,6 +49,44 @@ describe("Knub", () => {
     assert(loadedTimes === 1);
   });
 
+  it("GUILD_CREATE followed by ready event load guild's plugins only once", async () => {
+    let loadedTimes = 0;
+
+    const PluginToLoad = typedGuildPlugin({
+      name: "plugin-to-load",
+
+      afterLoad() {
+        loadedTimes++;
+      },
+
+      afterUnload() {
+        loadedTimes--;
+      },
+    });
+
+    const client = createMockClient();
+    const knub = new Knub(client, {
+      guildPlugins: [PluginToLoad],
+      options: {
+        getEnabledGuildPlugins() {
+          return ["plugin-to-load"];
+        },
+        logFn: noop,
+      },
+    });
+
+    knub.initialize();
+    client.emit("connect");
+    await sleep(50);
+
+    const guild = createMockGuild(client);
+    client.ws.emit("GUILD_CREATE", guild);
+    await sleep(50);
+    client.emit("ready", client);
+    await sleep(50);
+    assert(loadedTimes === 1);
+  });
+
   it("Errors during plugin loading unloads guild", async () => {
     let loadedTimes = 0;
 
