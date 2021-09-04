@@ -361,11 +361,11 @@ export class Knub<
     const guilds: Guild[] = Array.from(this.client.guilds.cache.values());
     const loadPromises = guilds.map((guild) => this.loadGuild(guild.id));
 
-    await Promise.all(loadPromises);
+    await Promise.allSettled(loadPromises);
   }
 
   public async loadGuild(guildId: Snowflake): Promise<void> {
-    return this.getGuildLoadQueue(guildId).add(async () => {
+    let guildLoadPromise = this.getGuildLoadQueue(guildId).add(async () => {
       if (this.loadedGuilds.has(guildId)) {
         return;
       }
@@ -383,17 +383,33 @@ export class Knub<
         locks: new LockManager(),
       };
 
+      let err: any = null;
       try {
         await this.loadGuildConfig(guildContext);
         await this.loadGuildPlugins(guildContext);
-      } catch (err) {
-        await this.unloadGuild(guildId);
-        throw err;
+      } catch (_err) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        err = _err;
       }
 
+      // Even if we get an error, we need to mark the guild briefly as loaded
+      // so the unload function has something to work with
       this.loadedGuilds.set(guildId, guildContext);
+
+      // However, we don't emit the guildLoaded event unless we managed to load everything without errors
+      if (err) {
+        throw err;
+      }
       this.emit("guildLoaded", guildId);
     });
+
+    guildLoadPromise = guildLoadPromise.catch(async (err) => {
+      // If we encounter errors during loading, unload the guild and re-throw the error
+      await this.unloadGuild(guildId);
+      throw err;
+    });
+
+    return guildLoadPromise;
   }
 
   public async reloadGuild(guildId: Snowflake): Promise<void> {

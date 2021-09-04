@@ -13,10 +13,9 @@ export class Queue<TQueueFunction extends AnyFn = AnyFn> {
   }
 
   public add(fn: TQueueFunction): Promise<void> {
-    const promise = new Promise<void>((resolve) => {
+    const promise = new Promise<void>((resolve, reject) => {
       this.queue.push(async () => {
-        await fn();
-        resolve();
+        await Promise.resolve(fn()).then(resolve).catch(reject);
       });
 
       if (!this.running) this.next();
