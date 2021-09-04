@@ -1,3 +1,6 @@
+# 30.0.0-beta.45
+* Changed guild loading to be sequential as a test
+
 # 30.0.0-beta.44
 * Increase guild load queue timeout
 * Add plugin load time performance stats
