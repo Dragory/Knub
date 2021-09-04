@@ -44,12 +44,23 @@ import { EventRelay } from "./events/EventRelay";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 import { Queue } from "./Queue";
 import { GatewayGuildCreateDispatchData } from "discord-api-types";
+import { performance } from "perf_hooks";
 
 const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>> = {
   guildPlugins: [],
   globalPlugins: [],
   options: {},
 };
+
+interface PluginPerformanceStats {
+  averageLoadTimes: Record<
+    string,
+    {
+      time: number;
+      count: number;
+    }
+  >;
+}
 
 const defaultLogFn: LogFn = (level: string, ...args) => {
   /* eslint-disable no-console */
@@ -81,6 +92,10 @@ export class Knub<
   protected options: KnubOptions<TGuildConfig>;
 
   protected log: LogFn = defaultLogFn;
+
+  protected pluginPerformanceStats: PluginPerformanceStats = {
+    averageLoadTimes: {},
+  };
 
   constructor(client: Client, userArgs: Partial<KnubArgs<TGuildConfig>>) {
     super();
@@ -496,6 +511,8 @@ export class Knub<
         throw new UnknownPluginError(`Unknown plugin: ${pluginName}`);
       }
 
+      const startTime = performance.now();
+
       const plugin = this.guildPlugins.get(pluginName)!;
       const isDependency = !enabledPlugins.includes(pluginName);
 
@@ -554,6 +571,19 @@ export class Knub<
         blueprint: plugin,
         pluginData: fullPluginData,
       });
+
+      const totalLoadTime = performance.now() - startTime;
+      if (!this.pluginPerformanceStats.averageLoadTimes[pluginName]) {
+        this.pluginPerformanceStats.averageLoadTimes[pluginName] = {
+          time: 0,
+          count: 0,
+        };
+      }
+
+      const performanceStats = this.pluginPerformanceStats.averageLoadTimes[pluginName]!;
+      performanceStats.time =
+        (performanceStats.count * performanceStats.time + totalLoadTime) / (performanceStats.count + 1);
+      performanceStats.count++;
     }
 
     // Run afterLoad functions
@@ -671,5 +701,9 @@ export class Knub<
     for (const loadedPlugin of ctx.loadedPlugins.values()) {
       await loadedPlugin.blueprint.afterLoad?.(loadedPlugin.pluginData);
     }
+  }
+
+  public getPluginPerformanceStats(): PluginPerformanceStats {
+    return this.pluginPerformanceStats;
   }
 }
