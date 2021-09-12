@@ -105,7 +105,7 @@ export function waitForReply(
       resolve(null);
     }, timeout);
 
-    client.on("message", (msg) => {
+    client.on("messageCreate", (msg) => {
       if (!msg.channel || msg.channel.id !== channel.id) return;
       if (msg.author && msg.author.id === client.user!.id) return;
       if (restrictToUserId && (!msg.author || msg.author.id !== restrictToUserId)) return;
