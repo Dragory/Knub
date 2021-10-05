@@ -254,6 +254,7 @@ export class Knub<
     return {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _pluginType: undefined as any,
+      pluginName: plugin.name,
       loaded: false,
       client: this.client,
       config: configManager,

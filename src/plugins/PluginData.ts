@@ -28,6 +28,8 @@ export type BasePluginData<TPluginType extends BasePluginType> = {
    */
   loaded: boolean;
 
+  pluginName: string;
+
   /**
    * The underlying d.js Client object
    */
