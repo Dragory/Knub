@@ -45,22 +45,13 @@ import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 import { Queue } from "./Queue";
 import { GatewayGuildCreateDispatchData } from "discord-api-types";
 import { performance } from "perf_hooks";
+import { Profiler } from "./Profiler";
 
 const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>> = {
   guildPlugins: [],
   globalPlugins: [],
   options: {},
 };
-
-interface PluginPerformanceStats {
-  averageLoadTimes: Record<
-    string,
-    {
-      time: number;
-      count: number;
-    }
-  >;
-}
 
 const defaultLogFn: LogFn = (level: string, ...args) => {
   /* eslint-disable no-console */
@@ -93,9 +84,7 @@ export class Knub<
 
   protected log: LogFn = defaultLogFn;
 
-  protected pluginPerformanceStats: PluginPerformanceStats = {
-    averageLoadTimes: {},
-  };
+  public profiler = new Profiler();
 
   constructor(client: Client, userArgs: Partial<KnubArgs<TGuildConfig>>) {
     super();
@@ -576,17 +565,7 @@ export class Knub<
       });
 
       const totalLoadTime = performance.now() - startTime;
-      if (!this.pluginPerformanceStats.averageLoadTimes[pluginName]) {
-        this.pluginPerformanceStats.averageLoadTimes[pluginName] = {
-          time: 0,
-          count: 0,
-        };
-      }
-
-      const performanceStats = this.pluginPerformanceStats.averageLoadTimes[pluginName]!;
-      performanceStats.time =
-        (performanceStats.count * performanceStats.time + totalLoadTime) / (performanceStats.count + 1);
-      performanceStats.count++;
+      this.profiler.addDataPoint(`load:${pluginName}`, totalLoadTime);
     }
 
     // Run afterLoad functions
@@ -704,9 +683,5 @@ export class Knub<
     for (const loadedPlugin of ctx.loadedPlugins.values()) {
       await loadedPlugin.blueprint.afterLoad?.(loadedPlugin.pluginData);
     }
-  }
-
-  public getPluginPerformanceStats(): PluginPerformanceStats {
-    return this.pluginPerformanceStats;
   }
 }
