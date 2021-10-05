@@ -1,6 +1,8 @@
 import { EventArguments, ExtendedClientEvents, fromDjsArgs, GuildEvent, isGuildEvent, ValidEvent } from "./eventTypes";
 import { eventToGuild } from "./eventUtils";
 import { Client, ClientEvents } from "discord.js";
+import { Profiler } from "../Profiler";
+import { performance } from "perf_hooks";
 
 export type RelayListener<TEvent extends ValidEvent> = (args: EventArguments[TEvent]) => any;
 type GuildListenerMap = Map<string, Map<GuildEvent, Set<RelayListener<GuildEvent>>>>;
@@ -15,7 +17,7 @@ export class EventRelay {
   protected anyListeners: AnyListenerMap = new Map() as AnyListenerMap;
   protected registeredRelays: Set<ValidEvent> = new Set();
 
-  constructor(protected client: Client) {}
+  constructor(protected client: Client, protected profiler: Profiler) {}
 
   onGuildEvent<TEvent extends GuildEvent>(guildId: string, ev: TEvent, listener: RelayListener<TEvent>): void {
     if (!this.guildListeners.has(guildId)) {
@@ -75,7 +77,11 @@ export class EventRelay {
       const guild = eventToGuild[ev]?.(convertedArgs);
       if (guild && this.guildListeners.get(guild.id)?.has(ev)) {
         for (const listener of this.guildListeners.get(guild.id)!.get(ev)!.values()!) {
-          listener(convertedArgs as EventArguments[GuildEvent]);
+          const startTime = performance.now();
+          const result: unknown = listener(convertedArgs as EventArguments[GuildEvent]);
+          void Promise.resolve(result).then(() => {
+            this.profiler.addDataPoint(`event:${ev}`, performance.now() - startTime);
+          });
         }
       }
     }
@@ -83,7 +89,11 @@ export class EventRelay {
     // Guild events and global events are both passed to "any listeners"
     if (this.anyListeners.has(ev)) {
       for (const listener of this.anyListeners.get(ev)!.values()) {
-        listener(convertedArgs);
+        const startTime = performance.now();
+        const result: unknown = listener(convertedArgs);
+        void Promise.resolve(result).then(() => {
+          this.profiler.addDataPoint(`event:${ev}`, performance.now() - startTime);
+        });
       }
     }
   }

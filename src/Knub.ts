@@ -95,7 +95,7 @@ export class Knub<
     };
 
     this.client = client;
-    this.eventRelay = new EventRelay(client);
+    this.eventRelay = new EventRelay(client, this.profiler);
 
     this.globalContext = {
       // @ts-ignore: This property is always set in loadGlobalConfig() before it can be used by plugins
@@ -410,6 +410,11 @@ export class Knub<
     guildLoadPromise = guildLoadPromise.catch(async (err) => {
       // If we encounter errors during loading, unload the guild and re-throw the error
       await this.unloadGuild(guildId);
+
+      if (this.listenerCount("error") > 0) {
+        this.emit("error", err);
+        return;
+      }
       throw err;
     });
 
@@ -565,7 +570,7 @@ export class Knub<
       });
 
       const totalLoadTime = performance.now() - startTime;
-      this.profiler.addDataPoint(`load:${pluginName}`, totalLoadTime);
+      this.profiler.addDataPoint(`load-plugin:${pluginName}`, totalLoadTime);
     }
 
     // Run afterLoad functions

@@ -16,6 +16,7 @@ import {
 import { Client, Message } from "discord.js";
 import { AnyPluginData } from "../plugins/PluginData";
 import { CommandBlueprint } from "./CommandBlueprint";
+import { performance } from "perf_hooks";
 
 export interface PluginCommandManagerOpts {
   prefix?: string | RegExp;
@@ -127,6 +128,12 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
       command: matchedCommand,
     };
 
+    const startTime = performance.now();
     await handler(meta);
+    const commandName =
+      typeof matchedCommand.originalTriggers[0] === "string"
+        ? matchedCommand.originalTriggers[0]
+        : matchedCommand.originalTriggers[0].source;
+    this.pluginData!.getKnubInstance().profiler.addDataPoint(`command:${commandName}`, performance.now() - startTime);
   }
 }
