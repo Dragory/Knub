@@ -226,8 +226,8 @@ describe("Knub", () => {
     client.emit("messageCreate", message);
     await sleep(20);
 
-    expect(Object.keys(knub.profiler.getData())).to.include("event:messageCreate");
-    expect(knub.profiler.getData()["event:messageCreate"].totalTime).to.be.greaterThanOrEqual(8);
+    expect(Object.keys(knub.profiler.getData())).to.include("event:messageCreate:plugin-to-load");
+    expect(knub.profiler.getData()["event:messageCreate:plugin-to-load"].totalTime).to.be.greaterThanOrEqual(8);
   });
 
   it("Profiler tracks command processing times", async () => {

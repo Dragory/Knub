@@ -3,6 +3,7 @@ import { GuildPluginData } from "..";
 import { GuildEvent, GuildEventArguments } from "./eventTypes";
 import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
 import { AnyGuildEventListenerBlueprint } from "../plugins/PluginBlueprint";
+import { RelayListener } from "./EventRelay";
 
 export class GuildPluginEventManager<
   TPluginData extends GuildPluginData<any>
@@ -36,6 +37,8 @@ export class GuildPluginEventManager<
     };
 
     this.listeners.get(blueprint.event)!.add(wrappedListener);
+
+    (wrappedListener as RelayListener<any>).profilerContext = this.pluginData!.pluginName;
     this.eventRelay.onGuildEvent(this.pluginData!.guild.id, blueprint.event, wrappedListener);
 
     return wrappedListener;

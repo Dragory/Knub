@@ -4,7 +4,10 @@ import { Client, ClientEvents } from "discord.js";
 import { Profiler } from "../Profiler";
 import { performance } from "perf_hooks";
 
-export type RelayListener<TEvent extends ValidEvent> = (args: EventArguments[TEvent]) => any;
+export type RelayListener<TEvent extends ValidEvent> = {
+  (args: EventArguments[TEvent]): any;
+  profilerContext?: string;
+};
 type GuildListenerMap = Map<string, Map<GuildEvent, Set<RelayListener<GuildEvent>>>>;
 type AnyListenerMap = Map<ValidEvent, Set<RelayListener<ValidEvent>>>;
 
@@ -80,7 +83,11 @@ export class EventRelay {
           const startTime = performance.now();
           const result: unknown = listener(convertedArgs as EventArguments[GuildEvent]);
           void Promise.resolve(result).then(() => {
-            this.profiler.addDataPoint(`event:${ev}`, performance.now() - startTime);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            this.profiler.addDataPoint(
+              `event:${ev}:${listener.profilerContext ?? "unknown"}`,
+              performance.now() - startTime
+            );
           });
         }
       }
