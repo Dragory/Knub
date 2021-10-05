@@ -1,3 +1,10 @@
+# 30.0.0-beta.46
+* **BREAKING CHANGE:** `Knub.getPluginPerformanceStats()` has been removed and replaced with a new profiler
+* Knub now has a built-in profiler, accessible from `Knub.profiler`
+  * By default, the profiler tracks plugin load times, event listeners, and command handlers
+  * You can add track custom items by using the `Profiler.addDataPoint()` function
+  * You can retrieve accumulated performance stats with `Profiler.getData()`
+
 # 30.0.0-beta.45
 * Changed guild loading to be sequential as a test
 
