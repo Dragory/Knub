@@ -31,7 +31,7 @@ is coming in the near future.
 
 ### TypeScript example
 ```ts
-import Eris from "eris";
+import { Client, Intents } from "discord.js";
 import { Knub, typedGuildPlugin, typedGuildCommand, BasePluginType } from "knub";
 
 interface CustomPluginType extends BasePluginType {
@@ -49,7 +49,7 @@ const CounterCommand = typedGuildCommand<CustomPluginType>()({
   permission: null,
   run({ message, pluginData }) {
     // Type of `pluginData.state.counter` is `number`
-    message.channel.createMessage(`Counter value: ${++pluginData.state.counter}`);
+    message.channel.send(`Counter value: ${++pluginData.state.counter}`);
   },
 });
 
@@ -67,21 +67,22 @@ const CounterPlugin = typedGuildPlugin<CustomPluginType>()({
   },
 });
 
-const client = new Eris("my-bot-token");
+const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 const knub = new Knub(client, {
   guildPlugins: [
     CounterPlugin,
   ]
 });
 
-knub.run();
+knub.initialize();
+client.login("my-bot-token");
 ```
 
 ### JavaScript example
 This example doesn't use the type helpers used in the TypeScript example above, and instead uses plain objects wherever possible.
 
 ```js
-const Eris = require("eris");
+const { Client, Intents } = require("discord.js");
 const { Knub, baseCommandParameterTypeHelpers } = require("knub");
 
 const t = baseCommandParameterTypeHelpers;
@@ -93,7 +94,7 @@ const MyCommand = {
   },
   permission: null,
   run({ args, message }) {
-    message.channel.createMessage(args.text);
+    message.channel.send(args.text);
   },
 };
 
@@ -101,7 +102,7 @@ const OtherCommand = {
   trigger: "ping",
   permission: null,
   run({ message }) {
-    message.channel.createMessage("Pong!");
+    message.channel.send("Pong!");
   },
 };
 
@@ -113,12 +114,13 @@ const MyPlugin = {
   ],
 };
 
-const client = new Eris("my-bot-token");
+const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 const knub = new Knub(client, {
   guildPlugins: [
     MyPlugin,
   ]
 });
 
-knub.run();
+knub.initialize();
+client.login("my-bot-token");
 ```
