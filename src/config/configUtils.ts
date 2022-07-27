@@ -210,7 +210,7 @@ export async function evaluateOverrideCriteria<TPluginData extends AnyPluginData
       const value = criteria[key]!;
       if (value != null) {
         const match = matchParams.threadId != null;
-        if (!match) return false;
+        if (match !== value) return false;
       } else {
         return false;
       }
