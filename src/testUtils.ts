@@ -2,11 +2,8 @@ import { noop } from "./utils";
 import events = require("events");
 import {
   AnyThreadChannel,
-  BaseChannel,
-  Channel,
   ChannelManager,
   Client,
-  Constants,
   DMChannel,
   Guild,
   GuildChannel,
@@ -24,24 +21,24 @@ import {
   ThreadChannel,
   User,
   UserManager,
-  WebSocketManager
+  WebSocketManager,
 } from "discord.js";
 import { ChannelType } from "discord-api-types/v10";
 
 const EventEmitter = events.EventEmitter;
 
 const persisted = new WeakMap<any, Map<string | number | symbol, any>>();
-function persist<T, TProp extends keyof T>(that: T, prop: TProp, initial: T[TProp]) {
-  if (! persisted.has(that)) {
+function persist<T, TProp extends keyof T>(that: T, prop: TProp, initial: T[TProp]): T[TProp] {
+  if (!persisted.has(that)) {
     persisted.set(that, new Map());
   }
 
   const thatProps = persisted.get(that)!;
-  if (! thatProps.has(prop)) {
+  if (!thatProps.has(prop)) {
     thatProps.set(prop, initial);
   }
 
-  return thatProps.get(prop)!;
+  return thatProps.get(prop)! as T[TProp];
 }
 
 function createMockWebSocketManager(): WebSocketManager {
@@ -58,7 +55,7 @@ function createMockWebSocketManager(): WebSocketManager {
 
 export function createMockClient(): Client {
   return new Proxy<Client>(new EventEmitter() as Client, {
-    get(target, p: string, proxy) {
+    get(target, p: string, proxy: Client) {
       if (p in target) {
         return target[p] as unknown;
       }
@@ -69,12 +66,14 @@ export function createMockClient(): Client {
 
       if (p === "users") {
         // @ts-ignore
-        return persist(target, p, new UserManager(proxy));
+        // This type assertation is needed because the constructor is marked as private
+        return persist(target, p, new UserManager(proxy) as UserManager);
       }
 
       if (p === "guilds") {
         // @ts-ignore
-        return persist(target, p, new GuildManager(proxy));
+        // This type assertation is needed because the constructor is marked as private
+        return persist(target, p, new GuildManager(proxy) as GuildManager);
       }
 
       if (p === "options") {
@@ -87,7 +86,8 @@ export function createMockClient(): Client {
 
       if (p === "channels") {
         // @ts-ignore
-        return persist(target, p, new ChannelManager(proxy, []));
+        // This type assertation is needed because the constructor is marked as private
+        return persist(target, p, new ChannelManager(proxy, []) as ChannelManager);
       }
 
       return noop;
@@ -111,11 +111,14 @@ export function createMockGuild(client: Client, data = {}): Guild {
 
   const mockGuild = client.guilds.cache.get(id)!;
   // @ts-ignore
-  mockGuild.members = new GuildMemberManager(mockGuild);
+  // This type assertation is needed because the constructor is marked as private
+  mockGuild.members = new GuildMemberManager(mockGuild) as GuildMemberManager;
   // @ts-ignore
-  mockGuild.channels = new GuildChannelManager(mockGuild);
+  // This type assertation is needed because the constructor is marked as private
+  mockGuild.channels = new GuildChannelManager(mockGuild) as GuildChannelManager;
   // @ts-ignore
-  mockGuild.roles = new RoleManager(mockGuild);
+  // This type assertation is needed because the constructor is marked as private
+  mockGuild.roles = new RoleManager(mockGuild) as RoleManager;
 
   // Add everyone role
   mockGuild.roles.cache.set(mockGuild.id, createMockRole(mockGuild, { name: "everyone" }, mockGuild.id));
@@ -134,7 +137,7 @@ export function createMockUser(client: Client, data = {}): User {
       username: `mockuser_${id}`,
       discriminator: "0001",
       ...data,
-    })
+    }) as User
   );
 
   return mockUser.get(id)!;
@@ -142,6 +145,9 @@ export function createMockUser(client: Client, data = {}): User {
 
 export function createMockMember(guild: Guild, user: User, data = {}): GuildMember {
   // @ts-ignore
+  // Not sure why the eslint rule below is triggered, but it probably
+  // has something to do with the constructor being marked as private.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   guild.members.cache.set(user.id, new GuildMember(guild.client, { user, ...data }, guild));
   return guild.members.cache.get(user.id)!;
 }
@@ -153,13 +159,17 @@ export function createMockTextChannel(client: Client, guildId: Snowflake, data =
 
   /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
   // @ts-ignore
-  const mockChannel = new TextChannel(guild, {
-    id,
+  const mockChannel = new TextChannel(
     guild,
-    type: ChannelType.GuildText,
-    name: `mock-channel-${id}`,
-    ...data,
-  }, client);
+    {
+      id,
+      guild,
+      type: ChannelType.GuildText,
+      name: `mock-channel-${id}`,
+      ...data,
+    },
+    client
+  ) as TextChannel;
   guild.channels.cache.set(id, mockChannel);
   client.channels.cache.set(id, mockChannel);
   return mockChannel;
@@ -173,6 +183,7 @@ export function createMockMessage(
   data = {}
 ): Message {
   // @ts-ignore
+  // This type assertation is needed because the constructor is marked as private
   const message = new Message(client, {
     id: (++mockMessageId).toString(),
     channel_id: channel.id,
@@ -180,7 +191,7 @@ export function createMockMessage(
     // @ts-ignore
     author,
     ...data,
-  });
+  }) as Message;
 
   return message;
 }
@@ -191,6 +202,7 @@ export function createMockRole(guild: Guild, data = {}, overrideId: string | nul
   guild.roles.cache.set(
     id,
     // @ts-ignore
+    // This type assertation is needed because the constructor is marked as private
     new Role(
       guild.client,
       {
@@ -199,17 +211,18 @@ export function createMockRole(guild: Guild, data = {}, overrideId: string | nul
         ...data,
       } as any,
       guild
-    )
+    ) as Role
   );
   return guild.roles.cache.get(id)!;
 }
 
 let mockThreadId = 60000;
-export function createMockThread(channel: NewsChannel | GuildChannel): ThreadChannel {
+export function createMockThread(channel: NewsChannel | GuildChannel): AnyThreadChannel {
   const id = (++mockThreadId).toString();
   channel.guild.channels.cache.set(
     id,
     // @ts-ignore
+    // This type assertation is needed because the constructor is marked as private
     new ThreadChannel(
       channel.guild,
       {
@@ -218,10 +231,10 @@ export function createMockThread(channel: NewsChannel | GuildChannel): ThreadCha
         parent_id: channel.id,
       },
       channel.client
-    )
+    ) as AnyThreadChannel
   );
 
-  const mockThread = channel.guild.channels.cache.get(id)! as ThreadChannel;
-  channel.client.channels.cache.set(id, mockThread as AnyThreadChannel);
+  const mockThread = channel.guild.channels.cache.get(id)! as AnyThreadChannel;
+  channel.client.channels.cache.set(id, mockThread);
   return mockThread;
 }

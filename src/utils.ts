@@ -7,12 +7,11 @@ import { Snowflake } from "discord.js";
 /** */
 export type Awaitable<T = unknown> = T | Promise<T>;
 
-export type WithRequiredProps<T, K extends keyof T> = T &
-  {
-    [PK in K]-?: Exclude<T[K], null>;
-  };
+export type WithRequiredProps<T, K extends keyof T> = T & {
+  [PK in K]-?: Exclude<T[K], null>;
+};
 
-export function get<TObj extends any>(obj: TObj, path: string, def?: any): unknown {
+export function get<TObj>(obj: TObj, path: string, def?: any): unknown {
   let cursor = obj;
   const pathParts = path.split(".");
   for (const part of pathParts) {
@@ -36,11 +35,11 @@ export function getUserId(str: string): Snowflake | null {
 
   if (str.match(snowflakeRegex)) {
     // User ID
-    return str as Snowflake;
+    return str;
   } else {
     const mentionMatch = str.match(userMentionRegex);
     if (mentionMatch) {
-      return mentionMatch[1] as Snowflake;
+      return mentionMatch[1];
     }
   }
 
@@ -52,11 +51,11 @@ export function getChannelId(str: string): Snowflake | null {
 
   if (str.match(snowflakeRegex)) {
     // Channel ID
-    return str as Snowflake;
+    return str;
   } else {
     const mentionMatch = str.match(channelMentionRegex);
     if (mentionMatch) {
-      return mentionMatch[1] as Snowflake;
+      return mentionMatch[1];
     }
   }
 
@@ -68,11 +67,11 @@ export function getRoleId(str: string): Snowflake | null {
 
   if (str.match(snowflakeRegex)) {
     // Role ID
-    return str as Snowflake;
+    return str;
   } else {
     const mentionMatch = str.match(roleMentionRegex);
     if (mentionMatch) {
-      return mentionMatch[1] as Snowflake;
+      return mentionMatch[1];
     }
   }
 

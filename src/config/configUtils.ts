@@ -36,6 +36,7 @@ export function mergeConfig<T extends Record<string, unknown>>(...sources: any[]
   const target = {} as Record<string, unknown>;
 
   for (const source of sources) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     for (const [key, value] of Object.entries(source)) {
       // Merge objects
       if (typeof value === "object" && value != null && !Array.isArray(value)) {

@@ -12,6 +12,7 @@ import {
   getDefaultPrefix,
   PluginCommandDefinition,
   restrictCommandSource,
+  TSignatureOrArray,
 } from "./commandUtils";
 import { Client, Message } from "discord.js";
 import { AnyPluginData } from "../plugins/PluginData";
@@ -46,7 +47,9 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     this.pluginData = pluginData;
   }
 
-  public add(blueprint: CommandBlueprint<TPluginData, any>): void {
+  public add<TSignature extends TSignatureOrArray<TPluginData["_pluginType"]>>(
+    blueprint: CommandBlueprint<TPluginData, TSignature>
+  ): void {
     const preFilters = Array.from(blueprint.config?.preFilters ?? []);
     preFilters.unshift(restrictCommandSource, checkCommandPermission);
 
@@ -129,6 +132,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     };
 
     const startTime = performance.now();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await handler(meta);
     const commandName =
       typeof matchedCommand.originalTriggers[0] === "string"

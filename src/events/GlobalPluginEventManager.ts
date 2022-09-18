@@ -57,7 +57,7 @@ export class GlobalPluginEventManager<
   ): WrappedListener {
     return this.registerEventListener({
       ...opts,
-      event: event as ValidEvent,
+      event,
       listener,
     } as AnyGlobalEventListenerBlueprint<TPluginData>);
   }

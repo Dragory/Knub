@@ -50,7 +50,7 @@ export class LockManager {
     if (lockTimeout == null) lockTimeout = this.lockTimeout;
 
     keys.forEach((key) => {
-      clearTimeout(this.lockGCTimeouts.get(key)!);
+      clearTimeout(this.lockGCTimeouts.get(key));
       this.lockGCTimeouts.delete(key);
     });
 

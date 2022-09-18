@@ -56,7 +56,7 @@ export function typedGuildEventListener<TPluginType extends BasePluginType>(): E
 >;
 
 export function typedGuildEventListener(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return eventListener<GuildPluginData<any>>(...args);
 }
 
@@ -80,6 +80,6 @@ export function typedGlobalEventListener<TPluginType extends BasePluginType>(): 
 >;
 
 export function typedGlobalEventListener(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return eventListener<GlobalPluginData<any>>(...args);
 }

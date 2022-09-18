@@ -219,7 +219,7 @@ export function typedGuildPlugin<TPluginType extends BasePluginType>(): PluginBl
 >;
 
 export function typedGuildPlugin(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return plugin<GuildPluginBlueprint<any>>(...args);
 }
 
@@ -240,6 +240,6 @@ export function typedGlobalPlugin<TPluginType extends BasePluginType>(): PluginB
 >;
 
 export function typedGlobalPlugin(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return plugin<GlobalPluginBlueprint<any>>(...args);
 }

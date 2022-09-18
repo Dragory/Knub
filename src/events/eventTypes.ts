@@ -1,47 +1,38 @@
 import {
-  ApplicationCommand,
   ApplicationCommandPermissionsUpdateData,
-  Channel,
   ClientEvents,
   CloseEvent,
   Collection,
   DMChannel,
   Guild,
   GuildBan,
-  GuildBasedChannel,
-  GuildChannel,
   GuildEmoji,
   GuildMember,
   Interaction,
-  InvalidRequestWarningData,
   Invite,
   Message,
   MessageReaction,
   NonThreadGuildBasedChannel,
-  PartialDMChannel,
   PartialGuildMember,
   PartialMessage,
   PartialUser,
   Presence,
-  RateLimitData,
   Role,
   Snowflake,
   StageInstance,
   Sticker,
   TextBasedChannel,
   TextChannel,
-  ThreadChannel,
   ThreadMember,
   User,
   VoiceState,
-  Events,
   AnyThreadChannel,
   PartialThreadMember,
   Typing,
   NewsChannel,
   VoiceChannel,
   PartialMessageReaction,
-  GuildScheduledEvent
+  GuildScheduledEvent,
 } from "discord.js";
 import { GuildMessage } from "../types";
 
@@ -57,7 +48,7 @@ const createFromDjsArgsObject = <Obj extends FromDjsArgsConstraint>(obj: Obj): O
 
 /**
  * Each property is a function that converts DJS event listener arguments to Knub's event argument object.
- * @see https://github.com/discordjs/discord.js/blob/669c3cd2566eac68ef38ab522dd6378ba761e8b3/packages/discord.js/typings/index.d.ts#L4192
+ * @see https://github.com/discordjs/discord.js/blob/669c3cd/packages/discord.js/typings/index.d.ts#L4192
  */
 export const fromDjsArgs = createFromDjsArgsObject({
   applicationCommandPermissionsUpdate: (data: ApplicationCommandPermissionsUpdateData) => ({ data }),
@@ -65,7 +56,10 @@ export const fromDjsArgs = createFromDjsArgsObject({
   channelCreate: (channel: NonThreadGuildBasedChannel) => ({ channel }),
   channelDelete: (channel: DMChannel | NonThreadGuildBasedChannel) => ({ channel }),
   channelPinsUpdate: (channel: TextBasedChannel, date: Date) => ({ channel, date }),
-  channelUpdate: (oldChannel: DMChannel | NonThreadGuildBasedChannel, newChannel: DMChannel | NonThreadGuildBasedChannel) => ({ oldChannel, newChannel }),
+  channelUpdate: (
+    oldChannel: DMChannel | NonThreadGuildBasedChannel,
+    newChannel: DMChannel | NonThreadGuildBasedChannel
+  ) => ({ oldChannel, newChannel }),
   debug: (message: string) => ({ message }),
   emojiCreate: (emoji: GuildEmoji) => ({ emoji }),
   emojiDelete: (emoji: GuildEmoji) => ({ emoji }),
@@ -91,11 +85,14 @@ export const fromDjsArgs = createFromDjsArgsObject({
   guildScheduledEventCreate: (guildScheduledEvent: GuildScheduledEvent) => ({ guildScheduledEvent }),
   guildScheduledEventUpdate: (
     oldGuildScheduledEvent: GuildScheduledEvent | null,
-    newGuildScheduledEvent: GuildScheduledEvent,
+    newGuildScheduledEvent: GuildScheduledEvent
   ) => ({ oldGuildScheduledEvent, newGuildScheduledEvent }),
   guildScheduledEventDelete: (guildScheduledEvent: GuildScheduledEvent) => ({ guildScheduledEvent }),
   guildScheduledEventUserAdd: (guildScheduledEvent: GuildScheduledEvent, user: User) => ({ guildScheduledEvent, user }),
-  guildScheduledEventUserRemove: (guildScheduledEvent: GuildScheduledEvent, user: User) => ({ guildScheduledEvent, user }),
+  guildScheduledEventUserRemove: (guildScheduledEvent: GuildScheduledEvent, user: User) => ({
+    guildScheduledEvent,
+    user,
+  }),
   guildUnavailable: (guild: Guild) => ({ guild }),
   guildUpdate: (oldGuild: Guild, newGuild: Guild) => ({ oldGuild, newGuild }),
   interactionCreate: (interaction: Interaction) => ({ interaction }),
@@ -105,8 +102,14 @@ export const fromDjsArgs = createFromDjsArgsObject({
   messageCreate: (message: Message) => ({ message }),
   messageDelete: (message: Message | PartialMessage) => ({ message }),
   messageDeleteBulk: (messages: Collection<Snowflake, Message | PartialMessage>) => ({ messages }),
-  messageReactionAdd: (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) => ({ reaction, user }),
-  messageReactionRemove: (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) => ({ reaction, user }),
+  messageReactionAdd: (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) => ({
+    reaction,
+    user,
+  }),
+  messageReactionRemove: (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) => ({
+    reaction,
+    user,
+  }),
   messageReactionRemoveAll: (message: Message | PartialMessage) => ({ message }),
   messageReactionRemoveEmoji: (reaction: MessageReaction | PartialMessageReaction) => ({ reaction }),
   messageUpdate: (oldMessage: Message | PartialMessage, newMessage: Message | PartialMessage) => ({
@@ -139,7 +142,7 @@ export const fromDjsArgs = createFromDjsArgsObject({
   threadMembersUpdate: (
     addedMembers: Collection<Snowflake, ThreadMember>,
     removedMembers: Collection<Snowflake, ThreadMember | PartialThreadMember>,
-    thread: AnyThreadChannel,
+    thread: AnyThreadChannel
   ) => ({ addedMembers, removedMembers, thread }),
   threadUpdate: (oldThread: AnyThreadChannel, newThread: AnyThreadChannel) => ({ oldThread, newThread }),
   typingStart: (typing: Typing) => ({ typing }),
@@ -197,9 +200,9 @@ export type GlobalEvent = typeof globalEvents[number];
 export type GuildEvent = Exclude<ValidEvent, GlobalEvent>;
 
 export function isGlobalEvent(ev: ValidEvent): ev is GlobalEvent {
-  return globalEvents.includes(ev as any);
+  return globalEvents.includes(ev as typeof globalEvents[number]);
 }
 
 export function isGuildEvent(ev: ValidEvent): ev is GuildEvent {
-  return !globalEvents.includes(ev as any);
+  return !globalEvents.includes(ev as typeof globalEvents[number]);
 }

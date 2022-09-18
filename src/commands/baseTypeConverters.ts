@@ -4,21 +4,11 @@ import {
   defaultTypeConverters,
   string,
   switchOption,
-  TypeConversionError
+  TypeConversionError,
 } from "knub-command-manager";
 import { disableCodeBlocks } from "../helpers";
 import { getChannelId, getRoleId, getUserId } from "../utils";
-import {
-  Channel,
-  ChannelType,
-  GuildMember,
-  GuildTextBasedChannel,
-  Role,
-  TextChannel,
-  ThreadChannel,
-  User,
-  VoiceChannel
-} from "discord.js";
+import { Channel, ChannelType, GuildMember, GuildTextBasedChannel, Role, User, VoiceChannel } from "discord.js";
 import { AnyPluginData } from "../plugins/PluginData";
 import { CommandContext } from "./commandUtils";
 

@@ -55,7 +55,7 @@ const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>> = {
 };
 
 const defaultLogFn: LogFn = (level: string, ...args) => {
-  /* eslint-disable no-console */
+  /* eslint-disable no-console,@typescript-eslint/no-unsafe-argument */
   if (level === "error") {
     console.error("[ERROR]", ...args);
   } else if (level === "warn") {
@@ -63,6 +63,7 @@ const defaultLogFn: LogFn = (level: string, ...args) => {
   } else {
     console.log(`[${level.toUpperCase()}]`, ...args);
   }
+  /* eslint-enable no-console,@typescript-eslint/no-unsafe-argument */
 };
 
 export class Knub<
@@ -120,11 +121,13 @@ export class Knub<
 
     for (const globalPlugin of args.globalPlugins) {
       validatePlugin(globalPlugin);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       this.globalPlugins.set(globalPlugin.name, globalPlugin);
     }
 
     for (const guildPlugin of args.guildPlugins) {
       validatePlugin(guildPlugin);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       this.guildPlugins.set(guildPlugin.name, guildPlugin);
     }
 
@@ -233,6 +236,7 @@ export class Knub<
   ): Promise<BeforeLoadPluginData<BasePluginData<any>>> {
     const configManager = new PluginConfigManager(
       plugin.defaultOptions ?? { config: {} },
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       (get(ctx.config, `plugins.${plugin.name}`) as any) || {},
       ctx.config.levels || {},
       {

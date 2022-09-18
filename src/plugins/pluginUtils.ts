@@ -10,7 +10,7 @@ import path from "path";
 import _fs from "fs";
 import { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types";
 import { KeyOfMap } from "../utils";
-import { Guild, GuildMember, PartialGuildMember, Snowflake } from "discord.js";
+import { Guild, GuildMember, PartialGuildMember } from "discord.js";
 
 const fs = _fs.promises;
 
@@ -24,7 +24,7 @@ export function getMemberLevel(
   }
 
   for (const [id, level] of Object.entries(levels)) {
-    if (member.id === id || member.roles?.cache?.has(id as Snowflake)) {
+    if (member.id === id || member.roles?.cache?.has(id)) {
       return level;
     }
   }

@@ -1,7 +1,7 @@
 import { EventMeta, Listener } from "./BasePluginEventManager";
 import { Awaitable } from "../utils";
 import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils";
-import { EventArguments, KnownEvents, ValidEvent } from "./eventTypes";
+import { EventArguments, ValidEvent } from "./eventTypes";
 import { hasPermission } from "../helpers";
 import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
@@ -16,7 +16,7 @@ export type FilteredListener<T extends Listener<any, any>> = T;
 
 /**
  * Runs the specified event listener if the event passes ALL of the specified
- * filter
+ * filters
  */
 export function withFilters<T extends Listener<any, any>>(
   event: ValidEvent,
@@ -25,6 +25,7 @@ export function withFilters<T extends Listener<any, any>>(
 ): FilteredListener<T> {
   const wrapped: Listener<any, any> = async (meta) => {
     for (const filter of filters) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const filterResult = await filter(event, meta);
       if (!filterResult) return;
     }
@@ -46,6 +47,7 @@ export function withAnyFilter<T extends Listener<any, any>>(
 ): FilteredListener<T> {
   const wrapped: Listener<any, any> = async (meta) => {
     for (const filter of filters) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const filterResult = await filter(event, meta);
       if (filterResult) {
         return listener(meta);
@@ -67,14 +69,16 @@ export function onlyGuild(): EventFilter {
       return false;
     }
 
-    const guild = eventToGuild[event as keyof KnownEvents]?.(args as any) ?? null;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const guild = eventToGuild[event]?.(args as any) ?? null;
     return Boolean(guild && pluginData.guild === guild);
   };
 }
 
 export function onlyDM(): EventFilter {
   return (event, { args }) => {
-    const channel = eventToChannel[event as keyof KnownEvents]?.(args as any) ?? null;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const channel = eventToChannel[event]?.(args as any) ?? null;
     return Boolean(channel && channel instanceof DMChannel);
   };
 }
@@ -85,9 +89,12 @@ export function cooldown(timeMs: number, permission?: string): EventFilter {
   return async (event, { args, pluginData }) => {
     let cdApplies = true;
     if (permission) {
-      const user = eventToUser[event as keyof KnownEvents]?.(args as any);
-      const channel = eventToChannel[event as keyof KnownEvents]?.(args as any);
-      const msg = eventToMessage[event as keyof KnownEvents]?.(args as any);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const user = eventToUser[event]?.(args as any);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const channel = eventToChannel[event]?.(args as any);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const msg = eventToMessage[event]?.(args as any);
       const config = await pluginData.config.getMatchingConfig({
         channelId: channel?.id,
         userId: user?.id,
@@ -109,7 +116,8 @@ export function cooldown(timeMs: number, permission?: string): EventFilter {
 
 export function requirePermission(permission: string): EventFilter {
   return async (event, { args, pluginData }) => {
-    const user = eventToUser[event as keyof KnownEvents]?.(args as any) ?? null;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const user = eventToUser[event]?.(args as any) ?? null;
     const member = user && isGuildPluginData(pluginData) ? pluginData.guild.members.resolve(user.id) : null;
     const config = member
       ? await pluginData.config.getForMember(member)
@@ -123,14 +131,16 @@ export function requirePermission(permission: string): EventFilter {
 
 export function ignoreBots(): EventFilter {
   return (event, { args }) => {
-    const user = eventToUser[event as keyof KnownEvents]?.(args as any) ?? null;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const user = eventToUser[event]?.(args as any) ?? null;
     return !user || !(user as User).bot;
   };
 }
 
 export function ignoreSelf(): EventFilter {
   return (event, { args, pluginData }) => {
-    const user = eventToUser[event as keyof KnownEvents]?.(args as any) ?? null;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const user = eventToUser[event]?.(args as any) ?? null;
     return !user || user.id !== pluginData.client.user!.id;
   };
 }

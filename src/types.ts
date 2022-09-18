@@ -1,11 +1,4 @@
-import {
-  GuildMember,
-  GuildTextBasedChannel,
-  Message,
-  Snowflake,
-  TextBasedChannelFields,
-  TextChannel
-} from "discord.js";
+import { GuildMember, GuildTextBasedChannel, Message, Snowflake, TextBasedChannelFields } from "discord.js";
 import { BaseConfig } from "./config/configTypes";
 import { LockManager } from "./locks/LockManager";
 import { GlobalPluginBlueprint, GuildPluginBlueprint } from "./plugins/PluginBlueprint";

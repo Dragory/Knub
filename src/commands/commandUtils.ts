@@ -7,7 +7,7 @@ import {
   TOption,
   toSafeSignature,
   TSafeSignature,
-  TSignature
+  TSignature,
 } from "knub-command-manager";
 import { Lock } from "../locks/LockManager";
 import { AnyPluginData, GuildPluginData } from "../plugins/PluginData";
@@ -28,7 +28,7 @@ export type ContextualCommandMessage<TPluginData extends AnyPluginData<any>> = T
   ? GuildMessage
   : Message;
 
-export interface CommandMeta<TPluginData extends AnyPluginData<any>, TArguments extends any> {
+export interface CommandMeta<TPluginData extends AnyPluginData<any>, TArguments> {
   args: TArguments;
   message: ContextualCommandMessage<TPluginData>;
   command: ICommandDefinition<any, any>;
@@ -159,7 +159,7 @@ export async function checkCommandPermission<
   const permission = cmd.config!.extra?.blueprint.permission;
 
   // No permission defined, default to "no permission"
-  // If types are checked, this condition should never be true, but it's a safe-guard
+  // If types are checked, this condition should never be true, but it's a safeguard
   if (permission === undefined) return false;
 
   // If permission isn't set to a `null`, check it matches

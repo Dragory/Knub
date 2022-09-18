@@ -2,15 +2,7 @@ import { typedGlobalEventListener, typedGuildEventListener } from "./EventListen
 import { BasePluginType } from "../plugins/pluginTypes";
 import { expect } from "chai";
 import { GuildMessage } from "../types";
-import {
-  Channel,
-  GuildChannel,
-  GuildTextBasedChannel,
-  Message,
-  PartialDMChannel,
-  TextBasedChannel,
-  Typing
-} from "discord.js";
+import { Channel, GuildChannel, GuildTextBasedChannel, Message, TextBasedChannel } from "discord.js";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

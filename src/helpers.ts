@@ -105,7 +105,7 @@ export function waitForReply(
       resolve(null);
     }, timeout);
 
-    client.on("message", (msg) => {
+    client.on("messageCreate", (msg) => {
       if (!msg.channel || msg.channel.id !== channel.id) return;
       if (msg.author && msg.author.id === client.user!.id) return;
       if (restrictToUserId && (!msg.author || msg.author.id !== restrictToUserId)) return;
@@ -151,6 +151,7 @@ export function hasPermission(config: Record<string, unknown>, permission: strin
 export function getMemberLevel(pluginData: GuildPluginData<any>, member: GuildMember): number {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
   const levels = pluginData.fullConfig.levels ?? {};
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   return _getMemberLevel(levels, member, pluginData.guild);
 }
 

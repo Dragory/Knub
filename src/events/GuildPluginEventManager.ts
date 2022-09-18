@@ -60,7 +60,7 @@ export class GuildPluginEventManager<
   ): WrappedListener {
     return this.registerEventListener({
       ...opts,
-      event: event as GuildEvent,
+      event,
       listener,
     } as AnyGuildEventListenerBlueprint<TPluginData>);
   }

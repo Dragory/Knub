@@ -120,6 +120,5 @@ export const eventToMessage: EventToMessage = {
   messageReactionRemove: ({ reaction }) => (reaction.message instanceof Message ? reaction.message : undefined),
   messageReactionRemoveAll: ({ message }) => (message instanceof Message ? message : undefined),
   messageUpdate: ({ newMessage }) => (newMessage instanceof Message ? newMessage : undefined),
-  interactionCreate: ({ interaction }) =>
-    interaction.isMessageComponent() ? (interaction.message as Message) : undefined,
+  interactionCreate: ({ interaction }) => (interaction.isMessageComponent() ? interaction.message : undefined),
 };
