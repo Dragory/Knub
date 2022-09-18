@@ -1,4 +1,11 @@
-import { GuildMember, Message, Snowflake, TextBasedChannelFields, TextChannel } from "discord.js";
+import {
+  GuildMember,
+  GuildTextBasedChannel,
+  Message,
+  Snowflake,
+  TextBasedChannelFields,
+  TextChannel
+} from "discord.js";
 import { BaseConfig } from "./config/configTypes";
 import { LockManager } from "./locks/LockManager";
 import { GlobalPluginBlueprint, GuildPluginBlueprint } from "./plugins/PluginBlueprint";
@@ -59,6 +66,6 @@ export type AnyContext<TGuildConfig extends BaseConfig<any>, TGlobalConfig exten
   | GlobalContext<TGlobalConfig>;
 
 export interface GuildMessage extends Message {
-  channel: TextChannel;
+  channel: GuildTextBasedChannel;
   member: GuildMember;
 }

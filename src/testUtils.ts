@@ -1,6 +1,8 @@
 import { noop } from "./utils";
 import events = require("events");
 import {
+  AnyThreadChannel,
+  BaseChannel,
   Channel,
   ChannelManager,
   Client,
@@ -22,24 +24,30 @@ import {
   ThreadChannel,
   User,
   UserManager,
-  WebSocketManager,
+  WebSocketManager
 } from "discord.js";
-import { ChannelType } from "discord-api-types";
+import { ChannelType } from "discord-api-types/v10";
 
 const EventEmitter = events.EventEmitter;
 
+const persisted = new WeakMap<any, Map<string | number | symbol, any>>();
 function persist<T, TProp extends keyof T>(that: T, prop: TProp, initial: T[TProp]) {
-  if (!that[prop]) {
-    that[prop] = initial;
+  if (! persisted.has(that)) {
+    persisted.set(that, new Map());
   }
 
-  return that[prop];
+  const thatProps = persisted.get(that)!;
+  if (! thatProps.has(prop)) {
+    thatProps.set(prop, initial);
+  }
+
+  return thatProps.get(prop)!;
 }
 
 function createMockWebSocketManager(): WebSocketManager {
   return new Proxy<WebSocketManager>(new EventEmitter() as WebSocketManager, {
     get(target, p: string) {
-      if (target[p]) {
+      if (p in target) {
         return target[p] as unknown;
       }
 
@@ -51,7 +59,7 @@ function createMockWebSocketManager(): WebSocketManager {
 export function createMockClient(): Client {
   return new Proxy<Client>(new EventEmitter() as Client, {
     get(target, p: string, proxy) {
-      if (target[p]) {
+      if (p in target) {
         return target[p] as unknown;
       }
 
@@ -60,10 +68,12 @@ export function createMockClient(): Client {
       }
 
       if (p === "users") {
+        // @ts-ignore
         return persist(target, p, new UserManager(proxy));
       }
 
       if (p === "guilds") {
+        // @ts-ignore
         return persist(target, p, new GuildManager(proxy));
       }
 
@@ -76,6 +86,7 @@ export function createMockClient(): Client {
       }
 
       if (p === "channels") {
+        // @ts-ignore
         return persist(target, p, new ChannelManager(proxy, []));
       }
 
@@ -99,8 +110,11 @@ export function createMockGuild(client: Client, data = {}): Guild {
   } as Guild);
 
   const mockGuild = client.guilds.cache.get(id)!;
+  // @ts-ignore
   mockGuild.members = new GuildMemberManager(mockGuild);
+  // @ts-ignore
   mockGuild.channels = new GuildChannelManager(mockGuild);
+  // @ts-ignore
   mockGuild.roles = new RoleManager(mockGuild);
 
   // Add everyone role
@@ -114,6 +128,7 @@ export function createMockUser(client: Client, data = {}): User {
   const id = (++mockUserId).toString();
   const mockUser = client.users.cache.set(
     id,
+    // @ts-ignore
     new User(client, {
       id,
       username: `mockuser_${id}`,
@@ -126,6 +141,7 @@ export function createMockUser(client: Client, data = {}): User {
 }
 
 export function createMockMember(guild: Guild, user: User, data = {}): GuildMember {
+  // @ts-ignore
   guild.members.cache.set(user.id, new GuildMember(guild.client, { user, ...data }, guild));
   return guild.members.cache.get(user.id)!;
 }
@@ -136,22 +152,15 @@ export function createMockTextChannel(client: Client, guildId: Snowflake, data =
   const guild = client.guilds.cache.get(guildId)!;
 
   /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
-  guild.channels.cache.set(
+  // @ts-ignore
+  const mockChannel = new TextChannel(guild, {
     id,
-    (Channel as any).create(
-      client,
-      {
-        id,
-        guild,
-        type: Constants.ChannelTypes.GUILD_TEXT,
-        name: `mock-channel-${id}`,
-        ...data,
-      },
-      guild
-    )
-  );
-
-  const mockChannel = guild.channels.cache.get(id)! as TextChannel;
+    guild,
+    type: ChannelType.GuildText,
+    name: `mock-channel-${id}`,
+    ...data,
+  }, client);
+  guild.channels.cache.set(id, mockChannel);
   client.channels.cache.set(id, mockChannel);
   return mockChannel;
 }
@@ -163,6 +172,7 @@ export function createMockMessage(
   author: User,
   data = {}
 ): Message {
+  // @ts-ignore
   const message = new Message(client, {
     id: (++mockMessageId).toString(),
     channel_id: channel.id,
@@ -180,6 +190,7 @@ export function createMockRole(guild: Guild, data = {}, overrideId: string | nul
   const id = overrideId || (++mockRoleId).toString();
   guild.roles.cache.set(
     id,
+    // @ts-ignore
     new Role(
       guild.client,
       {
@@ -198,6 +209,7 @@ export function createMockThread(channel: NewsChannel | GuildChannel): ThreadCha
   const id = (++mockThreadId).toString();
   channel.guild.channels.cache.set(
     id,
+    // @ts-ignore
     new ThreadChannel(
       channel.guild,
       {
@@ -210,6 +222,6 @@ export function createMockThread(channel: NewsChannel | GuildChannel): ThreadCha
   );
 
   const mockThread = channel.guild.channels.cache.get(id)! as ThreadChannel;
-  channel.client.channels.cache.set(id, mockThread);
+  channel.client.channels.cache.set(id, mockThread as AnyThreadChannel);
   return mockThread;
 }

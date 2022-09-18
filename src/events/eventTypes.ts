@@ -1,5 +1,6 @@
 import {
   ApplicationCommand,
+  ApplicationCommandPermissionsUpdateData,
   Channel,
   ClientEvents,
   CloseEvent,
@@ -7,6 +8,7 @@ import {
   DMChannel,
   Guild,
   GuildBan,
+  GuildBasedChannel,
   GuildChannel,
   GuildEmoji,
   GuildMember,
@@ -15,6 +17,7 @@ import {
   Invite,
   Message,
   MessageReaction,
+  NonThreadGuildBasedChannel,
   PartialDMChannel,
   PartialGuildMember,
   PartialMessage,
@@ -25,32 +28,44 @@ import {
   Snowflake,
   StageInstance,
   Sticker,
+  TextBasedChannel,
   TextChannel,
   ThreadChannel,
   ThreadMember,
   User,
   VoiceState,
+  Events,
+  AnyThreadChannel,
+  PartialThreadMember,
+  Typing,
+  NewsChannel,
+  VoiceChannel,
+  PartialMessageReaction,
+  GuildScheduledEvent
 } from "discord.js";
 import { GuildMessage } from "../types";
 
 export type ExtendedClientEvents = ClientEvents & { raw: any[] };
 
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+type FromDjsArgsConstraint = {
+  [Key in keyof ExtendedClientEvents]: (...args: ExtendedClientEvents[Key]) => unknown;
+};
+
+const createFromDjsArgsObject = <Obj extends FromDjsArgsConstraint>(obj: Obj): Obj => {
+  return obj;
+};
+
 /**
  * Each property is a function that converts DJS event listener arguments to Knub's event argument object.
- * @see https://github.com/discordjs/discord.js/blob/e300518597955abf4bf3c3d2634b47b9b3964274/typings/index.d.ts#L2591
+ * @see https://github.com/discordjs/discord.js/blob/669c3cd2566eac68ef38ab522dd6378ba761e8b3/packages/discord.js/typings/index.d.ts#L4192
  */
-export const fromDjsArgs = {
-  applicationCommandCreate: (command: ApplicationCommand) => ({ command }),
-  applicationCommandDelete: (command: ApplicationCommand) => ({ command }),
-  applicationCommandUpdate: (oldCommand: ApplicationCommand | null, newCommand: ApplicationCommand) => ({
-    oldCommand,
-    newCommand,
-  }),
-  channelCreate: (channel: GuildChannel) => ({ channel }),
-  channelDelete: (channel: DMChannel | GuildChannel) => ({ channel }),
-  channelPinsUpdate: (channel: Channel | PartialDMChannel, date: Date) => ({ channel, date }),
-  channelUpdate: (oldChannel: Channel, newChannel: Channel) => ({ oldChannel, newChannel }),
+export const fromDjsArgs = createFromDjsArgsObject({
+  applicationCommandPermissionsUpdate: (data: ApplicationCommandPermissionsUpdateData) => ({ data }),
+  cacheSweep: (message: string) => ({ message }),
+  channelCreate: (channel: NonThreadGuildBasedChannel) => ({ channel }),
+  channelDelete: (channel: DMChannel | NonThreadGuildBasedChannel) => ({ channel }),
+  channelPinsUpdate: (channel: TextBasedChannel, date: Date) => ({ channel, date }),
+  channelUpdate: (oldChannel: DMChannel | NonThreadGuildBasedChannel, newChannel: DMChannel | NonThreadGuildBasedChannel) => ({ oldChannel, newChannel }),
   debug: (message: string) => ({ message }),
   emojiCreate: (emoji: GuildEmoji) => ({ emoji }),
   emojiDelete: (emoji: GuildEmoji) => ({ emoji }),
@@ -73,26 +88,32 @@ export const fromDjsArgs = {
     oldMember,
     newMember,
   }),
+  guildScheduledEventCreate: (guildScheduledEvent: GuildScheduledEvent) => ({ guildScheduledEvent }),
+  guildScheduledEventUpdate: (
+    oldGuildScheduledEvent: GuildScheduledEvent | null,
+    newGuildScheduledEvent: GuildScheduledEvent,
+  ) => ({ oldGuildScheduledEvent, newGuildScheduledEvent }),
+  guildScheduledEventDelete: (guildScheduledEvent: GuildScheduledEvent) => ({ guildScheduledEvent }),
+  guildScheduledEventUserAdd: (guildScheduledEvent: GuildScheduledEvent, user: User) => ({ guildScheduledEvent, user }),
+  guildScheduledEventUserRemove: (guildScheduledEvent: GuildScheduledEvent, user: User) => ({ guildScheduledEvent, user }),
   guildUnavailable: (guild: Guild) => ({ guild }),
   guildUpdate: (oldGuild: Guild, newGuild: Guild) => ({ oldGuild, newGuild }),
   interactionCreate: (interaction: Interaction) => ({ interaction }),
   invalidated: () => ({}),
-  invalidRequestWarning: (invalidRequestWarningData: InvalidRequestWarningData) => ({ invalidRequestWarningData }),
   inviteCreate: (invite: Invite) => ({ invite }),
   inviteDelete: (invite: Invite) => ({ invite }),
   messageCreate: (message: Message) => ({ message }),
   messageDelete: (message: Message | PartialMessage) => ({ message }),
   messageDeleteBulk: (messages: Collection<Snowflake, Message | PartialMessage>) => ({ messages }),
-  messageReactionAdd: (reaction: MessageReaction, user: User | PartialUser) => ({ reaction, user }),
-  messageReactionRemove: (reaction: MessageReaction, user: User | PartialUser) => ({ reaction, user }),
+  messageReactionAdd: (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) => ({ reaction, user }),
+  messageReactionRemove: (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) => ({ reaction, user }),
   messageReactionRemoveAll: (message: Message | PartialMessage) => ({ message }),
-  messageReactionRemoveEmoji: (reaction: MessageReaction) => ({ reaction }),
+  messageReactionRemoveEmoji: (reaction: MessageReaction | PartialMessageReaction) => ({ reaction }),
   messageUpdate: (oldMessage: Message | PartialMessage, newMessage: Message | PartialMessage) => ({
     oldMessage,
     newMessage,
   }),
-  presenceUpdate: (oldPresence: Presence | undefined, newPresence: Presence) => ({ oldPresence, newPresence }),
-  rateLimit: (rateLimitData: RateLimitData) => ({ rateLimitData }),
+  presenceUpdate: (oldPresence: Presence | null, newPresence: Presence) => ({ oldPresence, newPresence }),
   ready: () => ({}),
   roleCreate: (role: Role) => ({ role }),
   roleDelete: (role: Role) => ({ role }),
@@ -104,40 +125,30 @@ export const fromDjsArgs = {
   shardResume: (shardID: number, replayedEvents: number) => ({ shardID, replayedEvents }),
   stageInstanceCreate: (stageInstance: StageInstance) => ({ stageInstance }),
   stageInstanceDelete: (stageInstance: StageInstance) => ({ stageInstance }),
-  stageInstanceUpdate: (oldStageInstance: StageInstance, newStageInstance: StageInstance) => ({
+  stageInstanceUpdate: (oldStageInstance: StageInstance | null, newStageInstance: StageInstance) => ({
     oldStageInstance,
     newStageInstance,
   }),
   stickerCreate: (sticker: Sticker) => ({ sticker }),
   stickerDelete: (sticker: Sticker) => ({ sticker }),
   stickerUpdate: (oldSticker: Sticker, newSticker: Sticker) => ({ oldSticker, newSticker }),
-  threadCreate: (thread: ThreadChannel) => ({ thread }),
-  threadDelete: (thread: ThreadChannel) => ({ thread }),
-  threadListSync: (threads: Collection<Snowflake, ThreadChannel>) => ({ threads }),
-  threadMembersUpdate: (
-    oldMembers: Collection<Snowflake, ThreadMember>,
-    newMembers: Collection<Snowflake, ThreadMember>
-  ) => ({ oldMembers, newMembers }),
+  threadCreate: (thread: AnyThreadChannel, newlyCreated: boolean) => ({ thread, newlyCreated }),
+  threadDelete: (thread: AnyThreadChannel) => ({ thread }),
+  threadListSync: (threads: Collection<Snowflake, AnyThreadChannel>, guild: Guild) => ({ threads, guild }),
   threadMemberUpdate: (oldMember: ThreadMember, newMember: ThreadMember) => ({ oldMember, newMember }),
-  threadUpdate: (oldThread: ThreadChannel, newThread: ThreadChannel) => ({ oldThread, newThread }),
-  typingStart: (channel: Channel | PartialDMChannel, user: User | PartialUser) => ({ channel, user }),
+  threadMembersUpdate: (
+    addedMembers: Collection<Snowflake, ThreadMember>,
+    removedMembers: Collection<Snowflake, ThreadMember | PartialThreadMember>,
+    thread: AnyThreadChannel,
+  ) => ({ addedMembers, removedMembers, thread }),
+  threadUpdate: (oldThread: AnyThreadChannel, newThread: AnyThreadChannel) => ({ oldThread, newThread }),
+  typingStart: (typing: Typing) => ({ typing }),
   userUpdate: (oldUser: User | PartialUser, newUser: User) => ({ oldUser, newUser }),
   voiceStateUpdate: (oldState: VoiceState, newState: VoiceState) => ({ oldState, newState }),
   warn: (message: string) => ({ message }),
-  webhookUpdate: (channel: TextChannel) => ({ channel }),
+  webhookUpdate: (channel: TextChannel | NewsChannel | VoiceChannel) => ({ channel }),
   raw: (...rawArgs: any[]) => ({ rawArgs }),
-};
-/* eslint-enable @typescript-eslint/explicit-module-boundary-types */
-
-/*
-// Validate the above types against DJS types
-type ValidFromDjsArgs = {
-  [key in keyof ExtendedClientEvents]: (...args: ExtendedClientEvents[key]) => unknown;
-};
-type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const fromDjsArgsIsValid: AssertEquals<typeof fromDjsArgs, ValidFromDjsArgs> = true;
-*/
+});
 
 // Extended event types
 export type KnownEvents = {
@@ -146,18 +157,19 @@ export type KnownEvents = {
 
 export interface KnownGuildEvents extends KnownEvents {
   channelUpdate: {
-    oldChannel: GuildChannel;
-    newChannel: GuildChannel;
+    oldChannel: NonThreadGuildBasedChannel;
+    newChannel: NonThreadGuildBasedChannel;
   };
   channelDelete: {
-    channel: GuildChannel;
+    channel: NonThreadGuildBasedChannel;
   };
   messageCreate: {
     message: GuildMessage;
   };
   typingStart: {
-    channel: GuildChannel;
-    user: User | PartialUser;
+    typing: Typing & {
+      channel: NonThreadGuildBasedChannel;
+    };
   };
 }
 
@@ -174,8 +186,6 @@ export const globalEvents = [
   "guildCreate",
   "guildUnavailable",
   "error",
-  "rateLimit",
-  "invalidRequestWarning",
   "ready",
   "invalidated",
   "userUpdate",

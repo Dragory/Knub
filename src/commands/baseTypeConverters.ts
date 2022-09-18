@@ -4,11 +4,21 @@ import {
   defaultTypeConverters,
   string,
   switchOption,
-  TypeConversionError,
+  TypeConversionError
 } from "knub-command-manager";
 import { disableCodeBlocks } from "../helpers";
 import { getChannelId, getRoleId, getUserId } from "../utils";
-import { Channel, GuildMember, Role, TextChannel, ThreadChannel, User, VoiceChannel } from "discord.js";
+import {
+  Channel,
+  ChannelType,
+  GuildMember,
+  GuildTextBasedChannel,
+  Role,
+  TextChannel,
+  ThreadChannel,
+  User,
+  VoiceChannel
+} from "discord.js";
 import { AnyPluginData } from "../plugins/PluginData";
 import { CommandContext } from "./commandUtils";
 
@@ -44,7 +54,7 @@ export const baseTypeConverters = {
   },
 
   member(value: string, { message, pluginData: { client } }: CommandContext<AnyPluginData<any>>): GuildMember {
-    if (message.channel.type === "DM") {
+    if (message.channel.type === ChannelType.DM) {
       throw new TypeConversionError(`Type 'Member' can only be used in guilds`);
     }
 
@@ -67,7 +77,7 @@ export const baseTypeConverters = {
   },
 
   channel(value: string, { message }: CommandContext<AnyPluginData<any>>): Channel {
-    if (message.channel.type === "DM") {
+    if (message.channel.type === ChannelType.DM) {
       throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
     }
 
@@ -85,9 +95,9 @@ export const baseTypeConverters = {
     return channel;
   },
 
-  textChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): TextChannel | ThreadChannel {
-    if (message.channel.type === "DM") {
-      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
+  textChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): GuildTextBasedChannel {
+    if (message.channel.type === ChannelType.DM) {
+      throw new TypeConversionError(`Type 'textChannel' can only be used in guilds`);
     }
 
     const channelId = getChannelId(value);
@@ -101,16 +111,16 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`Could not find channel for channel id \`${channelId}\``);
     }
 
-    if (!channel.isText()) {
+    if (!channel.isTextBased()) {
       throw new TypeConversionError(`Channel \`${channel.name}\` is not a text channel`);
     }
 
-    return channel as TextChannel | ThreadChannel;
+    return channel;
   },
 
   voiceChannel(value: string, { message }: CommandContext<AnyPluginData<any>>): VoiceChannel {
-    if (message.channel.type === "DM") {
-      throw new TypeConversionError(`Type 'Channel' can only be used in guilds`);
+    if (message.channel.type === ChannelType.DM) {
+      throw new TypeConversionError(`Type 'voiceChannel' can only be used in guilds`);
     }
 
     const channelId = getChannelId(value);
@@ -124,7 +134,7 @@ export const baseTypeConverters = {
       throw new TypeConversionError(`Could not find channel for channel id \`${channelId}\``);
     }
 
-    if (!(channel instanceof VoiceChannel)) {
+    if (channel.type !== ChannelType.GuildVoice) {
       throw new TypeConversionError(`Channel \`${channel.name}\` is not a voice channel`);
     }
 
@@ -132,7 +142,7 @@ export const baseTypeConverters = {
   },
 
   role(value: string, { message }: CommandContext<AnyPluginData<any>>): Role {
-    if (message.channel.type === "DM") {
+    if (message.channel.type === ChannelType.DM) {
       throw new TypeConversionError(`Type 'Role' can only be used in guilds`);
     }
 
@@ -180,7 +190,7 @@ export const baseCommandParameterTypeHelpers = {
   user: createTypeHelper<User>(baseTypeConverters.user),
   member: createTypeHelper<GuildMember>(baseTypeConverters.member),
   channel: createTypeHelper<Channel>(baseTypeConverters.channel),
-  textChannel: createTypeHelper<TextChannel | ThreadChannel>(baseTypeConverters.textChannel),
+  textChannel: createTypeHelper<GuildTextBasedChannel>(baseTypeConverters.textChannel),
   voiceChannel: createTypeHelper<VoiceChannel>(baseTypeConverters.voiceChannel),
   role: createTypeHelper<Role>(baseTypeConverters.role),
   userId: createTypeHelper<string>(baseTypeConverters.userId),

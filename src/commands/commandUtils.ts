@@ -1,4 +1,4 @@
-import { Client, Message } from "discord.js";
+import { ChannelType, Client, Message } from "discord.js";
 import { Awaitable } from "../utils";
 import {
   ICommandConfig,
@@ -7,7 +7,7 @@ import {
   TOption,
   toSafeSignature,
   TSafeSignature,
-  TSignature,
+  TSignature
 } from "knub-command-manager";
 import { Lock } from "../locks/LockManager";
 import { AnyPluginData, GuildPluginData } from "../plugins/PluginData";
@@ -137,11 +137,11 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
   let source = cmd.config!.extra?.blueprint.source ?? "guild";
   if (!Array.isArray(source)) source = [source];
 
-  if (context.message.channel.type === "DM" && source.includes("dm")) {
+  if (context.message.channel.type === ChannelType.DM && source.includes("dm")) {
     return true;
   }
 
-  if (context.message.channel.type !== "DM" && source.includes("guild")) {
+  if (context.message.channel.type !== ChannelType.DM && source.includes("guild")) {
     return true;
   }
 

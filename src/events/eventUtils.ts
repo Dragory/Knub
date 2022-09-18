@@ -2,19 +2,19 @@ import { KnownEvents } from "./eventTypes";
 import { Channel, Guild, GuildChannel, Message, PartialDMChannel, PartialUser, TextChannel, User } from "discord.js";
 
 type EventToGuild = {
-  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Guild | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Guild | null | undefined;
 };
 
 type EventToUser = {
-  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => User | PartialUser | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => User | PartialUser | null | undefined;
 };
 
 type EventToChannel = {
-  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Channel | PartialDMChannel | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Channel | PartialDMChannel | null | undefined;
 };
 
 type EventToMessage = {
-  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Message | undefined;
+  [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Message | null | undefined;
 };
 
 export const eventToGuild: EventToGuild = {
@@ -30,6 +30,11 @@ export const eventToGuild: EventToGuild = {
   guildMemberUpdate: ({ newMember }) => newMember.guild,
   guildUnavailable: ({ guild }) => guild,
   guildUpdate: ({ newGuild }) => newGuild,
+  guildScheduledEventCreate: ({ guildScheduledEvent }) => guildScheduledEvent.guild,
+  guildScheduledEventUpdate: ({ newGuildScheduledEvent }) => newGuildScheduledEvent.guild,
+  guildScheduledEventDelete: ({ guildScheduledEvent }) => guildScheduledEvent.guild,
+  guildScheduledEventUserAdd: ({ guildScheduledEvent }) => guildScheduledEvent.guild,
+  guildScheduledEventUserRemove: ({ guildScheduledEvent }) => guildScheduledEvent.guild,
   roleCreate: ({ role }) => role.guild,
   roleDelete: ({ role }) => role.guild,
   roleUpdate: ({ newRole }) => newRole.guild,
@@ -41,7 +46,7 @@ export const eventToGuild: EventToGuild = {
   messageReactionRemoveAll: ({ message }) => (message.channel as TextChannel)?.guild,
   messageUpdate: ({ newMessage }) => (newMessage.channel as TextChannel).guild,
   presenceUpdate: ({ newPresence }) => newPresence.member?.guild,
-  typingStart: ({ channel }) => (channel as TextChannel)?.guild,
+  typingStart: ({ typing }) => typing.guild,
   voiceStateUpdate: ({ oldState, newState }) => newState?.guild ?? oldState?.guild,
   interactionCreate: ({ interaction }) => interaction.guild ?? undefined,
   threadCreate: ({ thread }) => thread.guild,
@@ -50,12 +55,11 @@ export const eventToGuild: EventToGuild = {
   threadListSync: ({ threads }) => threads.first()?.guild ?? undefined,
   threadMemberUpdate: ({ oldMember, newMember }) =>
     newMember.guildMember?.guild ?? oldMember.guildMember?.guild ?? undefined,
-  threadMembersUpdate: ({ oldMembers, newMembers }) =>
-    newMembers.first()?.guildMember?.guild ?? oldMembers.first()?.guildMember?.guild ?? undefined,
+  threadMembersUpdate: ({ thread }) => thread.guild,
   stageInstanceCreate: ({ stageInstance }) => stageInstance.guild ?? undefined,
   stageInstanceDelete: ({ stageInstance }) => stageInstance.guild ?? undefined,
   stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
-    newStageInstance.guild ?? oldStageInstance.guild ?? undefined,
+    newStageInstance.guild ?? oldStageInstance?.guild ?? undefined,
   emojiCreate: ({ emoji }) => emoji.guild,
   emojiDelete: ({ emoji }) => emoji.guild,
   emojiUpdate: ({ newEmoji }) => newEmoji.guild,
@@ -75,7 +79,7 @@ export const eventToUser: EventToUser = {
   messageReactionAdd: ({ user }) => user,
   messageUpdate: ({ newMessage }) => newMessage.author ?? undefined,
   presenceUpdate: ({ newPresence }) => newPresence.user ?? undefined,
-  typingStart: ({ user }) => user,
+  typingStart: ({ typing }) => typing.user,
   userUpdate: ({ newUser }) => newUser,
   voiceStateUpdate: ({ newState }) => newState.member?.user,
   interactionCreate: ({ interaction }) => interaction.user ?? undefined,
@@ -92,18 +96,17 @@ export const eventToChannel: EventToChannel = {
   channelCreate: ({ channel }) => channel,
   channelDelete: ({ channel }) => channel,
   channelUpdate: ({ newChannel }) => newChannel,
-  typingStart: ({ channel }) => channel,
+  typingStart: ({ typing }) => typing.channel,
   voiceStateUpdate: ({ oldState, newState }) => newState?.channel ?? oldState?.channel ?? undefined,
   interactionCreate: ({ interaction }) => interaction.channel ?? undefined,
   threadCreate: ({ thread }) => thread,
   threadDelete: ({ thread }) => thread,
   threadUpdate: ({ oldThread, newThread }) => newThread ?? oldThread,
-  threadMembersUpdate: ({ oldMembers, newMembers }) =>
-    newMembers.first()?.thread ?? oldMembers.first()?.thread ?? undefined,
+  threadMembersUpdate: ({ thread }) => thread.parent,
   stageInstanceCreate: ({ stageInstance }) => stageInstance.channel ?? undefined,
   stageInstanceDelete: ({ stageInstance }) => stageInstance.channel ?? undefined,
   stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
-    newStageInstance.channel ?? oldStageInstance.channel ?? undefined,
+    newStageInstance.channel ?? oldStageInstance?.channel ?? undefined,
 };
 
 export const eventToMessage: EventToMessage = {

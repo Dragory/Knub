@@ -43,9 +43,10 @@ import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
 import { EventRelay } from "./events/EventRelay";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 import { Queue } from "./Queue";
-import { GatewayGuildCreateDispatchData } from "discord-api-types";
+import { GatewayGuildCreateDispatchData } from "discord-api-types/v10";
 import { performance } from "perf_hooks";
 import { Profiler } from "./Profiler";
+import { GatewayDispatchEvents } from "discord-api-types/gateway/v10";
 
 const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>> = {
   guildPlugins: [],
@@ -186,7 +187,7 @@ export class Knub<
       this.emit("loadingFinished");
     });
 
-    this.client.ws.on("GUILD_CREATE", (data: GatewayGuildCreateDispatchData) => {
+    this.client.ws.on(GatewayDispatchEvents.GuildCreate, (data: GatewayGuildCreateDispatchData) => {
       setImmediate(() => {
         this.log("info", `Guild available: ${data.id}`);
         void this.loadGuild(data.id);
@@ -534,7 +535,7 @@ export class Knub<
       try {
         await plugin.beforeLoad?.(preloadPluginData);
       } catch (e) {
-        throw new PluginLoadError(plugin.name, ctx, e);
+        throw new PluginLoadError(plugin.name, ctx, e as Error);
       }
 
       if (!isDependency) {
@@ -651,7 +652,7 @@ export class Knub<
       try {
         await plugin.beforeLoad?.(beforeLoadPluginData);
       } catch (e) {
-        throw new PluginLoadError(plugin.name, ctx, e);
+        throw new PluginLoadError(plugin.name, ctx, e as Error);
       }
 
       // Register event listeners
