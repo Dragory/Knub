@@ -31,7 +31,7 @@ is coming in the near future.
 
 ### TypeScript example
 ```ts
-import { Client, Intents } from "discord.js";
+import { Client, GatewayIntentBits } from "discord.js";
 import { Knub, typedGuildPlugin, typedGuildCommand, BasePluginType } from "knub";
 
 interface CustomPluginType extends BasePluginType {
@@ -67,11 +67,14 @@ const CounterPlugin = typedGuildPlugin<CustomPluginType>()({
   },
 });
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+});
+
 const knub = new Knub(client, {
   guildPlugins: [
     CounterPlugin,
-  ]
+  ],
 });
 
 knub.initialize();
@@ -82,7 +85,7 @@ client.login("my-bot-token");
 This example doesn't use the type helpers used in the TypeScript example above, and instead uses plain objects wherever possible.
 
 ```js
-const { Client, Intents } = require("discord.js");
+const { Client, GatewayIntentBits } = require("discord.js");
 const { Knub, baseCommandParameterTypeHelpers } = require("knub");
 
 const t = baseCommandParameterTypeHelpers;
@@ -114,11 +117,14 @@ const MyPlugin = {
   ],
 };
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+});
+
 const knub = new Knub(client, {
   guildPlugins: [
     MyPlugin,
-  ]
+  ],
 });
 
 knub.initialize();
