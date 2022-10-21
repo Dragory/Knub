@@ -33,6 +33,7 @@ import {
   VoiceChannel,
   PartialMessageReaction,
   GuildScheduledEvent,
+  ForumChannel,
 } from "discord.js";
 import { GuildMessage } from "../types";
 
@@ -149,7 +150,7 @@ export const fromDjsArgs = createFromDjsArgsObject({
   userUpdate: (oldUser: User | PartialUser, newUser: User) => ({ oldUser, newUser }),
   voiceStateUpdate: (oldState: VoiceState, newState: VoiceState) => ({ oldState, newState }),
   warn: (message: string) => ({ message }),
-  webhookUpdate: (channel: TextChannel | NewsChannel | VoiceChannel) => ({ channel }),
+  webhookUpdate: (channel: TextChannel | NewsChannel | VoiceChannel | ForumChannel) => ({ channel }),
   raw: (...rawArgs: any[]) => ({ rawArgs }),
 });
 
