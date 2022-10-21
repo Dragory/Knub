@@ -31,7 +31,7 @@ is coming in the near future.
 
 ### TypeScript example
 ```ts
-import Eris from "eris";
+import { Client, Intents } from "discord.js";
 import { Knub, typedGuildPlugin, typedGuildCommand, BasePluginType } from "knub";
 
 interface CustomPluginType extends BasePluginType {
@@ -61,28 +61,41 @@ const CounterPlugin = typedGuildPlugin<CustomPluginType>()({
     CounterCommand,
   ],
 
-  onLoad({ state }) {
+  beforeLoad({ state }) {
     // Initialize counter for CounterCommand
     state.counter = 0;
   },
 });
 
-const client = new Eris("my-bot-token");
-const knub = new Knub(client, {
-  guildPlugins: [
-    CounterPlugin,
-  ]
+// Create discord.js client
+const client = new Client({
+  intents: [
+    // Message intent is required for message commands
+    // Slash commands are *not* currently supported
+    Intents.FLAGS.GUILD_MESSAGES,
+  ],
 });
 
-knub.run();
+// Create Knub instance based on the client
+const bot = new Knub(client, {
+  guildPlugins: [
+    CounterPlugin,
+  ],
+});
+
+// Initialize Knub
+bot.initialize();
+
+// Connect to the gateway
+client.login("my-bot-token");
 ```
 
 ### JavaScript example
 This example doesn't use the type helpers used in the TypeScript example above, and instead uses plain objects wherever possible.
 
 ```js
-const Eris = require("eris");
-const { Knub, baseCommandParameterTypeHelpers } = require("knub");
+import { Client, Intents } from "discord.js";
+import { Knub, typedGuildPlugin, typedGuildCommand, BasePluginType } from "knub";
 
 const t = baseCommandParameterTypeHelpers;
 
@@ -113,12 +126,25 @@ const MyPlugin = {
   ],
 };
 
-const client = new Eris("my-bot-token");
-const knub = new Knub(client, {
-  guildPlugins: [
-    MyPlugin,
-  ]
+// Create discord.js client
+const client = new Client({
+  intents: [
+    // Message intent is required for message commands
+    // Slash commands are *not* currently supported
+    Intents.FLAGS.GUILD_MESSAGES,
+  ],
 });
 
-knub.run();
+// Create Knub instance based on the client
+const bot = new Knub(client, {
+  guildPlugins: [
+    MyPlugin,
+  ],
+});
+
+// Initialize Knub
+bot.initialize();
+
+// Connect to the gateway
+client.login("my-bot-token");
 ```
