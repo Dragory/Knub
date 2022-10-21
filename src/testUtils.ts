@@ -65,9 +65,9 @@ export function createMockClient(): Client {
       }
 
       if (p === "users") {
-        // @ts-ignore
-        // This type assertation is needed because the constructor is marked as private
-        return persist(target, p, new UserManager(proxy) as UserManager);
+        // We use Reflect.construct() here because the constructor is marked as private in the typings
+        const userManager = Reflect.construct(UserManager, [proxy]) as UserManager;
+        return persist(target, p, userManager);
       }
 
       if (p === "guilds") {
