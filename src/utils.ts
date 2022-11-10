@@ -84,3 +84,8 @@ export const typedKeys = Object.keys as unknown as <T = Record<string, unknown>>
 
 // From https://stackoverflow.com/a/60737746/316944
 export type KeyOfMap<M extends Map<unknown, unknown>> = M extends Map<infer K, unknown> ? K : never;
+
+type TypeExtender<BaseType> = <T extends BaseType>(t: T) => T;
+export function extendType<Type>(): TypeExtender<Type> {
+  return t => t;
+}

@@ -12,10 +12,11 @@ import {
   GlobalPluginData,
   GuildPluginData,
 } from "./PluginData";
-import { CommandBlueprint } from "../commands/CommandBlueprint";
+import { MessageCommandBlueprint } from "../commands/messageCommands/messageCommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { BasePluginType } from "./pluginTypes";
 import { GuildEvent, ValidEvent } from "../events/eventTypes";
+import { SlashCommandBlueprint } from "../commands/slashCommands/slashCommandBlueprint";
 
 /**
  * Each value in the public interface is a function that returns the actual
@@ -52,7 +53,7 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
   /**
    * Commands that are automatically registered on plugin load
    */
-  commands?: Array<CommandBlueprint<TPluginData, any>>;
+  commands?: Array<MessageCommandBlueprint<TPluginData, any> | SlashCommandBlueprint<TPluginData, any>>;
 
   /**
    * If this plugin includes any custom overrides, this function evaluates them

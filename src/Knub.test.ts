@@ -13,7 +13,7 @@ import { Knub } from "./Knub";
 import { expect } from "chai";
 import { typedGuildEventListener } from "./events/EventListenerBlueprint";
 import _domain from "domain";
-import { typedGuildCommand } from "./commands/CommandBlueprint";
+import { guildPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint";
 
 describe("Knub", () => {
   it("Multiple GUILD_CREATE events load guild's plugins only once", async () => {
@@ -235,7 +235,7 @@ describe("Knub", () => {
       name: "plugin-to-load",
 
       commands: [
-        typedGuildCommand({
+        guildPluginMessageCommand({
           trigger: "foo",
           permission: null,
           async run() {

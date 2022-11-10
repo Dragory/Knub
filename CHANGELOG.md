@@ -1,3 +1,6 @@
+# 31.0.0-beta.1
+* **BREAKING CHANGE:** Knub now uses discord.js v14
+
 # 30.0.0-beta.46
 * **BREAKING CHANGE:** `Knub.getPluginPerformanceStats()` has been removed and replaced with a new profiler
 * Knub now has a built-in profiler, accessible from `Knub.profiler`

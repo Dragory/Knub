@@ -6,17 +6,17 @@ import {
   CommandContext,
   CommandExtraData,
   CommandFn,
-  CommandMeta,
+  MessageCommandMeta,
   ContextualCommandMessage,
-  getCommandSignature,
-  getDefaultPrefix,
+  getMessageCommandSignature,
+  getDefaultMessageCommandPrefix,
   PluginCommandDefinition,
   restrictCommandSource,
-  TSignatureOrArray,
-} from "./commandUtils";
+  MessageCommandSignatureOrArray,
+} from "./messageCommands/messageCommandUtils";
 import { Client, Message } from "discord.js";
 import { AnyPluginData } from "../plugins/PluginData";
-import { CommandBlueprint } from "./CommandBlueprint";
+import { MessageCommandBlueprint } from "./messageCommands/messageCommandBlueprint";
 import { performance } from "perf_hooks";
 
 export interface PluginCommandManagerOpts {
@@ -33,7 +33,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
 
   constructor(client: Client, opts: PluginCommandManagerOpts = {}) {
     this.manager = new CommandManager<CommandContext<TPluginData>, CommandExtraData<TPluginData>>({
-      prefix: opts.prefix ?? getDefaultPrefix(client),
+      prefix: opts.prefix ?? getDefaultMessageCommandPrefix(client),
     });
 
     this.handlers = new Map<number, CommandFn<TPluginData, any>>();
@@ -47,8 +47,8 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     this.pluginData = pluginData;
   }
 
-  public add<TSignature extends TSignatureOrArray<TPluginData["_pluginType"]>>(
-    blueprint: CommandBlueprint<TPluginData, TSignature>
+  public add<TSignature extends MessageCommandSignatureOrArray<TPluginData["_pluginType"]>>(
+    blueprint: MessageCommandBlueprint<TPluginData, TSignature>
   ): void {
     const preFilters = Array.from(blueprint.config?.preFilters ?? []);
     preFilters.unshift(restrictCommandSource, checkCommandPermission);
@@ -93,12 +93,12 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
     }
 
     if (isError(command)) {
-      const usageLine = getCommandSignature(command.command);
+      const usageLine = getMessageCommandSignature(command.command);
       void msg.channel.send(`${command.error}\nUsage: \`${usageLine}\``);
       return;
     }
 
-    const extraMeta: Partial<CommandMeta<TPluginData, any>> = {};
+    const extraMeta: Partial<MessageCommandMeta<TPluginData, any>> = {};
     if (command.config!.extra?._lock) {
       extraMeta.lock = command.config!.extra._lock;
     }
@@ -109,7 +109,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
   private async runCommand(
     msg: ContextualCommandMessage<TPluginData>,
     matchedCommand: IMatchedCommand<CommandContext<TPluginData>, CommandExtraData<TPluginData>>,
-    extraMeta?: Partial<CommandMeta<TPluginData, any>>
+    extraMeta?: Partial<MessageCommandMeta<TPluginData, any>>
   ): Promise<void> {
     const handler = this.handlers.get(matchedCommand.id);
     if (!handler) {
@@ -122,7 +122,7 @@ export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
       return map;
     }, {});
 
-    const meta: CommandMeta<TPluginData, any> = {
+    const meta: MessageCommandMeta<TPluginData, any> = {
       ...extraMeta,
       args: valueMap,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

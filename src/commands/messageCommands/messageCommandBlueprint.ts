@@ -1,13 +1,15 @@
-import { CommandFn, PluginCommandConfig, TSignatureOrArray } from "./commandUtils";
-import { BasePluginType } from "../plugins/pluginTypes";
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../plugins/PluginData";
+import { CommandFn, PluginCommandConfig, MessageCommandSignatureOrArray } from "./messageCommandUtils";
+import { BasePluginType } from "../../plugins/pluginTypes";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
 
 type CommandSource = "guild" | "dm";
 
-export interface CommandBlueprint<
+export interface MessageCommandBlueprint<
   TPluginData extends AnyPluginData<any>,
-  _TSignature extends TSignatureOrArray<TPluginData["_pluginType"]>
+  _TSignature extends MessageCommandSignatureOrArray<TPluginData["_pluginType"]>
 > {
+  type: "message";
+
   trigger: string | string[];
   signature?: _TSignature;
   run: CommandFn<TPluginData, _TSignature>;
@@ -38,17 +40,20 @@ export interface CommandBlueprint<
 }
 
 type CommandBlueprintCreator<TPluginData extends AnyPluginData<any>> = <
-  TSignature extends TSignatureOrArray<TPluginData>
+  TSignature extends MessageCommandSignatureOrArray<TPluginData>
 >(
-  blueprint: CommandBlueprint<TPluginData, TSignature>
-) => CommandBlueprint<TPluginData, TSignature>;
+  blueprint: Omit<MessageCommandBlueprint<TPluginData, TSignature>, "type">
+) => MessageCommandBlueprint<TPluginData, TSignature>;
 
 function command<TPluginData extends AnyPluginData<BasePluginType>>(...args) {
   if (args.length === 1) {
     // (blueprint)
-    // Return command blueprint
+    // Return command blueprint with proper type
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return args[0];
+    return {
+      ...args[0],
+      type: "message",
+    };
   }
 
   if (args.length === 0) {
@@ -65,18 +70,18 @@ function command<TPluginData extends AnyPluginData<BasePluginType>>(...args) {
  * To specify `TPluginType` for additional type hints, use:
  * `guildCommand<TPluginType>()(blueprint)`
  */
-export function typedGuildCommand<_TSignature extends TSignatureOrArray<any>>(
-  blueprint: CommandBlueprint<GuildPluginData<any>, _TSignature>
-): CommandBlueprint<GuildPluginData<any>, _TSignature>;
+export function guildPluginMessageCommand<TSignature extends MessageCommandSignatureOrArray<any>>(
+  blueprint: Omit<MessageCommandBlueprint<GuildPluginData<any>, TSignature>, "type">
+): MessageCommandBlueprint<GuildPluginData<any>, TSignature>;
 
 /**
  * Specify `TPluginType` for type hints and return self
  */
-export function typedGuildCommand<TPluginType extends BasePluginType>(): CommandBlueprintCreator<
+export function guildPluginMessageCommand<TPluginType extends BasePluginType>(): CommandBlueprintCreator<
   GuildPluginData<TPluginType>
 >;
 
-export function typedGuildCommand(...args: any[]): any {
+export function guildPluginMessageCommand(...args: any[]): any {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return command<GuildPluginData<any>>(...args);
 }
@@ -87,17 +92,17 @@ export function typedGuildCommand(...args: any[]): any {
  * To specify `TPluginType` for additional type hints, use:
  * `globalCommand<TPluginType>()(blueprint)`
  */
-export function typedGlobalCommand<_TSignature extends TSignatureOrArray<any>>(
-  blueprint: CommandBlueprint<GlobalPluginData<any>, _TSignature>
-): CommandBlueprint<GlobalPluginData<any>, _TSignature>;
+export function globalPluginMessageCommand<TSignature extends MessageCommandSignatureOrArray<any>>(
+  blueprint: Omit<MessageCommandBlueprint<GlobalPluginData<any>, TSignature>, "type">
+): MessageCommandBlueprint<GlobalPluginData<any>, TSignature>;
 /**
  * Specify `TPluginType` for type hints and return self
  */
-export function typedGlobalCommand<TPluginType extends BasePluginType>(): CommandBlueprintCreator<
+export function globalPluginMessageCommand<TPluginType extends BasePluginType>(): CommandBlueprintCreator<
   GlobalPluginData<TPluginType>
 >;
 
-export function typedGlobalCommand(...args: any[]): any {
+export function globalPluginMessageCommand(...args: any[]): any {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return command<GlobalPluginData<any>>(...args);
 }

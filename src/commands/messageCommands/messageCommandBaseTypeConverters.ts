@@ -6,16 +6,16 @@ import {
   switchOption,
   TypeConversionError,
 } from "knub-command-manager";
-import { disableCodeBlocks } from "../helpers";
-import { getChannelId, getRoleId, getUserId } from "../utils";
+import { disableCodeBlocks } from "../../helpers";
+import { getChannelId, getRoleId, getUserId } from "../../utils";
 import { Channel, ChannelType, GuildMember, GuildTextBasedChannel, Role, User, VoiceChannel } from "discord.js";
-import { AnyPluginData } from "../plugins/PluginData";
-import { CommandContext } from "./commandUtils";
+import { AnyPluginData } from "../../plugins/PluginData";
+import { CommandContext } from "./messageCommandUtils";
 
 // TODO: Remove eslint-disable below after `this: void` has been added to the functions in knub-command-manager
 /* eslint-disable @typescript-eslint/unbound-method */
 
-export const baseTypeConverters = {
+export const messageCommandBaseTypeConverters = {
   ...defaultTypeConverters,
 
   boolean: defaultTypeConverters.bool,
@@ -176,13 +176,13 @@ export const baseCommandParameterTypeHelpers = {
 
   // Knub-specific types
   // knub-command-manager also has a number() helper, but we have slightly different error handling here
-  number: createTypeHelper<number>(baseTypeConverters.number),
-  user: createTypeHelper<User>(baseTypeConverters.user),
-  member: createTypeHelper<GuildMember>(baseTypeConverters.member),
-  channel: createTypeHelper<Channel>(baseTypeConverters.channel),
-  textChannel: createTypeHelper<GuildTextBasedChannel>(baseTypeConverters.textChannel),
-  voiceChannel: createTypeHelper<VoiceChannel>(baseTypeConverters.voiceChannel),
-  role: createTypeHelper<Role>(baseTypeConverters.role),
-  userId: createTypeHelper<string>(baseTypeConverters.userId),
-  channelId: createTypeHelper<string>(baseTypeConverters.channelId),
+  number: createTypeHelper<number>(messageCommandBaseTypeConverters.number),
+  user: createTypeHelper<User>(messageCommandBaseTypeConverters.user),
+  member: createTypeHelper<GuildMember>(messageCommandBaseTypeConverters.member),
+  channel: createTypeHelper<Channel>(messageCommandBaseTypeConverters.channel),
+  textChannel: createTypeHelper<GuildTextBasedChannel>(messageCommandBaseTypeConverters.textChannel),
+  voiceChannel: createTypeHelper<VoiceChannel>(messageCommandBaseTypeConverters.voiceChannel),
+  role: createTypeHelper<Role>(messageCommandBaseTypeConverters.role),
+  userId: createTypeHelper<string>(messageCommandBaseTypeConverters.userId),
+  channelId: createTypeHelper<string>(messageCommandBaseTypeConverters.channelId),
 };

@@ -5,11 +5,11 @@ import * as helpers from "./helpers";
 export { Knub } from "./Knub";
 
 export { GuildPluginBlueprint, GlobalPluginBlueprint } from "./plugins/PluginBlueprint";
-export { CommandBlueprint } from "./commands/CommandBlueprint";
+export { MessageCommandBlueprint } from "./commands/messageCommands/messageCommandBlueprint";
 export { EventListenerBlueprint } from "./events/EventListenerBlueprint";
 
 export { typedGuildPlugin, typedGlobalPlugin } from "./plugins/PluginBlueprint";
-export { typedGuildCommand, typedGlobalCommand } from "./commands/CommandBlueprint";
+export { typedGuildCommand, typedGlobalCommand } from "./commands/messageCommands/messageCommandBlueprint";
 export { typedGuildEventListener, typedGlobalEventListener } from "./events/EventListenerBlueprint";
 
 export { configUtils };
@@ -39,9 +39,9 @@ export {
 
 export { BasePluginType } from "./plugins/pluginTypes";
 
-export { getCommandSignature, PluginCommandConfig, CommandContext } from "./commands/commandUtils";
+export { getMessageCommandSignature, PluginCommandConfig, CommandContext } from "./commands/messageCommands/messageCommandUtils";
 
-export * from "./commands/baseTypeConverters";
+export * from "./commands/messageCommands/messageCommandBaseTypeConverters";
 
 export { helpers };
 

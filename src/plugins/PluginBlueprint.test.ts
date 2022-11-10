@@ -21,7 +21,7 @@ import { BeforeLoadPluginData, GuildPluginData, isGlobalPluginData } from "./Plu
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
 import { typedGlobalEventListener, typedGuildEventListener } from "../events/EventListenerBlueprint";
-import { typedGuildCommand } from "../commands/CommandBlueprint";
+import { guildPluginMessageCommand } from "../commands/messageCommands/messageCommandBlueprint";
 import { TextChannel } from "discord.js";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
@@ -39,7 +39,7 @@ describe("PluginBlueprint", () => {
         const PluginToLoad = typedGuildPlugin({
           name: "plugin-to-load",
 
-          commands: [typedGuildCommand({ trigger: "foo", permission: null, run: noop })],
+          commands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
 
           events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
@@ -284,21 +284,21 @@ describe("PluginBlueprint", () => {
         },
 
         commands: [
-          typedGuildCommand({
+          guildPluginMessageCommand({
             trigger: "info",
             permission: "can_use_info_cmd",
             run({ message }) {
               infoCmdCallUsers.push(message.author.id);
             },
           }),
-          typedGuildCommand({
+          guildPluginMessageCommand({
             trigger: "server",
             permission: "can_use_server_cmd",
             run({ message }) {
               serverCmdCallUsers.push(message.author.id);
             },
           }),
-          typedGuildCommand({
+          guildPluginMessageCommand({
             trigger: "ping",
             permission: "can_use_ping_cmd",
             run({ message }) {
@@ -1249,7 +1249,7 @@ describe("PluginBlueprint", () => {
         const Dependency = typedGuildPlugin({
           name: "dependency",
 
-          commands: [typedGuildCommand({ trigger: "foo", permission: null, run: noop })],
+          commands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
 
           events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
@@ -1316,7 +1316,7 @@ describe("PluginBlueprint", () => {
           },
 
           commands: [
-            typedGuildCommand({
+            guildPluginMessageCommand({
               trigger: "foo",
               permission: "can_do",
               run() {
@@ -1409,7 +1409,7 @@ describe("PluginBlueprint", () => {
           },
 
           commands: [
-            typedGuildCommand({
+            guildPluginMessageCommand({
               trigger: "foo",
               permission: "can_do",
               run() {
@@ -1493,7 +1493,7 @@ describe("PluginBlueprint", () => {
         const TestPlugin = typedGuildPlugin({
           name: "test-plugin",
           commands: [
-            typedGuildCommand({
+            guildPluginMessageCommand({
               trigger: "foo",
               permission: null,
               signature: parseSignature("<str:foo>", types, "foo"),

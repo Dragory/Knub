@@ -1,26 +1,26 @@
 import { ChannelType, Client, Message } from "discord.js";
-import { Awaitable } from "../utils";
+import { Awaitable } from "../../utils";
 import {
-  ICommandConfig,
-  ICommandDefinition,
-  IParameter,
-  TOption,
-  toSafeSignature,
-  TSafeSignature,
-  TSignature,
+  ICommandConfig as MessageCommandConfig,
+  ICommandDefinition as MessageCommandDefinition,
+  IParameter as MessageCommandParameter,
+  TOption as MessageCommandOption,
+  toSafeSignature as toMessageCommandSafeSignature,
+  TSafeSignature as MessageCommandSafeSignature,
+  TSignature as MessageCommandSignature,
 } from "knub-command-manager";
-import { Lock } from "../locks/LockManager";
-import { AnyPluginData, GuildPluginData } from "../plugins/PluginData";
-import { hasPermission } from "../helpers";
-import { CommandBlueprint } from "./CommandBlueprint";
-import { BasePluginType } from "../plugins/pluginTypes";
-import { GuildMessage } from "../types";
+import { Lock } from "../../locks/LockManager";
+import { AnyPluginData, GuildPluginData } from "../../plugins/PluginData";
+import { hasPermission } from "../../helpers";
+import { MessageCommandBlueprint } from "./messageCommandBlueprint";
+import { BasePluginType } from "../../plugins/pluginTypes";
+import { GuildMessage } from "../../types";
 
-export type TSignatureOrArray<TPluginData extends AnyPluginData<any>> =
-  | TSignature<CommandContext<TPluginData>>
-  | Array<TSignature<CommandContext<TPluginData>>>;
+export type MessageCommandSignatureOrArray<TPluginData extends AnyPluginData<any>> =
+  | MessageCommandSignature<CommandContext<TPluginData>>
+  | Array<MessageCommandSignature<CommandContext<TPluginData>>>;
 
-export function getDefaultPrefix(client: Client): RegExp {
+export function getDefaultMessageCommandPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user!.id}> `);
 }
 
@@ -28,10 +28,10 @@ export type ContextualCommandMessage<TPluginData extends AnyPluginData<any>> = T
   ? GuildMessage
   : Message;
 
-export interface CommandMeta<TPluginData extends AnyPluginData<any>, TArguments> {
+export interface MessageCommandMeta<TPluginData extends AnyPluginData<any>, TArguments> {
   args: TArguments;
   message: ContextualCommandMessage<TPluginData>;
-  command: ICommandDefinition<any, any>;
+  command: MessageCommandDefinition<any, any>;
   pluginData: TPluginData;
   lock?: Lock;
 }
@@ -42,34 +42,34 @@ export interface CommandMeta<TPluginData extends AnyPluginData<any>, TArguments>
  * to the return types of said type functions. For example, if the signature had a "name" property with a type function
  * that returns a string, ArgsFromSignature would return `{ name: string }`.
  */
-type ArgsFromSignature<T extends TSignature<any>> = {
-  [K in keyof T]: T[K] extends IParameter<any> | TOption<any> ? ParameterOrOptionType<T[K]> : never;
+type MessageCommandArgsFromSignature<T extends MessageCommandSignature<any>> = {
+  [K in keyof T]: T[K] extends MessageCommandParameter<any> | MessageCommandOption<any> ? ParameterOrOptionType<T[K]> : never;
 };
 
 /**
  * Higher level wrapper for ArgsFromSignature that also supports multiple signatures,
  * returning a union type of possible sets of arguments.
  */
-export type ArgsFromSignatureOrArray<T extends TSignatureOrArray<any>> = ArgsFromSignatureUnion<
+export type ArgsFromSignatureOrArray<T extends MessageCommandSignatureOrArray<any>> = ArgsFromSignatureUnion<
   SignatureToArray<T>[number]
 >;
 
 // Needed to distribute the union type properly
 // See https://github.com/microsoft/TypeScript/issues/28339#issuecomment-463577347
-type ArgsFromSignatureUnion<T extends TSignature<any>> = T extends any ? ArgsFromSignature<T> : never;
+type ArgsFromSignatureUnion<T extends MessageCommandSignature<any>> = T extends any ? MessageCommandArgsFromSignature<T> : never;
 
 type SignatureToArray<T> = T extends any[] ? T : [T];
 
 type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 
-type ParameterOrOptionType<T extends IParameter<any> | TOption<any>> = T extends IParameter<any>
+type ParameterOrOptionType<T extends MessageCommandParameter<any> | MessageCommandOption<any>> = T extends MessageCommandParameter<any>
   ? T["rest"] extends true
     ? Array<PromiseType<ReturnType<T["type"]>>>
     : PromiseType<ReturnType<T["type"]>>
   : PromiseType<ReturnType<T["type"]>>;
 
-export type CommandFn<TPluginData extends AnyPluginData<any>, _TSignature extends TSignatureOrArray<TPluginData>> = (
-  meta: CommandMeta<TPluginData, ArgsFromSignatureOrArray<_TSignature>>
+export type CommandFn<TPluginData extends AnyPluginData<any>, _TSignature extends MessageCommandSignatureOrArray<TPluginData>> = (
+  meta: MessageCommandMeta<TPluginData, ArgsFromSignatureOrArray<_TSignature>>
 ) => Awaitable<void>;
 
 export interface CommandContext<TPluginData extends AnyPluginData<any>> {
@@ -79,27 +79,27 @@ export interface CommandContext<TPluginData extends AnyPluginData<any>> {
 }
 
 export interface CommandExtraData<TPluginData extends AnyPluginData<any>> {
-  blueprint: CommandBlueprint<TPluginData, any>;
+  blueprint: MessageCommandBlueprint<TPluginData, any>;
   _lock?: Lock;
 }
 
-export type PluginCommandDefinition = ICommandDefinition<CommandContext<any>, CommandExtraData<any>>;
-export type PluginCommandConfig = ICommandConfig<CommandContext<any>, CommandExtraData<any>>;
+export type PluginCommandDefinition = MessageCommandDefinition<CommandContext<any>, CommandExtraData<any>>;
+export type PluginCommandConfig = MessageCommandConfig<CommandContext<any>, CommandExtraData<any>>;
 
 /**
  * Returns a readable command signature string for the given command.
  * Trigger is passed as a string instead of using the "triggers" property of the command to allow choosing which
  * trigger of potentially multiple ones to show and in what format.
  */
-export function getCommandSignature(
+export function getMessageCommandSignature(
   command: PluginCommandDefinition,
   overrideTrigger?: string,
-  overrideSignature?: TSignature<any>
+  overrideSignature?: MessageCommandSignature<any>
 ): string {
-  const signature: TSafeSignature<any> = toSafeSignature(overrideSignature || command.signatures[0] || {});
+  const signature: MessageCommandSafeSignature<any> = toMessageCommandSafeSignature(overrideSignature || command.signatures[0] || {});
   const signatureEntries = Object.entries(signature);
-  const parameters = signatureEntries.filter(([_, param]) => param.option !== true) as Array<[string, IParameter<any>]>;
-  const options = signatureEntries.filter(([_, opt]) => opt.option === true) as Array<[string, TOption<any>]>;
+  const parameters = signatureEntries.filter(([_, param]) => param.option !== true) as Array<[string, MessageCommandParameter<any>]>;
+  const options = signatureEntries.filter(([_, opt]) => opt.option === true) as Array<[string, MessageCommandOption<any>]>;
 
   const paramStrings = parameters.map(([name, param]) => {
     return param.required ? `<${name}>` : `[${name}]`;

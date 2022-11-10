@@ -1,14 +1,14 @@
 import { number, string } from "knub-command-manager";
 import { expect } from "chai";
-import { BasePluginType } from "..";
-import { typedGuildCommand, typedGlobalCommand } from "./CommandBlueprint";
+import { BasePluginType } from "../../index";
+import { guildPluginMessageCommand, globalPluginMessageCommand } from "./messageCommandBlueprint";
 import { DMChannel, TextChannel } from "discord.js";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
-describe("typedGuildCommand() helper", () => {
+describe("typedGuildMessageCommand() helper", () => {
   it("(blueprint)", () => {
-    const blueprint = typedGuildCommand({
+    const blueprint = guildPluginMessageCommand({
       trigger: "cmd",
       permission: null,
       signature: {
@@ -34,7 +34,7 @@ describe("typedGuildCommand() helper", () => {
   }
 
   it("<TPluginType>()(blueprint)", () => {
-    const blueprint = typedGuildCommand<CustomPluginType>()({
+    const blueprint = guildPluginMessageCommand<CustomPluginType>()({
       trigger: "cmd",
       permission: null,
       signature: {
@@ -56,7 +56,7 @@ describe("typedGuildCommand() helper", () => {
   });
 
   it("command message is a guild message", () => {
-    typedGuildCommand({
+    guildPluginMessageCommand({
       trigger: "foo",
       permission: null,
       run({ message }) {
@@ -77,7 +77,7 @@ describe("typedGuildCommand() helper", () => {
   });
 
   it("args type inference for multiple signatures", () => {
-    typedGuildCommand({
+    guildPluginMessageCommand({
       trigger: "cmd",
       permission: null,
       signature: [
@@ -108,9 +108,9 @@ describe("typedGuildCommand() helper", () => {
   });
 });
 
-describe("typedGlobalCommand() helper", () => {
+describe("typedGlobalMessageCommand() helper", () => {
   it("(blueprint)", () => {
-    const blueprint = typedGlobalCommand({
+    const blueprint = globalPluginMessageCommand({
       trigger: "cmd",
       permission: null,
       signature: {
@@ -136,7 +136,7 @@ describe("typedGlobalCommand() helper", () => {
   }
 
   it("<TPluginType>()(blueprint)", () => {
-    const blueprint = typedGlobalCommand<CustomPluginType>()({
+    const blueprint = globalPluginMessageCommand<CustomPluginType>()({
       trigger: "cmd",
       permission: null,
       signature: {
@@ -158,7 +158,7 @@ describe("typedGlobalCommand() helper", () => {
   });
 
   it("command message is NOT necessarily a guild message", () => {
-    typedGlobalCommand({
+    globalPluginMessageCommand({
       trigger: "foo",
       permission: null,
       run({ message }) {
