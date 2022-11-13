@@ -16,7 +16,8 @@ import { MessageCommandBlueprint } from "../commands/messageCommands/messageComm
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { BasePluginType } from "./pluginTypes";
 import { GuildEvent, ValidEvent } from "../events/eventTypes";
-import { SlashCommandBlueprint } from "../commands/slashCommands/slashCommandBlueprint";
+import { AnySlashCommandSignature, SlashCommandBlueprint } from "../commands/slashCommands/slashCommandBlueprint";
+import { SlashGroupBlueprint } from "../commands/slashCommands/slashGroupBlueprint";
 
 /**
  * Each value in the public interface is a function that returns the actual
@@ -50,10 +51,12 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
    */
   defaultOptions?: PluginOptions<TPluginData["_pluginType"]>;
 
+  messageCommands?: Array<MessageCommandBlueprint<TPluginData, any>>;
+
   /**
    * Commands that are automatically registered on plugin load
    */
-  commands?: Array<MessageCommandBlueprint<TPluginData, any> | SlashCommandBlueprint<TPluginData, any>>;
+  slashCommands?: Array<SlashCommandBlueprint<TPluginData, AnySlashCommandSignature> | SlashGroupBlueprint<TPluginData>>;
 
   /**
    * If this plugin includes any custom overrides, this function evaluates them
@@ -208,18 +211,18 @@ function plugin<TBlueprint extends AnyPluginBlueprint>(...args) {
  *
  * To specify `TPluginType` for additional type hints, use: `guildPlugin<TPluginType>()(blueprint)`
  */
-export function typedGuildPlugin<TBlueprint extends GuildPluginBlueprint<GuildPluginData<any>>>(
+export function guildPlugin<TBlueprint extends GuildPluginBlueprint<GuildPluginData<any>>>(
   blueprint: TBlueprint
 ): TBlueprint;
 
 /**
  * Helper function with no arguments. Specify `TPluginType` for type hints and return self.
  */
-export function typedGuildPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
+export function guildPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
   GuildPluginBlueprint<GuildPluginData<TPluginType>>
 >;
 
-export function typedGuildPlugin(...args: any[]): any {
+export function guildPlugin(...args: any[]): any {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return plugin<GuildPluginBlueprint<any>>(...args);
 }
@@ -229,18 +232,18 @@ export function typedGuildPlugin(...args: any[]): any {
  *
  * To specify `TPluginType` for additional type hints, use: `globalPlugin<TPluginType>()(blueprint)`
  */
-export function typedGlobalPlugin<TBlueprint extends GlobalPluginBlueprint<GlobalPluginData<any>>>(
+export function globalPlugin<TBlueprint extends GlobalPluginBlueprint<GlobalPluginData<any>>>(
   blueprint: TBlueprint
 ): TBlueprint;
 
 /**
  * Helper function with no arguments. Specify `TPluginType` for type hints and return self
  */
-export function typedGlobalPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
+export function globalPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
   GlobalPluginBlueprint<GlobalPluginData<TPluginType>>
 >;
 
-export function typedGlobalPlugin(...args: any[]): any {
+export function globalPlugin(...args: any[]): any {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return plugin<GlobalPluginBlueprint<any>>(...args);
 }

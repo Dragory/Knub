@@ -14,7 +14,8 @@ import {
 
 export interface BaseSlashCommandOption<DiscordType extends ApplicationCommandOptionType, OutputType> {
   type: DiscordType;
-  valueResolver: (interaction: ChatInputCommandInteraction) => OutputType;
+  resolveValue: (interaction: ChatInputCommandInteraction) => OutputType;
+  getExtraAPIProps: () => Record<string, any>;
   name: string;
   nameLocalizations?: Record<Locale, string>;
   description: string;
@@ -22,8 +23,8 @@ export interface BaseSlashCommandOption<DiscordType extends ApplicationCommandOp
   required?: boolean;
 }
 
-type OptionBuilderInput<OptionType extends BaseSlashCommandOption<any, unknown>, Name extends string> = Omit<OptionType, "type" | "valueResolver"> & { name: Name };
-type OptionBuilderOutput<OptionType extends BaseSlashCommandOption<any, unknown>, InputType> = InputType & { type: OptionType["type"], valueResolver: OptionType["valueResolver"] };
+type OptionBuilderInput<OptionType extends BaseSlashCommandOption<any, unknown>, Name extends string> = Omit<OptionType, "type" | "resolveValue" | "getExtraAPIProps"> & { name: Name };
+type OptionBuilderOutput<OptionType extends BaseSlashCommandOption<any, unknown>, InputType> = InputType & { type: OptionType["type"], resolveValue: OptionType["resolveValue"], getExtraAPIProps: OptionType["getExtraAPIProps"] };
 
 export type OptionBuilder<OptionType extends BaseSlashCommandOption<any, unknown>> =
   <Name extends string, OptionInput extends OptionBuilderInput<OptionType, Name>>(opt: OptionInput)
@@ -56,7 +57,18 @@ const stringOptionBuilder = makeOptionBuilder<StringSlashCommandOption>(opt => {
   return {
     ...opt,
     type: ApplicationCommandOptionType.String,
-    valueResolver: interaction => interaction.options.getString(opt.name) ?? "",
+    resolveValue: interaction => interaction.options.getString(opt.name) ?? "",
+    getExtraAPIProps: () => ({
+      choices: opt.choices
+        ? opt.choices.map(choice => ({
+            name: choice.name,
+            name_localizations: choice.nameLocalizations,
+            value: choice.value,
+          }))
+        : undefined,
+      min_length: opt.minLength,
+      max_length: opt.maxLength,
+    }),
   };
 });
 
@@ -79,23 +91,32 @@ const integerOptionBuilder = makeOptionBuilder<IntegerSlashCommandOption>(opt =>
   return {
     ...opt,
     type: ApplicationCommandOptionType.Integer,
-    valueResolver: interaction => interaction.options.getInteger(opt.name, true),
+    resolveValue: interaction => interaction.options.getInteger(opt.name, true),
+    getExtraAPIProps: () => ({
+      choices: opt.choices
+        ? opt.choices.map(choice => ({
+          name: choice.name,
+          name_localizations: choice.nameLocalizations,
+          value: choice.value,
+        }))
+        : undefined,
+      min_value: opt.minValue,
+      max_value: opt.maxValue,
+    }),
   };
 });
 
 // endregion
 // region Type: BOOLEAN
 
-export type BooleanSlashCommandOption = BaseSlashCommandOption<ApplicationCommandOptionType.Boolean, boolean> & {
-  type: ApplicationCommandOptionType.Boolean;
-  resolve: (interaction: ChatInputCommandInteraction, name: string) => boolean;
-};
+export type BooleanSlashCommandOption = BaseSlashCommandOption<ApplicationCommandOptionType.Boolean, boolean>;
 
 const booleanOptionBuilder = makeOptionBuilder<BooleanSlashCommandOption>(opt => {
   return {
     ...opt,
     type: ApplicationCommandOptionType.Boolean,
-    valueResolver: interaction => interaction.options.getBoolean(opt.name, true),
+    resolveValue: interaction => interaction.options.getBoolean(opt.name, true),
+    getExtraAPIProps: () => ({}),
   };
 });
 
@@ -108,7 +129,8 @@ const userOptionBuilder = makeOptionBuilder<UserSlashCommandOption>(opt => {
   return {
     ...opt,
     type: ApplicationCommandOptionType.User,
-    valueResolver: interaction => interaction.options.getUser(opt.name, true),
+    resolveValue: interaction => interaction.options.getUser(opt.name, true),
+    getExtraAPIProps: () => ({}),
   };
 });
 
@@ -131,8 +153,11 @@ function channelOptionBuilder<
   return {
     ...opt,
     type: ApplicationCommandOptionType.Channel,
-    valueResolver: interaction =>
+    resolveValue: interaction =>
       interaction.options.getChannel(opt.name, true) as Extract<Channel, { type: OptionInput["channelTypes"][number] }>,
+    getExtraAPIProps: () => ({
+      channel_types: opt.channelTypes,
+    }),
   };
 }
 
@@ -145,7 +170,8 @@ const roleOptionBuilder = makeOptionBuilder<RoleSlashCommandOption>(opt => {
   return {
     ...opt,
     type: ApplicationCommandOptionType.Role,
-    valueResolver: interaction => interaction.options.getRole(opt.name, true),
+    resolveValue: interaction => interaction.options.getRole(opt.name, true),
+    getExtraAPIProps: () => ({}),
   };
 });
 
@@ -157,7 +183,8 @@ const mentionableOptionBuilder = makeOptionBuilder<MentionableSlashCommandOption
   return {
     ...opt,
     type: ApplicationCommandOptionType.Mentionable,
-    valueResolver: interaction => interaction.options.getMentionable(opt.name, true),
+    resolveValue: interaction => interaction.options.getMentionable(opt.name, true),
+    getExtraAPIProps: () => ({}),
   };
 });
 
@@ -180,7 +207,18 @@ const numberOptionBuilder = makeOptionBuilder<NumberSlashCommandOption>(opt => {
   return {
     ...opt,
     type: ApplicationCommandOptionType.Number,
-    valueResolver: interaction => interaction.options.getNumber(opt.name, true),
+    resolveValue: interaction => interaction.options.getNumber(opt.name, true),
+    getExtraAPIProps: () => ({
+      choices: opt.choices
+        ? opt.choices.map(choice => ({
+            name: choice.name,
+            name_localizations: choice.nameLocalizations,
+            value: choice.value,
+          }))
+        : undefined,
+      min_value: opt.minValue,
+      max_value: opt.maxValue,
+    }),
   };
 });
 

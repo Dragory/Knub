@@ -13,7 +13,8 @@
     "declaration": true,
     "experimentalDecorators": true,
     "esModuleInterop": true,
-    "strict": true
+    "strict": true,
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*"

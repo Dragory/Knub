@@ -12,7 +12,7 @@ import {
   GuildPluginData,
 } from "./plugins/PluginData";
 import { PluginConfigManager } from "./config/PluginConfigManager";
-import { PluginCommandManager } from "./commands/PluginCommandManager";
+import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager";
 import { CooldownManager } from "./cooldowns/CooldownManager";
 import { PluginLoadError } from "./plugins/PluginLoadError";
 import { defaultGetConfig, defaultGetEnabledGuildPlugins, PluginPublicInterface } from "./plugins/pluginUtils";
@@ -47,6 +47,10 @@ import { GatewayGuildCreateDispatchData } from "discord-api-types/v10";
 import { performance } from "perf_hooks";
 import { Profiler } from "./Profiler";
 import { GatewayDispatchEvents } from "discord-api-types/gateway/v10";
+import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashCommandManager";
+import { SlashCommandBlueprint } from "./commands/slashCommands/slashCommandBlueprint";
+import { SlashGroupBlueprint } from "./commands/slashCommands/slashGroupBlueprint";
+import { registerSlashCommands } from "./commands/slashCommands/registerSlashCommands";
 
 const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>> = {
   guildPlugins: [],
@@ -179,8 +183,11 @@ export class Knub<
 
     this.client.once("ready", async () => {
       this.log("info", "Received READY");
-      this.log("info", "- Loading global plugins...");
 
+      this.log("info", "- Registering slash commands with Discord...");
+      await this.registerSlashCommands();
+
+      this.log("info", "- Loading global plugins...");
       await this.loadGlobalContext();
 
       this.log("info", "- Loading available servers that haven't been loaded yet...");
@@ -526,14 +533,16 @@ export class Knub<
       preloadPluginData.guild = this.client.guilds.resolve(ctx.guildId)!;
 
       preloadPluginData.events = new GuildPluginEventManager(this.eventRelay);
-      preloadPluginData.commands = new PluginCommandManager(this.client, {
+      preloadPluginData.messageCommands = new PluginMessageCommandManager(this.client, {
         prefix: ctx.config.prefix,
       });
+      preloadPluginData.slashCommands = new PluginSlashCommandManager();
 
       const fullPluginData = this.withFinalPluginDataProperties(ctx, preloadPluginData);
 
       preloadPluginData.events.setPluginData(fullPluginData);
-      preloadPluginData.commands.setPluginData(fullPluginData);
+      preloadPluginData.messageCommands.setPluginData(fullPluginData);
+      preloadPluginData.slashCommands.setPluginData(fullPluginData);
       preloadPluginData.config.setPluginData(fullPluginData);
 
       try {
@@ -553,19 +562,31 @@ export class Knub<
           }
         }
 
-        // Register commands
-        if (plugin.commands) {
-          for (const commandBlueprint of plugin.commands) {
-            fullPluginData.commands.add({
+        // Register message commands
+        if (plugin.messageCommands) {
+          for (const commandBlueprint of plugin.messageCommands) {
+            fullPluginData.messageCommands.add({
               ...commandBlueprint,
               run: commandBlueprint.run,
             });
           }
         }
 
-        // Initialize messageCreate event listener for commands
+        // Initialize messageCreate event listener for message commands
         fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
-          return _pluginData.commands.runFromMessage(message);
+          return _pluginData.messageCommands.runFromMessage(message);
+        });
+
+        // Register slash commands
+        if (plugin.slashCommands) {
+          for (const slashCommandBlueprint of plugin.slashCommands) {
+            fullPluginData.slashCommands.add(slashCommandBlueprint);
+          }
+        }
+
+        // Add interactionCreate event listener for slash commands
+        fullPluginData.events.on("interactionCreate", async ({ args: { interaction }, pluginData: _pluginData }) => {
+          await _pluginData.slashCommands.runFromInteraction(interaction);
         });
       }
 
@@ -643,14 +664,16 @@ export class Knub<
       beforeLoadPluginData.context = "global";
 
       beforeLoadPluginData.events = new GlobalPluginEventManager(this.eventRelay);
-      beforeLoadPluginData.commands = new PluginCommandManager(this.client, {
+      beforeLoadPluginData.messageCommands = new PluginMessageCommandManager(this.client, {
         prefix: ctx.config.prefix,
       });
+      beforeLoadPluginData.slashCommands = new PluginSlashCommandManager();
 
       const fullPluginData = this.withFinalPluginDataProperties(ctx, beforeLoadPluginData);
 
       beforeLoadPluginData.events.setPluginData(fullPluginData);
-      beforeLoadPluginData.commands.setPluginData(fullPluginData);
+      beforeLoadPluginData.messageCommands.setPluginData(fullPluginData);
+      beforeLoadPluginData.slashCommands.setPluginData(fullPluginData);
       beforeLoadPluginData.config.setPluginData(fullPluginData);
 
       try {
@@ -669,19 +692,31 @@ export class Knub<
         }
       }
 
-      // Register commands
-      if (plugin.commands) {
-        for (const commandBlueprint of plugin.commands) {
-          fullPluginData.commands.add({
+      // Register message commands
+      if (plugin.messageCommands) {
+        for (const commandBlueprint of plugin.messageCommands) {
+          fullPluginData.messageCommands.add({
             ...commandBlueprint,
             run: commandBlueprint.run,
           });
         }
       }
 
-      // Initialize message event listener for commands
+      // Add messageCreate event listener for commands
       fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
-        return _pluginData.commands.runFromMessage(message);
+        return _pluginData.messageCommands.runFromMessage(message);
+      });
+
+      // Register slash commands
+      if (plugin.slashCommands) {
+        for (const slashCommandBlueprint of plugin.slashCommands) {
+          fullPluginData.slashCommands.add(slashCommandBlueprint);
+        }
+      }
+
+      // Add interactionCreate event listener for slash commands
+      fullPluginData.events.on("interactionCreate", async ({ args: { interaction }, pluginData: _pluginData }) => {
+        await _pluginData.slashCommands.runFromInteraction(interaction);
       });
 
       fullPluginData.loaded = true;
@@ -694,5 +729,17 @@ export class Knub<
     for (const loadedPlugin of ctx.loadedPlugins.values()) {
       await loadedPlugin.blueprint.afterLoad?.(loadedPlugin.pluginData);
     }
+  }
+
+  protected async registerSlashCommands(): Promise<void> {
+    const slashCommands: Array<SlashCommandBlueprint<any, any> | SlashGroupBlueprint<GuildPluginData<any>> | SlashGroupBlueprint<GlobalPluginData<any>>> = [];
+    for (const plugin of this.guildPlugins.values()) {
+      slashCommands.push(...(plugin.slashCommands || []));
+    }
+    for (const plugin of this.globalPlugins.values()) {
+      slashCommands.push(...(plugin.slashCommands || []));
+    }
+    const result = await registerSlashCommands(this.client as Client<true>, slashCommands);
+    this.log("info", `-- Created ${result.create}, updated ${result.update}, deleted ${result.delete}`);
   }
 }

@@ -1,4 +1,11 @@
-import { CooldownManager, GlobalPluginBlueprint, GlobalPluginData, Knub, LockManager } from "../index";
+import {
+  CooldownManager,
+  GlobalPluginBlueprint,
+  GlobalPluginData,
+  guildPluginSlashCommand,
+  Knub,
+  LockManager, slashOptions
+} from "../index";
 import {
   createMockClient,
   createMockGuild,
@@ -11,18 +18,19 @@ import {
 } from "../testUtils";
 import * as assert from "assert";
 import { noop } from "../utils";
-import { PluginCommandManager } from "../commands/PluginCommandManager";
+import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { BasePluginType } from "./pluginTypes";
 import { parseSignature } from "knub-command-manager";
 import { expect } from "chai";
-import { typedGuildPlugin, typedGlobalPlugin, GuildPluginBlueprint } from "./PluginBlueprint";
+import { guildPlugin, globalPlugin, GuildPluginBlueprint } from "./PluginBlueprint";
 import { BeforeLoadPluginData, GuildPluginData, isGlobalPluginData } from "./PluginData";
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
 import { typedGlobalEventListener, typedGuildEventListener } from "../events/EventListenerBlueprint";
 import { guildPluginMessageCommand } from "../commands/messageCommands/messageCommandBlueprint";
 import { TextChannel } from "discord.js";
+import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
@@ -36,17 +44,17 @@ describe("PluginBlueprint", () => {
   describe("Commands and events", () => {
     it("loads commands and events", (done) => {
       void (async () => {
-        const PluginToLoad = typedGuildPlugin({
+        const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
 
-          commands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
+          messageCommands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
 
           events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
           afterLoad(pluginData) {
             setTimeout(() => {
               // The command above should be loaded
-              assert.strictEqual(pluginData.commands.getAll().length, 1);
+              assert.strictEqual(pluginData.messageCommands.getAll().length, 1);
 
               // The event listener above should be loaded
               // There is also a default message listener that's always registered
@@ -89,7 +97,7 @@ describe("PluginBlueprint", () => {
           [guild1.id]: 0,
         };
 
-        const PluginToLoad = typedGuildPlugin({
+        const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
 
           events: [
@@ -146,7 +154,7 @@ describe("PluginBlueprint", () => {
 
     it("global events are not passed to guild event listeners", (done) => {
       void (async () => {
-        const PluginToLoad = typedGuildPlugin({
+        const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
 
           events: [
@@ -191,7 +199,7 @@ describe("PluginBlueprint", () => {
 
     it("global events are passed to global event listeners", (done) => {
       void (async () => {
-        const PluginToLoad = typedGlobalPlugin({
+        const PluginToLoad = globalPlugin({
           name: "plugin-to-load",
           events: [
             typedGlobalEventListener({
@@ -226,7 +234,7 @@ describe("PluginBlueprint", () => {
         const client = createMockClient();
         const guild = createMockGuild(client);
 
-        const PluginToLoad = typedGlobalPlugin({
+        const PluginToLoad = globalPlugin({
           name: "plugin-to-load",
           events: [
             typedGlobalEventListener({
@@ -272,7 +280,7 @@ describe("PluginBlueprint", () => {
         };
       }
 
-      const TestPlugin = typedGuildPlugin<PluginType>()({
+      const TestPlugin = guildPlugin<PluginType>()({
         name: "test-plugin",
 
         defaultOptions: {
@@ -394,6 +402,25 @@ describe("PluginBlueprint", () => {
       assert.deepStrictEqual(infoCmdCallUsers, [user1.id]);
       assert.deepStrictEqual(serverCmdCallUsers, [user2.id]);
       assert.deepStrictEqual(pingCmdCallUsers, [user3.id]);
+    });
+
+    it("slash commands", () => {
+      const SlashTestPlugin = guildPlugin({
+        name: "slash-test-plugin",
+        slashCommands: [
+          guildPluginSlashCommand({
+            name: "echo",
+            description: "Repeat what you said",
+            signature: [
+              slashOptions.string({ name: "text", description: "bar", required: true }),
+            ],
+            run({ interaction, options }) {
+              const foo = options.text;
+              interaction.reply(options.text);
+            },
+          }),
+        ],
+      });
     });
   });
 
@@ -1023,9 +1050,9 @@ describe("PluginBlueprint", () => {
   describe("Dependencies", () => {
     it("hasPlugin", (done) => {
       void (async () => {
-        const DependencyToLoad = typedGuildPlugin({ name: "dependency-to-load" });
+        const DependencyToLoad = guildPlugin({ name: "dependency-to-load" });
 
-        const PluginToLoad = typedGuildPlugin({
+        const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
           afterLoad(pluginData) {
             setTimeout(() => {
@@ -1060,7 +1087,7 @@ describe("PluginBlueprint", () => {
 
     it("getPlugin", (done) => {
       void (async () => {
-        const DependencyToLoad = typedGuildPlugin({
+        const DependencyToLoad = guildPlugin({
           name: "dependency-to-load",
           public: {
             ok(pluginData) {
@@ -1071,7 +1098,7 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        const PluginToLoad = typedGuildPlugin({
+        const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
           afterLoad(pluginData) {
             setTimeout(() => {
@@ -1104,7 +1131,7 @@ describe("PluginBlueprint", () => {
 
     it("getPlugin has correct pluginData", (done) => {
       void (async () => {
-        const DependencyToLoad = typedGuildPlugin({
+        const DependencyToLoad = guildPlugin({
           name: "dependency-to-load",
 
           defaultOptions: {
@@ -1126,7 +1153,7 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        const PluginToLoad = typedGuildPlugin({
+        const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
 
           defaultOptions: {
@@ -1166,11 +1193,11 @@ describe("PluginBlueprint", () => {
 
     it("automatic dependency loading", (done) => {
       void (async () => {
-        const DependencyToLoad = typedGuildPlugin({ name: "dependency-to-load" });
+        const DependencyToLoad = guildPlugin({ name: "dependency-to-load" });
 
-        const OtherDependencyToLoad = typedGuildPlugin({ name: "other-dependency-to-load" });
+        const OtherDependencyToLoad = guildPlugin({ name: "other-dependency-to-load" });
 
-        const PluginToLoad = typedGuildPlugin({
+        const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
 
           dependencies: () => [DependencyToLoad, OtherDependencyToLoad],
@@ -1205,13 +1232,13 @@ describe("PluginBlueprint", () => {
 
     it("transitive dependencies", (done) => {
       void (async () => {
-        const DependencyTwo = typedGuildPlugin({ name: "dependency-two" });
-        const DependencyOne = typedGuildPlugin({
+        const DependencyTwo = guildPlugin({ name: "dependency-two" });
+        const DependencyOne = guildPlugin({
           name: "dependency-one",
           dependencies: () => [DependencyTwo],
         });
 
-        const PluginToLoad = typedGuildPlugin({
+        const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
 
           dependencies: () => [DependencyOne],
@@ -1246,16 +1273,16 @@ describe("PluginBlueprint", () => {
 
     it("plugins loaded as dependencies do not load commands or events", (done) => {
       void (async () => {
-        const Dependency = typedGuildPlugin({
+        const Dependency = guildPlugin({
           name: "dependency",
 
-          commands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
+          messageCommands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
 
           events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
           afterLoad(pluginData) {
             // The command above should *not* be loaded
-            assert.strictEqual(pluginData.commands.getAll().length, 0);
+            assert.strictEqual(pluginData.messageCommands.getAll().length, 0);
 
             // The event listener above should *not* be loaded, and neither should the default message listener
             assert.strictEqual(pluginData.events.getListenerCount(), 0);
@@ -1264,7 +1291,7 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        const PluginToLoad = typedGuildPlugin({
+        const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
           dependencies: () => [Dependency],
         });
@@ -1302,7 +1329,7 @@ describe("PluginBlueprint", () => {
           };
         }
 
-        const TestPlugin = typedGuildPlugin<PluginType>()({
+        const TestPlugin = guildPlugin<PluginType>()({
           name: "test-plugin",
 
           defaultOptions: {
@@ -1392,7 +1419,7 @@ describe("PluginBlueprint", () => {
           };
         }
 
-        const TestPlugin = typedGuildPlugin<PluginType>()({
+        const TestPlugin = guildPlugin<PluginType>()({
           name: "test-plugin",
 
           defaultOptions: {
@@ -1490,9 +1517,9 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const TestPlugin = typedGuildPlugin({
+        const TestPlugin = guildPlugin({
           name: "test-plugin",
-          commands: [
+          messageCommands: [
             guildPluginMessageCommand({
               trigger: "foo",
               permission: null,
@@ -1544,7 +1571,8 @@ describe("PluginBlueprint", () => {
           beforeLoad(pluginData) {
             assert.ok(pluginData.client != null);
             assert.ok((pluginData.cooldowns as unknown) instanceof CooldownManager);
-            assert.ok((pluginData.commands as unknown) instanceof PluginCommandManager);
+            assert.ok((pluginData.messageCommands as unknown) instanceof PluginMessageCommandManager);
+            assert.ok((pluginData.slashCommands as unknown) instanceof PluginSlashCommandManager);
             assert.ok((pluginData.config as unknown) instanceof PluginConfigManager);
             assert.ok((pluginData.events as unknown) instanceof GuildPluginEventManager);
             assert.ok((pluginData.locks as unknown) instanceof LockManager);
@@ -1580,7 +1608,8 @@ describe("PluginBlueprint", () => {
           beforeLoad(pluginData) {
             assert.ok(pluginData.client != null);
             assert.ok((pluginData.cooldowns as unknown) instanceof CooldownManager);
-            assert.ok((pluginData.commands as unknown) instanceof PluginCommandManager);
+            assert.ok((pluginData.messageCommands as unknown) instanceof PluginMessageCommandManager);
+            assert.ok((pluginData.slashCommands as unknown) instanceof PluginSlashCommandManager);
             assert.ok((pluginData.config as unknown) instanceof PluginConfigManager);
             assert.ok((pluginData.events as unknown) instanceof GlobalPluginEventManager);
             assert.ok((pluginData.locks as unknown) instanceof LockManager);
@@ -1661,7 +1690,7 @@ describe("PluginBlueprint", () => {
 
   describe("plugin() helper", () => {
     it("(blueprint)", () => {
-      const blueprint = typedGuildPlugin({
+      const blueprint = guildPlugin({
         name: "my-plugin",
         info: "foo",
       });
@@ -1677,7 +1706,7 @@ describe("PluginBlueprint", () => {
     }
 
     it("<TPluginType>()(blueprint)", () => {
-      const blueprint = typedGuildPlugin<CustomPluginType>()({
+      const blueprint = guildPlugin<CustomPluginType>()({
         name: "my-plugin",
         info: "foo",
 
@@ -1709,7 +1738,7 @@ describe("PluginBlueprint", () => {
         };
       }
 
-      const OtherPlugin = typedGuildPlugin<OtherPluginType>()({
+      const OtherPlugin = guildPlugin<OtherPluginType>()({
         name: "other-plugin",
         public: {
           myFn(pluginData) {
@@ -1723,7 +1752,7 @@ describe("PluginBlueprint", () => {
       });
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const MainPlugin = typedGuildPlugin({
+      const MainPlugin = guildPlugin({
         name: "main-plugin",
         afterLoad(pluginData) {
           const otherPlugin = pluginData.getPlugin(OtherPlugin);

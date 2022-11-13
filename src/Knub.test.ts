@@ -1,4 +1,4 @@
-import { typedGuildPlugin } from "./plugins/PluginBlueprint";
+import { guildPlugin } from "./plugins/PluginBlueprint";
 import { noop } from "./utils";
 import assert from "assert";
 import {
@@ -19,7 +19,7 @@ describe("Knub", () => {
   it("Multiple GUILD_CREATE events load guild's plugins only once", async () => {
     let loadedTimes = 0;
 
-    const PluginToLoad = typedGuildPlugin({
+    const PluginToLoad = guildPlugin({
       name: "plugin-to-load",
 
       afterLoad() {
@@ -62,7 +62,7 @@ describe("Knub", () => {
   it("GUILD_CREATE followed by ready event load guild's plugins only once", async () => {
     let loadedTimes = 0;
 
-    const PluginToLoad = typedGuildPlugin({
+    const PluginToLoad = guildPlugin({
       name: "plugin-to-load",
 
       afterLoad() {
@@ -100,7 +100,7 @@ describe("Knub", () => {
   it("Errors during plugin loading unloads guild", async () => {
     let loadedTimes = 0;
 
-    const Plugin1 = typedGuildPlugin({
+    const Plugin1 = guildPlugin({
       name: "plugin1",
 
       beforeLoad() {
@@ -112,7 +112,7 @@ describe("Knub", () => {
       },
     });
 
-    const PluginWithError = typedGuildPlugin({
+    const PluginWithError = guildPlugin({
       name: "plugin-with-error",
 
       beforeLoad() {
@@ -154,7 +154,7 @@ describe("Knub", () => {
   });
 
   it("Profiler tracks plugin load times", async () => {
-    const PluginToLoad = typedGuildPlugin({
+    const PluginToLoad = guildPlugin({
       name: "plugin-to-load",
 
       async beforeLoad() {
@@ -187,7 +187,7 @@ describe("Knub", () => {
   });
 
   it("Profiler tracks event processing times", async () => {
-    const PluginToLoad = typedGuildPlugin({
+    const PluginToLoad = guildPlugin({
       name: "plugin-to-load",
 
       events: [
@@ -231,10 +231,10 @@ describe("Knub", () => {
   });
 
   it("Profiler tracks command processing times", async () => {
-    const PluginToLoad = typedGuildPlugin({
+    const PluginToLoad = guildPlugin({
       name: "plugin-to-load",
 
-      commands: [
+      messageCommands: [
         guildPluginMessageCommand({
           trigger: "foo",
           permission: null,

@@ -13,10 +13,10 @@ import {
   PluginCommandDefinition,
   restrictCommandSource,
   MessageCommandSignatureOrArray,
-} from "./messageCommands/messageCommandUtils";
+} from "./messageCommandUtils";
 import { Client, Message } from "discord.js";
-import { AnyPluginData } from "../plugins/PluginData";
-import { MessageCommandBlueprint } from "./messageCommands/messageCommandBlueprint";
+import { AnyPluginData } from "../../plugins/PluginData";
+import { MessageCommandBlueprint } from "./messageCommandBlueprint";
 import { performance } from "perf_hooks";
 
 export interface PluginCommandManagerOpts {
@@ -26,7 +26,7 @@ export interface PluginCommandManagerOpts {
 /**
  * A module to manage and run commands for a single instance of a plugin
  */
-export class PluginCommandManager<TPluginData extends AnyPluginData<any>> {
+export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>> {
   private pluginData: TPluginData | undefined;
   private manager: CommandManager<CommandContext<TPluginData>, CommandExtraData<TPluginData>>;
   private handlers: Map<number, CommandFn<TPluginData, any>>;

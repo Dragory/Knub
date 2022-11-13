@@ -8,8 +8,8 @@ export type SlashCommandSignature = Array<BaseSlashCommandOption<any, any>>;
 
 type OptionsFromSignature<TSignature extends SlashCommandSignature> = {
   [Opt in TSignature[number] as Opt["name"]]: Opt["required"] extends true
-    ? ReturnType<Opt["valueResolver"]>
-    : ReturnType<Opt["valueResolver"]> | null;
+    ? ReturnType<Opt["resolveValue"]>
+    : ReturnType<Opt["resolveValue"]> | null;
 };
 
 export type SlashCommandMeta<TPluginData extends AnyPluginData<any>, TSignature extends SlashCommandSignature> = {

@@ -1,4 +1,4 @@
-import { PluginCommandManager } from "../commands/PluginCommandManager";
+import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager";
 import { PluginConfigManager } from "../config/PluginConfigManager";
 import { LockManager } from "../locks/LockManager";
 import { CooldownManager } from "../cooldowns/CooldownManager";
@@ -9,6 +9,7 @@ import { AnyPluginBlueprint } from "./PluginBlueprint";
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
 import { Client, Guild } from "discord.js";
+import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager";
 
 export type HasPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => boolean;
 export type GetPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => PluginPublicInterface<T>;
@@ -92,7 +93,8 @@ export type GuildPluginData<TPluginType extends BasePluginType> = BasePluginData
   guild: Guild;
 
   events: GuildPluginEventManager<GuildPluginData<TPluginType>>;
-  commands: PluginCommandManager<GuildPluginData<TPluginType>>;
+  messageCommands: PluginMessageCommandManager<GuildPluginData<TPluginType>>;
+  slashCommands: PluginSlashCommandManager<GuildPluginData<TPluginType>>;
 };
 
 /**
@@ -102,7 +104,8 @@ export type GlobalPluginData<TPluginType extends BasePluginType> = BasePluginDat
   context: "global";
 
   events: GlobalPluginEventManager<GlobalPluginData<TPluginType>>;
-  commands: PluginCommandManager<GlobalPluginData<TPluginType>>;
+  messageCommands: PluginMessageCommandManager<GlobalPluginData<TPluginType>>;
+  slashCommands: PluginSlashCommandManager<GlobalPluginData<TPluginType>>;
 };
 
 export type AnyPluginData<TPluginType extends BasePluginType> =

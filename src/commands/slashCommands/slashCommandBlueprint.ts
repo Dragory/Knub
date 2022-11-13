@@ -1,20 +1,21 @@
 import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
-import { Locale } from "discord-api-types/v10";
-import { PermissionResolvable } from "discord.js";
+import { Locale, Permissions } from "discord-api-types/v10";
 import { BaseSlashCommandOption } from "./slashCommandOptions";
 import { SlashCommandFn, SlashCommandSignature } from "./slashCommandUtils";
 import { BasePluginType } from "../../plugins/pluginTypes";
 
+export type AnySlashCommandSignature = Array<BaseSlashCommandOption<any, any>>;
+
 export type SlashCommandBlueprint<
   TPluginData extends AnyPluginData<any>,
-  TSignature extends Array<BaseSlashCommandOption<any, any>>,
+  TSignature extends AnySlashCommandSignature,
 > = {
   type: "slash";
   name: string;
   nameLocalizations?: Record<Locale, string>;
   description: string;
   descriptionLocalizations?: Record<Locale, string>;
-  defaultMemberPermissions?: PermissionResolvable;
+  defaultMemberPermissions?: Permissions;
   customPermission?: string;
   allowDms?: boolean;
   signature: TSignature;

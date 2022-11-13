@@ -8,8 +8,9 @@ export { GuildPluginBlueprint, GlobalPluginBlueprint } from "./plugins/PluginBlu
 export { MessageCommandBlueprint } from "./commands/messageCommands/messageCommandBlueprint";
 export { EventListenerBlueprint } from "./events/EventListenerBlueprint";
 
-export { typedGuildPlugin, typedGlobalPlugin } from "./plugins/PluginBlueprint";
-export { typedGuildCommand, typedGlobalCommand } from "./commands/messageCommands/messageCommandBlueprint";
+export { guildPlugin, globalPlugin } from "./plugins/PluginBlueprint";
+export { guildPluginMessageCommand, globalPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint";
+export { guildPluginSlashCommand, globalPluginSlashCommand } from "./commands/slashCommands/slashCommandBlueprint";
 export { typedGuildEventListener, typedGlobalEventListener } from "./events/EventListenerBlueprint";
 
 export { configUtils };
@@ -18,6 +19,9 @@ export { ConfigValidationError } from "./config/ConfigValidationError";
 export { pluginUtils };
 
 export { GuildPluginData, GlobalPluginData } from "./plugins/PluginData";
+
+export * from "./commands/slashCommands/slashCommandOptions";
+export * from "./commands/slashCommands/slashGroupBlueprint";
 
 export {
   KnubOptions,
@@ -48,7 +52,7 @@ export { helpers };
 export { PluginError } from "./plugins/PluginError";
 
 export { PluginConfigManager } from "./config/PluginConfigManager";
-export { PluginCommandManager } from "./commands/PluginCommandManager";
+export { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager";
 export { GuildPluginEventManager } from "./events/GuildPluginEventManager";
 export { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 export { LockManager, Lock } from "./locks/LockManager";
