@@ -140,28 +140,6 @@ export class Knub<
       getEnabledGuildPlugins: defaultGetEnabledGuildPlugins,
       canLoadGuild: () => true,
       customArgumentTypes: {},
-
-      sendErrorMessageFn(channel, body) {
-        void channel.send({
-          embeds: [
-            {
-              description: body,
-              color: 0xee4400,
-            },
-          ],
-        });
-      },
-
-      sendSuccessMessageFn(channel, body) {
-        void channel.send({
-          embeds: [
-            {
-              description: body,
-              color: 0x1ac600,
-            },
-          ],
-        });
-      },
     };
 
     this.options = { ...defaultOptions, ...args.options };

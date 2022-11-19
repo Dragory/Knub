@@ -6,8 +6,6 @@ import { GlobalPluginData, GuildPluginData } from "./plugins/PluginData";
 import { Awaitable } from "./utils";
 import { BasePluginType } from "./plugins/pluginTypes";
 
-type StatusMessageFn = (channel: TextBasedChannelFields, body: string) => void;
-
 export type GuildPluginMap = Map<string, GuildPluginBlueprint<GuildPluginData<any>>>;
 export type GlobalPluginMap = Map<string, GlobalPluginBlueprint<GlobalPluginData<any>>>;
 
@@ -23,8 +21,7 @@ export interface KnubOptions<TGuildConfig extends BaseConfig<any>> {
   getEnabledGuildPlugins?: (ctx: GuildContext<TGuildConfig>, plugins: GuildPluginMap) => Awaitable<string[]>;
   canLoadGuild: (guildId: string) => Awaitable<boolean>;
   logFn?: LogFn;
-  sendErrorMessageFn: StatusMessageFn;
-  sendSuccessMessageFn: StatusMessageFn;
+
   [key: string]: any;
 }
 
