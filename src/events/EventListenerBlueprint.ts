@@ -43,19 +43,19 @@ function eventListener<TPluginData extends AnyPluginData<BasePluginType>>(...arg
  * To specify `TPluginType` for additional type hints, use:
  * `guildEventListener<TPluginType>()(blueprint)`
  */
-export function typedGuildEventListener<TEventName extends GuildEvent>(
+export function guildPluginEventListener<TEventName extends GuildEvent>(
   blueprint: EventListenerBlueprint<GuildPluginData<any>, TEventName>
 ): EventListenerBlueprint<GuildPluginData<any>, TEventName>;
 
 /**
  * Specify `TPluginType` for type hints and return self
  */
-export function typedGuildEventListener<TPluginType extends BasePluginType>(): EventListenerBlueprintCreator<
+export function guildPluginEventListener<TPluginType extends BasePluginType>(): EventListenerBlueprintCreator<
   GuildPluginData<TPluginType>,
   GuildEvent
 >;
 
-export function typedGuildEventListener(...args: any[]): any {
+export function guildPluginEventListener(...args: any[]): any {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return eventListener<GuildPluginData<any>>(...args);
 }
@@ -67,19 +67,19 @@ export function typedGuildEventListener(...args: any[]): any {
  * To specify `TPluginType` for additional type hints, use:
  * `globalEventListener<TPluginType>()(blueprint)`
  */
-export function typedGlobalEventListener<TEventName extends ValidEvent>(
+export function globalPluginEventListener<TEventName extends ValidEvent>(
   blueprint: EventListenerBlueprint<GlobalPluginData<any>, TEventName>
 ): EventListenerBlueprint<GlobalPluginData<any>, TEventName>;
 
 /**
  * Specify `TPluginType` for type hints and return self
  */
-export function typedGlobalEventListener<TPluginType extends BasePluginType>(): EventListenerBlueprintCreator<
+export function globalPluginEventListener<TPluginType extends BasePluginType>(): EventListenerBlueprintCreator<
   GlobalPluginData<TPluginType>,
   ValidEvent
 >;
 
-export function typedGlobalEventListener(...args: any[]): any {
+export function globalPluginEventListener(...args: any[]): any {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return eventListener<GlobalPluginData<any>>(...args);
 }
