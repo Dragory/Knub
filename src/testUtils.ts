@@ -238,3 +238,26 @@ export function createMockThread(channel: NewsChannel | GuildChannel): AnyThread
   channel.client.channels.cache.set(id, mockThread);
   return mockThread;
 }
+
+export type AssertTypeEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
+
+/**
+ * Assertion "function" for types
+ * 1. First type parameter (TExpected) is the expected type
+ * 2. Second type parameter (TActual) is the actual, tested type
+ * 3. Third type parameter (TAssert) is either true or false, based on whether the first and second type should match
+ *
+ * For example:
+ * ```
+ * assertTypeEquals<string, string, true>(); // passes: string and string match, and third parameter was true
+ * assertTypeEquals<string, number, true>(); // error: string and number do not match, but third parameter was true
+ * assertTypeEquals<string, number, false>(); // passses: string and number do not match, and third parameter was false
+ * ```
+ */
+export function assertTypeEquals<
+  TExpected,
+  TActual,
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+  TAssert extends (TActual extends TExpected ? true : false),
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+>(): void {}

@@ -6,7 +6,7 @@ import { DMChannel, TextChannel } from "discord.js";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
-describe("typedGuildMessageCommand() helper", () => {
+describe("guildPluginMessageCommand() helper", () => {
   it("(blueprint)", () => {
     const blueprint = guildPluginMessageCommand({
       trigger: "cmd",
@@ -108,7 +108,7 @@ describe("typedGuildMessageCommand() helper", () => {
   });
 });
 
-describe("typedGlobalMessageCommand() helper", () => {
+describe("globalPluginMessageCommand() helper", () => {
   it("(blueprint)", () => {
     const blueprint = globalPluginMessageCommand({
       trigger: "cmd",

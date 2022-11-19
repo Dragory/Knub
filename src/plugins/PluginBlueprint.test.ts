@@ -2,11 +2,13 @@ import {
   CooldownManager,
   GlobalPluginBlueprint,
   GlobalPluginData,
-  guildPluginSlashCommand,
+  guildPluginSlashCommand, guildPluginSlashGroup,
   Knub,
   LockManager, slashOptions
 } from "../index";
 import {
+  assertTypeEquals,
+  AssertTypeEquals,
   createMockClient,
   createMockGuild,
   createMockMember,
@@ -14,7 +16,7 @@ import {
   createMockRole,
   createMockTextChannel,
   createMockUser,
-  sleep,
+  sleep
 } from "../testUtils";
 import * as assert from "assert";
 import { noop } from "../utils";
@@ -29,8 +31,9 @@ import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
 import { typedGlobalEventListener, typedGuildEventListener } from "../events/EventListenerBlueprint";
 import { guildPluginMessageCommand } from "../commands/messageCommands/messageCommandBlueprint";
-import { TextChannel } from "discord.js";
+import { ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager";
+import { OptionsFromSignature } from "../commands/slashCommands/slashCommandUtils";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
@@ -49,16 +52,18 @@ describe("PluginBlueprint", () => {
 
           messageCommands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
 
+          slashCommands: [guildPluginSlashCommand({ name: "bar", description: "", signature: [], run: noop })],
+
           events: [typedGuildEventListener({ event: "messageCreate", listener: noop })],
 
           afterLoad(pluginData) {
             setTimeout(() => {
-              // The command above should be loaded
               assert.strictEqual(pluginData.messageCommands.getAll().length, 1);
 
-              // The event listener above should be loaded
-              // There is also a default message listener that's always registered
-              assert.strictEqual(pluginData.events.getListenerCount(), 2);
+              assert.strictEqual(pluginData.slashCommands.getAll().length, 1);
+
+              // There are also default message and interaction listeners that are always registered, hence 3
+              assert.strictEqual(pluginData.events.getListenerCount(), 3);
 
               done();
             }, 1);
@@ -267,159 +272,208 @@ describe("PluginBlueprint", () => {
       })();
     });
 
-    it("command permissions", async () => {
-      const infoCmdCallUsers: string[] = [];
-      const serverCmdCallUsers: string[] = [];
-      const pingCmdCallUsers: string[] = [];
+    describe("Message commands", () => {
+      it("command permissions", async () => {
+        const infoCmdCallUsers: string[] = [];
+        const serverCmdCallUsers: string[] = [];
+        const pingCmdCallUsers: string[] = [];
 
-      interface PluginType extends BasePluginType {
-        config: {
-          can_use_info_cmd: boolean;
-          can_use_server_cmd: boolean;
-          can_use_ping_cmd: boolean;
-        };
-      }
-
-      const TestPlugin = guildPlugin<PluginType>()({
-        name: "test-plugin",
-
-        defaultOptions: {
+        interface PluginType extends BasePluginType {
           config: {
-            can_use_info_cmd: false,
-            can_use_server_cmd: false,
-            can_use_ping_cmd: false,
+            can_use_info_cmd: boolean;
+            can_use_server_cmd: boolean;
+            can_use_ping_cmd: boolean;
+          };
+        }
+
+        const TestPlugin = guildPlugin<PluginType>()({
+          name: "test-plugin",
+
+          defaultOptions: {
+            config: {
+              can_use_info_cmd: false,
+              can_use_server_cmd: false,
+              can_use_ping_cmd: false,
+            },
           },
-        },
 
-        commands: [
-          guildPluginMessageCommand({
-            trigger: "info",
-            permission: "can_use_info_cmd",
-            run({ message }) {
-              infoCmdCallUsers.push(message.author.id);
-            },
-          }),
-          guildPluginMessageCommand({
-            trigger: "server",
-            permission: "can_use_server_cmd",
-            run({ message }) {
-              serverCmdCallUsers.push(message.author.id);
-            },
-          }),
-          guildPluginMessageCommand({
-            trigger: "ping",
-            permission: "can_use_ping_cmd",
-            run({ message }) {
-              pingCmdCallUsers.push(message.author.id);
-            },
-          }),
-        ],
-      });
-
-      const client = createMockClient();
-      const guild = createMockGuild(client);
-
-      const user1 = createMockUser(client);
-      const user2 = createMockUser(client);
-      const user3 = createMockUser(client);
-
-      const role = createMockRole(guild);
-      const _member3 = createMockMember(guild, user3, { roles: [role.id] });
-
-      const knub = new Knub(client, {
-        guildPlugins: [TestPlugin],
-        options: {
-          getEnabledGuildPlugins() {
-            return ["test-plugin"];
-          },
-          getConfig() {
-            return {
-              prefix: "!",
-              plugins: {
-                "test-plugin": {
-                  overrides: [
-                    {
-                      user: user1.id,
-                      config: {
-                        can_use_info_cmd: true,
-                      },
-                    },
-                    {
-                      user: user2.id,
-                      config: {
-                        can_use_server_cmd: true,
-                      },
-                    },
-                    {
-                      role: role.id,
-                      config: {
-                        can_use_ping_cmd: true,
-                      },
-                    },
-                  ],
-                },
+          commands: [
+            guildPluginMessageCommand({
+              trigger: "info",
+              permission: "can_use_info_cmd",
+              run({ message }) {
+                infoCmdCallUsers.push(message.author.id);
               },
-            };
+            }),
+            guildPluginMessageCommand({
+              trigger: "server",
+              permission: "can_use_server_cmd",
+              run({ message }) {
+                serverCmdCallUsers.push(message.author.id);
+              },
+            }),
+            guildPluginMessageCommand({
+              trigger: "ping",
+              permission: "can_use_ping_cmd",
+              run({ message }) {
+                pingCmdCallUsers.push(message.author.id);
+              },
+            }),
+          ],
+        });
+
+        const client = createMockClient();
+        const guild = createMockGuild(client);
+
+        const user1 = createMockUser(client);
+        const user2 = createMockUser(client);
+        const user3 = createMockUser(client);
+
+        const role = createMockRole(guild);
+        const _member3 = createMockMember(guild, user3, { roles: [role.id] });
+
+        const knub = new Knub(client, {
+          guildPlugins: [TestPlugin],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["test-plugin"];
+            },
+            getConfig() {
+              return {
+                prefix: "!",
+                plugins: {
+                  "test-plugin": {
+                    overrides: [
+                      {
+                        user: user1.id,
+                        config: {
+                          can_use_info_cmd: true,
+                        },
+                      },
+                      {
+                        user: user2.id,
+                        config: {
+                          can_use_server_cmd: true,
+                        },
+                      },
+                      {
+                        role: role.id,
+                        config: {
+                          can_use_ping_cmd: true,
+                        },
+                      },
+                    ],
+                  },
+                },
+              };
+            },
+            logFn: noop,
           },
-          logFn: noop,
-        },
+        });
+
+        knub.initialize();
+        client.emit("connect");
+        client.emit("ready", client);
+        await sleep(10);
+
+        client.ws.emit("GUILD_CREATE", guild);
+        await sleep(10);
+
+        const channel = createMockTextChannel(client, guild.id);
+
+        // !info
+        const infoFromUser1Msg = createMockMessage(client, channel, user1, { content: "!info" });
+        client.emit("messageCreate", infoFromUser1Msg);
+        await sleep(10);
+        const infoFromUser2Msg = createMockMessage(client, channel, user2, { content: "!info" });
+        client.emit("messageCreate", infoFromUser2Msg);
+        await sleep(10);
+
+        // !server
+        const serverFromUser1Msg = createMockMessage(client, channel, user1, { content: "!server" });
+        client.emit("messageCreate", serverFromUser1Msg);
+        await sleep(10);
+        const serverFromUser2Msg = createMockMessage(client, channel, user2, { content: "!server" });
+        client.emit("messageCreate", serverFromUser2Msg);
+        await sleep(10);
+
+        // !ping
+        const pingFromUser1Msg = createMockMessage(client, channel, user1, { content: "!ping" });
+        client.emit("messageCreate", pingFromUser1Msg);
+        await sleep(10);
+        const pingFromUser3Msg = createMockMessage(client, channel, user3, { content: "!ping" });
+        client.emit("messageCreate", pingFromUser3Msg);
+        await sleep(10);
+
+        assert.deepStrictEqual(infoCmdCallUsers, [user1.id]);
+        assert.deepStrictEqual(serverCmdCallUsers, [user2.id]);
+        assert.deepStrictEqual(pingCmdCallUsers, [user3.id]);
       });
-
-      knub.initialize();
-      client.emit("connect");
-      client.emit("ready", client);
-      await sleep(10);
-
-      client.ws.emit("GUILD_CREATE", guild);
-      await sleep(10);
-
-      const channel = createMockTextChannel(client, guild.id);
-
-      // !info
-      const infoFromUser1Msg = createMockMessage(client, channel, user1, { content: "!info" });
-      client.emit("messageCreate", infoFromUser1Msg);
-      await sleep(10);
-      const infoFromUser2Msg = createMockMessage(client, channel, user2, { content: "!info" });
-      client.emit("messageCreate", infoFromUser2Msg);
-      await sleep(10);
-
-      // !server
-      const serverFromUser1Msg = createMockMessage(client, channel, user1, { content: "!server" });
-      client.emit("messageCreate", serverFromUser1Msg);
-      await sleep(10);
-      const serverFromUser2Msg = createMockMessage(client, channel, user2, { content: "!server" });
-      client.emit("messageCreate", serverFromUser2Msg);
-      await sleep(10);
-
-      // !ping
-      const pingFromUser1Msg = createMockMessage(client, channel, user1, { content: "!ping" });
-      client.emit("messageCreate", pingFromUser1Msg);
-      await sleep(10);
-      const pingFromUser3Msg = createMockMessage(client, channel, user3, { content: "!ping" });
-      client.emit("messageCreate", pingFromUser3Msg);
-      await sleep(10);
-
-      assert.deepStrictEqual(infoCmdCallUsers, [user1.id]);
-      assert.deepStrictEqual(serverCmdCallUsers, [user2.id]);
-      assert.deepStrictEqual(pingCmdCallUsers, [user3.id]);
     });
 
-    it("slash commands", () => {
-      const SlashTestPlugin = guildPlugin({
-        name: "slash-test-plugin",
-        slashCommands: [
-          guildPluginSlashCommand({
-            name: "echo",
-            description: "Repeat what you said",
-            signature: [
-              slashOptions.string({ name: "text", description: "bar", required: true }),
-            ],
-            run({ interaction, options }) {
-              const foo = options.text;
-              interaction.reply(options.text);
-            },
-          }),
-        ],
+    describe("Slash commands", () => {
+      it("Type inference in slash command function", () => {
+        guildPlugin({
+          name: "slash-test-plugin",
+          slashCommands: [
+            guildPluginSlashCommand({
+              name: "echo",
+              description: "Repeat what you said",
+              signature: [
+                slashOptions.string({ name: "text1", description: "bar", required: true }),
+                slashOptions.string({ name: "text2", description: "bar" }),
+                slashOptions.string({ name: "text3", description: "bar", required: false }),
+              ],
+              run({ interaction, options }) {
+                assertTypeEquals<string, typeof options.text1, true>();
+                assertTypeEquals<null, typeof options.text1, false>(); // Required (required: true), cannot be null
+
+                assertTypeEquals<string, typeof options.text2, true>();
+                assertTypeEquals<null, typeof options.text2, true>(); // Optional (required: omitted), can be null
+
+                assertTypeEquals<string, typeof options.text3, true>();
+                assertTypeEquals<null, typeof options.text3, true>(); // Optional (required: false), can be null
+
+                assertTypeEquals<ChatInputCommandInteraction, typeof interaction, true>();
+              },
+            }),
+          ],
+        });
+      });
+
+      it("Slash command group types", () => {
+        guildPlugin({
+          name: "slash-test-plugin",
+          slashCommands: [
+            guildPluginSlashGroup({
+              name: "top_level_group",
+              description: "",
+              subcommands: [
+                guildPluginSlashCommand({
+                  name: "one_level_down",
+                  description: "",
+                  signature: [],
+                  // eslint-disable-next-line @typescript-eslint/no-empty-function
+                  run() {},
+                }),
+
+                guildPluginSlashGroup({
+                  name: "second_level_group",
+                  description: "",
+                  subcommands: [
+                    guildPluginSlashCommand({
+                      name: "two_levels_down",
+                      description: "",
+                      signature: [],
+                      // eslint-disable-next-line @typescript-eslint/no-empty-function
+                      run() {},
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
       });
     });
   });

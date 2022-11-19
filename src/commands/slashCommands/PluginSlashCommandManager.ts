@@ -22,6 +22,10 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
     this.nameToCommandOrGroup[commandOrGroup.name] = commandOrGroup;
   }
 
+  public getAll(): Array<CommandOrGroup<TPluginData>> {
+    return Object.values(this.nameToCommandOrGroup);
+  }
+
   public runFromInteraction(interaction: Interaction): Promise<void> | null {
     if (! interaction.isChatInputCommand()) {
       return null;
