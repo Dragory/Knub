@@ -61,6 +61,10 @@ guildPluginSlashCommand({
   // Default member permissions required to use this command.
   // This is a bit set represented as a string. See further below for an example of how to create this.
   defaultMemberPermissions: "0",
+  // A custom permission check based on plugin config.
+  // If this is set to a config property (or a dot.path.to.one for nested properties), that property
+  // must be "true" to be able to run the command. This takes overrides into account.
+  configPermission: "can_use",
   // A set of localizations/translations for the command name.
   // The object key is the locale and the value is the localization.
   nameLocalizations: {

@@ -8,15 +8,16 @@ import {
   PluginOverride
 } from "./configTypes";
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
-import { getMemberLevel } from "../plugins/pluginUtils";
+import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils";
 import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
-import { Channel, GuildChannel, GuildMember, Message, PartialUser, User } from "discord.js";
+import { APIInteractionGuildMember, Channel, GuildChannel, GuildMember, Message, PartialUser, User } from "discord.js";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string | null;
-  member?: GuildMember | null;
+  member?: GuildMember | APIInteractionGuildMember | null;
   message?: Message | null;
+  channel?: Channel | null;
 }
 
 export interface PluginConfigManagerOpts<TPluginType extends BasePluginType> {
@@ -86,7 +87,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     return this.parsedOptions!;
   }
 
-  protected getMemberLevel(member: GuildMember): number | null {
+  protected getMemberLevel(member: GuildMember | APIInteractionGuildMember): number | null {
     if (!isGuildPluginData(this.pluginData!)) {
       return null;
     }
@@ -109,29 +110,58 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   public getMatchingConfig(matchParams: ExtendedMatchParams): Promise<TPluginType["config"]> {
     const message = matchParams.message;
 
-    // Passed userId -> passed member's id -> passed message's author's id
     const userId =
+      // Directly passed userId
       matchParams.userId ||
-      (matchParams.member && matchParams.member.id) ||
-      (message && message.author && message.author.id);
+      // Passed member's ID
+      (matchParams.member && ("id" in matchParams.member) && matchParams.member.id) ||
+      // Passed member's user ID
+      (matchParams.member && matchParams.member.user.id) ||
+      // Passed message's author's ID
+      (message && message.author && message.author.id) ||
+      null;
 
-    // Passed channelId -> passed message's thread's parent id -> passed message's channel id
     const channelId =
+      // Directly passed channelId
       matchParams.channelId ||
+      // Passed non-thread channel's ID
+      (matchParams.channel && ! matchParams.channel.isThread() && matchParams.channel.id) ||
+      // Passed thread channel's parent ID
+      (matchParams.channel?.isThread?.() && matchParams.channel.parentId) ||
+      // Passed message's thread's parent ID
       (message?.channel?.isThread?.() && message.channel.parentId) ||
-      (message && message.channel && message.channel.id);
+      // Passed message's non-thread channel's ID
+      (message && message.channel && message.channel.id) ||
+      null;
 
-    // Passed category id -> passed message's thread's channel's category id -> passed message's channel's category id
     const categoryId =
+      // Directly passed categoryId
       matchParams.categoryId ||
+      // Passed non-thread channel's parent ID
+      (matchParams.channel && ! matchParams.channel.isThread() && (matchParams.channel as GuildChannel).parentId) ||
+      // Passed thread channel's parent ID
+      (matchParams.channel?.isThread?.() && matchParams.channel.parent?.parentId) ||
+      // Passed message's thread's channel's parent ID
       (message?.channel?.isThread?.() && message.channel.parent?.parentId) ||
-      (message?.channel && (message.channel as GuildChannel).parentId);
+      // Passed message's non-thread channel's parent ID
+      (message?.channel && (message.channel as GuildChannel).parentId) ||
+      null;
 
     // Passed thread id -> passed message's thread id
-    const threadId = matchParams.threadId || (message?.channel?.isThread?.() && message.channel.id) || null;
+    const threadId =
+      // Directly passed threadId
+      matchParams.threadId ||
+      // Passed thread channel's ID
+      (matchParams.channel?.isThread?.() && matchParams.channel.id) ||
+      // Passed message's thread channel's ID
+      (message?.channel?.isThread?.() && message.channel.id) ||
+      null;
 
     // Passed value -> whether message's channel is a thread
-    const isThread = matchParams.isThread ?? message?.channel?.isThread?.() ?? null;
+    const isThread = matchParams.isThread ??
+      matchParams?.channel?.isThread?.() ??
+      message?.channel?.isThread?.() ??
+      null;
 
     // Passed member -> passed message's member
     const member = matchParams.member || (message && message.member);
@@ -140,7 +170,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const level = matchParams?.level ?? (member && this.getMemberLevel(member)) ?? null;
 
     // Passed roles -> passed member's roles
-    const memberRoles = matchParams.memberRoles ?? [...(member?.roles.cache.keys() ?? [])];
+    const memberRoles = matchParams.memberRoles ?? (member ? getMemberRoles(member) : []);
 
     const finalMatchParams: MatchParams = {
       level,

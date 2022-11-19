@@ -3,6 +3,7 @@ import { AnyPluginData } from "../../plugins/PluginData";
 import { ChatInputCommandInteraction, CommandInteractionOption, Interaction } from "discord.js";
 import { SlashCommandMeta } from "./slashCommandUtils";
 import { SlashGroupBlueprint } from "./slashGroupBlueprint";
+import { get } from "../../utils";
 
 type CommandOrGroup<TPluginData extends AnyPluginData<any>> = SlashCommandBlueprint<TPluginData, AnySlashCommandSignature> | SlashGroupBlueprint<TPluginData>;
 
@@ -26,19 +27,36 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
     return Object.values(this.nameToCommandOrGroup);
   }
 
-  public runFromInteraction(interaction: Interaction): Promise<void> | null {
+  public async runFromInteraction(interaction: Interaction): Promise<void> {
     if (! interaction.isChatInputCommand()) {
-      return null;
+      return;
     }
 
     if (! this.nameToCommandOrGroup[interaction.commandName]) {
-      return null;
+      return;
     }
 
     const commandOrGroup = this.nameToCommandOrGroup[interaction.commandName];
     const command = this.resolveSubcommand(interaction, commandOrGroup);
     if (! command) {
-      return null;
+      return;
+    }
+
+    // Check custom, config-based permissions
+    if (command.configPermission) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const matchingConfig = await this.pluginData!.config.getMatchingConfig({
+        member: interaction.member,
+        userId: interaction.user.id,
+        channel: interaction.channel,
+      });
+      if (! get(matchingConfig, command.configPermission)) {
+        void interaction.reply({
+          content: "You don't have permission to use this command",
+          ephemeral: true,
+        });
+        return;
+      }
     }
 
     const nestedOptions = this.getNestedOptionsData(interaction.options.data);
@@ -63,7 +81,7 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
       pluginData: this.pluginData!,
     };
 
-    return Promise.resolve(command.run(meta));
+    await command.run(meta);
   }
 
   protected resolveSubcommand(interaction: ChatInputCommandInteraction, commandOrGroup: CommandOrGroup<TPluginData>): SlashCommandBlueprint<TPluginData, AnySlashCommandSignature> | null {

@@ -8,19 +8,27 @@ import {
 } from "./PluginBlueprint";
 import { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types";
 import { KeyOfMap } from "../utils";
-import { Guild, GuildMember, PartialGuildMember } from "discord.js";
+import { APIInteractionGuildMember, Guild, GuildMember, PartialGuildMember } from "discord.js";
+
+export function getMemberRoles(member: GuildMember | PartialGuildMember | APIInteractionGuildMember): string[] {
+  return Array.isArray(member.roles)
+    ? member.roles
+    : Array.from(member.roles.cache.values()).map(r => r.id);
+}
 
 export function getMemberLevel(
   levels: PermissionLevels,
-  member: GuildMember | PartialGuildMember,
+  member: GuildMember | PartialGuildMember | APIInteractionGuildMember,
   guild: Guild
 ): number {
-  if (guild.ownerId === member.id) {
+  const memberId = ("id" in member) ? member.id : member.user.id;
+  if (guild.ownerId === memberId) {
     return 99999;
   }
 
+  const roles = getMemberRoles(member);
   for (const [id, level] of Object.entries(levels)) {
-    if (member.id === id || member.roles?.cache?.has(id)) {
+    if (memberId === id || roles.includes(id)) {
       return level;
     }
   }

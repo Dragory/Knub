@@ -140,6 +140,10 @@ function hasPendingDataChanged(pendingData: any, existingData: any): boolean {
     }
   }
 
+  if (("default_member_permissions" in existingData) && ! ("default_member_permissions" in pendingData)) {
+    return true;
+  }
+
   return false;
 }
 /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment */
@@ -160,6 +164,10 @@ function commandOrGroupToAPIData(input: CommandOrGroup): RESTPostAPIChatInputApp
 function slashGroupToAPIData(blueprint: SlashGroupBlueprint<AnyPluginData<any>>, depth = 1): RESTPostAPIChatInputApplicationCommandsJSONBody {
   if (depth >= 3) {
     throw new Error("Subcommands can only be nested in one subcommand group");
+  }
+
+  if ("defaultMemberPermissions" in blueprint && depth > 1) {
+    throw new Error("Only top-level slash groups and commands can have defaultMemberPermissions");
   }
 
   return {
@@ -190,6 +198,10 @@ function slashGroupToAPIData(blueprint: SlashGroupBlueprint<AnyPluginData<any>>,
 }
 
 function slashCommandToAPIData(blueprint: SlashCommandBlueprint<AnyPluginData<any>, AnySlashCommandSignature>, depth = 1): RESTPostAPIChatInputApplicationCommandsJSONBody {
+  if ("defaultMemberPermissions" in blueprint && depth > 1) {
+    throw new Error("Only top-level slash groups and commands can have defaultMemberPermissions");
+  }
+
   return {
     name: blueprint.name,
     name_localizations: blueprint.nameLocalizations,
