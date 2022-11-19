@@ -14,7 +14,11 @@ export type GlobalPluginMap = Map<string, GlobalPluginBlueprint<GlobalPluginData
 export type LogFn = (level, ...args) => void;
 
 export interface KnubOptions<TGuildConfig extends BaseConfig<any>> {
-  autoInitGuilds?: boolean;
+  /**
+   * If enabled, plugin slash commands are automatically registered with Discord on bot start-up.
+   * Defaults to `true`.
+   */
+  autoRegisterSlashCommands?: boolean;
   getConfig: (id: string) => Awaitable<any>;
   getEnabledGuildPlugins?: (ctx: GuildContext<TGuildConfig>, plugins: GuildPluginMap) => Awaitable<string[]>;
   canLoadGuild: (guildId: string) => Awaitable<boolean>;

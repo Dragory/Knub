@@ -184,8 +184,11 @@ export class Knub<
     this.client.once("ready", async () => {
       this.log("info", "Received READY");
 
-      this.log("info", "- Registering slash commands with Discord...");
-      await this.registerSlashCommands();
+      const autoRegisterSlashCommands = this.options.autoRegisterSlashCommands ?? true;
+      if (autoRegisterSlashCommands) {
+        this.log("info", "- Registering slash commands with Discord...");
+        await this.registerSlashCommands();
+      }
 
       this.log("info", "- Loading global plugins...");
       await this.loadGlobalContext();
