@@ -30,6 +30,9 @@ desktop.ini
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
 
+# Unrelated to a library
+.idea/deployment.xml
+
 # File-based project format
 *.iws
 
