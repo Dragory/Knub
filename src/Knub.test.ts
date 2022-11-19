@@ -11,7 +11,7 @@ import {
 } from "./testUtils";
 import { Knub } from "./Knub";
 import { expect } from "chai";
-import { typedGuildEventListener } from "./events/EventListenerBlueprint";
+import { guildPluginEventListener } from "./events/EventListenerBlueprint";
 import _domain from "domain";
 import { guildPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint";
 
@@ -21,6 +21,7 @@ describe("Knub", () => {
 
     const PluginToLoad = guildPlugin({
       name: "plugin-to-load",
+      configParser: () => ({}),
 
       afterLoad() {
         loadedTimes++;
@@ -35,6 +36,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
+        autoRegisterSlashCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },
@@ -64,6 +66,7 @@ describe("Knub", () => {
 
     const PluginToLoad = guildPlugin({
       name: "plugin-to-load",
+      configParser: () => ({}),
 
       afterLoad() {
         loadedTimes++;
@@ -78,6 +81,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
+        autoRegisterSlashCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },
@@ -102,6 +106,7 @@ describe("Knub", () => {
 
     const Plugin1 = guildPlugin({
       name: "plugin1",
+      configParser: () => ({}),
 
       beforeLoad() {
         loadedTimes++;
@@ -114,6 +119,7 @@ describe("Knub", () => {
 
     const PluginWithError = guildPlugin({
       name: "plugin-with-error",
+      configParser: () => ({}),
 
       beforeLoad() {
         throw new Error("Foo");
@@ -124,6 +130,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [Plugin1, PluginWithError],
       options: {
+        autoRegisterSlashCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin1", "plugin-with-error"];
         },
@@ -156,6 +163,7 @@ describe("Knub", () => {
   it("Profiler tracks plugin load times", async () => {
     const PluginToLoad = guildPlugin({
       name: "plugin-to-load",
+      configParser: () => ({}),
 
       async beforeLoad() {
         await sleep(10);
@@ -166,6 +174,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
+        autoRegisterSlashCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },
@@ -189,9 +198,10 @@ describe("Knub", () => {
   it("Profiler tracks event processing times", async () => {
     const PluginToLoad = guildPlugin({
       name: "plugin-to-load",
+      configParser: () => ({}),
 
       events: [
-        typedGuildEventListener({
+        guildPluginEventListener({
           event: "messageCreate",
           async listener() {
             await sleep(10);
@@ -204,6 +214,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
+        autoRegisterSlashCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },
@@ -230,9 +241,10 @@ describe("Knub", () => {
     expect(knub.profiler.getData()["event:messageCreate:plugin-to-load"].totalTime).to.be.greaterThanOrEqual(8);
   });
 
-  it("Profiler tracks command processing times", async () => {
+  it("Profiler tracks message command processing times", async () => {
     const PluginToLoad = guildPlugin({
       name: "plugin-to-load",
+      configParser: () => ({}),
 
       messageCommands: [
         guildPluginMessageCommand({
@@ -249,6 +261,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
+        autoRegisterSlashCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },

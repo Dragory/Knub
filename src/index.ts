@@ -11,7 +11,7 @@ export { EventListenerBlueprint } from "./events/EventListenerBlueprint";
 export { guildPlugin, globalPlugin } from "./plugins/PluginBlueprint";
 export { guildPluginMessageCommand, globalPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint";
 export { guildPluginSlashCommand, globalPluginSlashCommand } from "./commands/slashCommands/slashCommandBlueprint";
-export { typedGuildEventListener, typedGlobalEventListener } from "./events/EventListenerBlueprint";
+export { guildPluginEventListener, globalPluginEventListener } from "./events/EventListenerBlueprint";
 
 export { configUtils };
 export { ConfigValidationError } from "./config/ConfigValidationError";
@@ -35,9 +35,7 @@ export {
 
 export {
   PermissionLevels,
-  BasePluginConfig,
   BaseConfig,
-  PartialPluginOptions,
   PluginOptions,
 } from "./config/configTypes";
 

@@ -28,7 +28,8 @@
     "discord-api-types": "^0.37.10",
     "discord.js": "^14",
     "knub-command-manager": "^9.1.0",
-    "ts-essentials": "^9"
+    "ts-essentials": "^9",
+    "zod": "^3.19.1"
   },
   "devDependencies": {
     "@types/chai": "^4",

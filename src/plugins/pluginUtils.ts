@@ -1,4 +1,4 @@
-import { BaseConfig, PermissionLevels } from "../config/configTypes";
+import { PermissionLevels } from "../config/configTypes";
 import {
   AnyPluginBlueprint,
   GlobalPluginBlueprint,
@@ -6,13 +6,9 @@ import {
   PluginBlueprintPublicInterface,
   ResolvedPluginBlueprintPublicInterface,
 } from "./PluginBlueprint";
-import path from "path";
-import _fs from "fs";
 import { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types";
 import { KeyOfMap } from "../utils";
 import { Guild, GuildMember, PartialGuildMember } from "discord.js";
-
-const fs = _fs.promises;
 
 export function getMemberLevel(
   levels: PermissionLevels,
@@ -32,24 +28,24 @@ export function getMemberLevel(
   return 0;
 }
 
-export function isGuildContext(ctx: AnyContext<any, any>): ctx is GuildContext<any> {
+export function isGuildContext(ctx: AnyContext): ctx is GuildContext {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   return (ctx as any).guildId != null;
 }
 
-export function isGlobalContext(ctx: AnyContext<any, any>): ctx is GuildContext<any> {
+export function isGlobalContext(ctx: AnyContext): ctx is GuildContext {
   return !isGuildContext(ctx);
 }
 
 export function isGuildBlueprintByContext(
-  _ctx: GuildContext<any>,
+  _ctx: GuildContext,
   _blueprint: AnyPluginBlueprint
 ): _blueprint is GuildPluginBlueprint<any> {
   return true;
 }
 
 export function isGlobalBlueprintByContext(
-  _ctx: GlobalContext<any>,
+  _ctx: GlobalContext,
   _blueprint: AnyPluginBlueprint
 ): _blueprint is GlobalPluginBlueprint<any> {
   return true;
@@ -70,7 +66,7 @@ export function defaultGetConfig() {
  * By default, load all available guild plugins
  */
 export function defaultGetEnabledGuildPlugins(
-  ctx: AnyContext<BaseConfig<any>, BaseConfig<any>>,
+  ctx: AnyContext,
   guildPlugins: GuildPluginMap
 ): Array<KeyOfMap<GuildPluginMap>> {
   return Array.from(guildPlugins.keys());

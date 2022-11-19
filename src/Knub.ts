@@ -52,7 +52,7 @@ import { SlashCommandBlueprint } from "./commands/slashCommands/slashCommandBlue
 import { SlashGroupBlueprint } from "./commands/slashCommands/slashGroupBlueprint";
 import { registerSlashCommands } from "./commands/slashCommands/registerSlashCommands";
 
-const defaultKnubArgs: KnubArgs<BaseConfig<BasePluginType>> = {
+const defaultKnubArgs: KnubArgs = {
   guildPlugins: [],
   globalPlugins: [],
   options: {},
@@ -70,35 +70,32 @@ const defaultLogFn: LogFn = (level: string, ...args) => {
   /* eslint-enable no-console,@typescript-eslint/no-unsafe-argument */
 };
 
-export class Knub<
-  TGuildConfig extends BaseConfig<any> = BaseConfig<BasePluginType>,
-  TGlobalConfig extends BaseConfig<any> = BaseConfig<BasePluginType>
-> extends EventEmitter {
+export class Knub extends EventEmitter {
   protected client: Client;
   protected eventRelay: EventRelay;
 
   protected guildPlugins: GuildPluginMap = new Map() as GuildPluginMap;
   protected globalPlugins: GlobalPluginMap = new Map() as GlobalPluginMap;
 
-  protected loadedGuilds: Map<string, GuildContext<TGuildConfig>> = new Map<string, GuildContext<TGuildConfig>>();
+  protected loadedGuilds: Map<string, GuildContext> = new Map<string, GuildContext>();
   // Guild loads and unloads are queued up to avoid race conditions
   protected guildLoadQueues: Map<string, Queue> = new Map<string, Queue>();
-  protected globalContext: GlobalContext<TGlobalConfig>;
+  protected globalContext: GlobalContext;
   protected globalContextLoaded = false;
 
-  protected options: KnubOptions<TGuildConfig>;
+  protected options: KnubOptions;
 
   protected log: LogFn = defaultLogFn;
 
   public profiler = new Profiler();
 
-  constructor(client: Client, userArgs: Partial<KnubArgs<TGuildConfig>>) {
+  constructor(client: Client, userArgs: Partial<KnubArgs>) {
     super();
 
-    const args: KnubArgs<TGuildConfig> = {
+    const args = {
       ...defaultKnubArgs,
       ...userArgs,
-    };
+    } satisfies KnubArgs;
 
     this.client = client;
     this.eventRelay = new EventRelay(client, this.profiler);
@@ -135,12 +132,12 @@ export class Knub<
       this.guildPlugins.set(guildPlugin.name, guildPlugin);
     }
 
-    const defaultOptions: KnubOptions<TGuildConfig> = {
+    const defaultOptions = {
       getConfig: defaultGetConfig,
       getEnabledGuildPlugins: defaultGetEnabledGuildPlugins,
       canLoadGuild: () => true,
       customArgumentTypes: {},
-    };
+    } satisfies KnubOptions;
 
     this.options = { ...defaultOptions, ...args.options };
 
@@ -210,7 +207,7 @@ export class Knub<
     return this.globalPlugins;
   }
 
-  public getGlobalConfig(): TGlobalConfig {
+  public getGlobalConfig(): BaseConfig {
     return this.globalContext.config;
   }
 
@@ -218,7 +215,7 @@ export class Knub<
    * Create the partial PluginData that's passed to beforeLoad()
    */
   protected async getBeforeLoadPluginData(
-    ctx: AnyContext<BaseConfig<any>, BaseConfig<any>>,
+    ctx: AnyContext,
     plugin: AnyPluginBlueprint,
     loadedAsDependency: boolean
   ): Promise<BeforeLoadPluginData<BasePluginData<any>>> {
@@ -226,22 +223,20 @@ export class Knub<
       plugin.defaultOptions ?? { config: {} },
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       (get(ctx.config, `plugins.${plugin.name}`) as any) || {},
-      ctx.config.levels || {},
       {
+        levels: ctx.config.levels || {},
+        parser: plugin.configParser,
         customOverrideCriteriaFunctions: plugin.customOverrideCriteriaFunctions,
-        preprocessor: plugin.configPreprocessor,
-        validator: plugin.configValidator,
-      }
+      },
     );
 
     try {
       await configManager.init();
     } catch (e) {
-      if (e instanceof ConfigValidationError) {
-        throw new PluginLoadError(plugin.name, ctx, e);
+      if (! (e instanceof Error)) {
+        throw e;
       }
-
-      throw e;
+      throw new PluginLoadError(plugin.name, ctx, e);
     }
 
     return {
@@ -268,7 +263,7 @@ export class Knub<
    * Convert the partial PluginData from getBeforeLoadPluginData() to a full PluginData object
    */
   protected withFinalPluginDataProperties<TPluginData extends BasePluginData<any>>(
-    ctx: AnyContext<any, any>,
+    ctx: AnyContext,
     beforeLoadPluginData: BeforeLoadPluginData<TPluginData>
   ): TPluginData {
     return {
@@ -312,7 +307,7 @@ export class Knub<
     return resolvedDependencies;
   }
 
-  protected ctxHasPlugin(ctx: AnyContext<TGuildConfig, TGlobalConfig>, plugin: AnyPluginBlueprint): boolean {
+  protected ctxHasPlugin(ctx: AnyContext, plugin: AnyPluginBlueprint): boolean {
     return ctx.loadedPlugins.has(plugin.name);
   }
 
@@ -342,7 +337,7 @@ export class Knub<
   }
 
   protected getPluginPublicInterface<T extends AnyPluginBlueprint>(
-    ctx: AnyContext<TGuildConfig, TGlobalConfig>,
+    ctx: AnyContext,
     plugin: T
   ): PluginPublicInterface<T> {
     if (!ctx.loadedPlugins.has(plugin.name)) {
@@ -373,7 +368,7 @@ export class Knub<
         return;
       }
 
-      const guildContext: GuildContext<TGuildConfig> = {
+      const guildContext: GuildContext = {
         guildId,
         // @ts-ignore: This property is always set below before it can be used by plugins
         config: null,
@@ -472,20 +467,20 @@ export class Knub<
     return this.guildLoadQueues.get(guildId)!;
   }
 
-  public getLoadedGuild(guildId: Snowflake): GuildContext<TGuildConfig> | undefined {
+  public getLoadedGuild(guildId: Snowflake): GuildContext | undefined {
     return this.loadedGuilds.get(guildId);
   }
 
-  public getLoadedGuilds(): Array<GuildContext<TGuildConfig>> {
+  public getLoadedGuilds(): Array<GuildContext> {
     return Array.from(this.loadedGuilds.values());
   }
 
-  protected async loadGuildConfig(ctx: GuildContext<TGuildConfig>): Promise<void> {
+  protected async loadGuildConfig(ctx: GuildContext): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     ctx.config = await this.options.getConfig(ctx.guildId);
   }
 
-  protected async loadGuildPlugins(ctx: GuildContext<TGuildConfig>): Promise<void> {
+  protected async loadGuildPlugins(ctx: GuildContext): Promise<void> {
     const enabledPlugins = await this.options.getEnabledGuildPlugins!(ctx, this.guildPlugins);
     const dependencies: Set<string> = new Set();
     for (const pluginName of enabledPlugins) {
@@ -637,7 +632,7 @@ export class Knub<
     this.globalContextLoaded = false;
   }
 
-  protected async loadGlobalPlugins(ctx: GlobalContext<TGlobalConfig>): Promise<void> {
+  protected async loadGlobalPlugins(ctx: GlobalContext): Promise<void> {
     for (const plugin of this.globalPlugins.values()) {
       const beforeLoadPluginData = (await this.getBeforeLoadPluginData(ctx, plugin, false)) as BeforeLoadPluginData<
         GlobalPluginData<any>

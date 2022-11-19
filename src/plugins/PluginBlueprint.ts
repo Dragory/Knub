@@ -1,16 +1,11 @@
-import {
-  ConfigPreprocessorFn,
-  ConfigValidatorFn,
-  CustomOverrideCriteriaFunctions,
-  PluginOptions,
-} from "../config/configTypes";
+import { ConfigParserFn, CustomOverrideCriteriaFunctions, PluginOptions } from "../config/configTypes";
 import { Awaitable } from "../utils";
 import {
   AfterUnloadPluginData,
   AnyPluginData,
   BeforeLoadPluginData,
   GlobalPluginData,
-  GuildPluginData,
+  GuildPluginData
 } from "./PluginData";
 import { MessageCommandBlueprint } from "../commands/messageCommands/messageCommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
@@ -51,6 +46,11 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
    */
   defaultOptions?: PluginOptions<TPluginData["_pluginType"]>;
 
+  /**
+   * Parses the plugin's config from untrusted input, returning the correct type for the config or throwing an error
+   */
+  configParser: ConfigParserFn<TPluginData["_pluginType"]["config"]>;
+
   messageCommands?: Array<MessageCommandBlueprint<TPluginData, any>>;
 
   /**
@@ -62,22 +62,6 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
    * If this plugin includes any custom overrides, this function evaluates them
    */
   customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>;
-
-  /**
-   * Preprocesses the plugin's config after it's been merged with the default options
-   * but before it's validated by `this.configValidator`.
-   *
-   * (Merge with default options) -> configPreprocessor -> configValidator
-   */
-  configPreprocessor?: ConfigPreprocessorFn<TPluginData["_pluginType"]>;
-
-  /**
-   * Validates the plugin's config after it's been merged with the default options
-   * and run through `this.configPreprocessor`.
-   *
-   * (Merge with default options) -> configPreprocessor -> configValidator
-   */
-  configValidator?: ConfigValidatorFn<TPluginData["_pluginType"]>;
 
   /**
    * Public interface for this plugin

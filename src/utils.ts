@@ -13,6 +13,9 @@ export type WithRequiredProps<T, K extends keyof T> = T & {
 
 export function get<TObj>(obj: TObj, path: string, def?: any): unknown {
   let cursor = obj;
+  if (cursor === undefined) return def;
+  if (cursor == null) return null;
+
   const pathParts = path.split(".");
   for (const part of pathParts) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

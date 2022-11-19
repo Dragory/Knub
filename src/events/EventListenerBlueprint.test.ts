@@ -1,4 +1,4 @@
-import { typedGlobalEventListener, typedGuildEventListener } from "./EventListenerBlueprint";
+import { globalPluginEventListener, guildPluginEventListener } from "./EventListenerBlueprint";
 import { BasePluginType } from "../plugins/pluginTypes";
 import { expect } from "chai";
 import { GuildMessage } from "../types";
@@ -6,9 +6,9 @@ import { Channel, GuildChannel, GuildTextBasedChannel, Message, TextBasedChannel
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
-describe("typedGuildEventListener() helper", () => {
+describe("guildPluginEventListener() helper", () => {
   it("(blueprint)", () => {
-    const blueprint1 = typedGuildEventListener({
+    const blueprint1 = guildPluginEventListener({
       event: "messageCreate",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
@@ -20,7 +20,7 @@ describe("typedGuildEventListener() helper", () => {
   });
 
   it("(blueprint) guild event argument inference", () => {
-    typedGuildEventListener({
+    guildPluginEventListener({
       event: "messageCreate",
       listener({ args }) {
         // Test type inference
@@ -30,7 +30,7 @@ describe("typedGuildEventListener() helper", () => {
     });
 
     // More type checks
-    typedGuildEventListener({
+    guildPluginEventListener({
       event: "channelUpdate",
       listener({ args }) {
         // Test type inference
@@ -39,7 +39,7 @@ describe("typedGuildEventListener() helper", () => {
       },
     });
 
-    typedGuildEventListener({
+    guildPluginEventListener({
       event: "typingStart",
       listener({ args }) {
         // Test type inference
@@ -56,7 +56,7 @@ describe("typedGuildEventListener() helper", () => {
   }
 
   it("<TPluginType>()(blueprint)", () => {
-    const blueprint = typedGuildEventListener<CustomPluginType>()({
+    const blueprint = guildPluginEventListener<CustomPluginType>()({
       event: "messageCreate",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
@@ -68,9 +68,9 @@ describe("typedGuildEventListener() helper", () => {
   });
 });
 
-describe("typedGlobalEventListener() helper", () => {
+describe("globalPluginEventListener() helper", () => {
   it("(blueprint)", () => {
-    const blueprint = typedGlobalEventListener({
+    const blueprint = globalPluginEventListener({
       event: "messageCreate",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
@@ -82,7 +82,7 @@ describe("typedGlobalEventListener() helper", () => {
   });
 
   it("(blueprint) guild event argument inference", () => {
-    typedGlobalEventListener({
+    globalPluginEventListener({
       event: "messageCreate",
       listener({ args }) {
         // Test type inference
@@ -92,7 +92,7 @@ describe("typedGlobalEventListener() helper", () => {
     });
 
     // More type checks
-    typedGlobalEventListener({
+    globalPluginEventListener({
       event: "channelUpdate",
       listener({ args }) {
         // Test type inference
@@ -101,7 +101,7 @@ describe("typedGlobalEventListener() helper", () => {
       },
     });
 
-    typedGlobalEventListener({
+    globalPluginEventListener({
       event: "typingStart",
       listener({ args }) {
         // Test type inference
@@ -118,7 +118,7 @@ describe("typedGlobalEventListener() helper", () => {
   }
 
   it("<TPluginType>()(blueprint)", () => {
-    const blueprint = typedGlobalEventListener<CustomPluginType>()({
+    const blueprint = globalPluginEventListener<CustomPluginType>()({
       event: "messageCreate",
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},

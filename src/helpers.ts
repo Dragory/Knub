@@ -144,7 +144,7 @@ export function getInviteLink(inv: Invite): string {
   return `https://discord.gg/${inv.code}`;
 }
 
-export function hasPermission(config: Record<string, unknown>, permission: string): boolean {
+export function hasPermission(config: unknown, permission: string): boolean {
   return get(config, permission) === true;
 }
 

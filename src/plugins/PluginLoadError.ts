@@ -5,7 +5,7 @@ export class PluginLoadError extends Error {
   public pluginName: string;
   public guildId?: string;
 
-  constructor(pluginName: string, ctx: AnyContext<any, any>, originalError: Error) {
+  constructor(pluginName: string, ctx: AnyContext, originalError: Error) {
     super(`PluginLoadError (${pluginName}): ${originalError.message}`);
     this.stack = originalError.stack;
 

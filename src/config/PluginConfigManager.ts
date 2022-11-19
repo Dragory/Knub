@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/restrict-plus-operands */
 import {
-  ConfigPreprocessorFn,
-  ConfigValidatorFn,
+  ConfigParserFn,
   CustomOverrideCriteriaFunctions,
-  PartialPluginOptions,
   PermissionLevels,
+  pluginBaseOptionsSchema,
   PluginOptions,
+  PluginOverride
 } from "./configTypes";
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { getMemberLevel } from "../plugins/pluginUtils";
@@ -20,52 +20,69 @@ export interface ExtendedMatchParams extends MatchParams {
 }
 
 export interface PluginConfigManagerOpts<TPluginType extends BasePluginType> {
+  levels: PermissionLevels;
+  parser: ConfigParserFn<TPluginType["config"]>;
   customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<AnyPluginData<TPluginType>>;
-  preprocessor?: ConfigPreprocessorFn<TPluginType>;
-  validator?: ConfigValidatorFn<TPluginType>;
 }
 
 export class PluginConfigManager<TPluginType extends BasePluginType> {
+  private readonly defaultOptions: PluginOptions<TPluginType>;
+  private readonly userInput: unknown;
   private readonly levels: PermissionLevels;
-  private options: PluginOptions<TPluginType>;
   private readonly customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<AnyPluginData<TPluginType>>;
-  private readonly preprocessor?: ConfigPreprocessorFn<TPluginType>;
-  private readonly validator?: ConfigValidatorFn<TPluginType>;
+  private readonly parser: ConfigParserFn<TPluginType["config"]>;
   private pluginData?: AnyPluginData<TPluginType>;
+
+  private initialized = false;
+  private parsedOptions: PluginOptions<TPluginType> | null = null;
 
   constructor(
     defaultOptions: PluginOptions<TPluginType>,
-    userOptions: PartialPluginOptions<TPluginType>,
-    levels: PermissionLevels = {},
-    opts: PluginConfigManagerOpts<TPluginType> = {}
+    userInput: unknown,
+    opts: PluginConfigManagerOpts<TPluginType>,
   ) {
-    this.options = this.mergeOptions(defaultOptions, userOptions);
-    this.levels = levels;
+    this.defaultOptions = defaultOptions;
+    this.userInput = userInput;
+    this.levels = opts.levels;
+    this.parser = opts.parser;
     this.customOverrideCriteriaFunctions = opts.customOverrideCriteriaFunctions;
-    this.preprocessor = opts.preprocessor;
-    this.validator = opts.validator;
   }
 
   public async init(): Promise<void> {
-    if (this.preprocessor) {
-      this.options = await this.preprocessor(this.options);
+    if (this.initialized) {
+      throw new Error("Already initialized");
     }
 
-    if (this.validator) {
-      await this.validator(this.options);
+    const parsedUserInput = pluginBaseOptionsSchema.parse(this.userInput);
+
+    const config = mergeConfig(this.defaultOptions.config ?? {}, parsedUserInput.config ?? {});
+    const parsedValidConfig = await this.parser(config);
+
+    const overrides = parsedUserInput.overrides ?? this.defaultOptions.overrides ?? [];
+    const parsedValidOverrides: Array<PluginOverride<TPluginType>> = [];
+    for (const override of overrides) {
+      if (! ("config" in override)) {
+        throw new Error("Overrides must include the config property");
+      }
+      const overrideConfig = mergeConfig(parsedValidConfig, override.config ?? {});
+      // Validate the override config as if it was already merged with the base config
+      // In reality, overrides are merged with the base config when they are evaluated
+      await this.parser(overrideConfig);
+      parsedValidOverrides.push(override as PluginOverride<TPluginType>);
     }
+
+    this.parsedOptions = {
+      config: parsedValidConfig,
+      overrides: parsedValidOverrides,
+    };
   }
 
-  private mergeOptions(
-    defaultOptions: PluginOptions<TPluginType>,
-    userOptions: PartialPluginOptions<TPluginType>
-  ): PluginOptions<TPluginType> {
-    return {
-      config: mergeConfig(defaultOptions.config ?? {}, userOptions.config ?? {}),
-      overrides: userOptions.replaceDefaultOverrides
-        ? userOptions.overrides ?? []
-        : (defaultOptions.overrides ?? []).concat(userOptions.overrides ?? []),
-    };
+  protected getParsedOptions(): PluginOptions<TPluginType> {
+    if (! this.initialized) {
+      throw new Error("Not initialized");
+    }
+
+    return this.parsedOptions!;
   }
 
   protected getMemberLevel(member: GuildMember): number | null {
@@ -85,7 +102,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   }
 
   public get(): TPluginType["config"] {
-    return this.options.config;
+    return this.getParsedOptions().config;
   }
 
   public getMatchingConfig(matchParams: ExtendedMatchParams): Promise<TPluginType["config"]> {
@@ -136,7 +153,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
 
     return getMatchingPluginConfig<TPluginType, AnyPluginData<TPluginType>>(
       this.pluginData!,
-      this.options,
+      this.getParsedOptions(),
       finalMatchParams,
       this.customOverrideCriteriaFunctions
     );

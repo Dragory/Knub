@@ -16,7 +16,7 @@ export type SlashCommandBlueprint<
   description: string;
   descriptionLocalizations?: Record<Locale, string>;
   defaultMemberPermissions?: Permissions;
-  customPermission?: string;
+  // customPermission?: string; // TODO
   allowDms?: boolean;
   signature: TSignature;
   run: SlashCommandFn<TPluginData, TSignature>;
