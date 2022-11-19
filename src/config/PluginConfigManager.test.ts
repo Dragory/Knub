@@ -16,7 +16,7 @@ import { GuildPluginData } from "../plugins/PluginData";
 import { z } from "zod";
 
 describe("PluginConfigManager", () => {
-  it("merge user config with default config", () => {
+  it("merge user config with default config", async () => {
     interface PluginType extends BasePluginType {
       config: {
         can_do: boolean;
@@ -50,6 +50,7 @@ describe("PluginConfigManager", () => {
         parser: input => input as PluginType["config"],
       },
     );
+    await configManager.init();
 
     expect(configManager.get().can_do).to.equal(true);
     expect(configManager.get().nested.one).to.equal(10);
@@ -98,6 +99,7 @@ describe("PluginConfigManager", () => {
         parser: input => input as PluginType["config"],
       },
     );
+    await configManager.init();
 
     expect(configManager.get().can_do).to.equal(false);
     expect((await configManager.getMatchingConfig({ level: 20 })).can_do).to.equal(true);
@@ -142,6 +144,7 @@ describe("PluginConfigManager", () => {
         parser: input => input as PluginType["config"],
       },
     );
+    await configManager.init();
 
     expect(configManager.get().can_do).to.equal(false);
     expect((await configManager.getMatchingConfig({ level: 50 })).can_do).to.equal(false);
@@ -164,7 +167,11 @@ describe("PluginConfigManager", () => {
           something: 0,
         },
       },
-      {},
+      {
+        config: {
+          something: "not a number",
+        },
+      },
       {
         levels: {},
         parser: (input) => configSchema.parse(input),
@@ -280,6 +287,7 @@ describe("PluginConfigManager", () => {
       },
     );
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
+    await configManager.init();
 
     expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ userId: user.id })).works).to.equal(true);
@@ -320,6 +328,7 @@ describe("PluginConfigManager", () => {
         parser: (input) => input as PluginType["config"],
       },
     );
+    await configManager.init();
 
     expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ channelId: channel.id })).works).to.equal(true);
@@ -360,6 +369,7 @@ describe("PluginConfigManager", () => {
         parser: (input) => input as PluginType["config"],
       },
     );
+    await configManager.init();
 
     expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
@@ -399,6 +409,7 @@ describe("PluginConfigManager", () => {
         parser: (input) => input as PluginType["config"],
       },
     );
+    await configManager.init();
 
     expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ categoryId })).works).to.equal(true);
@@ -440,6 +451,7 @@ describe("PluginConfigManager", () => {
         parser: (input) => input as PluginType["config"],
       },
     );
+    await configManager.init();
 
     expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
@@ -479,6 +491,7 @@ describe("PluginConfigManager", () => {
         parser: (input) => input as PluginType["config"],
       },
     );
+    await configManager.init();
 
     expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
@@ -518,6 +531,7 @@ describe("PluginConfigManager", () => {
         parser: (input) => input as PluginType["config"],
       },
     );
+    await configManager.init();
 
     expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
@@ -559,6 +573,7 @@ describe("PluginConfigManager", () => {
       },
     );
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
+    await configManager.init();
 
     expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ memberRoles: [role.id] })).works).to.equal(true);

@@ -715,7 +715,9 @@ export class Knub extends EventEmitter {
     for (const plugin of this.globalPlugins.values()) {
       slashCommands.push(...(plugin.slashCommands || []));
     }
-    const result = await registerSlashCommands(this.client as Client<true>, slashCommands);
-    this.log("info", `-- Created ${result.create}, updated ${result.update}, deleted ${result.delete}`);
+    if (slashCommands.length) {
+      const result = await registerSlashCommands(this.client as Client<true>, slashCommands);
+      this.log("info", `-- Created ${result.create}, updated ${result.update}, deleted ${result.delete}`);
+    }
   }
 }

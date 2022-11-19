@@ -75,6 +75,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       config: parsedValidConfig,
       overrides: parsedValidOverrides,
     };
+    this.initialized = true;
   }
 
   protected getParsedOptions(): PluginOptions<TPluginType> {

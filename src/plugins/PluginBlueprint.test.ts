@@ -78,6 +78,7 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [PluginToLoad],
           options: {
+            autoRegisterSlashCommands: false,
             getEnabledGuildPlugins() {
               return ["plugin-to-load"];
             },
@@ -166,6 +167,7 @@ describe("PluginBlueprint", () => {
       void (async () => {
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
+          configParser: () => ({}),
 
           events: [
             // @ts-expect-error: "userUpdate" is not a valid guild event
@@ -1249,7 +1251,7 @@ describe("PluginBlueprint", () => {
       void (async () => {
         const DependencyToLoad = guildPlugin({
           name: "dependency-to-load",
-          configParser: () => ({}),
+          configParser: (input) => input,
 
           defaultOptions: {
             config: {
