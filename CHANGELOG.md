@@ -1,4 +1,6 @@
-# Next
+# 31.0.0
+Released: 19 November 2022
+
 **BREAKING CHANGES**
 * Knub now uses **discord.js v14**
 * Knub now requires **TypeScript 4.9** or higher
