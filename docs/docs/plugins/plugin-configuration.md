@@ -66,7 +66,7 @@ For example, with the configuration above:
 guildPluginSlashCommand({
   // ...
   async run({ pluginData, interaction }) {
-    const userConfig = await pluginData.config.getForUser(interaction.user.id);
+    const userConfig = await pluginData.config.getForUser(interaction.user);
     // If the user has the role id for level 100: "Your coolness: 10000"
     // If the user has the user id for level 50: "Your coolness: 10"
     // Otherwise: "Your coolness: 0"
@@ -75,7 +75,116 @@ guildPluginSlashCommand({
 })
 ```
 
-### Override examples
+See the bottom of this page for examples of different kinds of overrides.
+
+## Types and validation for plugin config
+
+You may have noticed a `configParser` property in the plugin examples in the docs.
+This is a function that takes untrusted input (the plugin's configuration from the server configuration) and returns
+a valid config.  
+Many of the examples use `configParser: () => ({})`, which is fine when you don't have configurable
+options at all, but what about when you do?
+
+Using the `guildPlugin()` helper, we can specify a _PluginType_:
+
+```ts
+interface MyPluginType extends BasePluginType {
+  config: {
+    coolness: number;
+  };
+}
+
+// Note the type annotation and double () here
+const myPlugin = guildPlugin<MyPluginType>()({
+  name: "my-plugin",
+  
+  // Error! Since we specified a type, this function's return type must match it.
+  configParser: () => ({}),
+  
+  // Better. Now the input is validated properly.
+  configParser: (input) => {
+    if (! ("coolness" in input)) {
+      throw new Error("You must specify coolness");
+    }
+    
+    if (typeof input.coolness !== "number") {
+      throw new Error("Coolness must be a number");
+    }
+    
+    return {
+      coolness: input.coolness,
+    };
+  },
+});
+```
+
+However, doing the validation this way can get very cumbersome very fast.
+Ideally, we'd be able to specify a type for the config and automatically parse it.
+
+This is where libraries like `zod` come in. Here's an example using zod:
+
+```ts
+import { z } from "zod";
+
+const configSchema = z.object({
+  coolness: z.number(),
+});
+// The TypeScript type and zod schema are automatically in sync!
+type TConfigSchema = z.TypeOf<typeof configSchema>;
+
+interface MyPluginType extends BasePluginType {
+  config: TConfigSchema;
+}
+
+// Note the type annotation and double () here
+const myPlugin = guildPlugin<MyPluginType>()({
+  name: "my-plugin",
+  
+  // All we have to do here is use zod's parse() method
+  configParser: (input) => configSchema.parse(input),
+});
+```
+
+This may seem like boilerplate at first glance, but specifying the config's type allows it to be inferred elsewhere,
+such as in commands:
+
+```ts
+// Note the type annotation and double () here again
+const myCommand = guildPluginSlashCommand<MyPluginType>()({
+  // ...
+  async run({ interaction, pluginData }) {
+    // TypeScript knows that "userCoolness" is a number now!
+    // And, thanks to configParser, we can trust that the number is there.
+    const userCoolness = await pluginData.config.getForUser(interaction.user);
+    interaction.reply(`Your coolness: ${userCoolness}`);
+  }
+});
+```
+
+Ok, but what about default options? If you have a lot of options, you probably don't want to require specifying them all
+in the config, especially if you can give them reasonable defaults.
+
+Here's where `defaultOptions` come in:
+```ts
+const myPlugin = guildPlugin<MyPluginType>()({
+  name: "my-plugin",
+  
+  // All we have to do here is use zod's parse() method
+  configParser: (input) => configSchema.parse(input),
+  
+  // These too are type checked
+  defaultOptions: {
+    config: {
+      coolness: 0,
+    },
+  },
+});
+```
+
+The untrusted input is merged with the config from `defaultOptions` before being passed to `configParser`.
+This effectively makes the `coolness` property optional in the user-provided configuration.
+
+## Override examples
 
 Note: `can_kick` in these examples is entirely arbitrary and does not inherently grant any permissions.
 

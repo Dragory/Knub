@@ -23,6 +23,8 @@ const echoCommand = guildPluginSlashCommand({
 // Create a plugin and give it the command
 const myPlugin = guildPlugin({
   name: "my-plugin",
+  configParser: () => ({}),
+
   slashCommands: [
     echoCommand,
   ],

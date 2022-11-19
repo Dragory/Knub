@@ -9,7 +9,7 @@ A plugin in Knub is really just a "POJO" (**P**lain **O**ld **J**avaScript **O**
 ```ts
 const myGuildPlugin = {
   name: "my-plugin",
-  slashCommands: [],
+  configParser: () => ({}),
 };
 ```
 
@@ -20,7 +20,7 @@ import { guildPlugin } from "knub";
 
 const myGuildPlugin = guildPlugin({
   name: "my-plugin",
-  slashCommands: [],
+  configParser: () => ({}),
 });
 ```
 
@@ -31,6 +31,10 @@ This way, you can get auto-completions for plugin properties, warnings for inval
 const myPlugin = guildPlugin({
   // Required. Internal name of the plugin, must be unique.
   name: "",
+
+  // Required. Parses untrusted input (from Knub's getConfig()) and returns a valid plugin config.
+  // See the plugin configuration section of the docs for more details.
+  configParser: () => ({}),
   
   // Default options for the plugin, including overrides.
   // See the plugin configuration section of the docs for more details.
