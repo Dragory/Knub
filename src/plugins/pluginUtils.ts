@@ -59,20 +59,11 @@ export type PluginPublicInterface<T extends AnyPluginBlueprint> =
   T["public"] extends PluginBlueprintPublicInterface<any> ? ResolvedPluginBlueprintPublicInterface<T["public"]> : null;
 
 /**
- * Load JSON config files from a "config" folder, relative to cwd
+ * By default, return an empty config for all guilds and the global config
  */
-export async function defaultGetConfig(key: string): Promise<any> {
-  const configFile = key ? `${key}.json` : "global.json";
-  const configPath = path.join("config", configFile);
-
-  try {
-    await fs.access(configPath);
-  } catch (e) {
-    return {};
-  }
-
-  const json = await fs.readFile(configPath, { encoding: "utf8" });
-  return JSON.parse(json); // eslint-disable-line @typescript-eslint/no-unsafe-return
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function defaultGetConfig() {
+  return {};
 }
 
 /**
