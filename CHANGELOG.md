@@ -1,5 +1,24 @@
-# 31.0.0-beta.1
-* **BREAKING CHANGE:** Knub now uses discord.js v14
+# Next
+**BREAKING CHANGES**
+* Knub now uses **discord.js v14**
+* Knub now requires **TypeScript 4.9** or higher
+* Renamed several helper functions:
+  * `typedGuildCommand()` ➔ `guildPluginMessageCommand()`
+  * `typedGlobalCommand()` ➔ `globalPluginMessageCommand()`
+  * `typedGuildEventListener()` ➔ `guildPluginEventListener()`
+  * `typedGlobalEventListener()` ➔ `globalPluginEventListener()`
+  * `typedGuildPlugin()` ➔ `guildPlugin()`
+  * `typedGlobalPlugin()` ➔ `globalPlugin()`
+* Plugin properties `configPreprocessor()` and `configValidator()` have been replaced by `configParser()`
+* Message command blueprints now require a `type: "message"` property
+  * This is set automatically by the `guildPluginMessageCommand()` / `globalPluginMessageCommand()` helper functions
+* Types `BasePluginConfig` and `PartialPluginOptions` have been removed
+
+**New features**
+* Slash commands
+
+**Other**
+* Knub has a new documentation website: https://knub.zeppelin.gg
 
 # 30.0.0-beta.46
 * **BREAKING CHANGE:** `Knub.getPluginPerformanceStats()` has been removed and replaced with a new profiler
