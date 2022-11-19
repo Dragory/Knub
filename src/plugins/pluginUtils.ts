@@ -76,14 +76,11 @@ export async function defaultGetConfig(key: string): Promise<any> {
 }
 
 /**
- * By default, load all guild plugins that haven't been explicitly disabled
+ * By default, load all available guild plugins
  */
 export function defaultGetEnabledGuildPlugins(
   ctx: AnyContext<BaseConfig<any>, BaseConfig<any>>,
   guildPlugins: GuildPluginMap
 ): Array<KeyOfMap<GuildPluginMap>> {
-  const plugins = ctx.config.plugins ?? {};
-  return Array.from(guildPlugins.keys()).filter((pluginName) => {
-    return plugins[pluginName]?.enabled !== false;
-  });
+  return Array.from(guildPlugins.keys());
 }
