@@ -36,7 +36,23 @@ guildPlugin({
 
 ```ts
 guildPluginEventListener({
-  // Required: Name of the event 
-  event: "",
+  // Required. Name of the event.
+  event: "messageReactionAdd",
+  // Required. Function that is run in response to the event.
+  // "args" is a type-safe object with the event's data.
+  listener({ args }) {
+    // ...
+  },
+  // Whether to react to events from bots
+  allowBots: false,
+  // Whether to react to events from ourself
+  allowSelf: false,
+  // An array of filters to run before proceeding to "listener".
+  // If any of these return false (or a promise resolving to false), the listener function won't be called.
+  filters: [
+    ({ args }) => {
+      return false;
+    },
+  ],
 })
 ```
