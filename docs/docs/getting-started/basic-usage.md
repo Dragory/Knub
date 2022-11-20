@@ -13,7 +13,7 @@ const echoCommand = guildPluginSlashCommand({
   name: "echo",
   description: "Repeats what you say",
   signature: [
-    slashOptions.string({ name: "text", description: "", required: true }),
+    slashOptions.string({ name: "text", description: "The text to repeat", required: true }),
   ],
   run({ interaction, options }) {
     interaction.reply(options.text);
@@ -46,5 +46,5 @@ const knub = new Knub(djsClient, {
 
 // Initialize Knub and connect to the bot gateway
 knub.initialize();
-djsClient.connect("YOUR TOKEN HERE");
+djsClient.login("YOUR TOKEN HERE");
 ```
