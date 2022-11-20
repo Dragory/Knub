@@ -11,7 +11,7 @@ Plugin configuration is included in each server's config ([see also: `getConfig`
 
 A server configuration has the following basic format. Note the plugin configuration section, where each plugin gets their configuration from.
 
-```json5
+```json
 {
   // Optional. Message command prefix.
   "prefix": "!",
@@ -188,7 +188,7 @@ This effectively makes the `coolness` property optional in the user-provided con
 
 Note: `can_kick` in these examples is entirely arbitrary and does not inherently grant any permissions.
 
-```json5
+```json
 {
   "plugins": {
     "example_plugin": {
