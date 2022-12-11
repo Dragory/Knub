@@ -32,9 +32,9 @@ import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
 import {
   AnyGlobalEventListenerBlueprint,
   AnyGuildEventListenerBlueprint,
-  AnyPluginBlueprint,
+  AnyPluginBlueprint, GuildPluginBlueprint,
   PluginBlueprintPublicInterface,
-  ResolvedPluginBlueprintPublicInterface,
+  ResolvedPluginBlueprintPublicInterface
 } from "./plugins/PluginBlueprint";
 import { UnknownPluginError } from "./plugins/UnknownPluginError";
 import { BasePluginType } from "./plugins/pluginTypes";
@@ -492,6 +492,14 @@ export class Knub extends EventEmitter {
 
     const pluginsToLoad = Array.from(new Set([...dependenciesArr, ...enabledPlugins]));
 
+    const pluginsInProgress: Array<{
+      pluginName: string,
+      pluginData: GuildPluginData<any>,
+      isDependency: boolean,
+      startTime: number,
+    }> = [];
+
+    // 1. Set up plugin data for each plugin. Call beforeLoad() hook.
     for (const pluginName of pluginsToLoad) {
       if (!this.guildPlugins.has(pluginName)) {
         throw new UnknownPluginError(`Unknown plugin: ${pluginName}`);
@@ -527,11 +535,43 @@ export class Knub extends EventEmitter {
         throw new PluginLoadError(plugin.name, ctx, e as Error);
       }
 
+      pluginsInProgress.push({
+        pluginName,
+        pluginData: fullPluginData,
+        isDependency,
+        startTime,
+      });
+    }
+
+    // 2. Call each plugin's beforeInit() hook
+    for (const { pluginName, pluginData } of pluginsInProgress) {
+      const plugin = this.guildPlugins.get(pluginName)!;
+      try {
+        await plugin.beforeInit?.(pluginData);
+      } catch (e) {
+        throw new PluginLoadError(plugin.name, ctx, e as Error);
+      }
+    }
+
+    // 3. Call each plugin's afterInit() hook
+    for (const { pluginName, pluginData } of pluginsInProgress) {
+      const plugin = this.guildPlugins.get(pluginName)!;
+      try {
+        await plugin.afterInit?.(pluginData);
+      } catch (e) {
+        throw new PluginLoadError(plugin.name, ctx, e as Error);
+      }
+    }
+
+    // 4. Register event handlers and commands
+    for (const { pluginName, pluginData, isDependency, startTime } of pluginsInProgress) {
+      const plugin = this.guildPlugins.get(pluginName)!;
+
       if (!isDependency) {
         // Register event listeners
         if (plugin.events) {
           for (const eventListenerBlueprint of plugin.events) {
-            fullPluginData.events.registerEventListener({
+            pluginData.events.registerEventListener({
               ...eventListenerBlueprint,
               listener: eventListenerBlueprint.listener,
             } as AnyGuildEventListenerBlueprint<GuildPluginData<any>>);
@@ -541,7 +581,7 @@ export class Knub extends EventEmitter {
         // Register message commands
         if (plugin.messageCommands) {
           for (const commandBlueprint of plugin.messageCommands) {
-            fullPluginData.messageCommands.add({
+            pluginData.messageCommands.add({
               ...commandBlueprint,
               run: commandBlueprint.run,
             });
@@ -549,34 +589,34 @@ export class Knub extends EventEmitter {
         }
 
         // Initialize messageCreate event listener for message commands
-        fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
+        pluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
           return _pluginData.messageCommands.runFromMessage(message);
         });
 
         // Register slash commands
         if (plugin.slashCommands) {
           for (const slashCommandBlueprint of plugin.slashCommands) {
-            fullPluginData.slashCommands.add(slashCommandBlueprint);
+            pluginData.slashCommands.add(slashCommandBlueprint);
           }
         }
 
         // Add interactionCreate event listener for slash commands
-        fullPluginData.events.on("interactionCreate", async ({ args: { interaction }, pluginData: _pluginData }) => {
+        pluginData.events.on("interactionCreate", async ({ args: { interaction }, pluginData: _pluginData }) => {
           await _pluginData.slashCommands.runFromInteraction(interaction);
         });
       }
 
-      fullPluginData.loaded = true;
+      pluginData.loaded = true;
       ctx.loadedPlugins.set(pluginName, {
         blueprint: plugin,
-        pluginData: fullPluginData,
+        pluginData: pluginData,
       });
 
       const totalLoadTime = performance.now() - startTime;
       this.profiler.addDataPoint(`load-plugin:${pluginName}`, totalLoadTime);
     }
 
-    // Run afterLoad functions
+    // 5. Call each plugin's afterLoad() hook
     for (const loadedPlugin of ctx.loadedPlugins.values()) {
       await loadedPlugin.blueprint.afterLoad?.(loadedPlugin.pluginData);
     }
@@ -633,7 +673,13 @@ export class Knub extends EventEmitter {
   }
 
   protected async loadGlobalPlugins(ctx: GlobalContext): Promise<void> {
-    for (const plugin of this.globalPlugins.values()) {
+    const pluginsInProgress: Array<{
+      pluginName: string,
+      pluginData: GlobalPluginData<any>,
+    }> = [];
+
+    // 1. Set up plugin data for each plugin. Call beforeLoad() hooks.
+    for (const [pluginName, plugin] of this.globalPlugins.entries()) {
       const beforeLoadPluginData = (await this.getBeforeLoadPluginData(ctx, plugin, false)) as BeforeLoadPluginData<
         GlobalPluginData<any>
       >;
@@ -658,10 +704,40 @@ export class Knub extends EventEmitter {
         throw new PluginLoadError(plugin.name, ctx, e as Error);
       }
 
+      pluginsInProgress.push({
+        pluginName,
+        pluginData: fullPluginData,
+      });
+    }
+
+    // 2. Call each plugin's beforeInit() hook
+    for (const { pluginName, pluginData } of pluginsInProgress) {
+      const plugin = this.globalPlugins.get(pluginName)!;
+      try {
+        await plugin.beforeInit?.(pluginData);
+      } catch (e) {
+        throw new PluginLoadError(plugin.name, ctx, e as Error);
+      }
+    }
+
+    // 3. Call each plugin's afterInit() hook
+    for (const { pluginName, pluginData } of pluginsInProgress) {
+      const plugin = this.globalPlugins.get(pluginName)!;
+      try {
+        await plugin.afterInit?.(pluginData);
+      } catch (e) {
+        throw new PluginLoadError(plugin.name, ctx, e as Error);
+      }
+    }
+
+    // 4. Register each plugin's event listeners and commands
+    for (const { pluginName, pluginData } of pluginsInProgress) {
+      const plugin = this.globalPlugins.get(pluginName)!;
+
       // Register event listeners
       if (plugin.events) {
         for (const eventListenerBlueprint of plugin.events) {
-          fullPluginData.events.registerEventListener({
+          pluginData.events.registerEventListener({
             ...eventListenerBlueprint,
             listener: eventListenerBlueprint.listener,
           } as AnyGlobalEventListenerBlueprint<GlobalPluginData<any>>);
@@ -671,7 +747,7 @@ export class Knub extends EventEmitter {
       // Register message commands
       if (plugin.messageCommands) {
         for (const commandBlueprint of plugin.messageCommands) {
-          fullPluginData.messageCommands.add({
+          pluginData.messageCommands.add({
             ...commandBlueprint,
             run: commandBlueprint.run,
           });
@@ -679,29 +755,30 @@ export class Knub extends EventEmitter {
       }
 
       // Add messageCreate event listener for commands
-      fullPluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
+      pluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
         return _pluginData.messageCommands.runFromMessage(message);
       });
 
       // Register slash commands
       if (plugin.slashCommands) {
         for (const slashCommandBlueprint of plugin.slashCommands) {
-          fullPluginData.slashCommands.add(slashCommandBlueprint);
+          pluginData.slashCommands.add(slashCommandBlueprint);
         }
       }
 
       // Add interactionCreate event listener for slash commands
-      fullPluginData.events.on("interactionCreate", async ({ args: { interaction }, pluginData: _pluginData }) => {
+      pluginData.events.on("interactionCreate", async ({ args: { interaction }, pluginData: _pluginData }) => {
         await _pluginData.slashCommands.runFromInteraction(interaction);
       });
 
-      fullPluginData.loaded = true;
+      pluginData.loaded = true;
       ctx.loadedPlugins.set(plugin.name, {
-        pluginData: fullPluginData,
+        pluginData,
         blueprint: plugin,
       });
     }
 
+    // 5. Call each plugin's afterLoad() hook
     for (const loadedPlugin of ctx.loadedPlugins.values()) {
       await loadedPlugin.blueprint.afterLoad?.(loadedPlugin.pluginData);
     }

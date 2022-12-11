@@ -69,7 +69,7 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
   public?: PluginBlueprintPublicInterface<TPluginData>;
 
   /**
-   * This function is called before the plugin is loaded.
+   * This hook is called before the plugin is loaded.
    * At this point, there are two guarantees:
    *
    * 1. Other plugins haven't yet interacted with this plugin
@@ -78,6 +78,21 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
    * Similarly, `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable.
    */
   beforeLoad?: (pluginData: BeforeLoadPluginData<TPluginData>) => Awaitable<void>;
+  /**
+   * This hook is called after each plugin's plugin data has been set up,
+   * but before any event listeners or commands are loaded.
+   * At this point, keep in mind:
+   *
+   * 1. Other plugins are able to interact with this plugin's public interfaces.
+   *    You can check PluginData.initialized to enforce custom limitations here.
+   * 2. Commands and event handlers have not been registered yet
+   */
+  beforeInit?: (pluginData: TPluginData) => Awaitable<void>;
+  /**
+   * This hook is called after beforeInit() has been called for each plugin, but before afterLoad().
+   * Same guarantees and notes as beforeInit().
+   */
+  afterInit?: (pluginData: TPluginData) => Awaitable<void>;
   /**
    * This function is called after the plugin has been loaded.
    * At this point, make sure to consider the following:

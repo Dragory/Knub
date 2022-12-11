@@ -108,7 +108,7 @@ describe("Knub", () => {
       name: "plugin1",
       configParser: () => ({}),
 
-      beforeLoad() {
+      afterLoad() {
         loadedTimes++;
       },
 
@@ -121,7 +121,7 @@ describe("Knub", () => {
       name: "plugin-with-error",
       configParser: () => ({}),
 
-      beforeLoad() {
+      afterLoad() {
         throw new Error("Foo");
       },
     });
