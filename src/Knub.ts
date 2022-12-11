@@ -254,6 +254,8 @@ export class Knub extends EventEmitter {
 
       // @ts-ignore: This is actually correct, dw about it
       getKnubInstance: () => this,
+      hasGlobalPlugin: (resolvablePlugin) => this.ctxHasPlugin(this.globalContext, resolvablePlugin),
+      getGlobalPlugin: (resolvablePlugin) => this.getPluginPublicInterface(this.globalContext, resolvablePlugin),
 
       state: {},
     };

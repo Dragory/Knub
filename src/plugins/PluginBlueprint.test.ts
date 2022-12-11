@@ -1354,6 +1354,97 @@ describe("PluginBlueprint", () => {
       })();
     });
 
+
+    it("hasGlobalPlugin", (done) => {
+      void (async () => {
+        const SomeGlobalPlugin = guildPlugin({
+          name: "some-global-plugin",
+          configParser: () => ({}),
+          public: {
+            works() {
+              return () => true;
+            },
+          },
+        });
+
+        const SomeGuildPlugin = guildPlugin({
+          name: "some-guild-plugin",
+          configParser: () => ({}),
+
+          beforeLoad(pluginData) {
+            const hasGlobalPlugin = pluginData.hasGlobalPlugin(SomeGlobalPlugin);
+            assert.strictEqual(hasGlobalPlugin, true);
+            done();
+          },
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [SomeGlobalPlugin],
+          guildPlugins: [SomeGuildPlugin],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["some-guild-plugin"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.initialize();
+        client.emit("connect");
+        client.emit("ready", client);
+        await sleep(30);
+
+        const guild = createMockGuild(client);
+        client.ws.emit("GUILD_CREATE", guild);
+      })();
+    });
+
+    it("getPlugin", (done) => {
+      void (async () => {
+        const SomeGlobalPlugin = guildPlugin({
+          name: "some-global-plugin",
+          configParser: () => ({}),
+          public: {
+            works() {
+              return () => true;
+            },
+          },
+        });
+
+        const SomeGuildPlugin = guildPlugin({
+          name: "some-guild-plugin",
+          configParser: () => ({}),
+
+          beforeLoad(pluginData) {
+            const globalPlugin = pluginData.getGlobalPlugin(SomeGlobalPlugin);
+            assert.strictEqual(globalPlugin.works(), true);
+            done();
+          },
+        });
+
+        const client = createMockClient();
+        const knub = new Knub(client, {
+          globalPlugins: [SomeGlobalPlugin],
+          guildPlugins: [SomeGuildPlugin],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["some-guild-plugin"];
+            },
+            logFn: noop,
+          },
+        });
+
+        knub.initialize();
+        client.emit("connect");
+        client.emit("ready", client);
+        await sleep(30);
+
+        const guild = createMockGuild(client);
+        client.ws.emit("GUILD_CREATE", guild);
+      })();
+    });
+
     it("getPlugin has correct pluginData", (done) => {
       void (async () => {
         const DependencyToLoad = guildPlugin({

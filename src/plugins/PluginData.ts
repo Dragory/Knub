@@ -51,6 +51,16 @@ export type BasePluginData<TPluginType extends BasePluginType> = {
   getPlugin: GetPluginFn;
 
   /**
+   * Check whether a specific global plugin has been loaded
+   */
+  hasGlobalPlugin: HasPluginFn;
+
+  /**
+   * Get the public interface for a loaded global plugin
+   */
+  getGlobalPlugin: GetPluginFn;
+
+  /**
    * Whether this plugin was loaded as a dependency, as opposed to being enabled explicitly.
    * Plugins that are only loaded as a dependency do not have their commands or events registered.
    */
