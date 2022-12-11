@@ -1,3 +1,15 @@
+# NEXT
+* New hooks:
+  * `beforeInit()`
+    * Called after the plugin's data has been set up, but before event listeners or commands are registered
+    * Has access to `getPlugin()`
+  * `afterInit()`
+    * Called after each plugin's `beforeInit()` hook has been called, still before event listeners and commands
+  * With these, the hook order is now: `beforeLoad()`, `beforeInit()`, `afterInit()`, `afterLoad()`
+* It's now possible to get a global plugin's public interface from a guild plugin:
+  * `PluginData.hasGlobalPlugin()`
+  * `PluginData.getGlobalPlugin()`
+
 # 31.0.0
 Released: 19 November 2022
 
