@@ -9,6 +9,8 @@
 * It's now possible to get a global plugin's public interface from a guild plugin:
   * `PluginData.hasGlobalPlugin()`
   * `PluginData.getGlobalPlugin()`
+* Guilds are now loaded concurrently, which should speed up the initial connection to the gateway
+  * If this ends up causing problems with larger guild counts, I'll look into limiting it to X concurrent loads instead
 
 # 31.0.0
 Released: 19 November 2022
