@@ -244,6 +244,7 @@ export class Knub extends EventEmitter {
       _pluginType: undefined as any,
       pluginName: plugin.name,
       loaded: false,
+      initialized: false,
       client: this.client,
       config: configManager,
       locks: ctx.locks,
@@ -436,6 +437,7 @@ export class Knub extends EventEmitter {
       for (const [pluginName, loadedPlugin] of pluginsToUnload) {
         loadedPlugin.pluginData.events.clearAllListeners();
         loadedPlugin.pluginData.loaded = false;
+        loadedPlugin.pluginData.initialized = false;
         ctx.loadedPlugins.delete(pluginName);
       }
 
@@ -550,6 +552,8 @@ export class Knub extends EventEmitter {
       } catch (e) {
         throw new PluginLoadError(plugin.name, ctx, e as Error);
       }
+
+      pluginData.initialized = true;
     }
 
     // 3. Call each plugin's afterInit() hook
@@ -659,6 +663,7 @@ export class Knub extends EventEmitter {
     for (const [pluginName, loadedPlugin] of pluginsToUnload) {
       loadedPlugin.pluginData.events.clearAllListeners();
       loadedPlugin.pluginData.loaded = false;
+      loadedPlugin.pluginData.initialized = false;
       this.globalContext.loadedPlugins.delete(pluginName);
     }
 
@@ -717,6 +722,8 @@ export class Knub extends EventEmitter {
       } catch (e) {
         throw new PluginLoadError(plugin.name, ctx, e as Error);
       }
+
+      pluginData.initialized = true;
     }
 
     // 3. Call each plugin's afterInit() hook

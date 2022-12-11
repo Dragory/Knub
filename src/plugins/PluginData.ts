@@ -29,6 +29,11 @@ export type BasePluginData<TPluginType extends BasePluginType> = {
    */
   loaded: boolean;
 
+  /**
+   * Whether the plugin has run its beforeInit() and afterInit() hooks
+   */
+  initialized: boolean;
+
   pluginName: string;
 
   /**
