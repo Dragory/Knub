@@ -32,13 +32,11 @@ import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
 import {
   AnyGlobalEventListenerBlueprint,
   AnyGuildEventListenerBlueprint,
-  AnyPluginBlueprint, GuildPluginBlueprint,
+  AnyPluginBlueprint,
   PluginBlueprintPublicInterface,
   ResolvedPluginBlueprintPublicInterface
 } from "./plugins/PluginBlueprint";
 import { UnknownPluginError } from "./plugins/UnknownPluginError";
-import { BasePluginType } from "./plugins/pluginTypes";
-import { ConfigValidationError } from "./config/ConfigValidationError";
 import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
 import { EventRelay } from "./events/EventRelay";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
@@ -477,7 +475,7 @@ export class Knub extends EventEmitter {
     return this.loadedGuilds.get(guildId);
   }
 
-  public getLoadedGuilds(): Array<GuildContext> {
+  public getLoadedGuilds(): GuildContext[] {
     return Array.from(this.loadedGuilds.values());
   }
 
@@ -617,7 +615,7 @@ export class Knub extends EventEmitter {
       pluginData.loaded = true;
       ctx.loadedPlugins.set(pluginName, {
         blueprint: plugin,
-        pluginData: pluginData,
+        pluginData,
       });
 
       const totalLoadTime = performance.now() - startTime;
