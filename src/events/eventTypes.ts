@@ -34,6 +34,9 @@ import {
   PartialMessageReaction,
   GuildScheduledEvent,
   ForumChannel,
+  AutoModerationActionExecution,
+  AutoModerationRule,
+  GuildAuditLogsEntry,
 } from "discord.js";
 import { GuildMessage } from "../types";
 
@@ -53,6 +56,15 @@ const createFromDjsArgsObject = <Obj extends FromDjsArgsConstraint>(obj: Obj): O
  */
 export const fromDjsArgs = createFromDjsArgsObject({
   applicationCommandPermissionsUpdate: (data: ApplicationCommandPermissionsUpdateData) => ({ data }),
+  autoModerationActionExecution: (autoModerationActionExecution: AutoModerationActionExecution) => ({
+    autoModerationActionExecution,
+  }),
+  autoModerationRuleCreate: (autoModerationRule: AutoModerationRule) => ({ autoModerationRule }),
+  autoModerationRuleDelete: (autoModerationRule: AutoModerationRule) => ({ autoModerationRule }),
+  autoModerationRuleUpdate: (
+    oldAutoModerationRule: AutoModerationRule | null,
+    newAutoModerationRule: AutoModerationRule
+  ) => ({ oldAutoModerationRule, newAutoModerationRule }),
   cacheSweep: (message: string) => ({ message }),
   channelCreate: (channel: NonThreadGuildBasedChannel) => ({ channel }),
   channelDelete: (channel: DMChannel | NonThreadGuildBasedChannel) => ({ channel }),
@@ -66,6 +78,7 @@ export const fromDjsArgs = createFromDjsArgsObject({
   emojiDelete: (emoji: GuildEmoji) => ({ emoji }),
   emojiUpdate: (oldEmoji: GuildEmoji, newEmoji: GuildEmoji) => ({ oldEmoji, newEmoji }),
   error: (error: Error) => ({ error }),
+  guildAuditLogEntryCreate: (auditLogEntry: GuildAuditLogsEntry, guild: Guild) => ({ auditLogEntry, guild }),
   guildBanAdd: (ban: GuildBan) => ({ ban }),
   guildBanRemove: (ban: GuildBan) => ({ ban }),
   guildCreate: (guild: Guild) => ({ guild }),
@@ -156,7 +169,7 @@ export const fromDjsArgs = createFromDjsArgsObject({
 
 // Extended event types
 export type KnownEvents = {
-  [key in keyof typeof fromDjsArgs]: ReturnType<typeof fromDjsArgs[key]>;
+  [key in keyof typeof fromDjsArgs]: ReturnType<(typeof fromDjsArgs)[key]>;
 };
 
 export interface KnownGuildEvents extends KnownEvents {
@@ -197,13 +210,13 @@ export const globalEvents = [
 ] as const;
 
 export type ValidEvent = keyof KnownEvents;
-export type GlobalEvent = typeof globalEvents[number];
+export type GlobalEvent = (typeof globalEvents)[number];
 export type GuildEvent = Exclude<ValidEvent, GlobalEvent>;
 
 export function isGlobalEvent(ev: ValidEvent): ev is GlobalEvent {
-  return globalEvents.includes(ev as typeof globalEvents[number]);
+  return globalEvents.includes(ev as (typeof globalEvents)[number]);
 }
 
 export function isGuildEvent(ev: ValidEvent): ev is GuildEvent {
-  return !globalEvents.includes(ev as typeof globalEvents[number]);
+  return !globalEvents.includes(ev as (typeof globalEvents)[number]);
 }

@@ -1,4 +1,4 @@
-import { Client, Guild, Snowflake } from "discord.js";
+import { Client, Guild, Snowflake, GatewayGuildCreateDispatchData, GatewayDispatchEvents } from "discord.js";
 import { EventEmitter } from "events";
 import { BaseConfig } from "./config/configTypes";
 import { get } from "./utils";
@@ -34,17 +34,15 @@ import {
   AnyGuildEventListenerBlueprint,
   AnyPluginBlueprint,
   PluginBlueprintPublicInterface,
-  ResolvedPluginBlueprintPublicInterface
+  ResolvedPluginBlueprintPublicInterface,
 } from "./plugins/PluginBlueprint";
 import { UnknownPluginError } from "./plugins/UnknownPluginError";
 import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
 import { EventRelay } from "./events/EventRelay";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
 import { Queue } from "./Queue";
-import { GatewayGuildCreateDispatchData } from "discord-api-types/v10";
 import { performance } from "perf_hooks";
 import { Profiler } from "./Profiler";
-import { GatewayDispatchEvents } from "discord-api-types/gateway/v10";
 import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashCommandManager";
 import { SlashCommandBlueprint } from "./commands/slashCommands/slashCommandBlueprint";
 import { SlashGroupBlueprint } from "./commands/slashCommands/slashGroupBlueprint";
@@ -231,13 +229,13 @@ export class Knub extends EventEmitter {
         levels: ctx.config.levels || {},
         parser: plugin.configParser,
         customOverrideCriteriaFunctions: plugin.customOverrideCriteriaFunctions,
-      },
+      }
     );
 
     try {
       await configManager.init();
     } catch (e) {
-      if (! (e instanceof Error)) {
+      if (!(e instanceof Error)) {
         throw e;
       }
       throw new PluginLoadError(plugin.name, ctx, e);
@@ -497,10 +495,10 @@ export class Knub extends EventEmitter {
     const pluginsToLoad = Array.from(new Set([...dependenciesArr, ...enabledPlugins]));
 
     const pluginsInProgress: Array<{
-      pluginName: string,
-      pluginData: GuildPluginData<any>,
-      isDependency: boolean,
-      startTime: number,
+      pluginName: string;
+      pluginData: GuildPluginData<any>;
+      isDependency: boolean;
+      startTime: number;
     }> = [];
 
     // 1. Set up plugin data for each plugin. Call beforeLoad() hook.
@@ -681,8 +679,8 @@ export class Knub extends EventEmitter {
 
   protected async loadGlobalPlugins(ctx: GlobalContext): Promise<void> {
     const pluginsInProgress: Array<{
-      pluginName: string,
-      pluginData: GlobalPluginData<any>,
+      pluginName: string;
+      pluginData: GlobalPluginData<any>;
     }> = [];
 
     // 1. Set up plugin data for each plugin. Call beforeLoad() hooks.
@@ -794,7 +792,11 @@ export class Knub extends EventEmitter {
   }
 
   protected async registerSlashCommands(): Promise<void> {
-    const slashCommands: Array<SlashCommandBlueprint<any, any> | SlashGroupBlueprint<GuildPluginData<any>> | SlashGroupBlueprint<GlobalPluginData<any>>> = [];
+    const slashCommands: Array<
+      | SlashCommandBlueprint<any, any>
+      | SlashGroupBlueprint<GuildPluginData<any>>
+      | SlashGroupBlueprint<GlobalPluginData<any>>
+    > = [];
     for (const plugin of this.guildPlugins.values()) {
       slashCommands.push(...(plugin.slashCommands || []));
     }

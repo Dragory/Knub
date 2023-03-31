@@ -22,8 +22,8 @@ import {
   User,
   UserManager,
   WebSocketManager,
+  ChannelType,
 } from "discord.js";
-import { ChannelType } from "discord-api-types/v10";
 
 const EventEmitter = events.EventEmitter;
 
@@ -257,7 +257,7 @@ export type AssertTypeEquals<TActual, TExpected> = TActual extends TExpected ? t
 export function assertTypeEquals<
   TExpected,
   TActual,
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-  TAssert extends (TActual extends TExpected ? true : false),
-// eslint-disable-next-line @typescript-eslint/no-empty-function
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  TAssert extends TActual extends TExpected ? true : false
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
 >(): void {}

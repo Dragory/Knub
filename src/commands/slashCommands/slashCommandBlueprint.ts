@@ -1,5 +1,5 @@
 import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
-import { Locale, Permissions } from "discord-api-types/v10";
+import { Locale, Permissions } from "discord.js";
 import { BaseSlashCommandOption } from "./slashCommandOptions";
 import { SlashCommandFn, SlashCommandSignature } from "./slashCommandUtils";
 import { BasePluginType } from "../../plugins/pluginTypes";
@@ -8,7 +8,7 @@ export type AnySlashCommandSignature = Array<BaseSlashCommandOption<any, any>>;
 
 export type SlashCommandBlueprint<
   TPluginData extends AnyPluginData<any>,
-  TSignature extends AnySlashCommandSignature,
+  TSignature extends AnySlashCommandSignature
 > = {
   type: "slash";
   name: string;
@@ -22,9 +22,7 @@ export type SlashCommandBlueprint<
   run: SlashCommandFn<TPluginData, TSignature>;
 };
 
-type SlashCommandBlueprintCreator<TPluginData extends AnyPluginData<any>> = <
-  TSignature extends SlashCommandSignature
->(
+type SlashCommandBlueprintCreator<TPluginData extends AnyPluginData<any>> = <TSignature extends SlashCommandSignature>(
   blueprint: Omit<SlashCommandBlueprint<TPluginData, TSignature>, "type">
 ) => SlashCommandBlueprint<TPluginData, TSignature>;
 

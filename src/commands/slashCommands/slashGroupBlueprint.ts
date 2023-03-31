@@ -1,5 +1,5 @@
 import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
-import { Locale, Permissions } from "discord-api-types/v10";
+import { Locale, Permissions } from "discord.js";
 import { SlashCommandBlueprint } from "./slashCommandBlueprint";
 import { BasePluginType } from "../../plugins/pluginTypes";
 
@@ -12,15 +12,7 @@ export type SlashGroupBlueprint<TPluginData extends AnyPluginData<any>> = {
   defaultMemberPermissions?: Permissions;
   allowDms?: boolean;
   subcommands: Array<SlashCommandBlueprint<TPluginData, any> | SlashGroupBlueprint<TPluginData>>;
-}
-
-// export function slashGroup<Blueprint extends Omit<SlashGroupBlueprint, "type">>(blueprint: Blueprint): Blueprint & { type: "slash-group" } {
-//   return {
-//     ...blueprint,
-//     type: "slash-group",
-//   };
-// }
-
+};
 
 type SlashGroupBlueprintCreator<TPluginData extends AnyPluginData<any>> = (
   blueprint: Omit<SlashGroupBlueprint<TPluginData>, "type">
