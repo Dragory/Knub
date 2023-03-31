@@ -19,6 +19,10 @@
     overrides?: [ ... ];
   }
   ```
+* **BREAKING CHANGE:** Knub now uses the package.json `exports` property. This means arbitrary sub-path imports are no longer possible.
+  * More exports have been made available to accomodate certain use cases
+  * You can now import Knub helper functions from `knub/helpers`
+    * E.g. `import { waitForReply } from "knub/helpers"`
 * New hooks:
   * `beforeInit()`
     * Called after the plugin's data has been set up, but before event listeners or commands are registered
