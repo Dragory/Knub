@@ -1,5 +1,5 @@
 # NEXT
-* **BREAKING CHANGE:** Guild and global configs are now enforced to a standard type, which is roughly:
+* ⚠️ **BREAKING CHANGE:** Guild and global configs are now enforced to a standard type, which is roughly:
   ```
   {
     prefix?: string;
@@ -10,7 +10,7 @@
   * Extra properties at the top level will throw an error during validation.
     Consider using a plugin to store these properties instead.
   * Since this type is now always the same, the config type generics from Knub constructor have been removed
-* **BREAKING CHANGE:** The general type of plugin options is now type-checked and extra properties throw an error.
+* ⚠️ **BREAKING CHANGE:** The general type of plugin options is now type-checked and extra properties throw an error.
   This general type is roughly:
   ```
   {
@@ -19,7 +19,7 @@
     overrides?: [ ... ];
   }
   ```
-* **BREAKING CHANGE:** Knub now uses the package.json `exports` property. This means arbitrary sub-path imports are no longer possible.
+* ⚠️ **BREAKING CHANGE:** Knub now uses the package.json `exports` property. This means arbitrary sub-path imports are no longer possible.
   * More exports have been made available to accomodate certain use cases
   * You can now import Knub helper functions from `knub/helpers`
     * E.g. `import { waitForReply } from "knub/helpers"`
@@ -34,7 +34,8 @@
   * `PluginData.hasGlobalPlugin()`
   * `PluginData.getGlobalPlugin()`
 * Guilds are now loaded concurrently, which should speed up the initial connection to the gateway
-  * This is controlled by the `concurrentGuildLoadLimit` Knub option (default 10)
+  * This is controlled by the `concurrentGuildLoadLimit` Knub option (default 10).
+    Set to 1 to restore previous sequential behavior.
 
 # 31.0.0
 Released: 19 November 2022
