@@ -51,6 +51,7 @@ import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashC
 import { SlashCommandBlueprint } from "./commands/slashCommands/slashCommandBlueprint";
 import { SlashGroupBlueprint } from "./commands/slashCommands/slashGroupBlueprint";
 import { registerSlashCommands } from "./commands/slashCommands/registerSlashCommands";
+import { ConcurrentRunner } from "./ConcurrentRunner";
 
 const defaultKnubArgs: KnubArgs = {
   guildPlugins: [],
@@ -88,6 +89,8 @@ export class Knub extends EventEmitter {
   protected log: LogFn = defaultLogFn;
 
   public profiler = new Profiler();
+
+  #guildLoadRunner: ConcurrentRunner;
 
   constructor(client: Client, userArgs: Partial<KnubArgs>) {
     super();
@@ -137,6 +140,7 @@ export class Knub extends EventEmitter {
       getEnabledGuildPlugins: defaultGetEnabledGuildPlugins,
       canLoadGuild: () => true,
       customArgumentTypes: {},
+      concurrentGuildLoadLimit: 10,
     } satisfies KnubOptions;
 
     this.options = { ...defaultOptions, ...args.options };
@@ -144,6 +148,8 @@ export class Knub extends EventEmitter {
     if (this.options.logFn) {
       this.log = this.options.logFn;
     }
+
+    this.#guildLoadRunner = new ConcurrentRunner(this.options.concurrentGuildLoadLimit);
   }
 
   public initialize(): void {
@@ -178,7 +184,7 @@ export class Knub extends EventEmitter {
     this.client.ws.on(GatewayDispatchEvents.GuildCreate, (data: GatewayGuildCreateDispatchData) => {
       setImmediate(() => {
         this.log("info", `Guild available: ${data.id}`);
-        void this.loadGuild(data.id);
+        void this.#guildLoadRunner.run(() => this.loadGuild(data.id));
       });
     });
 
@@ -355,8 +361,7 @@ export class Knub extends EventEmitter {
 
   protected async loadAllAvailableGuilds(): Promise<void> {
     const guilds: Guild[] = Array.from(this.client.guilds.cache.values());
-    const loadPromises = guilds.map((guild) => this.loadGuild(guild.id));
-
+    const loadPromises = guilds.map((guild) => this.#guildLoadRunner.run(() => this.loadGuild(guild.id)));
     await Promise.allSettled(loadPromises);
   }
 
@@ -415,7 +420,7 @@ export class Knub extends EventEmitter {
 
   public async reloadGuild(guildId: Snowflake): Promise<void> {
     await this.unloadGuild(guildId);
-    await this.loadGuild(guildId);
+    await this.#guildLoadRunner.run(() => this.loadGuild(guildId));
   }
 
   public async unloadGuild(guildId: Snowflake): Promise<void> {

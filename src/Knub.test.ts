@@ -292,4 +292,50 @@ describe("Knub", () => {
     expect(Object.keys(knub.profiler.getData())).to.include("command:foo");
     expect(knub.profiler.getData()["command:foo"].totalTime).to.be.greaterThanOrEqual(8);
   });
+
+  it("concurrentGuildLoadLimit", async () => {
+    const concurrentGuildLoadLimit = 10;
+    const loadTimeMs = 40;
+    let loadedTimes = 0;
+
+    const PluginToLoad = guildPlugin({
+      name: "plugin-to-load",
+      configParser: () => ({}),
+
+      async beforeLoad() {
+        await sleep(loadTimeMs);
+      },
+
+      afterLoad() {
+        loadedTimes++;
+      },
+    });
+
+    const client = createMockClient();
+    const knub = new Knub(client, {
+      guildPlugins: [PluginToLoad],
+      options: {
+        autoRegisterSlashCommands: false,
+        getEnabledGuildPlugins() {
+          return ["plugin-to-load"];
+        },
+        logFn: noop,
+        concurrentGuildLoadLimit,
+      },
+    });
+
+    knub.initialize();
+    client.emit("connect");
+    client.emit("ready", client);
+    await sleep(30);
+
+    for (let i = 0; i < concurrentGuildLoadLimit * 2; i++) {
+      const guild = createMockGuild(client);
+      client.ws.emit("GUILD_CREATE", guild);
+    }
+    await sleep(loadTimeMs + 5);
+    assert.equal(loadedTimes, concurrentGuildLoadLimit);
+    await sleep(loadTimeMs + 5);
+    assert.equal(loadedTimes, concurrentGuildLoadLimit * 2);
+  });
 });

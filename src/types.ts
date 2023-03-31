@@ -20,6 +20,7 @@ export interface KnubOptions {
   getConfig: (id: string) => Awaitable<any>;
   getEnabledGuildPlugins?: (ctx: GuildContext, plugins: GuildPluginMap) => Awaitable<string[]>;
   canLoadGuild: (guildId: string) => Awaitable<boolean>;
+  concurrentGuildLoadLimit: number;
   logFn?: LogFn;
 
   [key: string]: any;
