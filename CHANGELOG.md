@@ -1,4 +1,24 @@
 # NEXT
+* **BREAKING CHANGE:** Guild and global configs are now enforced to a standard type, which is roughly:
+  ```
+  {
+    prefix?: string;
+    levels?: { ... };
+    plugins?: [ ... ];
+  }
+  ```
+  * Extra properties at the top level will throw an error during validation.
+    Consider using a plugin to store these properties instead.
+  * Since this type is now always the same, the config type generics from Knub constructor have been removed
+* **BREAKING CHANGE:** The general type of plugin options is now type-checked and extra properties throw an error.
+  This general type is roughly:
+  ```
+  {
+    config?: unknown;
+    replaceDefaultOverrides?: boolean;
+    overrides?: [ ... ];
+  }
+  ```
 * New hooks:
   * `beforeInit()`
     * Called after the plugin's data has been set up, but before event listeners or commands are registered
@@ -10,7 +30,7 @@
   * `PluginData.hasGlobalPlugin()`
   * `PluginData.getGlobalPlugin()`
 * Guilds are now loaded concurrently, which should speed up the initial connection to the gateway
-  * If this ends up causing problems with larger guild counts, I'll look into limiting it to X concurrent loads instead
+  * This is controlled by the `concurrentGuildLoadLimit` Knub option (default 10)
 
 # 31.0.0
 Released: 19 November 2022
