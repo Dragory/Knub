@@ -15,6 +15,9 @@ desktop.ini
 .idea/**/dictionaries
 .idea/**/shelf
 
+# We don't use PHP
+.idea/php.xml
+
 # AWS User-specific
 .idea/**/aws.xml
 
