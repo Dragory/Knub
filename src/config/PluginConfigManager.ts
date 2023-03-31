@@ -5,7 +5,7 @@ import {
   PermissionLevels,
   pluginBaseOptionsSchema,
   PluginOptions,
-  PluginOverride
+  PluginOverride,
 } from "./configTypes";
 import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
 import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils";
@@ -40,7 +40,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   constructor(
     defaultOptions: PluginOptions<TPluginType>,
     userInput: unknown,
-    opts: PluginConfigManagerOpts<TPluginType>,
+    opts: PluginConfigManagerOpts<TPluginType>
   ) {
     this.defaultOptions = defaultOptions;
     this.userInput = userInput;
@@ -59,17 +59,19 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const config = mergeConfig(this.defaultOptions.config ?? {}, parsedUserInput.config ?? {});
     const parsedValidConfig = await this.parser(config);
 
-    const overrides = parsedUserInput.overrides ?? this.defaultOptions.overrides ?? [];
+    const overrides: Array<PluginOverride<TPluginType>> = parsedUserInput.replaceDefaultOverrides
+      ? parsedUserInput.overrides ?? []
+      : (this.defaultOptions.overrides ?? []).concat(parsedUserInput.overrides ?? []);
     const parsedValidOverrides: Array<PluginOverride<TPluginType>> = [];
     for (const override of overrides) {
-      if (! ("config" in override)) {
+      if (!("config" in override)) {
         throw new Error("Overrides must include the config property");
       }
       const overrideConfig = mergeConfig(parsedValidConfig, override.config ?? {});
       // Validate the override config as if it was already merged with the base config
       // In reality, overrides are merged with the base config when they are evaluated
       await this.parser(overrideConfig);
-      parsedValidOverrides.push(override as PluginOverride<TPluginType>);
+      parsedValidOverrides.push(override);
     }
 
     this.parsedOptions = {
@@ -80,7 +82,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   }
 
   protected getParsedOptions(): PluginOptions<TPluginType> {
-    if (! this.initialized) {
+    if (!this.initialized) {
       throw new Error("Not initialized");
     }
 
@@ -114,7 +116,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       // Directly passed userId
       matchParams.userId ||
       // Passed member's ID
-      (matchParams.member && ("id" in matchParams.member) && matchParams.member.id) ||
+      (matchParams.member && "id" in matchParams.member && matchParams.member.id) ||
       // Passed member's user ID
       (matchParams.member && matchParams.member.user.id) ||
       // Passed message's author's ID
@@ -125,7 +127,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       // Directly passed channelId
       matchParams.channelId ||
       // Passed non-thread channel's ID
-      (matchParams.channel && ! matchParams.channel.isThread() && matchParams.channel.id) ||
+      (matchParams.channel && !matchParams.channel.isThread() && matchParams.channel.id) ||
       // Passed thread channel's parent ID
       (matchParams.channel?.isThread?.() && matchParams.channel.parentId) ||
       // Passed message's thread's parent ID
@@ -138,7 +140,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       // Directly passed categoryId
       matchParams.categoryId ||
       // Passed non-thread channel's parent ID
-      (matchParams.channel && ! matchParams.channel.isThread() && (matchParams.channel as GuildChannel).parentId) ||
+      (matchParams.channel && !matchParams.channel.isThread() && (matchParams.channel as GuildChannel).parentId) ||
       // Passed thread channel's parent ID
       (matchParams.channel?.isThread?.() && matchParams.channel.parent?.parentId) ||
       // Passed message's thread's channel's parent ID
@@ -158,10 +160,8 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       null;
 
     // Passed value -> whether message's channel is a thread
-    const isThread = matchParams.isThread ??
-      matchParams?.channel?.isThread?.() ??
-      message?.channel?.isThread?.() ??
-      null;
+    const isThread =
+      matchParams.isThread ?? matchParams?.channel?.isThread?.() ?? message?.channel?.isThread?.() ?? null;
 
     // Passed member -> passed message's member
     const member = matchParams.member || (message && message.member);

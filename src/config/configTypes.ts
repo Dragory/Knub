@@ -10,6 +10,7 @@ export type PermissionLevels = z.TypeOf<typeof permissionLevelsSchema>;
 
 export const pluginBaseOptionsSchema = z.strictObject({
   config: z.unknown().optional(),
+  replaceDefaultOverrides: z.boolean().optional(),
   overrides: z.array(z.record(z.string(), z.unknown())).optional(),
 });
 
@@ -22,6 +23,7 @@ export type BaseConfig = z.TypeOf<typeof baseConfigSchema>;
 
 export interface PluginOptions<TPluginType extends BasePluginType> {
   config: TPluginType["config"];
+  replaceDefaultOverrides?: boolean;
   overrides?: Array<PluginOverride<TPluginType>>;
 }
 
