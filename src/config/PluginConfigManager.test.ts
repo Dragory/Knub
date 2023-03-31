@@ -47,8 +47,8 @@ describe("PluginConfigManager", () => {
       },
       {
         levels: {},
-        parser: input => input as PluginType["config"],
-      },
+        parser: (input) => input as PluginType["config"],
+      }
     );
     await configManager.init();
 
@@ -96,8 +96,8 @@ describe("PluginConfigManager", () => {
       },
       {
         levels: {},
-        parser: input => input as PluginType["config"],
-      },
+        parser: (input) => input as PluginType["config"],
+      }
     );
     await configManager.init();
 
@@ -141,8 +141,8 @@ describe("PluginConfigManager", () => {
       },
       {
         levels: {},
-        parser: input => input as PluginType["config"],
-      },
+        parser: (input) => input as PluginType["config"],
+      }
     );
     await configManager.init();
 
@@ -152,7 +152,7 @@ describe("PluginConfigManager", () => {
   });
 
   it("Config parser", async () => {
-    const configSchema = z.object({
+    const configSchema = z.strictObject({
       something: z.number(),
     });
     type ConfigSchema = z.TypeOf<typeof configSchema>;
@@ -175,7 +175,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => configSchema.parse(input),
-      },
+      }
     );
 
     try {
@@ -212,7 +212,7 @@ describe("PluginConfigManager", () => {
             something: 7,
           };
         },
-      },
+      }
     );
     await configManager.init();
 
@@ -245,7 +245,7 @@ describe("PluginConfigManager", () => {
             something: 7,
           };
         },
-      },
+      }
     );
     await configManager.init();
 
@@ -284,7 +284,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      },
+      }
     );
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
     await configManager.init();
@@ -326,7 +326,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      },
+      }
     );
     await configManager.init();
 
@@ -367,7 +367,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      },
+      }
     );
     await configManager.init();
 
@@ -407,7 +407,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      },
+      }
     );
     await configManager.init();
 
@@ -449,7 +449,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      },
+      }
     );
     await configManager.init();
 
@@ -489,7 +489,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      },
+      }
     );
     await configManager.init();
 
@@ -529,7 +529,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      },
+      }
     );
     await configManager.init();
 
@@ -570,7 +570,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      },
+      }
     );
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
     await configManager.init();

@@ -8,12 +8,12 @@ import { z } from "zod";
 export const permissionLevelsSchema = z.record(z.string(), z.number().int());
 export type PermissionLevels = z.TypeOf<typeof permissionLevelsSchema>;
 
-export const pluginBaseOptionsSchema = z.object({
+export const pluginBaseOptionsSchema = z.strictObject({
   config: z.unknown().optional(),
   overrides: z.array(z.record(z.string(), z.unknown())).optional(),
 });
 
-export const baseConfigSchema = z.object({
+export const baseConfigSchema = z.strictObject({
   prefix: z.string().optional(),
   levels: permissionLevelsSchema.optional(),
   plugins: z.array(pluginBaseOptionsSchema).optional(),

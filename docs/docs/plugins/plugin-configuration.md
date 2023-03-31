@@ -126,7 +126,7 @@ This is where libraries like `zod` come in. Here's an example using zod:
 ```ts
 import { z } from "zod";
 
-const configSchema = z.object({
+const configSchema = z.strictObject({
   coolness: z.number(),
 });
 // The TypeScript type and zod schema are automatically in sync!
