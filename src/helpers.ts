@@ -5,7 +5,7 @@
 import { get } from "./utils";
 import { GuildPluginData } from "./plugins/PluginData";
 import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils";
-import { Client, GuildMember, Invite, Message, TextBasedChannelFields, TextChannel } from "discord.js";
+import { Client, GuildMember, Invite, Message, TextBasedChannel } from "discord.js";
 
 /**
  * Splits a string into chunks, preferring to split at newlines if possible
@@ -79,7 +79,7 @@ export function splitMessageIntoChunks(str: string, chunkLength = 1990): string[
  * Sends a message to the specified channel, splitting it into multiple shorter messages if the message text goes over
  * the Discord message length limit (2000)
  */
-export async function createChunkedMessage(channel: TextBasedChannelFields, messageText: string): Promise<Message[]> {
+export async function createChunkedMessage(channel: TextBasedChannel, messageText: string): Promise<Message[]> {
   const chunks = splitMessageIntoChunks(messageText);
   const messages: Message[] = [];
 
@@ -96,7 +96,7 @@ export async function createChunkedMessage(channel: TextBasedChannelFields, mess
  */
 export function waitForReply(
   client: Client,
-  channel: TextChannel,
+  channel: TextBasedChannel,
   restrictToUserId?: string,
   timeout = 15000
 ): Promise<Message | null> {
@@ -155,4 +155,12 @@ export function getMemberLevel(pluginData: GuildPluginData<any>, member: GuildMe
   return _getMemberLevel(levels, member, pluginData.guild);
 }
 
-export { userMentionRegex, channelMentionRegex, roleMentionRegex, snowflakeRegex } from "./utils";
+export {
+  userMentionRegex,
+  channelMentionRegex,
+  roleMentionRegex,
+  snowflakeRegex,
+  getChannelId,
+  getRoleId,
+  getUserId,
+} from "./utils";
