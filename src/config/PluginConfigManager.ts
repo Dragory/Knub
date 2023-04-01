@@ -55,8 +55,12 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       throw new Error("Already initialized");
     }
 
-    const parsedUserInput = pluginBaseOptionsSchema.parse(this.userInput);
+    const userInputParseResult = pluginBaseOptionsSchema.safeParse(this.userInput);
+    if (!userInputParseResult.success) {
+      throw new ConfigValidationError(userInputParseResult.error.message);
+    }
 
+    const parsedUserInput = userInputParseResult.data;
     const config = mergeConfig(this.defaultOptions.config ?? {}, parsedUserInput.config ?? {});
     const parsedValidConfig = await this.parser(config);
 
