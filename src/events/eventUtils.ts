@@ -18,9 +18,14 @@ type EventToMessage = {
 };
 
 export const eventToGuild: EventToGuild = {
+  autoModerationActionExecution: ({ autoModerationActionExecution }) => autoModerationActionExecution.guild,
+  autoModerationRuleCreate: ({ autoModerationRule }) => autoModerationRule.guild,
+  autoModerationRuleDelete: ({ autoModerationRule }) => autoModerationRule.guild,
+  autoModerationRuleUpdate: ({ newAutoModerationRule }) => newAutoModerationRule.guild,
   channelCreate: ({ channel }) => channel.guild,
   channelDelete: ({ channel }) => (channel as GuildChannel).guild,
   channelUpdate: ({ newChannel }) => (newChannel as GuildChannel).guild,
+  guildAuditLogEntryCreate: ({ guild }) => guild,
   guildBanAdd: ({ ban }) => ban.guild,
   guildBanRemove: ({ ban }) => ban.guild,
   guildCreate: ({ guild }) => guild,
