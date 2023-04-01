@@ -12,6 +12,7 @@ import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils";
 import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
 import { APIInteractionGuildMember, Channel, GuildChannel, GuildMember, Message, PartialUser, User } from "discord.js";
+import { ConfigValidationError } from "./ConfigValidationError";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string | null;
@@ -65,7 +66,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
     const parsedValidOverrides: Array<PluginOverride<TPluginType>> = [];
     for (const override of overrides) {
       if (!("config" in override)) {
-        throw new Error("Overrides must include the config property");
+        throw new ConfigValidationError("Overrides must include the config property");
       }
       const overrideConfig = mergeConfig(parsedValidConfig, override.config ?? {});
       // Validate the override config as if it was already merged with the base config
