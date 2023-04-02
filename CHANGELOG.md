@@ -1,5 +1,5 @@
 # NEXT
-* ⚠️ **BREAKING CHANGE:** Knub now requires discord.js v14.8
+* ⚠️ **BREAKING CHANGE:** Knub now requires discord.js v14.9
 * ⚠️ **BREAKING CHANGE:** Guild and global configs are now enforced to a standard type, which is roughly:
   ```
   {
