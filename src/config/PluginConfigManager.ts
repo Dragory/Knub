@@ -72,7 +72,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       if (!("config" in override)) {
         throw new ConfigValidationError("Overrides must include the config property");
       }
-      const overrideConfig = mergeConfig(parsedValidConfig, override.config ?? {});
+      const overrideConfig = mergeConfig(config, override.config ?? {});
       // Validate the override config as if it was already merged with the base config
       // In reality, overrides are merged with the base config when they are evaluated
       await this.parser(overrideConfig);
