@@ -85,6 +85,21 @@ export async function getMatchingPluginConfig<
     );
 
     if (matches) {
+      // FIXME: Debug
+      if (!result) {
+        // eslint-disable-next-line no-console
+        console.debug(
+          `!! DEBUG !! getMatchingPluginConfig, result missing`,
+          "guild" in pluginData ? pluginData.guild.id : "(global)"
+        );
+      }
+      if (!override.config) {
+        // eslint-disable-next-line no-console
+        console.debug(
+          `!! DEBUG !! getMatchingPluginConfig, override.config missing`,
+          "guild" in pluginData ? pluginData.guild.id : "(global)"
+        );
+      }
       result = mergeConfig(result, override.config);
     }
   }

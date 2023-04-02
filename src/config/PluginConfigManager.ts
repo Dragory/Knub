@@ -72,6 +72,14 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       if (!("config" in override)) {
         throw new ConfigValidationError("Overrides must include the config property");
       }
+      if (!config) {
+        // FIXME: Debug
+        // eslint-disable-next-line no-console
+        console.debug(
+          "!! DEBUG !! PluginConfigManager.init config missing",
+          "guild" in this.pluginData! ? this.pluginData.guild.id : "(global)"
+        );
+      }
       const overrideConfig = mergeConfig(config, override.config ?? {});
       // Validate the override config as if it was already merged with the base config
       // In reality, overrides are merged with the base config when they are evaluated
