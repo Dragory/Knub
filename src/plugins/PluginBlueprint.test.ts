@@ -6,7 +6,7 @@ import {
   guildPluginSlashGroup,
   Knub,
   LockManager,
-  slashOptions
+  slashOptions,
 } from "../index";
 import {
   assertTypeEquals,
@@ -17,7 +17,7 @@ import {
   createMockRole,
   createMockTextChannel,
   createMockUser,
-  sleep
+  sleep,
 } from "../testUtils";
 import * as assert from "assert";
 import { noop } from "../utils";
@@ -30,13 +30,12 @@ import { globalPlugin, guildPlugin, GuildPluginBlueprint } from "./PluginBluepri
 import { BeforeLoadPluginData, GuildPluginData, isGlobalPluginData } from "./PluginData";
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
-import {
-  guildPluginEventListener,
-  globalPluginEventListener
-} from "../events/EventListenerBlueprint";
+import { guildPluginEventListener, globalPluginEventListener } from "../events/EventListenerBlueprint";
 import { guildPluginMessageCommand } from "../commands/messageCommands/messageCommandBlueprint";
 import { ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager";
+import { guildPluginMessageContextMenuCommand } from "../commands/contextMenuCommands/contextMenuCommandBlueprint";
+import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
@@ -58,6 +57,8 @@ describe("PluginBlueprint", () => {
 
           slashCommands: [guildPluginSlashCommand({ name: "bar", description: "", signature: [], run: noop })],
 
+          contextMenuCommands: [guildPluginMessageContextMenuCommand({ name: "baz", run: noop })],
+
           events: [guildPluginEventListener({ event: "messageCreate", listener: noop })],
 
           afterLoad(pluginData) {
@@ -66,8 +67,10 @@ describe("PluginBlueprint", () => {
 
               assert.strictEqual(pluginData.slashCommands.getAll().length, 1);
 
-              // There are also default message and interaction listeners that are always registered, hence 3
-              assert.strictEqual(pluginData.events.getListenerCount(), 3);
+              assert.strictEqual(pluginData.contextMenuCommands.getAll().length, 1);
+
+              // There are also default message and interaction listeners that are always registered, hence 4
+              assert.strictEqual(pluginData.events.getListenerCount(), 4);
 
               done();
             }, 1);
@@ -78,7 +81,7 @@ describe("PluginBlueprint", () => {
         const knub = new Knub(client, {
           guildPlugins: [PluginToLoad],
           options: {
-            autoRegisterSlashCommands: false,
+            autoRegisterApplicationCommands: false,
             getEnabledGuildPlugins() {
               return ["plugin-to-load"];
             },
@@ -1354,7 +1357,6 @@ describe("PluginBlueprint", () => {
       })();
     });
 
-
     it("hasGlobalPlugin", (done) => {
       void (async () => {
         const SomeGlobalPlugin = guildPlugin({
@@ -1911,6 +1913,7 @@ describe("PluginBlueprint", () => {
             assert.ok((pluginData.cooldowns as unknown) instanceof CooldownManager);
             assert.ok((pluginData.messageCommands as unknown) instanceof PluginMessageCommandManager);
             assert.ok((pluginData.slashCommands as unknown) instanceof PluginSlashCommandManager);
+            assert.ok((pluginData.contextMenuCommands as unknown) instanceof PluginContextMenuCommandManager);
             assert.ok((pluginData.config as unknown) instanceof PluginConfigManager);
             assert.ok((pluginData.events as unknown) instanceof GuildPluginEventManager);
             assert.ok((pluginData.locks as unknown) instanceof LockManager);
@@ -1950,6 +1953,7 @@ describe("PluginBlueprint", () => {
             assert.ok((pluginData.cooldowns as unknown) instanceof CooldownManager);
             assert.ok((pluginData.messageCommands as unknown) instanceof PluginMessageCommandManager);
             assert.ok((pluginData.slashCommands as unknown) instanceof PluginSlashCommandManager);
+            assert.ok((pluginData.contextMenuCommands as unknown) instanceof PluginContextMenuCommandManager);
             assert.ok((pluginData.config as unknown) instanceof PluginConfigManager);
             assert.ok((pluginData.events as unknown) instanceof GlobalPluginEventManager);
             assert.ok((pluginData.locks as unknown) instanceof LockManager);

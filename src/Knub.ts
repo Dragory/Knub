@@ -1,4 +1,4 @@
-import { Client, Guild, Snowflake, GatewayGuildCreateDispatchData, GatewayDispatchEvents } from "discord.js";
+import { Client, GatewayDispatchEvents, GatewayGuildCreateDispatchData, Guild, Snowflake } from "discord.js";
 import { EventEmitter } from "events";
 import { BaseConfig } from "./config/configTypes";
 import { get } from "./utils";
@@ -44,10 +44,9 @@ import { Queue } from "./Queue";
 import { performance } from "perf_hooks";
 import { Profiler } from "./Profiler";
 import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashCommandManager";
-import { SlashCommandBlueprint } from "./commands/slashCommands/slashCommandBlueprint";
-import { SlashGroupBlueprint } from "./commands/slashCommands/slashGroupBlueprint";
-import { registerSlashCommands } from "./commands/slashCommands/registerSlashCommands";
 import { ConcurrentRunner } from "./ConcurrentRunner";
+import { AnyApplicationCommandBlueprint, registerApplicationCommands } from "./commands/registerApplicationCommands";
+import { PluginContextMenuCommandManager } from "./commands/contextMenuCommands/PluginContextMenuCommandManager";
 
 const defaultKnubArgs: KnubArgs = {
   guildPlugins: [],
@@ -161,10 +160,10 @@ export class Knub extends EventEmitter {
     this.client.once("ready", async () => {
       this.log("info", "Received READY");
 
-      const autoRegisterSlashCommands = this.options.autoRegisterSlashCommands ?? true;
-      if (autoRegisterSlashCommands) {
-        this.log("info", "- Registering slash commands with Discord...");
-        await this.registerSlashCommands();
+      const autoRegisterApplicationCommands = this.options.autoRegisterApplicationCommands ?? true;
+      if (autoRegisterApplicationCommands) {
+        this.log("info", "- Registering application commands with Discord...");
+        await this.registerApplicationCommands();
       }
 
       this.log("info", "- Loading global plugins...");
@@ -523,12 +522,14 @@ export class Knub extends EventEmitter {
         prefix: ctx.config.prefix,
       });
       preloadPluginData.slashCommands = new PluginSlashCommandManager();
+      preloadPluginData.contextMenuCommands = new PluginContextMenuCommandManager();
 
       const fullPluginData = this.withFinalPluginDataProperties(ctx, preloadPluginData);
 
       preloadPluginData.events.setPluginData(fullPluginData);
       preloadPluginData.messageCommands.setPluginData(fullPluginData);
       preloadPluginData.slashCommands.setPluginData(fullPluginData);
+      preloadPluginData.contextMenuCommands.setPluginData(fullPluginData);
       preloadPluginData.config.setPluginData(fullPluginData);
 
       try {
@@ -607,6 +608,18 @@ export class Knub extends EventEmitter {
         // Add interactionCreate event listener for slash commands
         pluginData.events.on("interactionCreate", async ({ args: { interaction }, pluginData: _pluginData }) => {
           await _pluginData.slashCommands.runFromInteraction(interaction);
+        });
+
+        // Register context menu commands
+        if (plugin.contextMenuCommands) {
+          for (const contextMenuCommandBlueprint of plugin.contextMenuCommands) {
+            pluginData.contextMenuCommands.add(contextMenuCommandBlueprint);
+          }
+        }
+
+        // Add interactionCreate event listener for context menu commands
+        pluginData.events.on("interactionCreate", async ({ args: { interaction }, pluginData: _pluginData }) => {
+          await _pluginData.contextMenuCommands.runFromInteraction(interaction);
         });
       }
 
@@ -695,12 +708,14 @@ export class Knub extends EventEmitter {
         prefix: ctx.config.prefix,
       });
       beforeLoadPluginData.slashCommands = new PluginSlashCommandManager();
+      beforeLoadPluginData.contextMenuCommands = new PluginContextMenuCommandManager();
 
       const fullPluginData = this.withFinalPluginDataProperties(ctx, beforeLoadPluginData);
 
       beforeLoadPluginData.events.setPluginData(fullPluginData);
       beforeLoadPluginData.messageCommands.setPluginData(fullPluginData);
       beforeLoadPluginData.slashCommands.setPluginData(fullPluginData);
+      beforeLoadPluginData.contextMenuCommands.setPluginData(fullPluginData);
       beforeLoadPluginData.config.setPluginData(fullPluginData);
 
       try {
@@ -778,6 +793,18 @@ export class Knub extends EventEmitter {
         await _pluginData.slashCommands.runFromInteraction(interaction);
       });
 
+      // Register context menu commands
+      if (plugin.contextMenuCommands) {
+        for (const contextMenuCommandBlueprint of plugin.contextMenuCommands) {
+          pluginData.contextMenuCommands.add(contextMenuCommandBlueprint);
+        }
+      }
+
+      // Add interactionCreate event listener for context menu commands
+      pluginData.events.on("interactionCreate", async ({ args: { interaction }, pluginData: _pluginData }) => {
+        await _pluginData.contextMenuCommands.runFromInteraction(interaction);
+      });
+
       pluginData.loaded = true;
       ctx.loadedPlugins.set(plugin.name, {
         pluginData,
@@ -791,20 +818,18 @@ export class Knub extends EventEmitter {
     }
   }
 
-  protected async registerSlashCommands(): Promise<void> {
-    const slashCommands: Array<
-      | SlashCommandBlueprint<any, any>
-      | SlashGroupBlueprint<GuildPluginData<any>>
-      | SlashGroupBlueprint<GlobalPluginData<any>>
-    > = [];
+  protected async registerApplicationCommands(): Promise<void> {
+    const applicationCommands: AnyApplicationCommandBlueprint[] = [];
     for (const plugin of this.guildPlugins.values()) {
-      slashCommands.push(...(plugin.slashCommands || []));
+      applicationCommands.push(...(plugin.slashCommands || []));
+      applicationCommands.push(...(plugin.contextMenuCommands || []));
     }
     for (const plugin of this.globalPlugins.values()) {
-      slashCommands.push(...(plugin.slashCommands || []));
+      applicationCommands.push(...(plugin.slashCommands || []));
+      applicationCommands.push(...(plugin.contextMenuCommands || []));
     }
-    if (slashCommands.length) {
-      const result = await registerSlashCommands(this.client as Client<true>, slashCommands);
+    if (applicationCommands.length) {
+      const result = await registerApplicationCommands(this.client as Client<true>, applicationCommands);
       this.log("info", `-- Created ${result.create}, updated ${result.update}, deleted ${result.delete}`);
     }
   }

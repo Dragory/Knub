@@ -36,7 +36,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
-        autoRegisterSlashCommands: false,
+        autoRegisterApplicationCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },
@@ -81,7 +81,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
-        autoRegisterSlashCommands: false,
+        autoRegisterApplicationCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },
@@ -130,7 +130,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [Plugin1, PluginWithError],
       options: {
-        autoRegisterSlashCommands: false,
+        autoRegisterApplicationCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin1", "plugin-with-error"];
         },
@@ -174,7 +174,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
-        autoRegisterSlashCommands: false,
+        autoRegisterApplicationCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },
@@ -214,7 +214,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
-        autoRegisterSlashCommands: false,
+        autoRegisterApplicationCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },
@@ -261,7 +261,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
-        autoRegisterSlashCommands: false,
+        autoRegisterApplicationCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },
@@ -315,7 +315,7 @@ describe("Knub", () => {
     const knub = new Knub(client, {
       guildPlugins: [PluginToLoad],
       options: {
-        autoRegisterSlashCommands: false,
+        autoRegisterApplicationCommands: false,
         getEnabledGuildPlugins() {
           return ["plugin-to-load"];
         },

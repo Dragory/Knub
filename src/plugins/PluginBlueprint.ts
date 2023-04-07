@@ -5,7 +5,7 @@ import {
   AnyPluginData,
   BeforeLoadPluginData,
   GlobalPluginData,
-  GuildPluginData
+  GuildPluginData,
 } from "./PluginData";
 import { MessageCommandBlueprint } from "../commands/messageCommands/messageCommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
@@ -13,6 +13,10 @@ import { BasePluginType } from "./pluginTypes";
 import { GuildEvent, ValidEvent } from "../events/eventTypes";
 import { AnySlashCommandSignature, SlashCommandBlueprint } from "../commands/slashCommands/slashCommandBlueprint";
 import { SlashGroupBlueprint } from "../commands/slashCommands/slashGroupBlueprint";
+import {
+  MessageContextMenuCommandBlueprint,
+  UserContextMenuCommandBlueprint,
+} from "../commands/contextMenuCommands/contextMenuCommandBlueprint";
 
 /**
  * Each value in the public interface is a function that returns the actual
@@ -53,10 +57,13 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
 
   messageCommands?: Array<MessageCommandBlueprint<TPluginData, any>>;
 
-  /**
-   * Commands that are automatically registered on plugin load
-   */
-  slashCommands?: Array<SlashCommandBlueprint<TPluginData, AnySlashCommandSignature> | SlashGroupBlueprint<TPluginData>>;
+  slashCommands?: Array<
+    SlashCommandBlueprint<TPluginData, AnySlashCommandSignature> | SlashGroupBlueprint<TPluginData>
+  >;
+
+  contextMenuCommands?: Array<
+    MessageContextMenuCommandBlueprint<TPluginData> | UserContextMenuCommandBlueprint<TPluginData>
+  >;
 
   /**
    * If this plugin includes any custom overrides, this function evaluates them

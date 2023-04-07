@@ -16,7 +16,7 @@ export interface KnubOptions {
    * If enabled, plugin slash commands are automatically registered with Discord on bot start-up.
    * Defaults to `true`.
    */
-  autoRegisterSlashCommands?: boolean;
+  autoRegisterApplicationCommands?: boolean;
   getConfig: (id: string) => Awaitable<any>;
   getEnabledGuildPlugins?: (ctx: GuildContext, plugins: GuildPluginMap) => Awaitable<string[]>;
   canLoadGuild: (guildId: string) => Awaitable<boolean>;
@@ -56,9 +56,7 @@ export interface GlobalContext extends BaseContext {
   loadedPlugins: Map<string, LoadedGlobalPlugin<any>>;
 }
 
-export type AnyContext =
-  | GuildContext
-  | GlobalContext;
+export type AnyContext = GuildContext | GlobalContext;
 
 export interface GuildMessage extends Message {
   channel: GuildTextBasedChannel;

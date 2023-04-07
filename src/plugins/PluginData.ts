@@ -10,6 +10,7 @@ import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
 import { Client, Guild } from "discord.js";
 import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager";
+import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager";
 
 export type HasPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => boolean;
 export type GetPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => PluginPublicInterface<T>;
@@ -110,6 +111,7 @@ export type GuildPluginData<TPluginType extends BasePluginType> = BasePluginData
   events: GuildPluginEventManager<GuildPluginData<TPluginType>>;
   messageCommands: PluginMessageCommandManager<GuildPluginData<TPluginType>>;
   slashCommands: PluginSlashCommandManager<GuildPluginData<TPluginType>>;
+  contextMenuCommands: PluginContextMenuCommandManager<GuildPluginData<TPluginType>>;
 };
 
 /**
@@ -121,6 +123,7 @@ export type GlobalPluginData<TPluginType extends BasePluginType> = BasePluginDat
   events: GlobalPluginEventManager<GlobalPluginData<TPluginType>>;
   messageCommands: PluginMessageCommandManager<GlobalPluginData<TPluginType>>;
   slashCommands: PluginSlashCommandManager<GlobalPluginData<TPluginType>>;
+  contextMenuCommands: PluginContextMenuCommandManager<GlobalPluginData<TPluginType>>;
 };
 
 export type AnyPluginData<TPluginType extends BasePluginType> =

@@ -14,6 +14,12 @@ export {
   globalPluginMessageCommand,
 } from "./commands/messageCommands/messageCommandBlueprint";
 export { guildPluginSlashCommand, globalPluginSlashCommand } from "./commands/slashCommands/slashCommandBlueprint";
+export {
+  guildPluginMessageContextMenuCommand,
+  globalPluginMessageContextMenuCommand,
+  guildPluginUserContextMenuCommand,
+  globalPluginUserContextMenuCommand,
+} from "./commands/contextMenuCommands/contextMenuCommandBlueprint";
 export { guildPluginEventListener, globalPluginEventListener } from "./events/EventListenerBlueprint";
 
 export { configUtils };
