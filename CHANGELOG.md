@@ -24,6 +24,11 @@
   * More exports have been made available to accomodate certain use cases
   * You can now import Knub helper functions from `knub/helpers`
     * E.g. `import { waitForReply } from "knub/helpers"`
+* ⚠️ **BREAKING CHANGE:** Renamed `autoRegisterSlashCommands` option to `autoRegisterApplicationCommands`
+* ⚠️ **BREAKING CHANGE:** If left unspecified, slash command `defaultMemberPermissions` now defaults to `"0"` i.e. admins only
+* Context menu commands are now supported
+  * Helpers: `guildPluginMessageContextMenuCommand()`, `guildPluginUserContextMenuCommand()`
+  * Context menu blueprints are listed in the `contextMenuCommands` property of a plugin
 * New hooks:
   * `beforeInit()`
     * Called after the plugin's data has been set up, but before event listeners or commands are registered
