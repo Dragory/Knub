@@ -15,7 +15,7 @@ const knub = new Knub(djsClient, {
   globalPlugins: [], // An array of global plugins
   options: {
     // Whether to register plugin slash commands with Discord automatically on initialization
-    autoRegisterSlashCommands: true,
+    autoRegisterApplicationCommands: true,
     
     // A function that returns the global config or the config for a guild (server)
     // "id" is either a server ID or, for the global config, "global".
