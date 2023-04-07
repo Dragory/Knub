@@ -5,6 +5,7 @@ import {
   Permissions,
   UserContextMenuCommandInteraction,
 } from "discord.js";
+import { BasePluginType } from "../../plugins/pluginTypes";
 
 export interface BaseContextMenuCommandBlueprint {
   name: string;
@@ -52,8 +53,8 @@ export function guildPluginMessageContextMenuCommand(
   blueprint: Omit<MessageContextMenuCommandBlueprint<GuildPluginData<any>>, "type">
 ): MessageContextMenuCommandBlueprint<GuildPluginData<any>>;
 export function guildPluginMessageContextMenuCommand<
-  TPluginData extends GuildPluginData<any>
->(): MessageContextMenuCommandCreator<TPluginData>;
+  TPluginType extends BasePluginType
+>(): MessageContextMenuCommandCreator<GuildPluginData<TPluginType>>;
 export function guildPluginMessageContextMenuCommand(...args: unknown[]): unknown {
   return messageContextMenuCommand(...args);
 }
@@ -62,8 +63,8 @@ export function globalPluginMessageContextMenuCommand(
   blueprint: Omit<MessageContextMenuCommandBlueprint<GlobalPluginData<any>>, "type">
 ): MessageContextMenuCommandBlueprint<GlobalPluginData<any>>;
 export function globalPluginMessageContextMenuCommand<
-  TPluginData extends GlobalPluginData<any>
->(): MessageContextMenuCommandCreator<TPluginData>;
+  TPluginType extends BasePluginType
+>(): MessageContextMenuCommandCreator<GlobalPluginData<TPluginType>>;
 export function globalPluginMessageContextMenuCommand(...args: unknown[]): unknown {
   return messageContextMenuCommand(...args);
 }
@@ -104,9 +105,9 @@ function userContextMenuCommand(...args: any[]): unknown {
 export function guildPluginUserContextMenuCommand(
   blueprint: Omit<UserContextMenuCommandBlueprint<GuildPluginData<any>>, "type">
 ): UserContextMenuCommandBlueprint<GuildPluginData<any>>;
-export function guildPluginUserContextMenuCommand<
-  TPluginData extends GuildPluginData<any>
->(): UserContextMenuCommandCreator<TPluginData>;
+export function guildPluginUserContextMenuCommand<TPluginType extends BasePluginType>(): UserContextMenuCommandCreator<
+  GuildPluginData<TPluginType>
+>;
 export function guildPluginUserContextMenuCommand(...args: unknown[]): unknown {
   return userContextMenuCommand(...args);
 }
@@ -114,9 +115,9 @@ export function guildPluginUserContextMenuCommand(...args: unknown[]): unknown {
 export function globalPluginUserContextMenuCommand(
   blueprint: Omit<UserContextMenuCommandBlueprint<GlobalPluginData<any>>, "type">
 ): UserContextMenuCommandBlueprint<GlobalPluginData<any>>;
-export function globalPluginUserContextMenuCommand<
-  TPluginData extends GlobalPluginData<any>
->(): UserContextMenuCommandCreator<TPluginData>;
+export function globalPluginUserContextMenuCommand<TPluginType extends BasePluginType>(): UserContextMenuCommandCreator<
+  GlobalPluginData<TPluginType>
+>;
 export function globalPluginUserContextMenuCommand(...args: unknown[]): unknown {
   return userContextMenuCommand(...args);
 }

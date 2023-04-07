@@ -40,7 +40,7 @@ describe("Context menu command blueprints", () => {
 
     it("<TPluginData>()(blueprint)", () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const guildBlueprint = guildPluginMessageContextMenuCommand<GuildPluginData<CustomPluginType>>()({
+      const guildBlueprint = guildPluginMessageContextMenuCommand<CustomPluginType>()({
         name: "Test command",
         run({ pluginData, interaction }) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -51,7 +51,7 @@ describe("Context menu command blueprints", () => {
       });
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const globalBlueprint = globalPluginMessageContextMenuCommand<GlobalPluginData<CustomPluginType>>()({
+      const globalBlueprint = globalPluginMessageContextMenuCommand<CustomPluginType>()({
         name: "Test command",
         run({ pluginData, interaction }) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -92,7 +92,7 @@ describe("Context menu command blueprints", () => {
 
     it("<TPluginData>()(blueprint)", () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const guildBlueprint = guildPluginUserContextMenuCommand<GuildPluginData<CustomPluginType>>()({
+      const guildBlueprint = guildPluginUserContextMenuCommand<CustomPluginType>()({
         name: "Test command",
         run({ pluginData, interaction }) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -103,7 +103,7 @@ describe("Context menu command blueprints", () => {
       });
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const globalBlueprint = globalPluginUserContextMenuCommand<GlobalPluginData<CustomPluginType>>()({
+      const globalBlueprint = globalPluginUserContextMenuCommand<CustomPluginType>()({
         name: "Test command",
         run({ pluginData, interaction }) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
