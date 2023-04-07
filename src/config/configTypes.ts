@@ -17,7 +17,7 @@ export const pluginBaseOptionsSchema = z.strictObject({
 export const baseConfigSchema = z.strictObject({
   prefix: z.string().optional(),
   levels: permissionLevelsSchema.optional(),
-  plugins: z.array(pluginBaseOptionsSchema).optional(),
+  plugins: z.record(z.string(), pluginBaseOptionsSchema).optional(),
 });
 export type BaseConfig = z.TypeOf<typeof baseConfigSchema>;
 
