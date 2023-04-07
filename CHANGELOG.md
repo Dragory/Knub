@@ -42,6 +42,7 @@
 * Guilds are now loaded concurrently, which should speed up the initial connection to the gateway
   * This is controlled by the `concurrentGuildLoadLimit` Knub option (default 10).
     Set to 1 to restore previous sequential behavior.
+* Fixed unnecessary application command update API calls when a slash command has an empty set of options
 
 # 31.0.0
 Released: 19 November 2022
