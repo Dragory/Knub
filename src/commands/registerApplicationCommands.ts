@@ -89,11 +89,7 @@ function compareAPIData(
     }
   }
 
-  for (const [existingName, existingItem] of existingAPIDataByName.entries()) {
-    if (existingItem.type !== ApplicationCommandType.ChatInput) {
-      continue;
-    }
-
+  for (const existingName of existingAPIDataByName.keys()) {
     if (!pendingAPIDataByName.has(existingName)) {
       diff.delete.push(existingAPIDataByName.get(existingName)!);
     }
@@ -140,6 +136,15 @@ function hasPendingDataChanged(pendingData: any, existingData: any): boolean {
   // We only care about changed keys in pendingData
   // Extra keys in existingData are fine
   for (const key of Object.keys(pendingData)) {
+    // Exception: An empty options list is not returned by the API
+    if (
+      key === "options" &&
+      Array.isArray(pendingData[key]) &&
+      pendingData[key].length === 0 &&
+      existingData[key] == null
+    ) {
+      continue;
+    }
     if (hasPendingDataChanged(pendingData[key], existingData[key])) {
       return true;
     }
