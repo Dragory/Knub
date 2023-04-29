@@ -16,6 +16,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "prepare": "husky install"
   },
+  "main": "dist/index.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
