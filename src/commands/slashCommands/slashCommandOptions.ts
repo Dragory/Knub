@@ -8,7 +8,7 @@ import {
   ChannelType,
   Locale,
   GuildMember,
-  APIInteractionDataResolvedGuildMember,
+  APIInteractionDataResolvedGuildMember, Attachment
 } from "discord.js";
 
 // region Base
@@ -237,6 +237,20 @@ const numberOptionBuilder = makeOptionBuilder<NumberSlashCommandOption>((opt) =>
 });
 
 // endregion
+// region Type: ATTACHMENT
+
+export type AttachmentSlashCommandOption = BaseSlashCommandOption<ApplicationCommandOptionType.Attachment, Attachment>;
+
+const attachmentOptionBuilder = makeOptionBuilder<AttachmentSlashCommandOption>((opt) => {
+  return {
+    ...opt,
+    type: ApplicationCommandOptionType.Attachment,
+    resolveValue: (interaction) => interaction.options.getAttachment(opt.name, true),
+    getExtraAPIProps: () => ({}),
+  };
+});
+
+// endregion
 
 export const slashOptions = {
   string: stringOptionBuilder,
@@ -247,4 +261,5 @@ export const slashOptions = {
   role: roleOptionBuilder,
   mentionable: mentionableOptionBuilder,
   number: numberOptionBuilder,
+  attachment: attachmentOptionBuilder,
 } satisfies Record<string, (...args: any[]) => BaseSlashCommandOption<any, any>>;
