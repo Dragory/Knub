@@ -11,7 +11,16 @@ import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils
 import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils";
 import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
-import { APIInteractionGuildMember, Channel, GuildChannel, GuildMember, Message, PartialUser, User } from "discord.js";
+import {
+  APIInteractionGuildMember,
+  Channel,
+  GuildChannel,
+  GuildMember,
+  Interaction,
+  Message,
+  PartialUser,
+  User
+} from "discord.js";
 import { ConfigValidationError } from "./ConfigValidationError";
 
 export interface ExtendedMatchParams extends MatchParams {
@@ -19,6 +28,7 @@ export interface ExtendedMatchParams extends MatchParams {
   member?: GuildMember | APIInteractionGuildMember | null;
   message?: Message | null;
   channel?: Channel | null;
+  interaction?: Interaction | null;
 }
 
 export interface PluginConfigManagerOpts<TPluginType extends BasePluginType> {
@@ -123,7 +133,7 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
   }
 
   public getMatchingConfig(matchParams: ExtendedMatchParams): Promise<TPluginType["config"]> {
-    const message = matchParams.message;
+    const { message, interaction } = matchParams;
 
     const userId =
       // Directly passed userId
@@ -134,6 +144,8 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       (matchParams.member && matchParams.member.user.id) ||
       // Passed message's author's ID
       (message && message.author && message.author.id) ||
+      // Passed interaction's author's ID
+      (interaction && interaction.user && interaction.user.id) ||
       null;
 
     const channelId =
@@ -147,6 +159,8 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       (message?.channel?.isThread?.() && message.channel.parentId) ||
       // Passed message's non-thread channel's ID
       (message && message.channel && message.channel.id) ||
+      // Passed interaction's author's ID
+      (interaction && interaction.channel && interaction.channel.id) ||
       null;
 
     const categoryId =
@@ -160,6 +174,10 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       (message?.channel?.isThread?.() && message.channel.parent?.parentId) ||
       // Passed message's non-thread channel's parent ID
       (message?.channel && (message.channel as GuildChannel).parentId) ||
+      // Passed interaction's thread's channel's parent ID
+      (interaction?.channel?.isThread?.() && interaction.channel.parent?.parentId) ||
+      // Passed interaction's non-thread channel's parent ID
+      (interaction?.channel && (interaction.channel as GuildChannel).parentId) ||
       null;
 
     // Passed thread id -> passed message's thread id
@@ -170,14 +188,19 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       (matchParams.channel?.isThread?.() && matchParams.channel.id) ||
       // Passed message's thread channel's ID
       (message?.channel?.isThread?.() && message.channel.id) ||
+      // Passed interaction's thread channel's ID
+      (interaction?.channel?.isThread?.() && interaction.channel.id) ||
       null;
 
-    // Passed value -> whether message's channel is a thread
-    const isThread =
-      matchParams.isThread ?? matchParams?.channel?.isThread?.() ?? message?.channel?.isThread?.() ?? null;
+    // Passed value -> whether message's channel is a thread -> whether interaction's channel is a thread
+    const isThread = matchParams.isThread
+      ?? matchParams?.channel?.isThread?.()
+      ?? message?.channel?.isThread?.()
+      ?? interaction?.channel?.isThread?.()
+      ?? null;
 
-    // Passed member -> passed message's member
-    const member = matchParams.member || (message && message.member);
+    // Passed member -> passed message's member -> passed interaction's member
+    const member = matchParams.member || (message && message.member) || (interaction && interaction.member);
 
     // Passed level -> passed member's level
     const level = matchParams?.level ?? (member && this.getMemberLevel(member)) ?? null;
@@ -212,6 +235,10 @@ export class PluginConfigManager<TPluginType extends BasePluginType> {
       categoryId: (msg.channel as GuildChannel).parentId,
       memberRoles: msg.member ? [...msg.member.roles.cache.keys()] : [],
     });
+  }
+
+  public getForInteraction(interaction: Interaction): Promise<TPluginType["config"]> {
+    return this.getMatchingConfig({ interaction });
   }
 
   public getForChannel(channel: Channel): Promise<TPluginType["config"]> {
