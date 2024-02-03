@@ -14,12 +14,7 @@ export {
   globalPluginMessageCommand,
 } from "./commands/messageCommands/messageCommandBlueprint";
 export { guildPluginSlashCommand, globalPluginSlashCommand } from "./commands/slashCommands/slashCommandBlueprint";
-export {
-  guildPluginMessageContextMenuCommand,
-  globalPluginMessageContextMenuCommand,
-  guildPluginUserContextMenuCommand,
-  globalPluginUserContextMenuCommand,
-} from "./commands/contextMenuCommands/contextMenuCommandBlueprint";
+export * from "./commands/contextMenuCommands/contextMenuCommandBlueprint";
 export { guildPluginEventListener, globalPluginEventListener } from "./events/EventListenerBlueprint";
 
 export { configUtils };
@@ -27,7 +22,7 @@ export { ConfigValidationError } from "./config/ConfigValidationError";
 
 export { pluginUtils };
 
-export { GuildPluginData, GlobalPluginData, AnyPluginData } from "./plugins/PluginData";
+export * from "./plugins/PluginData";
 
 export * from "./commands/slashCommands/slashCommandOptions";
 export * from "./commands/slashCommands/slashGroupBlueprint";
@@ -46,14 +41,7 @@ export { PermissionLevels, BaseConfig, PluginOptions, PluginOverrideCriteria } f
 
 export { BasePluginType } from "./plugins/pluginTypes";
 
-export {
-  getMessageCommandSignature,
-  PluginCommandConfig,
-  CommandContext,
-  ArgsFromSignatureOrArray,
-  PluginCommandDefinition,
-  getDefaultMessageCommandPrefix,
-} from "./commands/messageCommands/messageCommandUtils";
+export * from "./commands/messageCommands/messageCommandUtils";
 
 export * from "./commands/messageCommands/messageCommandBaseTypeConverters";
 
@@ -73,3 +61,5 @@ export { TypeConversionError, parseSignature, TTypeHelperResult, TTypeHelperOpts
 export { PluginLoadError } from "./plugins/PluginLoadError";
 export { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
 export { UnknownPluginError } from "./plugins/UnknownPluginError";
+
+export * from "./events/eventTypes";
