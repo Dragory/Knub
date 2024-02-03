@@ -29,6 +29,8 @@
 * Context menu commands are now supported
   * Helpers: `guildPluginMessageContextMenuCommand()`, `guildPluginUserContextMenuCommand()`
   * Context menu blueprints are listed in the `contextMenuCommands` property of a plugin
+* Added `PluginData.config.getForInteraction()` and `interaction` property for `PluginData.config.getMatchingConfig()` ([#28](https://github.com/Dragory/Knub/pull/28))
+* Added `slashOptions.attachment()` ([#29](https://github.com/Dragory/Knub/pull/29))
 * New hooks:
   * `beforeInit()`
     * Called after the plugin's data has been set up, but before event listeners or commands are registered
