@@ -1,3 +1,4 @@
 # This file is copied to dist/ prior to publishing
 *.test.js
 *.test.d.ts
+*.tsbuildinfo

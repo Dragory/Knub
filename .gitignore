@@ -44,3 +44,5 @@ desktop.ini
 
 # Environment-specific linter configuration
 .idea/jsLinters/eslint.xml
+
+*.tsbuildinfo
