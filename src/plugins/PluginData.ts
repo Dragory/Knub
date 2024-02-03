@@ -42,7 +42,6 @@ export type BasePluginData<TPluginType extends BasePluginType> = {
    */
   client: Client;
 
-  config: PluginConfigManager<TPluginType>;
   locks: LockManager;
   cooldowns: CooldownManager;
 
@@ -88,10 +87,6 @@ export type BasePluginData<TPluginType extends BasePluginType> = {
   state: TPluginType["state"];
 };
 
-export type BeforeLoadPluginData<TPluginData extends BasePluginData<any>> = Omit<
-  TPluginData,
-  "hasPlugin" | "getPlugin"
->;
 export type AfterUnloadPluginData<TPluginData extends BasePluginData<any>> = Omit<
   TPluginData,
   "hasPlugin" | "getPlugin"
@@ -108,11 +103,16 @@ export type GuildPluginData<TPluginType extends BasePluginType> = BasePluginData
    */
   guild: Guild;
 
+  config: PluginConfigManager<GuildPluginData<TPluginType>>;
   events: GuildPluginEventManager<GuildPluginData<TPluginType>>;
   messageCommands: PluginMessageCommandManager<GuildPluginData<TPluginType>>;
   slashCommands: PluginSlashCommandManager<GuildPluginData<TPluginType>>;
   contextMenuCommands: PluginContextMenuCommandManager<GuildPluginData<TPluginType>>;
 };
+export type BeforeLoadGuildPluginDataMissingProps = "hasPlugin" | "getPlugin" | "guild" | "events" | "messageCommands" | "slashCommands" | "contextMenuCommands";
+export type BeforeLoadGuildPluginData<TPluginType extends BasePluginType> =
+  & Omit<GuildPluginData<TPluginType>, BeforeLoadGuildPluginDataMissingProps>
+  & Partial<Pick<GuildPluginData<TPluginType>, BeforeLoadGuildPluginDataMissingProps>>;
 
 /**
  * PluginData for a global context
@@ -120,24 +120,29 @@ export type GuildPluginData<TPluginType extends BasePluginType> = BasePluginData
 export type GlobalPluginData<TPluginType extends BasePluginType> = BasePluginData<TPluginType> & {
   context: "global";
 
+  config: PluginConfigManager<GlobalPluginData<TPluginType>>;
   events: GlobalPluginEventManager<GlobalPluginData<TPluginType>>;
   messageCommands: PluginMessageCommandManager<GlobalPluginData<TPluginType>>;
   slashCommands: PluginSlashCommandManager<GlobalPluginData<TPluginType>>;
   contextMenuCommands: PluginContextMenuCommandManager<GlobalPluginData<TPluginType>>;
 };
+export type BeforeLoadGlobalPluginDataMissingProps = "hasPlugin" | "getPlugin" | "events" | "messageCommands" | "slashCommands" | "contextMenuCommands";
+export type BeforeLoadGlobalPluginData<TPluginType extends BasePluginType> =
+  & Omit<GlobalPluginData<TPluginType>, BeforeLoadGlobalPluginDataMissingProps>
+  & Partial<Pick<GlobalPluginData<TPluginType>, BeforeLoadGlobalPluginDataMissingProps>>;
 
 export type AnyPluginData<TPluginType extends BasePluginType> =
   | GuildPluginData<TPluginType>
   | GlobalPluginData<TPluginType>;
 
 export function isGuildPluginData<TPluginType extends BasePluginType>(
-  pluginData: AnyPluginData<TPluginType>
+  pluginData: AnyPluginData<TPluginType> | BasePluginData<TPluginType>
 ): pluginData is GuildPluginData<TPluginType> {
-  return pluginData.context === "guild";
+  return "context" in pluginData && pluginData.context === "guild";
 }
 
 export function isGlobalPluginData<TPluginType extends BasePluginType>(
-  pluginData: AnyPluginData<TPluginType>
+  pluginData: AnyPluginData<TPluginType> | BasePluginData<TPluginType>
 ): pluginData is GlobalPluginData<TPluginType> {
-  return pluginData.context === "global";
+  return "context" in pluginData && pluginData.context === "global";
 }

@@ -1,5 +1,5 @@
 import { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "./configTypes";
-import { AnyPluginData } from "../plugins/PluginData";
+import { AnyPluginData, BasePluginData } from "../plugins/PluginData";
 import { typedKeys } from "../utils";
 import { BasePluginType } from "../plugins/pluginTypes";
 
@@ -64,7 +64,7 @@ export function mergeConfig<T extends Record<string, unknown>>(...sources: any[]
  */
 export async function getMatchingPluginConfig<
   TPluginType extends BasePluginType,
-  TPluginData extends AnyPluginData<TPluginType> = AnyPluginData<TPluginType>,
+  TPluginData extends BasePluginData<TPluginType> = BasePluginData<TPluginType>,
   // Inferred type, should not be overridden
   TPluginOptions extends PluginOptions<TPluginData["_pluginType"]> = PluginOptions<TPluginData["_pluginType"]>
 >(
@@ -96,7 +96,7 @@ export async function getMatchingPluginConfig<
 /**
  * Each criteria "block" ({ level: "...", channel: "..." }) matches only if *all* criteria in it match.
  */
-export async function evaluateOverrideCriteria<TPluginData extends AnyPluginData<any>>(
+export async function evaluateOverrideCriteria<TPluginData extends BasePluginData<any>>(
   pluginData: TPluginData,
   criteria: PluginOverride<TPluginData["_pluginType"]>,
   matchParams: MatchParams,

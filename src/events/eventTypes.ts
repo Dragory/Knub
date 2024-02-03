@@ -36,7 +36,7 @@ import {
   ForumChannel,
   AutoModerationActionExecution,
   AutoModerationRule,
-  GuildAuditLogsEntry,
+  GuildAuditLogsEntry, PartialGuildScheduledEvent, MediaChannel
 } from "discord.js";
 import { GuildMessage } from "../types";
 
@@ -79,6 +79,7 @@ export const fromDjsArgs = createFromDjsArgsObject({
   emojiUpdate: (oldEmoji: GuildEmoji, newEmoji: GuildEmoji) => ({ oldEmoji, newEmoji }),
   error: (error: Error) => ({ error }),
   guildAuditLogEntryCreate: (auditLogEntry: GuildAuditLogsEntry, guild: Guild) => ({ auditLogEntry, guild }),
+  guildAvailable: (guild: Guild) => ({ guild }),
   guildBanAdd: (ban: GuildBan) => ({ ban }),
   guildBanRemove: (ban: GuildBan) => ({ ban }),
   guildCreate: (guild: Guild) => ({ guild }),
@@ -98,12 +99,12 @@ export const fromDjsArgs = createFromDjsArgsObject({
   }),
   guildScheduledEventCreate: (guildScheduledEvent: GuildScheduledEvent) => ({ guildScheduledEvent }),
   guildScheduledEventUpdate: (
-    oldGuildScheduledEvent: GuildScheduledEvent | null,
+    oldGuildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent | null,
     newGuildScheduledEvent: GuildScheduledEvent
   ) => ({ oldGuildScheduledEvent, newGuildScheduledEvent }),
-  guildScheduledEventDelete: (guildScheduledEvent: GuildScheduledEvent) => ({ guildScheduledEvent }),
-  guildScheduledEventUserAdd: (guildScheduledEvent: GuildScheduledEvent, user: User) => ({ guildScheduledEvent, user }),
-  guildScheduledEventUserRemove: (guildScheduledEvent: GuildScheduledEvent, user: User) => ({
+  guildScheduledEventDelete: (guildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent) => ({ guildScheduledEvent }),
+  guildScheduledEventUserAdd: (guildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent, user: User) => ({ guildScheduledEvent, user }),
+  guildScheduledEventUserRemove: (guildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent, user: User) => ({
     guildScheduledEvent,
     user,
   }),
@@ -163,7 +164,8 @@ export const fromDjsArgs = createFromDjsArgsObject({
   userUpdate: (oldUser: User | PartialUser, newUser: User) => ({ oldUser, newUser }),
   voiceStateUpdate: (oldState: VoiceState, newState: VoiceState) => ({ oldState, newState }),
   warn: (message: string) => ({ message }),
-  webhookUpdate: (channel: TextChannel | NewsChannel | VoiceChannel | ForumChannel) => ({ channel }),
+  webhookUpdate: (channel: TextChannel | NewsChannel | VoiceChannel | ForumChannel | MediaChannel) => ({ channel }),
+  webhooksUpdate: (channel: TextChannel | NewsChannel | VoiceChannel | ForumChannel | MediaChannel) => ({ channel }),
   raw: (...rawArgs: any[]) => ({ rawArgs }),
 });
 

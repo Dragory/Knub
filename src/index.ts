@@ -4,18 +4,12 @@ import * as helpers from "./helpers";
 
 export { Knub } from "./Knub";
 
-export { GuildPluginBlueprint, GlobalPluginBlueprint } from "./plugins/PluginBlueprint";
-export { MessageCommandBlueprint } from "./commands/messageCommands/messageCommandBlueprint";
-export { EventListenerBlueprint } from "./events/EventListenerBlueprint";
-
-export { guildPlugin, globalPlugin } from "./plugins/PluginBlueprint";
-export {
-  guildPluginMessageCommand,
-  globalPluginMessageCommand,
-} from "./commands/messageCommands/messageCommandBlueprint";
-export { guildPluginSlashCommand, globalPluginSlashCommand } from "./commands/slashCommands/slashCommandBlueprint";
+export * from "./plugins/PluginBlueprint";
+export * from "./events/EventListenerBlueprint";
+export * from "./commands/messageCommands/messageCommandBlueprint";
+export * from "./commands/slashCommands/slashCommandBlueprint";
+export * from "./commands/slashCommands/slashCommandUtils";
 export * from "./commands/contextMenuCommands/contextMenuCommandBlueprint";
-export { guildPluginEventListener, globalPluginEventListener } from "./events/EventListenerBlueprint";
 
 export { configUtils };
 export { ConfigValidationError } from "./config/ConfigValidationError";

@@ -53,9 +53,9 @@ function createMockWebSocketManager(): WebSocketManager {
   });
 }
 
-export function createMockClient(): Client {
-  return new Proxy<Client>(new EventEmitter() as Client, {
-    get(target, p: string, proxy: Client) {
+export function createMockClient(): Client<true> {
+  return new Proxy<Client<true>>(new EventEmitter() as Client<true>, {
+    get(target, p: string, proxy: Client<true>) {
       if (p in target) {
         return target[p] as unknown;
       }

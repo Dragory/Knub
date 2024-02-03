@@ -1,13 +1,18 @@
 import { GuildMember, GuildTextBasedChannel, Message, Snowflake } from "discord.js";
 import { BaseConfig } from "./config/configTypes";
 import { LockManager } from "./locks/LockManager";
-import { GlobalPluginBlueprint, GuildPluginBlueprint } from "./plugins/PluginBlueprint";
+import {
+  AnyGlobalPluginBlueprint,
+  AnyGuildPluginBlueprint,
+  GlobalPluginBlueprint,
+  GuildPluginBlueprint, PluginBlueprintPublicInterface
+} from "./plugins/PluginBlueprint";
 import { GlobalPluginData, GuildPluginData } from "./plugins/PluginData";
 import { Awaitable } from "./utils";
 import { BasePluginType } from "./plugins/pluginTypes";
 
-export type GuildPluginMap = Map<string, GuildPluginBlueprint<GuildPluginData<any>>>;
-export type GlobalPluginMap = Map<string, GlobalPluginBlueprint<GlobalPluginData<any>>>;
+export type GuildPluginMap = Map<string, AnyGuildPluginBlueprint>;
+export type GlobalPluginMap = Map<string, AnyGlobalPluginBlueprint>;
 
 export type LogFn = (level, ...args) => void;
 
@@ -27,18 +32,18 @@ export interface KnubOptions {
 }
 
 export interface KnubArgs {
-  guildPlugins: Array<GuildPluginBlueprint<any>>;
-  globalPlugins: Array<GlobalPluginBlueprint<any>>;
+  guildPlugins: Array<AnyGuildPluginBlueprint>;
+  globalPlugins: Array<AnyGlobalPluginBlueprint>;
   options: Partial<KnubOptions>;
 }
 
 export interface LoadedGuildPlugin<TPluginType extends BasePluginType> {
-  blueprint: GuildPluginBlueprint<GuildPluginData<TPluginType>>;
+  blueprint: GuildPluginBlueprint<GuildPluginData<TPluginType>, PluginBlueprintPublicInterface<GuildPluginData<TPluginType>>>;
   pluginData: GuildPluginData<TPluginType>;
 }
 
 export interface LoadedGlobalPlugin<TPluginType extends BasePluginType> {
-  blueprint: GlobalPluginBlueprint<GlobalPluginData<TPluginType>>;
+  blueprint: GlobalPluginBlueprint<GlobalPluginData<TPluginType>, PluginBlueprintPublicInterface<GlobalPluginData<TPluginType>>>;
   pluginData: GlobalPluginData<TPluginType>;
 }
 

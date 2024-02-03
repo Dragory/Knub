@@ -14,7 +14,7 @@ describe("pluginUtils", () => {
           return 5;
         },
       },
-    } satisfies GuildPluginBlueprint<any>;
+    } satisfies GuildPluginBlueprint<any, any>;
 
     type PublicInterface = PluginPublicInterface<typeof myPlugin>;
     type Expected = { someFn: 5 };

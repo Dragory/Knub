@@ -3,9 +3,10 @@ import { Awaitable } from "../utils";
 import {
   AfterUnloadPluginData,
   AnyPluginData,
-  BeforeLoadPluginData,
+  BeforeLoadGlobalPluginData,
+  BeforeLoadGuildPluginData,
   GlobalPluginData,
-  GuildPluginData,
+  GuildPluginData
 } from "./PluginData";
 import { MessageCommandBlueprint } from "../commands/messageCommands/messageCommandBlueprint";
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
@@ -15,7 +16,7 @@ import { AnySlashCommandSignature, SlashCommandBlueprint } from "../commands/sla
 import { SlashGroupBlueprint } from "../commands/slashCommands/slashGroupBlueprint";
 import {
   MessageContextMenuCommandBlueprint,
-  UserContextMenuCommandBlueprint,
+  UserContextMenuCommandBlueprint
 } from "../commands/contextMenuCommands/contextMenuCommandBlueprint";
 
 /**
@@ -29,11 +30,11 @@ export interface PluginBlueprintPublicInterface<TPluginData extends AnyPluginDat
 }
 
 // The actual interface that other plugins receive
-export type ResolvedPluginBlueprintPublicInterface<T extends PluginBlueprintPublicInterface<any>> = {
+export type ResolvedPluginBlueprintPublicInterface<T extends PluginBlueprintPublicInterface<AnyPluginData<any>>> = {
   [P in keyof T]: ReturnType<T[P]>;
 };
 
-interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
+export interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>, TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>> {
   /**
    * **[Required]** Internal name for the plugin
    */
@@ -73,18 +74,8 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
   /**
    * Public interface for this plugin
    */
-  public?: PluginBlueprintPublicInterface<TPluginData>;
+  public?: TPublicInterface;
 
-  /**
-   * This hook is called before the plugin is loaded.
-   * At this point, there are two guarantees:
-   *
-   * 1. Other plugins haven't yet interacted with this plugin
-   * 2. Other plugins can't interact with this plugin during this function
-   *
-   * Similarly, `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable.
-   */
-  beforeLoad?: (pluginData: BeforeLoadPluginData<TPluginData>) => Awaitable<void>;
   /**
    * This hook is called after each plugin's plugin data has been set up,
    * but before any event listeners or commands are loaded.
@@ -118,6 +109,7 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
    * 2. Other plugins are still able to interact with this plugin's public interfaces
    */
   beforeUnload?: (pluginData: TPluginData) => Awaitable<void>;
+
   /**
    * This function is called after the plugin has been unloaded.
    * At this point, it is guaranteed that other plugins can't interact with this plugin anymore.
@@ -129,18 +121,29 @@ interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>> {
 /**
  * Blueprint for a plugin that can only be loaded in a guild context
  */
-export interface GuildPluginBlueprint<TPluginData extends GuildPluginData<any>>
-  extends BasePluginBlueprint<TPluginData> {
+export interface GuildPluginBlueprint<TPluginData extends GuildPluginData<any>, TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>>
+  extends BasePluginBlueprint<TPluginData, TPublicInterface> {
   /**
    * Function that returns other plugins that are required for this plugin to function.
    * They will be loaded before this plugin.
    */
-  dependencies?: () => Array<GuildPluginBlueprint<any>> | Promise<Array<GuildPluginBlueprint<any>>>;
+  dependencies?: () => Array<GuildPluginBlueprint<any, any>> | Promise<Array<GuildPluginBlueprint<any, any>>>;
 
   /**
    * Event listeners that are automatically registered on plugin load
    */
   events?: Array<AnyGuildEventListenerBlueprint<TPluginData>>;
+
+  /**
+   * This hook is called before the plugin is loaded.
+   * At this point, there are two guarantees:
+   *
+   * 1. Other plugins haven't yet interacted with this plugin
+   * 2. Other plugins can't interact with this plugin during this function
+   *
+   * Similarly, `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable.
+   */
+  beforeLoad?: (pluginData: BeforeLoadGuildPluginData<TPluginData["_pluginType"]>) => Awaitable<void>;
 }
 
 /**
@@ -161,18 +164,29 @@ export type AnyGuildEventListenerBlueprint<TPluginData extends GuildPluginData<a
 /**
  * Blueprint for a plugin that can only be loaded in a global context
  */
-export interface GlobalPluginBlueprint<TPluginData extends GlobalPluginData<any>>
-  extends BasePluginBlueprint<TPluginData> {
+export interface GlobalPluginBlueprint<TPluginData extends GlobalPluginData<any>, TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>>
+  extends BasePluginBlueprint<TPluginData, TPublicInterface> {
   /**
    * Function that returns other plugins that are required for this plugin to function.
    * They will be loaded before this plugin.
    */
-  dependencies?: () => Array<GlobalPluginBlueprint<any>> | Promise<Array<GlobalPluginBlueprint<any>>>;
+  dependencies?: () => Array<GlobalPluginBlueprint<any, any>> | Promise<Array<GlobalPluginBlueprint<any, any>>>;
 
   /**
    * Event listeners that are automatically registered on plugin load
    */
   events?: Array<AnyGlobalEventListenerBlueprint<TPluginData>>;
+
+  /**
+   * This hook is called before the plugin is loaded.
+   * At this point, there are two guarantees:
+   *
+   * 1. Other plugins haven't yet interacted with this plugin
+   * 2. Other plugins can't interact with this plugin during this function
+   *
+   * Similarly, `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable.
+   */
+  beforeLoad?: (pluginData: BeforeLoadGlobalPluginData<TPluginData["_pluginType"]>) => Awaitable<void>;
 }
 
 /**
@@ -190,13 +204,15 @@ type GlobalEventListenerBlueprintsHelper<TPluginData extends GlobalPluginData<an
 export type AnyGlobalEventListenerBlueprint<TPluginData extends GlobalPluginData<any>> =
   GlobalEventListenerBlueprintsHelper<TPluginData>[keyof GlobalEventListenerBlueprintsHelper<TPluginData>];
 
-export type AnyPluginBlueprint = GuildPluginBlueprint<any> | GlobalPluginBlueprint<any>;
+export type AnyGuildPluginBlueprint = GuildPluginBlueprint<GuildPluginData<any>, PluginBlueprintPublicInterface<any>>;
+export type AnyGlobalPluginBlueprint = GlobalPluginBlueprint<GlobalPluginData<any>, PluginBlueprintPublicInterface<any>>;
+export type AnyPluginBlueprint = AnyGuildPluginBlueprint | AnyGlobalPluginBlueprint;
 
 type PluginBlueprintCreator<TBaseBlueprint extends AnyPluginBlueprint> = <TBlueprint extends TBaseBlueprint>(
   blueprint: TBlueprint
 ) => TBlueprint;
 
-function plugin<TBlueprint extends AnyPluginBlueprint>(...args) {
+function pluginCreator(...args) {
   if (args.length === 1) {
     // (blueprint)
     // Return blueprint
@@ -206,50 +222,57 @@ function plugin<TBlueprint extends AnyPluginBlueprint>(...args) {
 
   if (args.length === 0) {
     // No arguments, with TPluginType - return self
-    return plugin as PluginBlueprintCreator<TBlueprint>;
+    return pluginCreator;
   }
 
   throw new Error(`No signature of plugin() takes ${args.length} arguments`);
 }
+
+export type GuildPluginBlueprintCreator<TPluginData extends GuildPluginData<any>> = <TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>>(
+  blueprint: GuildPluginBlueprint<TPluginData, TPublicInterface>
+) => GuildPluginBlueprint<TPluginData, TPublicInterface>;
 
 /**
  * Helper function that creates a plugin blueprint for a guild plugin.
  *
  * To specify `TPluginType` for additional type hints, use: `guildPlugin<TPluginType>()(blueprint)`
  */
-export function guildPlugin<TBlueprint extends GuildPluginBlueprint<GuildPluginData<any>>>(
-  blueprint: TBlueprint
-): TBlueprint;
+export function guildPlugin<TPluginData extends GuildPluginData<any>, TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>>(
+  blueprint: GuildPluginBlueprint<TPluginData, TPublicInterface>
+): GuildPluginBlueprint<TPluginData, TPublicInterface>;
 
 /**
  * Helper function with no arguments. Specify `TPluginType` for type hints and return self.
  */
-export function guildPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
-  GuildPluginBlueprint<GuildPluginData<TPluginType>>
->;
+export function guildPlugin<TPluginType extends BasePluginType>(): GuildPluginBlueprintCreator<GuildPluginData<TPluginType>>;
 
 export function guildPlugin(...args: any[]): any {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
-  return plugin<GuildPluginBlueprint<any>>(...args);
+  return pluginCreator(...args);
 }
+
+export type GlobalPluginBlueprintCreator<TPluginData extends GlobalPluginData<any>> = <TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>>(
+  blueprint: GlobalPluginBlueprint<TPluginData, TPublicInterface>
+) => GlobalPluginBlueprint<TPluginData, TPublicInterface>;
 
 /**
  * Helper function that creates a plugin blueprint for a global plugin.
  *
  * To specify `TPluginType` for additional type hints, use: `globalPlugin<TPluginType>()(blueprint)`
  */
-export function globalPlugin<TBlueprint extends GlobalPluginBlueprint<GlobalPluginData<any>>>(
-  blueprint: TBlueprint
-): TBlueprint;
+export function globalPlugin<TPluginData extends GlobalPluginData<any>, TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>>(
+  blueprint: GlobalPluginBlueprint<TPluginData, TPublicInterface>
+): GlobalPluginBlueprint<TPluginData, TPublicInterface>;
 
 /**
  * Helper function with no arguments. Specify `TPluginType` for type hints and return self
  */
-export function globalPlugin<TPluginType extends BasePluginType>(): PluginBlueprintCreator<
-  GlobalPluginBlueprint<GlobalPluginData<TPluginType>>
->;
+export function globalPlugin<TPluginType extends BasePluginType>(): GlobalPluginBlueprintCreator<GlobalPluginData<TPluginType>>;
 
 export function globalPlugin(...args: any[]): any {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
-  return plugin<GlobalPluginBlueprint<any>>(...args);
+  return pluginCreator(...args);
 }
+
+export type GetPluginBlueprintPluginDataType<TBlueprint extends BasePluginBlueprint<any, any>> =
+  TBlueprint extends BasePluginBlueprint<infer R, any> ? R : never;

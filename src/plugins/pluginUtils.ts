@@ -1,10 +1,11 @@
 import { PermissionLevels } from "../config/configTypes";
 import {
+  AnyGlobalPluginBlueprint, AnyGuildPluginBlueprint,
   AnyPluginBlueprint,
   GlobalPluginBlueprint,
   GuildPluginBlueprint,
   PluginBlueprintPublicInterface,
-  ResolvedPluginBlueprintPublicInterface,
+  ResolvedPluginBlueprintPublicInterface
 } from "./PluginBlueprint";
 import { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types";
 import { KeyOfMap } from "../utils";
@@ -27,7 +28,7 @@ export function getMemberLevel(
   }
 
   const roles = getMemberRoles(member);
-  for (const [id, level] of Object.entries(levels)) {
+  for (const [id, level] of Object.entries<number>(levels)) {
     if (memberId === id || roles.includes(id)) {
       return level;
     }
@@ -48,19 +49,19 @@ export function isGlobalContext(ctx: AnyContext): ctx is GuildContext {
 export function isGuildBlueprintByContext(
   _ctx: GuildContext,
   _blueprint: AnyPluginBlueprint
-): _blueprint is GuildPluginBlueprint<any> {
+): _blueprint is AnyGuildPluginBlueprint {
   return true;
 }
 
 export function isGlobalBlueprintByContext(
   _ctx: GlobalContext,
   _blueprint: AnyPluginBlueprint
-): _blueprint is GlobalPluginBlueprint<any> {
+): _blueprint is AnyGlobalPluginBlueprint {
   return true;
 }
 
 export type PluginPublicInterface<T extends AnyPluginBlueprint> =
-  T["public"] extends PluginBlueprintPublicInterface<any> ? ResolvedPluginBlueprintPublicInterface<T["public"]> : null;
+  T["public"] extends undefined ? null : ResolvedPluginBlueprintPublicInterface<NonNullable<T["public"]>>;
 
 /**
  * By default, return an empty config for all guilds and the global config

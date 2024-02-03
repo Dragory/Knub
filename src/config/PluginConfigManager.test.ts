@@ -12,7 +12,7 @@ import {
   sleep,
 } from "../testUtils";
 import { BasePluginType } from "../plugins/pluginTypes";
-import { GuildPluginData } from "../plugins/PluginData";
+import { BasePluginData, GuildPluginData } from "../plugins/PluginData";
 import { z } from "zod";
 
 describe("PluginConfigManager", () => {
@@ -27,7 +27,7 @@ describe("PluginConfigManager", () => {
       };
     }
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<GuildPluginData<PluginType>>(
       {
         config: {
           can_do: false,
@@ -64,7 +64,7 @@ describe("PluginConfigManager", () => {
       };
     }
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           can_do: false,
@@ -114,7 +114,7 @@ describe("PluginConfigManager", () => {
       };
     }
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           can_do: false,
@@ -161,7 +161,7 @@ describe("PluginConfigManager", () => {
       config: ConfigSchema;
     }
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           something: 0,
@@ -194,7 +194,7 @@ describe("PluginConfigManager", () => {
       };
     }
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           something: 0,
@@ -226,7 +226,7 @@ describe("PluginConfigManager", () => {
       };
     }
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           something: 0,
@@ -266,7 +266,7 @@ describe("PluginConfigManager", () => {
     const channel = createMockTextChannel(client, guild.id);
     const message = createMockMessage(client, channel, user);
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           works: false,
@@ -308,7 +308,7 @@ describe("PluginConfigManager", () => {
     const channel = createMockTextChannel(client, guild.id);
     const message = createMockMessage(client, channel, user);
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           works: false,
@@ -349,7 +349,7 @@ describe("PluginConfigManager", () => {
     const thread = createMockThread(channel);
     const message = createMockMessage(client, thread, user);
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           works: false,
@@ -389,7 +389,7 @@ describe("PluginConfigManager", () => {
     const channel = createMockTextChannel(client, guild.id, { parent_id: categoryId });
     const message = createMockMessage(client, channel, user);
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           works: false,
@@ -431,7 +431,7 @@ describe("PluginConfigManager", () => {
     const thread = createMockThread(channel);
     const message = createMockMessage(client, thread, user);
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           works: false,
@@ -471,7 +471,7 @@ describe("PluginConfigManager", () => {
     const thread = createMockThread(channel);
     const message = createMockMessage(client, thread, user);
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           works: false,
@@ -511,7 +511,7 @@ describe("PluginConfigManager", () => {
     const thread = createMockThread(channel);
     const message = createMockMessage(client, thread, user);
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           works: false,
@@ -552,7 +552,7 @@ describe("PluginConfigManager", () => {
     const channel = createMockTextChannel(client, guild.id);
     const message = createMockMessage(client, channel, user);
 
-    const configManager = new PluginConfigManager<PluginType>(
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
       {
         config: {
           works: false,

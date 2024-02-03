@@ -7,9 +7,10 @@ import {
   AfterUnloadPluginData,
   AnyPluginData,
   BasePluginData,
-  BeforeLoadPluginData,
+  BeforeLoadGlobalPluginData,
+  BeforeLoadGuildPluginData,
   GlobalPluginData,
-  GuildPluginData,
+  GuildPluginData
 } from "./plugins/PluginData";
 import { PluginConfigManager } from "./config/PluginConfigManager";
 import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager";
@@ -26,15 +27,17 @@ import {
   KnubOptions,
   LoadedGlobalPlugin,
   LoadedGuildPlugin,
-  LogFn,
+  LogFn
 } from "./types";
 import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
 import {
   AnyGlobalEventListenerBlueprint,
   AnyGuildEventListenerBlueprint,
   AnyPluginBlueprint,
+  GlobalPluginBlueprint,
+  GuildPluginBlueprint,
   PluginBlueprintPublicInterface,
-  ResolvedPluginBlueprintPublicInterface,
+  ResolvedPluginBlueprintPublicInterface
 } from "./plugins/PluginBlueprint";
 import { UnknownPluginError } from "./plugins/UnknownPluginError";
 import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
@@ -47,6 +50,7 @@ import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashC
 import { ConcurrentRunner } from "./ConcurrentRunner";
 import { AnyApplicationCommandBlueprint, registerApplicationCommands } from "./commands/registerApplicationCommands";
 import { PluginContextMenuCommandManager } from "./commands/contextMenuCommands/PluginContextMenuCommandManager";
+import { BasePluginType } from "./plugins/pluginTypes";
 
 const defaultKnubArgs: KnubArgs = {
   guildPlugins: [],
@@ -215,12 +219,12 @@ export class Knub extends EventEmitter {
   /**
    * Create the partial PluginData that's passed to beforeLoad()
    */
-  protected async getBeforeLoadPluginData(
+  protected async getBeforeLoadGuildPluginData<TPluginType extends BasePluginType>(
     ctx: AnyContext,
-    plugin: AnyPluginBlueprint,
+    plugin: GuildPluginBlueprint<GuildPluginData<TPluginType>, any>,
     loadedAsDependency: boolean
-  ): Promise<BeforeLoadPluginData<BasePluginData<any>>> {
-    const configManager = new PluginConfigManager(
+  ): Promise<BeforeLoadGuildPluginData<TPluginType>> {
+    const configManager = new PluginConfigManager<GuildPluginData<TPluginType>>(
       plugin.defaultOptions ?? { config: {} },
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       (get(ctx.config, `plugins.${plugin.name}`) as any) || {},
@@ -243,6 +247,8 @@ export class Knub extends EventEmitter {
     return {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _pluginType: undefined as any,
+
+      context: "guild",
       pluginName: plugin.name,
       loaded: false,
       initialized: false,
@@ -263,18 +269,79 @@ export class Knub extends EventEmitter {
     };
   }
 
-  /**
-   * Convert the partial PluginData from getBeforeLoadPluginData() to a full PluginData object
-   */
-  protected withFinalPluginDataProperties<TPluginData extends BasePluginData<any>>(
-    ctx: AnyContext,
-    beforeLoadPluginData: BeforeLoadPluginData<TPluginData>
-  ): TPluginData {
+  protected withFinalGuildPluginDataProperties<TPluginType extends BasePluginType>(
+    ctx: GuildContext,
+    beforeLoadPluginData: BeforeLoadGuildPluginData<TPluginType>,
+  ): GuildPluginData<TPluginType> {
     return {
       ...beforeLoadPluginData,
       hasPlugin: (resolvablePlugin) => this.ctxHasPlugin(ctx, resolvablePlugin),
       getPlugin: (resolvablePlugin) => this.getPluginPublicInterface(ctx, resolvablePlugin),
-    } as TPluginData;
+    } as GuildPluginData<TPluginType>;
+  }
+
+  /**
+   * Create the partial PluginData that's passed to beforeLoad()
+   */
+  protected async getBeforeLoadGlobalPluginData<TPluginType extends BasePluginType>(
+    ctx: AnyContext,
+    plugin: GlobalPluginBlueprint<GlobalPluginData<TPluginType>, any>,
+    loadedAsDependency: boolean
+  ): Promise<BeforeLoadGlobalPluginData<TPluginType>> {
+    const configManager = new PluginConfigManager<GlobalPluginData<TPluginType>>(
+      plugin.defaultOptions ?? { config: {} },
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      (get(ctx.config, `plugins.${plugin.name}`) as any) || {},
+      {
+        levels: ctx.config.levels || {},
+        parser: plugin.configParser,
+        customOverrideCriteriaFunctions: plugin.customOverrideCriteriaFunctions,
+      }
+    );
+
+    try {
+      await configManager.init();
+    } catch (e) {
+      if (!(e instanceof Error)) {
+        throw e;
+      }
+      throw new PluginLoadError(plugin.name, ctx, e);
+    }
+
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      _pluginType: undefined as any,
+
+      context: "global",
+      pluginName: plugin.name,
+      loaded: false,
+      initialized: false,
+      client: this.client,
+      config: configManager,
+      locks: ctx.locks,
+      cooldowns: new CooldownManager(),
+      fullConfig: ctx.config,
+
+      loadedAsDependency,
+
+      // @ts-ignore: This is actually correct, dw about it
+      getKnubInstance: () => this,
+      hasGlobalPlugin: (resolvablePlugin) => this.ctxHasPlugin(this.globalContext, resolvablePlugin),
+      getGlobalPlugin: (resolvablePlugin) => this.getPluginPublicInterface(this.globalContext, resolvablePlugin),
+
+      state: {},
+    };
+  }
+
+  protected withFinalGlobalPluginDataProperties<TPluginType extends BasePluginType>(
+    ctx: GlobalContext,
+    beforeLoadPluginData: BeforeLoadGlobalPluginData<TPluginType>,
+  ): GlobalPluginData<TPluginType> {
+    return {
+      ...beforeLoadPluginData,
+      hasPlugin: (resolvablePlugin) => this.ctxHasPlugin(ctx, resolvablePlugin),
+      getPlugin: (resolvablePlugin) => this.getPluginPublicInterface(ctx, resolvablePlugin),
+    } as GlobalPluginData<TPluginType>;
   }
 
   /**
@@ -327,7 +394,7 @@ export class Knub extends EventEmitter {
     return Array.from(Object.entries(blueprint.public)).reduce((obj, [prop, fn]) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const finalFn = fn(pluginData);
-      obj[prop] = (...args) => {
+      obj[prop] = (...args: any[]) => {
         if (!pluginData.loaded) {
           throw new PluginNotLoadedError(
             `Tried to access plugin public interface (${blueprint.name}), but the plugin is no longer loaded`
@@ -511,9 +578,7 @@ export class Knub extends EventEmitter {
       const plugin = this.guildPlugins.get(pluginName)!;
       const isDependency = !enabledPlugins.includes(pluginName);
 
-      const preloadPluginData = (await this.getBeforeLoadPluginData(ctx, plugin, isDependency)) as BeforeLoadPluginData<
-        GuildPluginData<any>
-      >;
+      const preloadPluginData = await this.getBeforeLoadGuildPluginData(ctx, plugin, isDependency);
       preloadPluginData.context = "guild";
       preloadPluginData.guild = this.client.guilds.resolve(ctx.guildId)!;
 
@@ -524,7 +589,7 @@ export class Knub extends EventEmitter {
       preloadPluginData.slashCommands = new PluginSlashCommandManager();
       preloadPluginData.contextMenuCommands = new PluginContextMenuCommandManager();
 
-      const fullPluginData = this.withFinalPluginDataProperties(ctx, preloadPluginData);
+      const fullPluginData = this.withFinalGuildPluginDataProperties(ctx, preloadPluginData);
 
       preloadPluginData.events.setPluginData(fullPluginData);
       preloadPluginData.messageCommands.setPluginData(fullPluginData);
@@ -698,10 +763,7 @@ export class Knub extends EventEmitter {
 
     // 1. Set up plugin data for each plugin. Call beforeLoad() hooks.
     for (const [pluginName, plugin] of this.globalPlugins.entries()) {
-      const beforeLoadPluginData = (await this.getBeforeLoadPluginData(ctx, plugin, false)) as BeforeLoadPluginData<
-        GlobalPluginData<any>
-      >;
-      beforeLoadPluginData.context = "global";
+      const beforeLoadPluginData = await this.getBeforeLoadGlobalPluginData(ctx, plugin, false);
 
       beforeLoadPluginData.events = new GlobalPluginEventManager(this.eventRelay);
       beforeLoadPluginData.messageCommands = new PluginMessageCommandManager(this.client, {
@@ -710,7 +772,7 @@ export class Knub extends EventEmitter {
       beforeLoadPluginData.slashCommands = new PluginSlashCommandManager();
       beforeLoadPluginData.contextMenuCommands = new PluginContextMenuCommandManager();
 
-      const fullPluginData = this.withFinalPluginDataProperties(ctx, beforeLoadPluginData);
+      const fullPluginData = this.withFinalGlobalPluginDataProperties(ctx, beforeLoadPluginData);
 
       beforeLoadPluginData.events.setPluginData(fullPluginData);
       beforeLoadPluginData.messageCommands.setPluginData(fullPluginData);
