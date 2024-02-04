@@ -31,8 +31,8 @@
   },
   "lint-staged": {
     "*.ts": [
-      "prettier --write",
-      "eslint"
+      "biome check",
+      "biome format"
     ]
   },
   "dependencies": {
@@ -43,17 +43,14 @@
     "zod": "^3.19.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.5.3",
     "@types/chai": "^4",
     "@types/mocha": "^9",
     "@types/node": "^16",
-    "@typescript-eslint/eslint-plugin": "^5",
-    "@typescript-eslint/parser": "^5",
     "chai": "^4",
-    "eslint": "^8",
     "husky": "^8",
     "lint-staged": "^13",
     "mocha": "^10",
-    "prettier": "^2.3.0",
     "shx": "^0.3.3",
     "ts-node": "^10.9",
     "typescript": "5.3"
