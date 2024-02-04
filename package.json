@@ -8,12 +8,13 @@
     "test-files": "mocha --exit -r ts-node/register",
     "test": "mocha --exit -r ts-node/register \"src/**/*.test.ts\" -- --trace-warnings",
     "test-debug": "mocha --exit -r ts-node/register -g \"command permissions\" \"src/**/*.test.ts\" -- --trace-warnings",
-    "lint": "biome check ./src",
     "build": "shx touch dist && shx rm -r dist && shx rm tsconfig.tsbuildinfo && tsc --sourceMap false && shx cp .npmignore dist/",
     "preversion": "npm run test",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "shx touch dist && shx rm -r dist && tsc --watch",
-    "format": "biome format ./src",
+    "biome-check": "biome check ./src",
+    "biome-fix": "biome lint --apply ./src",
+    "biome-format": "biome format --write ./src",
     "prepare": "husky install"
   },
   "main": "dist/index.js",
@@ -29,12 +30,6 @@
       "require": "./dist/helpers.js"
     }
   },
-  "lint-staged": {
-    "*.ts": [
-      "biome check",
-      "biome format"
-    ]
-  },
   "dependencies": {
     "discord-api-types": "^0.37.67",
     "discord.js": "^14.14.1",
@@ -49,7 +44,6 @@
     "@types/node": "^16",
     "chai": "^4",
     "husky": "^8",
-    "lint-staged": "^13",
     "mocha": "^10",
     "shx": "^0.3.3",
     "ts-node": "^10.9",
