@@ -1,6 +1,6 @@
-import { CooldownManager } from "./CooldownManager";
 import assert from "assert";
 import { sleep } from "../testUtils";
+import { CooldownManager } from "./CooldownManager";
 
 describe("CooldownManager", () => {
   before(() => {

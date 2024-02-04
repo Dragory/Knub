@@ -1,8 +1,8 @@
-import { EventArguments, ExtendedClientEvents, fromDjsArgs, GuildEvent, isGuildEvent, ValidEvent } from "./eventTypes";
-import { eventToGuild } from "./eventUtils";
 import { Client, ClientEvents } from "discord.js";
-import { Profiler } from "../Profiler";
 import { performance } from "perf_hooks";
+import { Profiler } from "../Profiler";
+import { EventArguments, ExtendedClientEvents, GuildEvent, ValidEvent, fromDjsArgs, isGuildEvent } from "./eventTypes";
+import { eventToGuild } from "./eventUtils";
 
 export type RelayListener<TEvent extends ValidEvent> = {
   (args: EventArguments[TEvent]): any;
@@ -20,7 +20,10 @@ export class EventRelay {
   protected anyListeners: AnyListenerMap = new Map() as AnyListenerMap;
   protected registeredRelays: Set<ValidEvent> = new Set();
 
-  constructor(protected client: Client, protected profiler: Profiler) {}
+  constructor(
+    protected client: Client,
+    protected profiler: Profiler,
+  ) {}
 
   onGuildEvent<TEvent extends GuildEvent>(guildId: string, ev: TEvent, listener: RelayListener<TEvent>): void {
     if (!this.guildListeners.has(guildId)) {
@@ -87,7 +90,7 @@ export class EventRelay {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             this.profiler.addDataPoint(
               `event:${ev}:${listener.profilerContext ?? "unknown"}`,
-              performance.now() - startTime
+              performance.now() - startTime,
             );
           });
         }

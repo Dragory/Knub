@@ -1,12 +1,12 @@
-import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager";
 import { GuildPluginData } from "..";
-import { GuildEvent, GuildEventArguments } from "./eventTypes";
-import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
 import { AnyGuildEventListenerBlueprint } from "../plugins/PluginBlueprint";
+import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager";
 import { RelayListener } from "./EventRelay";
+import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
+import { GuildEvent, GuildEventArguments } from "./eventTypes";
 
 export class GuildPluginEventManager<
-  TPluginData extends GuildPluginData<any>
+  TPluginData extends GuildPluginData<any>,
 > extends BasePluginEventManager<TPluginData> {
   registerEventListener<T extends AnyGuildEventListenerBlueprint<TPluginData>>(blueprint: T): WrappedListener {
     if (!this.listeners.has(blueprint.event)) {
@@ -56,7 +56,7 @@ export class GuildPluginEventManager<
   on<TEventName extends GuildEvent>(
     event: TEventName,
     listener: Listener<TPluginData, TEventName>,
-    opts?: OnOpts
+    opts?: OnOpts,
   ): WrappedListener {
     return this.registerEventListener({
       ...opts,

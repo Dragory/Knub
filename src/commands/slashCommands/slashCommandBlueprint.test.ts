@@ -1,6 +1,6 @@
+import { BasePluginType } from "../../plugins/pluginTypes";
 import { guildPluginSlashCommand } from "./slashCommandBlueprint";
 import { slashOptions } from "./slashCommandOptions";
-import { BasePluginType } from "../../plugins/pluginTypes";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

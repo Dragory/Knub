@@ -1,7 +1,7 @@
-import { onlyGuild } from "./eventFilters";
+import * as assert from "assert";
 import { Message } from "discord.js";
 import { GlobalPluginData, GuildPluginData } from "../plugins/PluginData";
-import * as assert from "assert";
+import { onlyGuild } from "./eventFilters";
 
 describe("Event filters", () => {
   it("onlyGuild", () => {

@@ -1,10 +1,10 @@
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
 import {
   Locale,
   MessageContextMenuCommandInteraction,
   Permissions,
   UserContextMenuCommandInteraction,
 } from "discord.js";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
 import { BasePluginType } from "../../plugins/pluginTypes";
 
 export interface BaseContextMenuCommandBlueprint {
@@ -32,7 +32,7 @@ export type MessageContextMenuCommandMeta<TPluginData extends AnyPluginData<any>
 // The two function signatures are not needed here, but for consistency with other blueprint helpers (and in case we
 // want to add some inferred generics later) it's still using the same "double-call" signature.
 type MessageContextMenuCommandCreator<TPluginData extends AnyPluginData<any>> = (
-  blueprint: Omit<MessageContextMenuCommandBlueprint<TPluginData>, "type">
+  blueprint: Omit<MessageContextMenuCommandBlueprint<TPluginData>, "type">,
 ) => MessageContextMenuCommandBlueprint<TPluginData>;
 function messageContextMenuCommand(...args: any[]): unknown {
   if (args.length === 1) {
@@ -50,20 +50,20 @@ function messageContextMenuCommand(...args: any[]): unknown {
 }
 
 export function guildPluginMessageContextMenuCommand(
-  blueprint: Omit<MessageContextMenuCommandBlueprint<GuildPluginData<any>>, "type">
+  blueprint: Omit<MessageContextMenuCommandBlueprint<GuildPluginData<any>>, "type">,
 ): MessageContextMenuCommandBlueprint<GuildPluginData<any>>;
 export function guildPluginMessageContextMenuCommand<
-  TPluginType extends BasePluginType
+  TPluginType extends BasePluginType,
 >(): MessageContextMenuCommandCreator<GuildPluginData<TPluginType>>;
 export function guildPluginMessageContextMenuCommand(...args: unknown[]): unknown {
   return messageContextMenuCommand(...args);
 }
 
 export function globalPluginMessageContextMenuCommand(
-  blueprint: Omit<MessageContextMenuCommandBlueprint<GlobalPluginData<any>>, "type">
+  blueprint: Omit<MessageContextMenuCommandBlueprint<GlobalPluginData<any>>, "type">,
 ): MessageContextMenuCommandBlueprint<GlobalPluginData<any>>;
 export function globalPluginMessageContextMenuCommand<
-  TPluginType extends BasePluginType
+  TPluginType extends BasePluginType,
 >(): MessageContextMenuCommandCreator<GlobalPluginData<TPluginType>>;
 export function globalPluginMessageContextMenuCommand(...args: unknown[]): unknown {
   return messageContextMenuCommand(...args);
@@ -85,7 +85,7 @@ export type UserContextMenuCommandMeta<TPluginData extends AnyPluginData<any>> =
 // The two function signatures are not needed here, but for consistency with other blueprint helpers (and in case we
 // want to add some inferred generics later) it's still using the same "double-call" signature.
 type UserContextMenuCommandCreator<TPluginData extends AnyPluginData<any>> = (
-  blueprint: Omit<UserContextMenuCommandBlueprint<TPluginData>, "type">
+  blueprint: Omit<UserContextMenuCommandBlueprint<TPluginData>, "type">,
 ) => UserContextMenuCommandBlueprint<TPluginData>;
 function userContextMenuCommand(...args: any[]): unknown {
   if (args.length === 1) {
@@ -103,7 +103,7 @@ function userContextMenuCommand(...args: any[]): unknown {
 }
 
 export function guildPluginUserContextMenuCommand(
-  blueprint: Omit<UserContextMenuCommandBlueprint<GuildPluginData<any>>, "type">
+  blueprint: Omit<UserContextMenuCommandBlueprint<GuildPluginData<any>>, "type">,
 ): UserContextMenuCommandBlueprint<GuildPluginData<any>>;
 export function guildPluginUserContextMenuCommand<TPluginType extends BasePluginType>(): UserContextMenuCommandCreator<
   GuildPluginData<TPluginType>
@@ -113,7 +113,7 @@ export function guildPluginUserContextMenuCommand(...args: unknown[]): unknown {
 }
 
 export function globalPluginUserContextMenuCommand(
-  blueprint: Omit<UserContextMenuCommandBlueprint<GlobalPluginData<any>>, "type">
+  blueprint: Omit<UserContextMenuCommandBlueprint<GlobalPluginData<any>>, "type">,
 ): UserContextMenuCommandBlueprint<GlobalPluginData<any>>;
 export function globalPluginUserContextMenuCommand<TPluginType extends BasePluginType>(): UserContextMenuCommandCreator<
   GlobalPluginData<TPluginType>

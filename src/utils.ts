@@ -39,11 +39,10 @@ export function getUserId(str: string): Snowflake | null {
   if (str.match(snowflakeRegex)) {
     // User ID
     return str;
-  } else {
-    const mentionMatch = str.match(userMentionRegex);
-    if (mentionMatch) {
-      return mentionMatch[1];
-    }
+  }
+  const mentionMatch = str.match(userMentionRegex);
+  if (mentionMatch) {
+    return mentionMatch[1];
   }
 
   return null;
@@ -55,11 +54,10 @@ export function getChannelId(str: string): Snowflake | null {
   if (str.match(snowflakeRegex)) {
     // Channel ID
     return str;
-  } else {
-    const mentionMatch = str.match(channelMentionRegex);
-    if (mentionMatch) {
-      return mentionMatch[1];
-    }
+  }
+  const mentionMatch = str.match(channelMentionRegex);
+  if (mentionMatch) {
+    return mentionMatch[1];
   }
 
   return null;
@@ -71,11 +69,10 @@ export function getRoleId(str: string): Snowflake | null {
   if (str.match(snowflakeRegex)) {
     // Role ID
     return str;
-  } else {
-    const mentionMatch = str.match(roleMentionRegex);
-    if (mentionMatch) {
-      return mentionMatch[1];
-    }
+  }
+  const mentionMatch = str.match(roleMentionRegex);
+  if (mentionMatch) {
+    return mentionMatch[1];
   }
 
   return null;

@@ -1,15 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-plus-operands */
-import {
-  ConfigParserFn,
-  CustomOverrideCriteriaFunctions,
-  PermissionLevels,
-  pluginBaseOptionsSchema,
-  PluginOptions,
-  PluginOverride
-} from "./configTypes";
-import { getMatchingPluginConfig, MatchParams, mergeConfig } from "./configUtils";
-import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils";
-import { BasePluginData, isGuildPluginData } from "../plugins/PluginData";
 import {
   APIInteractionGuildMember,
   Channel,
@@ -18,9 +6,21 @@ import {
   Interaction,
   Message,
   PartialUser,
-  User
+  User,
 } from "discord.js";
+import { BasePluginData, isGuildPluginData } from "../plugins/PluginData";
+import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils";
 import { ConfigValidationError } from "./ConfigValidationError";
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+import {
+  ConfigParserFn,
+  CustomOverrideCriteriaFunctions,
+  PermissionLevels,
+  PluginOptions,
+  PluginOverride,
+  pluginBaseOptionsSchema,
+} from "./configTypes";
+import { MatchParams, getMatchingPluginConfig, mergeConfig } from "./configUtils";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string | null;
@@ -50,7 +50,7 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
   constructor(
     defaultOptions: PluginOptions<TPluginData["_pluginType"]>,
     userInput: unknown,
-    opts: PluginConfigManagerOpts<TPluginData>
+    opts: PluginConfigManagerOpts<TPluginData>,
   ) {
     this.defaultOptions = defaultOptions;
     this.userInput = userInput;
@@ -73,7 +73,9 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
     const config = mergeConfig(this.defaultOptions.config ?? {}, parsedUserInput.config ?? {});
     const parsedValidConfig = await this.parser(config);
 
-    const parsedUserInputOverrides = parsedUserInput.overrides as Array<PluginOverride<TPluginData["_pluginType"]>> | undefined;
+    const parsedUserInputOverrides = parsedUserInput.overrides as
+      | Array<PluginOverride<TPluginData["_pluginType"]>>
+      | undefined;
     const overrides: Array<PluginOverride<TPluginData["_pluginType"]>> = parsedUserInput.replaceDefaultOverrides
       ? parsedUserInputOverrides ?? []
       : (this.defaultOptions.overrides ?? []).concat(parsedUserInputOverrides ?? []);
@@ -87,7 +89,7 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
         // eslint-disable-next-line no-console
         console.debug(
           "!! DEBUG !! PluginConfigManager.init config missing",
-          (this.pluginData && isGuildPluginData(this.pluginData)) ? this.pluginData.guild.id : "(global)",
+          this.pluginData && isGuildPluginData(this.pluginData) ? this.pluginData.guild.id : "(global)",
         );
       }
       const overrideConfig = mergeConfig(config, override.config ?? {});
@@ -141,11 +143,11 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
       // Passed member's ID
       (matchParams.member && "id" in matchParams.member && matchParams.member.id) ||
       // Passed member's user ID
-      (matchParams.member && matchParams.member.user.id) ||
+      matchParams.member?.user.id ||
       // Passed message's author's ID
-      (message && message.author && message.author.id) ||
+      message?.author?.id ||
       // Passed interaction's author's ID
-      (interaction && interaction.user && interaction.user.id) ||
+      interaction?.user?.id ||
       null;
 
     const channelId =
@@ -158,9 +160,9 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
       // Passed message's thread's parent ID
       (message?.channel?.isThread() && message.channel.parentId) ||
       // Passed message's non-thread channel's ID
-      (message && message.channel && message.channel.id) ||
+      message?.channel?.id ||
       // Passed interaction's author's ID
-      (interaction && interaction.channel && interaction.channel.id) ||
+      interaction?.channel?.id ||
       null;
 
     const categoryId =
@@ -193,14 +195,15 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
       null;
 
     // Passed value -> whether message's channel is a thread -> whether interaction's channel is a thread
-    const isThread = matchParams.isThread
-      ?? matchParams?.channel?.isThread?.()
-      ?? message?.channel?.isThread?.()
-      ?? interaction?.channel?.isThread?.()
-      ?? null;
+    const isThread =
+      matchParams.isThread ??
+      matchParams?.channel?.isThread?.() ??
+      message?.channel?.isThread?.() ??
+      interaction?.channel?.isThread?.() ??
+      null;
 
     // Passed member -> passed message's member -> passed interaction's member
-    const member = matchParams.member || (message && message.member) || (interaction && interaction.member);
+    const member = matchParams.member || message?.member || interaction?.member;
 
     // Passed level -> passed member's level
     const level = matchParams?.level ?? (member && this.getMemberLevel(member)) ?? null;
@@ -222,7 +225,7 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
       this.pluginData!,
       this.getParsedOptions(),
       finalMatchParams,
-      this.customOverrideCriteriaFunctions
+      this.customOverrideCriteriaFunctions,
     );
   }
 

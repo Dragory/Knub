@@ -2,10 +2,10 @@
  * @file Public helper functions/types
  */
 
-import { get } from "./utils";
+import { Client, GuildMember, Invite, Message, TextBasedChannel } from "discord.js";
 import { GuildPluginData } from "./plugins/PluginData";
 import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils";
-import { Client, GuildMember, Invite, Message, TextBasedChannel } from "discord.js";
+import { get } from "./utils";
 
 /**
  * Splits a string into chunks, preferring to split at newlines if possible
@@ -49,9 +49,9 @@ export function splitMessageIntoChunks(str: string, chunkLength = 1990): string[
   let openCodeBlock = false;
   return chunks.map((chunk) => {
     // If the chunk starts with a newline, add an invisible unicode char so Discord doesn't strip it away
-    if (chunk[0] === "\n") chunk = "\u200b" + chunk;
+    if (chunk[0] === "\n") chunk = `\u200b${chunk}`;
     // If the chunk ends with a newline, add an invisible unicode char so Discord doesn't strip it away
-    if (chunk[chunk.length - 1] === "\n") chunk = chunk + "\u200b";
+    if (chunk[chunk.length - 1] === "\n") chunk = `${chunk}\u200b`;
     // If the previous chunk had an open code block, open it here again
     if (openCodeBlock) {
       openCodeBlock = false;
@@ -61,7 +61,7 @@ export function splitMessageIntoChunks(str: string, chunkLength = 1990): string[
         // Fix: Just strip the code block delimiter away from here, we don't need it anymore
         chunk = chunk.slice(3);
       } else {
-        chunk = "```" + chunk;
+        chunk = `\`\`\`${chunk}`;
       }
     }
     // If the chunk has an open code block, close it and open it again in the next chunk
@@ -98,7 +98,7 @@ export function waitForReply(
   client: Client,
   channel: TextBasedChannel,
   restrictToUserId?: string,
-  timeout = 15000
+  timeout = 15000,
 ): Promise<Message | null> {
   return new Promise((resolve) => {
     const timeoutTimer = setTimeout(() => {

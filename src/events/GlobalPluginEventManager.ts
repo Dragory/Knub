@@ -1,11 +1,11 @@
-import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager";
 import { GlobalPluginData } from "..";
-import { EventArguments, ValidEvent } from "./eventTypes";
-import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
 import { AnyGlobalEventListenerBlueprint } from "../plugins/PluginBlueprint";
+import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager";
+import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
+import { EventArguments, ValidEvent } from "./eventTypes";
 
 export class GlobalPluginEventManager<
-  TPluginData extends GlobalPluginData<any>
+  TPluginData extends GlobalPluginData<any>,
 > extends BasePluginEventManager<TPluginData> {
   registerEventListener<T extends AnyGlobalEventListenerBlueprint<TPluginData>>(blueprint: T): WrappedListener {
     if (!this.listeners.has(blueprint.event)) {
@@ -53,7 +53,7 @@ export class GlobalPluginEventManager<
   on<TEventName extends ValidEvent>(
     event: TEventName,
     listener: Listener<TPluginData, TEventName>,
-    opts?: OnOpts
+    opts?: OnOpts,
   ): WrappedListener {
     return this.registerEventListener({
       ...opts,

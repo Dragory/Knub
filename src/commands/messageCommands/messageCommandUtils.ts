@@ -1,20 +1,20 @@
 import { ChannelType, Client, Message } from "discord.js";
-import { Awaitable } from "../../utils";
 import {
   ICommandConfig as MessageCommandConfig,
   ICommandDefinition as MessageCommandDefinition,
   IParameter as MessageCommandParameter,
   TOption as MessageCommandOption,
-  toSafeSignature as toMessageCommandSafeSignature,
   TSafeSignature as MessageCommandSafeSignature,
   TSignature as MessageCommandSignature,
+  toSafeSignature as toMessageCommandSafeSignature,
 } from "knub-command-manager";
+import { hasPermission } from "../../helpers";
 import { Lock } from "../../locks/LockManager";
 import { AnyPluginData, GuildPluginData } from "../../plugins/PluginData";
-import { hasPermission } from "../../helpers";
-import { MessageCommandBlueprint } from "./messageCommandBlueprint";
 import { BasePluginType } from "../../plugins/pluginTypes";
 import { GuildMessage } from "../../types";
+import { Awaitable } from "../../utils";
+import { MessageCommandBlueprint } from "./messageCommandBlueprint";
 
 export type MessageCommandSignatureOrArray<TPluginData extends AnyPluginData<any>> =
   | MessageCommandSignature<CommandContext<TPluginData>>
@@ -43,7 +43,9 @@ export interface MessageCommandMeta<TPluginData extends AnyPluginData<any>, TArg
  * that returns a string, ArgsFromSignature would return `{ name: string }`.
  */
 type MessageCommandArgsFromSignature<T extends MessageCommandSignature<any>> = {
-  [K in keyof T]: T[K] extends MessageCommandParameter<any> | MessageCommandOption<any> ? ParameterOrOptionType<T[K]> : never;
+  [K in keyof T]: T[K] extends MessageCommandParameter<any> | MessageCommandOption<any>
+    ? ParameterOrOptionType<T[K]>
+    : never;
 };
 
 /**
@@ -56,21 +58,25 @@ export type ArgsFromSignatureOrArray<T extends MessageCommandSignatureOrArray<an
 
 // Needed to distribute the union type properly
 // See https://github.com/microsoft/TypeScript/issues/28339#issuecomment-463577347
-type ArgsFromSignatureUnion<T extends MessageCommandSignature<any>> = T extends any ? MessageCommandArgsFromSignature<T> : never;
+type ArgsFromSignatureUnion<T extends MessageCommandSignature<any>> = T extends any
+  ? MessageCommandArgsFromSignature<T>
+  : never;
 
 type SignatureToArray<T> = T extends any[] ? T : [T];
 
 type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 
-type ParameterOrOptionType<T extends MessageCommandParameter<any> | MessageCommandOption<any>> = T extends MessageCommandParameter<any>
-  ? T["rest"] extends true
-    ? Array<PromiseType<ReturnType<T["type"]>>>
-    : PromiseType<ReturnType<T["type"]>>
-  : PromiseType<ReturnType<T["type"]>>;
+type ParameterOrOptionType<T extends MessageCommandParameter<any> | MessageCommandOption<any>> =
+  T extends MessageCommandParameter<any>
+    ? T["rest"] extends true
+      ? Array<PromiseType<ReturnType<T["type"]>>>
+      : PromiseType<ReturnType<T["type"]>>
+    : PromiseType<ReturnType<T["type"]>>;
 
-export type CommandFn<TPluginData extends AnyPluginData<any>, _TSignature extends MessageCommandSignatureOrArray<TPluginData>> = (
-  meta: MessageCommandMeta<TPluginData, ArgsFromSignatureOrArray<_TSignature>>
-) => Awaitable<void>;
+export type CommandFn<
+  TPluginData extends AnyPluginData<any>,
+  _TSignature extends MessageCommandSignatureOrArray<TPluginData>,
+> = (meta: MessageCommandMeta<TPluginData, ArgsFromSignatureOrArray<_TSignature>>) => Awaitable<void>;
 
 export interface CommandContext<TPluginData extends AnyPluginData<any>> {
   message: Message;
@@ -94,12 +100,18 @@ export type PluginCommandConfig = MessageCommandConfig<CommandContext<any>, Comm
 export function getMessageCommandSignature(
   command: PluginCommandDefinition,
   overrideTrigger?: string,
-  overrideSignature?: MessageCommandSignature<any>
+  overrideSignature?: MessageCommandSignature<any>,
 ): string {
-  const signature: MessageCommandSafeSignature<any> = toMessageCommandSafeSignature(overrideSignature || command.signatures[0] || {});
+  const signature: MessageCommandSafeSignature<any> = toMessageCommandSafeSignature(
+    overrideSignature || command.signatures[0] || {},
+  );
   const signatureEntries = Object.entries(signature);
-  const parameters = signatureEntries.filter(([_, param]) => param.option !== true) as Array<[string, MessageCommandParameter<any>]>;
-  const options = signatureEntries.filter(([_, opt]) => opt.option === true) as Array<[string, MessageCommandOption<any>]>;
+  const parameters = signatureEntries.filter(([_, param]) => param.option !== true) as Array<
+    [string, MessageCommandParameter<any>]
+  >;
+  const options = signatureEntries.filter(([_, opt]) => opt.option === true) as Array<
+    [string, MessageCommandOption<any>]
+  >;
 
   const paramStrings = parameters.map(([name, param]) => {
     return param.required ? `<${name}>` : `[${name}]`;
@@ -119,8 +131,8 @@ export function getMessageCommandSignature(
     overrideTrigger != null
       ? overrideTrigger
       : typeof command.originalTriggers[0] === "string"
-      ? command.originalTriggers[0]
-      : command.originalTriggers[0].source;
+        ? command.originalTriggers[0]
+        : command.originalTriggers[0].source;
 
   const usageLine = `${String(prefix)}${trigger} ${paramStrings.join(" ")} ${optStrings.join(" ")}`
     .replace(/\s+/g, " ")
@@ -154,7 +166,7 @@ export function restrictCommandSource(cmd: PluginCommandDefinition, context: Com
  */
 export async function checkCommandPermission<
   TPluginType extends BasePluginType,
-  TPluginData extends AnyPluginData<TPluginType>
+  TPluginData extends AnyPluginData<TPluginType>,
 >(cmd: PluginCommandDefinition, context: CommandContext<TPluginData>): Promise<boolean> {
   const permission = cmd.config!.extra?.blueprint.permission;
 
@@ -179,7 +191,7 @@ export async function checkCommandPermission<
  */
 export async function checkCommandCooldown<
   TPluginType extends BasePluginType,
-  TPluginData extends AnyPluginData<TPluginType>
+  TPluginData extends AnyPluginData<TPluginType>,
 >(cmd: PluginCommandDefinition, context: CommandContext<TPluginData>): Promise<boolean> {
   if (cmd.config!.extra?.blueprint.cooldown) {
     const cdKey = `${cmd.id}-${context.message.author.id}`;
@@ -214,12 +226,13 @@ export async function checkCommandCooldown<
  */
 export async function checkCommandLocks<
   TPluginType extends BasePluginType,
-  TPluginData extends AnyPluginData<TPluginType>
+  TPluginData extends AnyPluginData<TPluginType>,
 >(cmd: PluginCommandDefinition, context: CommandContext<TPluginData>): Promise<boolean> {
-  if (!cmd.config!.extra?.blueprint.locks) {
+  if (!cmd.config?.extra?.blueprint.locks) {
     return true;
   }
 
-  const lock = (cmd.config!.extra._lock = await context.pluginData.locks.acquire(cmd.config!.extra.blueprint.locks));
+  const lock = await context.pluginData.locks.acquire(cmd.config.extra.blueprint.locks);
+  cmd.config.extra._lock = lock;
   return !lock.interrupted;
 }

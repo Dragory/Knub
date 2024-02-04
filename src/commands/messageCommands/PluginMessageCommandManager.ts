@@ -1,23 +1,23 @@
+import { Client, Message } from "discord.js";
 import { CommandManager, IMatchedCommand, isError } from "knub-command-manager";
+import { performance } from "perf_hooks";
+import { AnyPluginData } from "../../plugins/PluginData";
+import { MessageCommandBlueprint } from "./messageCommandBlueprint";
 import {
-  checkCommandCooldown,
-  checkCommandLocks,
-  checkCommandPermission,
   CommandContext,
   CommandExtraData,
   CommandFn,
-  MessageCommandMeta,
   ContextualCommandMessage,
-  getMessageCommandSignature,
-  getDefaultMessageCommandPrefix,
-  PluginCommandDefinition,
-  restrictCommandSource,
+  MessageCommandMeta,
   MessageCommandSignatureOrArray,
+  PluginCommandDefinition,
+  checkCommandCooldown,
+  checkCommandLocks,
+  checkCommandPermission,
+  getDefaultMessageCommandPrefix,
+  getMessageCommandSignature,
+  restrictCommandSource,
 } from "./messageCommandUtils";
-import { Client, Message } from "discord.js";
-import { AnyPluginData } from "../../plugins/PluginData";
-import { MessageCommandBlueprint } from "./messageCommandBlueprint";
-import { performance } from "perf_hooks";
 
 export interface PluginCommandManagerOpts {
   prefix?: string | RegExp;
@@ -48,7 +48,7 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   }
 
   public add<TSignature extends MessageCommandSignatureOrArray<TPluginData["_pluginType"]>>(
-    blueprint: MessageCommandBlueprint<TPluginData, TSignature>
+    blueprint: MessageCommandBlueprint<TPluginData, TSignature>,
   ): void {
     const preFilters = Array.from(blueprint.config?.preFilters ?? []);
     preFilters.unshift(restrictCommandSource, checkCommandPermission);
@@ -109,7 +109,7 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   private async runCommand(
     msg: ContextualCommandMessage<TPluginData>,
     matchedCommand: IMatchedCommand<CommandContext<TPluginData>, CommandExtraData<TPluginData>>,
-    extraMeta?: Partial<MessageCommandMeta<TPluginData, any>>
+    extraMeta?: Partial<MessageCommandMeta<TPluginData, any>>,
   ): Promise<void> {
     const handler = this.handlers.get(matchedCommand.id);
     if (!handler) {

@@ -1,6 +1,6 @@
+import { ChatInputCommandInteraction } from "discord.js";
 import { AnyPluginData } from "../../plugins/PluginData";
 import { BaseSlashCommandOption } from "./slashCommandOptions";
-import { ChatInputCommandInteraction } from "discord.js";
 
 export type SlashCommandSignature = Array<BaseSlashCommandOption<any, any>>;
 
@@ -16,9 +16,6 @@ export type SlashCommandMeta<TPluginData extends AnyPluginData<any>, TSignature 
   pluginData: TPluginData;
 };
 
-export type SlashCommandFn<
-  TPluginData extends AnyPluginData<any>,
-  TSignature extends SlashCommandSignature,
-> = (
+export type SlashCommandFn<TPluginData extends AnyPluginData<any>, TSignature extends SlashCommandSignature> = (
   meta: SlashCommandMeta<TPluginData, TSignature>,
 ) => void | Promise<void>;

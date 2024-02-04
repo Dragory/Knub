@@ -1,6 +1,11 @@
-import { ArgsFromSignatureOrArray, CommandContext, CommandExtraData, getMessageCommandSignature } from "./messageCommandUtils";
-import { CommandManager, isError, number, string } from "knub-command-manager";
 import assert from "assert";
+import { CommandManager, isError, number, string } from "knub-command-manager";
+import {
+  ArgsFromSignatureOrArray,
+  CommandContext,
+  CommandExtraData,
+  getMessageCommandSignature,
+} from "./messageCommandUtils";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

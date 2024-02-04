@@ -1,7 +1,7 @@
-import { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "./configTypes";
 import { AnyPluginData, BasePluginData } from "../plugins/PluginData";
-import { typedKeys } from "../utils";
 import { BasePluginType } from "../plugins/pluginTypes";
+import { typedKeys } from "../utils";
+import { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "./configTypes";
 
 const levelRangeRegex = /^([<>=!]+)(\d+)$/;
 const splitLevelRange = (v: string, defaultMod: string): [string, number] => {
@@ -66,12 +66,12 @@ export async function getMatchingPluginConfig<
   TPluginType extends BasePluginType,
   TPluginData extends BasePluginData<TPluginType> = BasePluginData<TPluginType>,
   // Inferred type, should not be overridden
-  TPluginOptions extends PluginOptions<TPluginData["_pluginType"]> = PluginOptions<TPluginData["_pluginType"]>
+  TPluginOptions extends PluginOptions<TPluginData["_pluginType"]> = PluginOptions<TPluginData["_pluginType"]>,
 >(
   pluginData: TPluginData,
   pluginOptions: TPluginOptions,
   matchParams: MatchParams<TPluginData["_pluginType"]["customOverrideMatchParams"]>,
-  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>
+  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>,
 ): Promise<TPluginData["_pluginType"]["config"]> {
   let result: TPluginData["_pluginType"]["config"] = mergeConfig(pluginOptions.config || {});
 
@@ -81,7 +81,7 @@ export async function getMatchingPluginConfig<
       pluginData,
       override,
       matchParams,
-      customOverrideCriteriaFunctions
+      customOverrideCriteriaFunctions,
     );
 
     if (matches) {
@@ -100,7 +100,7 @@ export async function evaluateOverrideCriteria<TPluginData extends BasePluginDat
   pluginData: TPluginData,
   criteria: PluginOverride<TPluginData["_pluginType"]>,
   matchParams: MatchParams,
-  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>
+  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>,
 ): Promise<boolean> {
   // Note: Despite the naming here, this does *not* imply any one criterion matching means the entire criteria block
   // matches. When matching of one criterion fails, the command returns immediately. This variable is here purely so

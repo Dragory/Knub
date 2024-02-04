@@ -1,14 +1,15 @@
 import {
-  Channel,
-  ChatInputCommandInteraction,
-  Role,
-  User,
+  APIInteractionDataResolvedGuildMember,
   APIRole,
   ApplicationCommandOptionType,
+  Attachment,
+  Channel,
   ChannelType,
-  Locale,
+  ChatInputCommandInteraction,
   GuildMember,
-  APIInteractionDataResolvedGuildMember, Attachment
+  Locale,
+  Role,
+  User,
 } from "discord.js";
 
 // region Base
@@ -36,13 +37,13 @@ type OptionBuilderOutput<OptionType extends BaseSlashCommandOption<any, unknown>
 
 export type OptionBuilder<OptionType extends BaseSlashCommandOption<any, unknown>> = <
   Name extends string,
-  OptionInput extends OptionBuilderInput<OptionType, Name>
+  OptionInput extends OptionBuilderInput<OptionType, Name>,
 >(
-  opt: OptionInput
+  opt: OptionInput,
 ) => OptionBuilderOutput<OptionType, OptionInput>;
 
 export function makeOptionBuilder<OptionType extends BaseSlashCommandOption<any, unknown>>(
-  builderFn: OptionBuilder<OptionType>
+  builderFn: OptionBuilder<OptionType>,
 ): OptionBuilder<OptionType> {
   return builderFn;
 }
@@ -156,7 +157,7 @@ export type ChannelSlashCommandOption<TChannelType extends ChannelType[]> = Base
 function channelOptionBuilder<
   TChannelType extends ChannelType[],
   Name extends string,
-  OptionInput extends OptionBuilderInput<ChannelSlashCommandOption<TChannelType>, Name>
+  OptionInput extends OptionBuilderInput<ChannelSlashCommandOption<TChannelType>, Name>,
 >(opt: OptionInput): OptionBuilderOutput<ChannelSlashCommandOption<OptionInput["channelTypes"]>, OptionInput> {
   return {
     ...opt,

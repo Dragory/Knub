@@ -1,15 +1,15 @@
-import { EventMeta, Listener } from "./BasePluginEventManager";
-import { Awaitable } from "../utils";
-import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils";
-import { EventArguments, ValidEvent } from "./eventTypes";
+import { DMChannel, User } from "discord.js";
 import { hasPermission } from "../helpers";
 import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
-import { DMChannel, User } from "discord.js";
+import { Awaitable } from "../utils";
+import { EventMeta, Listener } from "./BasePluginEventManager";
+import { EventArguments, ValidEvent } from "./eventTypes";
+import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils";
 
 export type EventFilter = <TEventName extends ValidEvent>(
   event: TEventName,
-  meta: EventMeta<AnyPluginData<BasePluginType>, EventArguments[TEventName]>
+  meta: EventMeta<AnyPluginData<BasePluginType>, EventArguments[TEventName]>,
 ) => Awaitable<boolean>;
 
 export type FilteredListener<T extends Listener<any, any>> = T;
@@ -21,7 +21,7 @@ export type FilteredListener<T extends Listener<any, any>> = T;
 export function withFilters<T extends Listener<any, any>>(
   event: ValidEvent,
   listener: T,
-  filters: EventFilter[]
+  filters: EventFilter[],
 ): FilteredListener<T> {
   const wrapped: Listener<any, any> = async (meta) => {
     for (const filter of filters) {
@@ -43,7 +43,7 @@ export function withFilters<T extends Listener<any, any>>(
 export function withAnyFilter<T extends Listener<any, any>>(
   event: ValidEvent,
   listener: T,
-  filters: EventFilter[]
+  filters: EventFilter[],
 ): FilteredListener<T> {
   const wrapped: Listener<any, any> = async (meta) => {
     for (const filter of filters) {
@@ -122,8 +122,8 @@ export function requirePermission(permission: string): EventFilter {
     const config = member
       ? await pluginData.config.getForMember(member)
       : user
-      ? await pluginData.config.getForUser(user)
-      : pluginData.config.get();
+        ? await pluginData.config.getForUser(user)
+        : pluginData.config.get();
 
     return hasPermission(config, permission);
   };

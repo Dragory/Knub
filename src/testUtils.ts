@@ -3,6 +3,7 @@ import events = require("events");
 import {
   AnyThreadChannel,
   ChannelManager,
+  ChannelType,
   Client,
   DMChannel,
   Guild,
@@ -22,7 +23,6 @@ import {
   User,
   UserManager,
   WebSocketManager,
-  ChannelType,
 } from "discord.js";
 
 const EventEmitter = events.EventEmitter;
@@ -137,7 +137,7 @@ export function createMockUser(client: Client, data = {}): User {
       username: `mockuser_${id}`,
       discriminator: "0001",
       ...data,
-    }) as User
+    }) as User,
   );
 
   return mockUser.get(id)!;
@@ -168,7 +168,7 @@ export function createMockTextChannel(client: Client, guildId: Snowflake, data =
       name: `mock-channel-${id}`,
       ...data,
     },
-    client
+    client,
   ) as TextChannel;
   guild.channels.cache.set(id, mockChannel);
   client.channels.cache.set(id, mockChannel);
@@ -180,7 +180,7 @@ export function createMockMessage(
   client: Client,
   channel: TextChannel | DMChannel | NewsChannel | ThreadChannel,
   author: User,
-  data = {}
+  data = {},
 ): Message {
   // @ts-ignore
   // This type assertation is needed because the constructor is marked as private
@@ -210,8 +210,8 @@ export function createMockRole(guild: Guild, data = {}, overrideId: string | nul
         permissions: "0",
         ...data,
       } as any,
-      guild
-    ) as Role
+      guild,
+    ) as Role,
   );
   return guild.roles.cache.get(id)!;
 }
@@ -230,8 +230,8 @@ export function createMockThread(channel: NewsChannel | GuildChannel): AnyThread
         type: ChannelType.GuildPublicThread,
         parent_id: channel.id,
       },
-      channel.client
-    ) as AnyThreadChannel
+      channel.client,
+    ) as AnyThreadChannel,
   );
 
   const mockThread = channel.guild.channels.cache.get(id)! as AnyThreadChannel;
@@ -258,6 +258,6 @@ export function assertTypeEquals<
   TExpected,
   TActual,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  TAssert extends TActual extends TExpected ? true : false
+  TAssert extends TActual extends TExpected ? true : false,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
 >(): void {}

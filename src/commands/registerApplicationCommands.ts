@@ -1,3 +1,4 @@
+import { APIApplicationCommandOption } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {
   APIApplicationCommand,
   ApplicationCommandOptionType,
@@ -8,16 +9,15 @@ import {
   RESTPostAPIContextMenuApplicationCommandsJSONBody,
   Routes,
 } from "discord.js";
-import { AnySlashCommandSignature, SlashCommandBlueprint } from "./slashCommands/slashCommandBlueprint";
 import { AnyPluginData } from "../plugins/PluginData";
-import { BaseSlashCommandOption } from "./slashCommands/slashCommandOptions";
-import { APIApplicationCommandOption } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-import { SlashGroupBlueprint } from "./slashCommands/slashGroupBlueprint";
 import { indexBy } from "../utils";
 import {
   MessageContextMenuCommandBlueprint,
   UserContextMenuCommandBlueprint,
 } from "./contextMenuCommands/contextMenuCommandBlueprint";
+import { AnySlashCommandSignature, SlashCommandBlueprint } from "./slashCommands/slashCommandBlueprint";
+import { BaseSlashCommandOption } from "./slashCommands/slashCommandOptions";
+import { SlashGroupBlueprint } from "./slashCommands/slashGroupBlueprint";
 
 export type AnyApplicationCommandBlueprint =
   | SlashCommandBlueprint<any, any>
@@ -33,7 +33,7 @@ type RegisterResult = {
 
 export async function registerApplicationCommands(
   client: Client<true>,
-  commands: AnyApplicationCommandBlueprint[]
+  commands: AnyApplicationCommandBlueprint[],
 ): Promise<RegisterResult> {
   const pendingAPIData = commands.map((cmd) => applicationCommandToAPIData(cmd));
   const pendingAPIDataByName = indexBy(pendingAPIData, "name");
@@ -70,7 +70,7 @@ type DiffResult = {
 
 function compareAPIData(
   pendingAPIDataByName: Map<string, RESTPostAPIApplicationCommandsJSONBody>,
-  existingAPIDataByName: Map<string, APIApplicationCommand>
+  existingAPIDataByName: Map<string, APIApplicationCommand>,
 ): DiffResult {
   const diff: DiffResult = {
     create: [],
@@ -181,7 +181,7 @@ function applicationCommandToAPIData(input: AnyApplicationCommandBlueprint): RES
 
 function slashGroupToAPIData(
   blueprint: SlashGroupBlueprint<AnyPluginData<any>>,
-  depth = 1
+  depth = 1,
 ): RESTPostAPIChatInputApplicationCommandsJSONBody {
   if (depth >= 3) {
     throw new Error("Subcommands can only be nested in one subcommand group");
@@ -222,7 +222,7 @@ function slashGroupToAPIData(
 
 function slashCommandToAPIData(
   blueprint: SlashCommandBlueprint<AnyPluginData<any>, AnySlashCommandSignature>,
-  depth = 1
+  depth = 1,
 ): RESTPostAPIChatInputApplicationCommandsJSONBody {
   if ("defaultMemberPermissions" in blueprint && depth > 1) {
     throw new Error("Only top-level slash groups and commands can have defaultMemberPermissions");
@@ -259,7 +259,7 @@ function optionToAPIData(option: BaseSlashCommandOption<any, AnySlashCommandSign
 }
 
 function messageContextMenuCommandToAPIData(
-  blueprint: MessageContextMenuCommandBlueprint<any>
+  blueprint: MessageContextMenuCommandBlueprint<any>,
 ): RESTPostAPIContextMenuApplicationCommandsJSONBody {
   return {
     type: ApplicationCommandType.Message,
@@ -272,7 +272,7 @@ function messageContextMenuCommandToAPIData(
 }
 
 function userContextMenuCommandToAPIData(
-  blueprint: UserContextMenuCommandBlueprint<any>
+  blueprint: UserContextMenuCommandBlueprint<any>,
 ): RESTPostAPIContextMenuApplicationCommandsJSONBody {
   return {
     type: ApplicationCommandType.User,

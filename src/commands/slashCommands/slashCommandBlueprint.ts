@@ -1,14 +1,14 @@
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
 import { Locale, Permissions } from "discord.js";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
+import { BasePluginType } from "../../plugins/pluginTypes";
 import { BaseSlashCommandOption } from "./slashCommandOptions";
 import { SlashCommandFn, SlashCommandSignature } from "./slashCommandUtils";
-import { BasePluginType } from "../../plugins/pluginTypes";
 
 export type AnySlashCommandSignature = Array<BaseSlashCommandOption<any, any>>;
 
 export type SlashCommandBlueprint<
   TPluginData extends AnyPluginData<any>,
-  TSignature extends AnySlashCommandSignature
+  TSignature extends AnySlashCommandSignature,
 > = {
   type: "slash";
   name: string;
@@ -23,7 +23,7 @@ export type SlashCommandBlueprint<
 };
 
 type SlashCommandBlueprintCreator<TPluginData extends AnyPluginData<any>> = <TSignature extends SlashCommandSignature>(
-  blueprint: Omit<SlashCommandBlueprint<TPluginData, TSignature>, "type">
+  blueprint: Omit<SlashCommandBlueprint<TPluginData, TSignature>, "type">,
 ) => SlashCommandBlueprint<TPluginData, TSignature>;
 
 function slashCommand<TPluginData extends AnyPluginData<BasePluginType>>(...args) {
@@ -52,7 +52,7 @@ function slashCommand<TPluginData extends AnyPluginData<BasePluginType>>(...args
  * `guildCommand<TPluginType>()(blueprint)`
  */
 export function guildPluginSlashCommand<TSignature extends SlashCommandSignature>(
-  blueprint: Omit<SlashCommandBlueprint<GuildPluginData<any>, TSignature>, "type">
+  blueprint: Omit<SlashCommandBlueprint<GuildPluginData<any>, TSignature>, "type">,
 ): SlashCommandBlueprint<GuildPluginData<any>, TSignature>;
 
 /**
@@ -74,7 +74,7 @@ export function guildPluginSlashCommand(...args: any[]): any {
  * `guildCommand<TPluginType>()(blueprint)`
  */
 export function globalPluginSlashCommand<TSignature extends SlashCommandSignature>(
-  blueprint: Omit<SlashCommandBlueprint<GlobalPluginData<any>, TSignature>, "type">
+  blueprint: Omit<SlashCommandBlueprint<GlobalPluginData<any>, TSignature>, "type">,
 ): SlashCommandBlueprint<GlobalPluginData<any>, TSignature>;
 
 /**

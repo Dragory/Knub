@@ -1,11 +1,13 @@
-import { AnySlashCommandSignature, SlashCommandBlueprint } from "./slashCommandBlueprint";
-import { AnyPluginData } from "../../plugins/PluginData";
 import { ChatInputCommandInteraction, CommandInteractionOption, Interaction } from "discord.js";
+import { AnyPluginData } from "../../plugins/PluginData";
+import { get } from "../../utils";
+import { AnySlashCommandSignature, SlashCommandBlueprint } from "./slashCommandBlueprint";
 import { SlashCommandMeta } from "./slashCommandUtils";
 import { SlashGroupBlueprint } from "./slashGroupBlueprint";
-import { get } from "../../utils";
 
-type CommandOrGroup<TPluginData extends AnyPluginData<any>> = SlashCommandBlueprint<TPluginData, AnySlashCommandSignature> | SlashGroupBlueprint<TPluginData>;
+type CommandOrGroup<TPluginData extends AnyPluginData<any>> =
+  | SlashCommandBlueprint<TPluginData, AnySlashCommandSignature>
+  | SlashGroupBlueprint<TPluginData>;
 
 export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
   protected pluginData: TPluginData | undefined;
@@ -28,17 +30,17 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
   }
 
   public async runFromInteraction(interaction: Interaction): Promise<void> {
-    if (! interaction.isChatInputCommand()) {
+    if (!interaction.isChatInputCommand()) {
       return;
     }
 
-    if (! this.nameToCommandOrGroup[interaction.commandName]) {
+    if (!this.nameToCommandOrGroup[interaction.commandName]) {
       return;
     }
 
     const commandOrGroup = this.nameToCommandOrGroup[interaction.commandName];
     const command = this.resolveSubcommand(interaction, commandOrGroup);
-    if (! command) {
+    if (!command) {
       return;
     }
 
@@ -50,7 +52,7 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
         userId: interaction.user.id,
         channel: interaction.channel,
       });
-      if (! get(matchingConfig, command.configPermission)) {
+      if (!get(matchingConfig, command.configPermission)) {
         void interaction.reply({
           content: "You don't have permission to use this command",
           ephemeral: true,
@@ -60,13 +62,13 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
     }
 
     const nestedOptions = this.getNestedOptionsData(interaction.options.data);
-    const receivedOptionNames = new Set(nestedOptions.map(opt => opt.name));
+    const receivedOptionNames = new Set(nestedOptions.map((opt) => opt.name));
     const optionsWithValues: Record<string, any> = {};
     for (const option of command.signature) {
       // If we haven't received a specific option at all, it has to be optional and we can set it to null.
       // We *could* put in a sanity check here to make sure we don't do this for options marked as required,
       // but we should be able to trust the slash command system that a required option *will always be included*.
-      if (! receivedOptionNames.has(option.name)) {
+      if (!receivedOptionNames.has(option.name)) {
         optionsWithValues[option.name] = null;
         continue;
       }
@@ -84,7 +86,10 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
     await command.run(meta);
   }
 
-  protected resolveSubcommand(interaction: ChatInputCommandInteraction, commandOrGroup: CommandOrGroup<TPluginData>): SlashCommandBlueprint<TPluginData, AnySlashCommandSignature> | null {
+  protected resolveSubcommand(
+    interaction: ChatInputCommandInteraction,
+    commandOrGroup: CommandOrGroup<TPluginData>,
+  ): SlashCommandBlueprint<TPluginData, AnySlashCommandSignature> | null {
     if (commandOrGroup.type === "slash") {
       return commandOrGroup;
     }
@@ -111,7 +116,9 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
         }
 
         // eslint-disable-next-line no-console
-        console.warn(`[WARN] Received interaction for subcommand group ${interaction.commandName} -> ${subcommandGroupName} but expected subcommand`);
+        console.warn(
+          `[WARN] Received interaction for subcommand group ${interaction.commandName} -> ${subcommandGroupName} but expected subcommand`,
+        );
         return null;
       }
     }
@@ -127,7 +134,9 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
         }
 
         // eslint-disable-next-line no-console
-        console.warn(`[WARN] Received interaction for subcommand ${interaction.commandName} -> ${subcommandName} but expected subcommand group`);
+        console.warn(
+          `[WARN] Received interaction for subcommand ${interaction.commandName} -> ${subcommandName} but expected subcommand group`,
+        );
         return null;
       }
     }
@@ -135,7 +144,9 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
     return null;
   }
 
-  protected getNestedOptionsData(optionsData: readonly CommandInteractionOption[]): readonly CommandInteractionOption[] {
+  protected getNestedOptionsData(
+    optionsData: readonly CommandInteractionOption[],
+  ): readonly CommandInteractionOption[] {
     for (const option of optionsData) {
       if ("options" in option && option.options != null) {
         return this.getNestedOptionsData(option.options);

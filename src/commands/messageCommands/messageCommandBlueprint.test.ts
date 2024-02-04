@@ -1,8 +1,8 @@
-import { number, string } from "knub-command-manager";
 import { expect } from "chai";
-import { BasePluginType } from "../../index";
-import { guildPluginMessageCommand, globalPluginMessageCommand } from "./messageCommandBlueprint";
 import { DMChannel, TextChannel } from "discord.js";
+import { number, string } from "knub-command-manager";
+import { BasePluginType } from "../../index";
+import { globalPluginMessageCommand, guildPluginMessageCommand } from "./messageCommandBlueprint";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
@@ -70,8 +70,8 @@ describe("guildPluginMessageCommand() helper", () => {
         const result2: DMChannel extends typeof message.channel
           ? false
           : TextChannel extends typeof message.channel
-          ? true
-          : false = true;
+            ? true
+            : false = true;
       },
     });
   });

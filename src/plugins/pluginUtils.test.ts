@@ -1,5 +1,5 @@
-import { PluginPublicInterface } from "./pluginUtils";
 import { GuildPluginBlueprint } from "./PluginBlueprint";
+import { PluginPublicInterface } from "./pluginUtils";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

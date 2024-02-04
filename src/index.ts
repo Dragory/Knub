@@ -1,6 +1,6 @@
 import * as configUtils from "./config/configUtils";
-import * as pluginUtils from "./plugins/pluginUtils";
 import * as helpers from "./helpers";
+import * as pluginUtils from "./plugins/pluginUtils";
 
 export { Knub } from "./Knub";
 

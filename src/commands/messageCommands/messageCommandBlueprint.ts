@@ -1,12 +1,12 @@
-import { CommandFn, PluginCommandConfig, MessageCommandSignatureOrArray } from "./messageCommandUtils";
-import { BasePluginType } from "../../plugins/pluginTypes";
 import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
+import { BasePluginType } from "../../plugins/pluginTypes";
+import { CommandFn, MessageCommandSignatureOrArray, PluginCommandConfig } from "./messageCommandUtils";
 
 type CommandSource = "guild" | "dm";
 
 export interface MessageCommandBlueprint<
   TPluginData extends AnyPluginData<any>,
-  _TSignature extends MessageCommandSignatureOrArray<TPluginData["_pluginType"]>
+  _TSignature extends MessageCommandSignatureOrArray<TPluginData["_pluginType"]>,
 > {
   type: "message";
 
@@ -40,9 +40,9 @@ export interface MessageCommandBlueprint<
 }
 
 type CommandBlueprintCreator<TPluginData extends AnyPluginData<any>> = <
-  TSignature extends MessageCommandSignatureOrArray<TPluginData>
+  TSignature extends MessageCommandSignatureOrArray<TPluginData>,
 >(
-  blueprint: Omit<MessageCommandBlueprint<TPluginData, TSignature>, "type">
+  blueprint: Omit<MessageCommandBlueprint<TPluginData, TSignature>, "type">,
 ) => MessageCommandBlueprint<TPluginData, TSignature>;
 
 function command<TPluginData extends AnyPluginData<BasePluginType>>(...args) {
@@ -71,7 +71,7 @@ function command<TPluginData extends AnyPluginData<BasePluginType>>(...args) {
  * `guildCommand<TPluginType>()(blueprint)`
  */
 export function guildPluginMessageCommand<TSignature extends MessageCommandSignatureOrArray<any>>(
-  blueprint: Omit<MessageCommandBlueprint<GuildPluginData<any>, TSignature>, "type">
+  blueprint: Omit<MessageCommandBlueprint<GuildPluginData<any>, TSignature>, "type">,
 ): MessageCommandBlueprint<GuildPluginData<any>, TSignature>;
 
 /**
@@ -93,7 +93,7 @@ export function guildPluginMessageCommand(...args: any[]): any {
  * `globalCommand<TPluginType>()(blueprint)`
  */
 export function globalPluginMessageCommand<TSignature extends MessageCommandSignatureOrArray<any>>(
-  blueprint: Omit<MessageCommandBlueprint<GlobalPluginData<any>, TSignature>, "type">
+  blueprint: Omit<MessageCommandBlueprint<GlobalPluginData<any>, TSignature>, "type">,
 ): MessageCommandBlueprint<GlobalPluginData<any>, TSignature>;
 /**
  * Specify `TPluginType` for type hints and return self

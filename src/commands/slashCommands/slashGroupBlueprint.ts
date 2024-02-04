@@ -1,7 +1,7 @@
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
 import { Locale, Permissions } from "discord.js";
-import { SlashCommandBlueprint } from "./slashCommandBlueprint";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
 import { BasePluginType } from "../../plugins/pluginTypes";
+import { SlashCommandBlueprint } from "./slashCommandBlueprint";
 
 export type SlashGroupBlueprint<TPluginData extends AnyPluginData<any>> = {
   type: "slash-group";
@@ -15,7 +15,7 @@ export type SlashGroupBlueprint<TPluginData extends AnyPluginData<any>> = {
 };
 
 type SlashGroupBlueprintCreator<TPluginData extends AnyPluginData<any>> = (
-  blueprint: Omit<SlashGroupBlueprint<TPluginData>, "type">
+  blueprint: Omit<SlashGroupBlueprint<TPluginData>, "type">,
 ) => SlashGroupBlueprint<TPluginData>;
 
 function slashGroup<TPluginData extends AnyPluginData<BasePluginType>>(...args) {
@@ -44,7 +44,7 @@ function slashGroup<TPluginData extends AnyPluginData<BasePluginType>>(...args) 
  * `guildPluginSlashGroup<TPluginType>()(blueprint)`
  */
 export function guildPluginSlashGroup(
-  blueprint: Omit<SlashGroupBlueprint<GuildPluginData<any>>, "type">
+  blueprint: Omit<SlashGroupBlueprint<GuildPluginData<any>>, "type">,
 ): SlashGroupBlueprint<GuildPluginData<any>>;
 
 /**
@@ -66,7 +66,7 @@ export function guildPluginSlashGroup(...args: any[]): any {
  * `globalPluginSlashGroup<TPluginType>()(blueprint)`
  */
 export function globalPluginSlashGroup(
-  blueprint: Omit<SlashGroupBlueprint<GlobalPluginData<any>>, "type">
+  blueprint: Omit<SlashGroupBlueprint<GlobalPluginData<any>>, "type">,
 ): SlashGroupBlueprint<GlobalPluginData<any>>;
 
 /**

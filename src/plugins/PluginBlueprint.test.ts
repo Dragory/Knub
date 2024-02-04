@@ -1,13 +1,26 @@
+import * as assert from "assert";
+import { expect } from "chai";
+import { ChatInputCommandInteraction, TextChannel } from "discord.js";
+import { parseSignature } from "knub-command-manager";
+import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager";
+import { guildPluginMessageContextMenuCommand } from "../commands/contextMenuCommands/contextMenuCommandBlueprint";
+import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager";
+import { guildPluginMessageCommand } from "../commands/messageCommands/messageCommandBlueprint";
+import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager";
+import { PluginConfigManager } from "../config/PluginConfigManager";
+import { globalPluginEventListener, guildPluginEventListener } from "../events/EventListenerBlueprint";
+import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
+import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import {
   BeforeLoadGuildPluginData,
   CooldownManager,
   GlobalPluginBlueprint,
   GlobalPluginData,
-  guildPluginSlashCommand,
-  guildPluginSlashGroup,
   Knub,
   LockManager,
-  slashOptions
+  guildPluginSlashCommand,
+  guildPluginSlashGroup,
+  slashOptions,
 } from "../index";
 import {
   assertTypeEquals,
@@ -18,25 +31,12 @@ import {
   createMockRole,
   createMockTextChannel,
   createMockUser,
-  sleep
+  sleep,
 } from "../testUtils";
-import * as assert from "assert";
 import { noop } from "../utils";
-import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager";
-import { PluginConfigManager } from "../config/PluginConfigManager";
-import { BasePluginType } from "./pluginTypes";
-import { parseSignature } from "knub-command-manager";
-import { expect } from "chai";
-import { globalPlugin, guildPlugin, GuildPluginBlueprint } from "./PluginBlueprint";
+import { GuildPluginBlueprint, globalPlugin, guildPlugin } from "./PluginBlueprint";
 import { GuildPluginData, isGlobalPluginData } from "./PluginData";
-import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
-import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
-import { globalPluginEventListener, guildPluginEventListener } from "../events/EventListenerBlueprint";
-import { guildPluginMessageCommand } from "../commands/messageCommands/messageCommandBlueprint";
-import { ChatInputCommandInteraction, TextChannel } from "discord.js";
-import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager";
-import { guildPluginMessageContextMenuCommand } from "../commands/contextMenuCommands/contextMenuCommandBlueprint";
-import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager";
+import { BasePluginType } from "./pluginTypes";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
@@ -2060,10 +2060,7 @@ describe("PluginBlueprint", () => {
 
         beforeLoad(partialPluginData) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const typeCheck: AssertEquals<
-            typeof partialPluginData,
-            BeforeLoadGuildPluginData<CustomPluginType>
-          > = true;
+          const typeCheck: AssertEquals<typeof partialPluginData, BeforeLoadGuildPluginData<CustomPluginType>> = true;
         },
         afterLoad(pluginData) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -1,12 +1,12 @@
+import { MessageContextMenuCommandInteraction, UserContextMenuCommandInteraction } from "discord.js";
+import { GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
+import { BasePluginType } from "../../plugins/pluginTypes";
 import {
   globalPluginMessageContextMenuCommand,
   globalPluginUserContextMenuCommand,
   guildPluginMessageContextMenuCommand,
   guildPluginUserContextMenuCommand,
 } from "./contextMenuCommandBlueprint";
-import { MessageContextMenuCommandInteraction, UserContextMenuCommandInteraction } from "discord.js";
-import { BasePluginType } from "../../plugins/pluginTypes";
-import { GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

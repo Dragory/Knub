@@ -1,6 +1,10 @@
-import { guildPlugin } from "./plugins/PluginBlueprint";
-import { noop } from "./utils";
 import assert from "assert";
+import _domain from "domain";
+import { expect } from "chai";
+import { Knub } from "./Knub";
+import { guildPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint";
+import { guildPluginEventListener } from "./events/EventListenerBlueprint";
+import { guildPlugin } from "./plugins/PluginBlueprint";
 import {
   createMockClient,
   createMockGuild,
@@ -9,11 +13,7 @@ import {
   createMockUser,
   sleep,
 } from "./testUtils";
-import { Knub } from "./Knub";
-import { expect } from "chai";
-import { guildPluginEventListener } from "./events/EventListenerBlueprint";
-import _domain from "domain";
-import { guildPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint";
+import { noop } from "./utils";
 
 describe("Knub", () => {
   it("Multiple GUILD_CREATE events load guild's plugins only once", async () => {

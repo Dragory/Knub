@@ -26,7 +26,7 @@ export class ConcurrentRunner {
         this.#running++;
         Promise.resolve(fn())
           .then(() => resolve())
-          .catch(err => reject(err))
+          .catch((err) => reject(err))
           .finally(() => {
             this.#running--;
             this.#next();

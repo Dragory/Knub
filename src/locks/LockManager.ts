@@ -15,7 +15,7 @@ export class Lock {
   constructor(oldLocks: Lock[] = [], lockTimeout = DEFAULT_LOCK_TIMEOUT) {
     // A new lock can be built by combining the state from previous locks
     // For now, this means if any of the old locks was interrupted, the new one is as well
-    this.interrupted = oldLocks.some((l) => l && l.interrupted);
+    this.interrupted = oldLocks.some((l) => l?.interrupted);
 
     this.unlockPromise = new Promise<Lock>((resolve: ResolveFn) => {
       this.resolve = resolve;
@@ -49,16 +49,18 @@ export class LockManager {
     if (!Array.isArray(keys)) keys = [keys];
     if (lockTimeout == null) lockTimeout = this.lockTimeout;
 
-    keys.forEach((key) => {
+    for (const key of keys) {
       clearTimeout(this.lockGCTimeouts.get(key));
       this.lockGCTimeouts.delete(key);
-    });
+    }
 
     // To acquire a lock, we must first wait for all matching old locks to resolve
-    const oldLockPromises = keys.reduce<Array<Promise<Lock>>>(
-      (lockPromises, key) => (this.locks.has(key) ? [...lockPromises, this.locks.get(key)!] : lockPromises),
-      []
-    );
+    const oldLockPromises = keys.reduce<Array<Promise<Lock>>>((lockPromises, key) => {
+      if (this.locks.has(key)) {
+        lockPromises.push(this.locks.get(key)!);
+      }
+      return lockPromises;
+    }, []);
     const newLockPromise = Promise.all(oldLockPromises)
       .then((oldLocks) => {
         // And then we have to wait for these old locks to unlock as well
@@ -66,15 +68,15 @@ export class LockManager {
       })
       .then((unlockedOldLocks) => {
         // And *then* we can return a new lock
-        (keys as string[]).forEach((key) => {
+        for (const key of keys) {
           this.lockGCTimeouts.set(
             key,
             setTimeout(() => {
               this.locks.delete(key);
               this.lockGCTimeouts.delete(key);
-            }, LOCK_GC_TIMEOUT)
+            }, LOCK_GC_TIMEOUT),
           );
-        });
+        }
 
         return new Lock(unlockedOldLocks, lockTimeout);
       });

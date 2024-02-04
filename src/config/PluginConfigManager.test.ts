@@ -1,5 +1,7 @@
 import { assert, expect } from "chai";
-import { PluginConfigManager } from "./PluginConfigManager";
+import { z } from "zod";
+import { BasePluginData, GuildPluginData } from "../plugins/PluginData";
+import { BasePluginType } from "../plugins/pluginTypes";
 import {
   createMockClient,
   createMockGuild,
@@ -11,9 +13,7 @@ import {
   createMockUser,
   sleep,
 } from "../testUtils";
-import { BasePluginType } from "../plugins/pluginTypes";
-import { BasePluginData, GuildPluginData } from "../plugins/PluginData";
-import { z } from "zod";
+import { PluginConfigManager } from "./PluginConfigManager";
 
 describe("PluginConfigManager", () => {
   it("merge user config with default config", async () => {
@@ -48,7 +48,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     await configManager.init();
 
@@ -97,7 +97,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     await configManager.init();
 
@@ -142,7 +142,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     await configManager.init();
 
@@ -175,7 +175,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => configSchema.parse(input),
-      }
+      },
     );
 
     try {
@@ -212,7 +212,7 @@ describe("PluginConfigManager", () => {
             something: 7,
           };
         },
-      }
+      },
     );
     await configManager.init();
 
@@ -245,7 +245,7 @@ describe("PluginConfigManager", () => {
             something: 7,
           };
         },
-      }
+      },
     );
     await configManager.init();
 
@@ -284,7 +284,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
     await configManager.init();
@@ -326,7 +326,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     await configManager.init();
 
@@ -367,7 +367,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     await configManager.init();
 
@@ -407,7 +407,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     await configManager.init();
 
@@ -449,7 +449,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     await configManager.init();
 
@@ -489,7 +489,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     await configManager.init();
 
@@ -529,7 +529,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     await configManager.init();
 
@@ -570,7 +570,7 @@ describe("PluginConfigManager", () => {
       {
         levels: {},
         parser: (input) => input as PluginType["config"],
-      }
+      },
     );
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
     await configManager.init();

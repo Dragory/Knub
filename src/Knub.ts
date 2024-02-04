@@ -1,8 +1,29 @@
-import { Client, GatewayDispatchEvents, GatewayGuildCreateDispatchData, Guild, Snowflake } from "discord.js";
 import { EventEmitter } from "events";
+import { Client, GatewayDispatchEvents, GatewayGuildCreateDispatchData, Guild, Snowflake } from "discord.js";
+import { performance } from "perf_hooks";
+import { ConcurrentRunner } from "./ConcurrentRunner";
+import { Profiler } from "./Profiler";
+import { Queue } from "./Queue";
+import { PluginContextMenuCommandManager } from "./commands/contextMenuCommands/PluginContextMenuCommandManager";
+import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager";
+import { AnyApplicationCommandBlueprint, registerApplicationCommands } from "./commands/registerApplicationCommands";
+import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashCommandManager";
+import { PluginConfigManager } from "./config/PluginConfigManager";
 import { BaseConfig } from "./config/configTypes";
-import { get } from "./utils";
+import { CooldownManager } from "./cooldowns/CooldownManager";
+import { EventRelay } from "./events/EventRelay";
+import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
+import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
 import { LockManager } from "./locks/LockManager";
+import {
+  AnyGlobalEventListenerBlueprint,
+  AnyGuildEventListenerBlueprint,
+  AnyPluginBlueprint,
+  GlobalPluginBlueprint,
+  GuildPluginBlueprint,
+  PluginBlueprintPublicInterface,
+  ResolvedPluginBlueprintPublicInterface,
+} from "./plugins/PluginBlueprint";
 import {
   AfterUnloadPluginData,
   AnyPluginData,
@@ -10,13 +31,13 @@ import {
   BeforeLoadGlobalPluginData,
   BeforeLoadGuildPluginData,
   GlobalPluginData,
-  GuildPluginData
+  GuildPluginData,
 } from "./plugins/PluginData";
-import { PluginConfigManager } from "./config/PluginConfigManager";
-import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager";
-import { CooldownManager } from "./cooldowns/CooldownManager";
 import { PluginLoadError } from "./plugins/PluginLoadError";
-import { defaultGetConfig, defaultGetEnabledGuildPlugins, PluginPublicInterface } from "./plugins/pluginUtils";
+import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
+import { UnknownPluginError } from "./plugins/UnknownPluginError";
+import { BasePluginType } from "./plugins/pluginTypes";
+import { PluginPublicInterface, defaultGetConfig, defaultGetEnabledGuildPlugins } from "./plugins/pluginUtils";
 import {
   AnyContext,
   GlobalContext,
@@ -27,30 +48,9 @@ import {
   KnubOptions,
   LoadedGlobalPlugin,
   LoadedGuildPlugin,
-  LogFn
+  LogFn,
 } from "./types";
-import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
-import {
-  AnyGlobalEventListenerBlueprint,
-  AnyGuildEventListenerBlueprint,
-  AnyPluginBlueprint,
-  GlobalPluginBlueprint,
-  GuildPluginBlueprint,
-  PluginBlueprintPublicInterface,
-  ResolvedPluginBlueprintPublicInterface
-} from "./plugins/PluginBlueprint";
-import { UnknownPluginError } from "./plugins/UnknownPluginError";
-import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
-import { EventRelay } from "./events/EventRelay";
-import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
-import { Queue } from "./Queue";
-import { performance } from "perf_hooks";
-import { Profiler } from "./Profiler";
-import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashCommandManager";
-import { ConcurrentRunner } from "./ConcurrentRunner";
-import { AnyApplicationCommandBlueprint, registerApplicationCommands } from "./commands/registerApplicationCommands";
-import { PluginContextMenuCommandManager } from "./commands/contextMenuCommands/PluginContextMenuCommandManager";
-import { BasePluginType } from "./plugins/pluginTypes";
+import { get } from "./utils";
 
 const defaultKnubArgs: KnubArgs = {
   guildPlugins: [],
@@ -112,7 +112,7 @@ export class Knub extends EventEmitter {
     const uniquePluginNames = new Set();
     const validatePlugin = (plugin: AnyPluginBlueprint) => {
       if (plugin.name == null) {
-        throw new Error(`No plugin name specified for plugin`);
+        throw new Error("No plugin name specified for plugin");
       }
 
       if (uniquePluginNames.has(plugin.name)) {
@@ -222,7 +222,7 @@ export class Knub extends EventEmitter {
   protected async getBeforeLoadGuildPluginData<TPluginType extends BasePluginType>(
     ctx: AnyContext,
     plugin: GuildPluginBlueprint<GuildPluginData<TPluginType>, any>,
-    loadedAsDependency: boolean
+    loadedAsDependency: boolean,
   ): Promise<BeforeLoadGuildPluginData<TPluginType>> {
     const configManager = new PluginConfigManager<GuildPluginData<TPluginType>>(
       plugin.defaultOptions ?? { config: {} },
@@ -232,7 +232,7 @@ export class Knub extends EventEmitter {
         levels: ctx.config.levels || {},
         parser: plugin.configParser,
         customOverrideCriteriaFunctions: plugin.customOverrideCriteriaFunctions,
-      }
+      },
     );
 
     try {
@@ -286,7 +286,7 @@ export class Knub extends EventEmitter {
   protected async getBeforeLoadGlobalPluginData<TPluginType extends BasePluginType>(
     ctx: AnyContext,
     plugin: GlobalPluginBlueprint<GlobalPluginData<TPluginType>, any>,
-    loadedAsDependency: boolean
+    loadedAsDependency: boolean,
   ): Promise<BeforeLoadGlobalPluginData<TPluginType>> {
     const configManager = new PluginConfigManager<GlobalPluginData<TPluginType>>(
       plugin.defaultOptions ?? { config: {} },
@@ -296,7 +296,7 @@ export class Knub extends EventEmitter {
         levels: ctx.config.levels || {},
         parser: plugin.configParser,
         customOverrideCriteriaFunctions: plugin.customOverrideCriteriaFunctions,
-      }
+      },
     );
 
     try {
@@ -348,7 +348,7 @@ export class Knub extends EventEmitter {
    * Convert a full PluginData object to the partial object that's passed to afterUnload() functions
    */
   protected getAfterUnloadPluginData<TPluginData extends BasePluginData<any>>(
-    pluginData: TPluginData
+    pluginData: TPluginData,
   ): AfterUnloadPluginData<TPluginData> {
     return {
       ...pluginData,
@@ -359,7 +359,7 @@ export class Knub extends EventEmitter {
 
   protected async resolveDependencies(
     plugin: AnyPluginBlueprint,
-    resolvedDependencies: Set<string> = new Set()
+    resolvedDependencies: Set<string> = new Set(),
   ): Promise<Set<string>> {
     if (!plugin.dependencies) {
       return resolvedDependencies;
@@ -384,7 +384,7 @@ export class Knub extends EventEmitter {
 
   protected resolvePluginBlueprintPublicInterface<T extends AnyPluginBlueprint, TPublic = T["public"]>(
     blueprint: T,
-    pluginData: AnyPluginData<any>
+    pluginData: AnyPluginData<any>,
   ): TPublic extends PluginBlueprintPublicInterface<any> ? ResolvedPluginBlueprintPublicInterface<TPublic> : null {
     if (!blueprint.public) {
       return null!;
@@ -397,7 +397,7 @@ export class Knub extends EventEmitter {
       obj[prop] = (...args: any[]) => {
         if (!pluginData.loaded) {
           throw new PluginNotLoadedError(
-            `Tried to access plugin public interface (${blueprint.name}), but the plugin is no longer loaded`
+            `Tried to access plugin public interface (${blueprint.name}), but the plugin is no longer loaded`,
           );
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return
@@ -409,7 +409,7 @@ export class Knub extends EventEmitter {
 
   protected getPluginPublicInterface<T extends AnyPluginBlueprint>(
     ctx: AnyContext,
-    plugin: T
+    plugin: T,
   ): PluginPublicInterface<T> {
     if (!ctx.loadedPlugins.has(plugin.name)) {
       throw new PluginNotLoadedError(`Plugin ${plugin.name} is not loaded`);

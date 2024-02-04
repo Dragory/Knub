@@ -1,15 +1,15 @@
+import { Channel, ChannelType, GuildMember, GuildTextBasedChannel, Role, User, VoiceChannel } from "discord.js";
 import {
+  TypeConversionError,
   bool,
   createTypeHelper,
   defaultTypeConverters,
   string,
   switchOption,
-  TypeConversionError,
 } from "knub-command-manager";
 import { disableCodeBlocks } from "../../helpers";
-import { getChannelId, getRoleId, getUserId } from "../../utils";
-import { Channel, ChannelType, GuildMember, GuildTextBasedChannel, Role, User, VoiceChannel } from "discord.js";
 import { AnyPluginData } from "../../plugins/PluginData";
+import { getChannelId, getRoleId, getUserId } from "../../utils";
 import { CommandContext } from "./messageCommandUtils";
 
 // TODO: Remove eslint-disable below after `this: void` has been added to the functions in knub-command-manager

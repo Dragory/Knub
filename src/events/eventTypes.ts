@@ -1,20 +1,31 @@
 import {
+  AnyThreadChannel,
   ApplicationCommandPermissionsUpdateData,
+  AutoModerationActionExecution,
+  AutoModerationRule,
   ClientEvents,
   CloseEvent,
   Collection,
   DMChannel,
+  ForumChannel,
   Guild,
+  GuildAuditLogsEntry,
   GuildBan,
   GuildEmoji,
   GuildMember,
+  GuildScheduledEvent,
   Interaction,
   Invite,
+  MediaChannel,
   Message,
   MessageReaction,
+  NewsChannel,
   NonThreadGuildBasedChannel,
   PartialGuildMember,
+  PartialGuildScheduledEvent,
   PartialMessage,
+  PartialMessageReaction,
+  PartialThreadMember,
   PartialUser,
   Presence,
   Role,
@@ -24,19 +35,10 @@ import {
   TextBasedChannel,
   TextChannel,
   ThreadMember,
-  User,
-  VoiceState,
-  AnyThreadChannel,
-  PartialThreadMember,
   Typing,
-  NewsChannel,
+  User,
   VoiceChannel,
-  PartialMessageReaction,
-  GuildScheduledEvent,
-  ForumChannel,
-  AutoModerationActionExecution,
-  AutoModerationRule,
-  GuildAuditLogsEntry, PartialGuildScheduledEvent, MediaChannel
+  VoiceState,
 } from "discord.js";
 import { GuildMessage } from "../types";
 
@@ -63,7 +65,7 @@ export const fromDjsArgs = createFromDjsArgsObject({
   autoModerationRuleDelete: (autoModerationRule: AutoModerationRule) => ({ autoModerationRule }),
   autoModerationRuleUpdate: (
     oldAutoModerationRule: AutoModerationRule | null,
-    newAutoModerationRule: AutoModerationRule
+    newAutoModerationRule: AutoModerationRule,
   ) => ({ oldAutoModerationRule, newAutoModerationRule }),
   cacheSweep: (message: string) => ({ message }),
   channelCreate: (channel: NonThreadGuildBasedChannel) => ({ channel }),
@@ -71,7 +73,7 @@ export const fromDjsArgs = createFromDjsArgsObject({
   channelPinsUpdate: (channel: TextBasedChannel, date: Date) => ({ channel, date }),
   channelUpdate: (
     oldChannel: DMChannel | NonThreadGuildBasedChannel,
-    newChannel: DMChannel | NonThreadGuildBasedChannel
+    newChannel: DMChannel | NonThreadGuildBasedChannel,
   ) => ({ oldChannel, newChannel }),
   debug: (message: string) => ({ message }),
   emojiCreate: (emoji: GuildEmoji) => ({ emoji }),
@@ -91,7 +93,7 @@ export const fromDjsArgs = createFromDjsArgsObject({
   guildMembersChunk: (
     members: Collection<Snowflake, GuildMember>,
     guild: Guild,
-    data: { count: number; index: number; nonce: string | undefined }
+    data: { count: number; index: number; nonce: string | undefined },
   ) => ({ members, guild, data }),
   guildMemberUpdate: (oldMember: GuildMember | PartialGuildMember, newMember: GuildMember) => ({
     oldMember,
@@ -100,11 +102,19 @@ export const fromDjsArgs = createFromDjsArgsObject({
   guildScheduledEventCreate: (guildScheduledEvent: GuildScheduledEvent) => ({ guildScheduledEvent }),
   guildScheduledEventUpdate: (
     oldGuildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent | null,
-    newGuildScheduledEvent: GuildScheduledEvent
+    newGuildScheduledEvent: GuildScheduledEvent,
   ) => ({ oldGuildScheduledEvent, newGuildScheduledEvent }),
-  guildScheduledEventDelete: (guildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent) => ({ guildScheduledEvent }),
-  guildScheduledEventUserAdd: (guildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent, user: User) => ({ guildScheduledEvent, user }),
-  guildScheduledEventUserRemove: (guildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent, user: User) => ({
+  guildScheduledEventDelete: (guildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent) => ({
+    guildScheduledEvent,
+  }),
+  guildScheduledEventUserAdd: (guildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent, user: User) => ({
+    guildScheduledEvent,
+    user,
+  }),
+  guildScheduledEventUserRemove: (
+    guildScheduledEvent: GuildScheduledEvent | PartialGuildScheduledEvent,
+    user: User,
+  ) => ({
     guildScheduledEvent,
     user,
   }),
@@ -157,7 +167,7 @@ export const fromDjsArgs = createFromDjsArgsObject({
   threadMembersUpdate: (
     addedMembers: Collection<Snowflake, ThreadMember>,
     removedMembers: Collection<Snowflake, ThreadMember | PartialThreadMember>,
-    thread: AnyThreadChannel
+    thread: AnyThreadChannel,
   ) => ({ addedMembers, removedMembers, thread }),
   threadUpdate: (oldThread: AnyThreadChannel, newThread: AnyThreadChannel) => ({ oldThread, newThread }),
   typingStart: (typing: Typing) => ({ typing }),

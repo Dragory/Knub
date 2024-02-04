@@ -1,9 +1,9 @@
 import { DeepPartial } from "ts-essentials";
+import { z } from "zod";
+import { AnyPluginData, BasePluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";
 import { Awaitable } from "../utils";
 import { MatchParams } from "./configUtils";
-import { AnyPluginData, BasePluginData } from "../plugins/PluginData";
-import { z } from "zod";
 
 export const permissionLevelsSchema = z.record(z.string(), z.number().int(), {});
 export type PermissionLevels = z.TypeOf<typeof permissionLevelsSchema>;
@@ -55,6 +55,6 @@ export type CustomOverrideCriteriaFunctions<TPluginData extends BasePluginData<a
   [KCriterion in keyof TPluginData["_pluginType"]["customOverrideCriteria"]]: (
     pluginData: TPluginData,
     matchParams: MatchParams<TPluginData["_pluginType"]["customOverrideMatchParams"]>,
-    value: NonNullable<TPluginData["_pluginType"]["customOverrideCriteria"][KCriterion]>
+    value: NonNullable<TPluginData["_pluginType"]["customOverrideCriteria"][KCriterion]>,
   ) => Awaitable<boolean>;
 };

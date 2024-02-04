@@ -1,6 +1,6 @@
-import { OptionsFromSignature, SlashCommandSignature } from "./slashCommandUtils";
-import { slashOptions } from "./slashCommandOptions";
 import { AssertTypeEquals } from "../../testUtils";
+import { slashOptions } from "./slashCommandOptions";
+import { OptionsFromSignature, SlashCommandSignature } from "./slashCommandUtils";
 
 describe("slashCommandUtils", () => {
   it("OptionsFromSignature basic functionality", () => {
