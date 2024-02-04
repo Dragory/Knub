@@ -75,19 +75,16 @@ export class EventRelay {
   }
 
   protected relayEvent(ev: ValidEvent, args: ExtendedClientEvents[ValidEvent]): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-assignment
     const convertedArgs = (fromDjsArgs[ev] as any)?.(...args);
 
     if (isGuildEvent(ev)) {
       // Only guild events are passed to guild listeners, and only to the matching guild
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const guild = eventToGuild[ev]?.(convertedArgs);
       if (guild && this.guildListeners.get(guild.id)?.has(ev)) {
         for (const listener of this.guildListeners.get(guild.id)!.get(ev)!.values()!) {
           const startTime = performance.now();
           const result: unknown = listener(convertedArgs as EventArguments[GuildEvent]);
           void Promise.resolve(result).then(() => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             this.profiler.addDataPoint(
               `event:${ev}:${listener.profilerContext ?? "unknown"}`,
               performance.now() - startTime,
@@ -101,7 +98,6 @@ export class EventRelay {
     if (this.anyListeners.has(ev)) {
       for (const listener of this.anyListeners.get(ev)!.values()) {
         const startTime = performance.now();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const result: unknown = listener(convertedArgs);
         void Promise.resolve(result).then(() => {
           this.profiler.addDataPoint(`event:${ev}`, performance.now() - startTime);

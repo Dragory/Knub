@@ -18,11 +18,9 @@ export function get<TObj>(obj: TObj, path: string, def?: any): unknown {
 
   const pathParts = path.split(".");
   for (const part of pathParts) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const value = cursor[part];
     if (value === undefined) return def;
     if (value == null) return null;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     cursor = value;
   }
   return cursor;
@@ -78,7 +76,7 @@ export function getRoleId(str: string): Snowflake | null {
   return null;
 }
 
-export const noop = (): void => {}; // eslint-disable-line @typescript-eslint/no-empty-function
+export const noop = (): void => {};
 
 export const typedKeys = Object.keys as unknown as <T = Record<string, unknown>>(o: T) => Array<keyof T>;
 

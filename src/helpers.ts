@@ -149,9 +149,7 @@ export function hasPermission(config: unknown, permission: string): boolean {
 }
 
 export function getMemberLevel(pluginData: GuildPluginData<any>, member: GuildMember): number {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
   const levels = pluginData.fullConfig.levels ?? {};
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   return _getMemberLevel(levels, member, pluginData.guild);
 }
 

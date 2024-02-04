@@ -37,7 +37,6 @@ export class PluginContextMenuCommandManager<TPluginData extends AnyPluginData<a
 
     // Check custom, config-based permissions
     if (command.configPermission) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const matchingConfig = await this.#pluginData!.config.getMatchingConfig({
         member: interaction.member,
         userId: interaction.user.id,

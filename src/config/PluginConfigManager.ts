@@ -11,7 +11,6 @@ import {
 import { BasePluginData, isGuildPluginData } from "../plugins/PluginData";
 import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils";
 import { ConfigValidationError } from "./ConfigValidationError";
-/* eslint-disable @typescript-eslint/restrict-plus-operands */
 import {
   ConfigParserFn,
   CustomOverrideCriteriaFunctions,
@@ -86,7 +85,6 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
       }
       if (!config) {
         // FIXME: Debug
-        // eslint-disable-next-line no-console
         console.debug(
           "!! DEBUG !! PluginConfigManager.init config missing",
           this.pluginData && isGuildPluginData(this.pluginData) ? this.pluginData.guild.id : "(global)",

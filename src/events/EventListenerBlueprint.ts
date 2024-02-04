@@ -24,7 +24,6 @@ function eventListener<TPluginData extends AnyPluginData<BasePluginType>>(...arg
   if (args.length === 1) {
     // (blueprint)
     // Return event listener blueprint
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return args[0];
   }
 
@@ -56,7 +55,6 @@ export function guildPluginEventListener<TPluginType extends BasePluginType>(): 
 >;
 
 export function guildPluginEventListener(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return eventListener<GuildPluginData<any>>(...args);
 }
 
@@ -80,6 +78,5 @@ export function globalPluginEventListener<TPluginType extends BasePluginType>():
 >;
 
 export function globalPluginEventListener(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return eventListener<GlobalPluginData<any>>(...args);
 }

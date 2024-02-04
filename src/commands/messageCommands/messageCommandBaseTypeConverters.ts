@@ -12,9 +12,6 @@ import { AnyPluginData } from "../../plugins/PluginData";
 import { getChannelId, getRoleId, getUserId } from "../../utils";
 import { CommandContext } from "./messageCommandUtils";
 
-// TODO: Remove eslint-disable below after `this: void` has been added to the functions in knub-command-manager
-/* eslint-disable @typescript-eslint/unbound-method */
-
 export const messageCommandBaseTypeConverters = {
   ...defaultTypeConverters,
 

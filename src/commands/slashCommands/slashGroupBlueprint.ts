@@ -22,7 +22,6 @@ function slashGroup<TPluginData extends AnyPluginData<BasePluginType>>(...args) 
   if (args.length === 1) {
     // (blueprint)
     // Return group blueprint
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return {
       ...args[0],
       type: "slash-group",
@@ -55,7 +54,6 @@ export function guildPluginSlashGroup<TPluginType extends BasePluginType>(): Sla
 >;
 
 export function guildPluginSlashGroup(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return slashGroup<GuildPluginData<any>>(...args);
 }
 
@@ -77,6 +75,5 @@ export function globalPluginSlashGroup<TPluginType extends BasePluginType>(): Sl
 >;
 
 export function globalPluginSlashGroup(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return slashGroup<GlobalPluginData<any>>(...args);
 }

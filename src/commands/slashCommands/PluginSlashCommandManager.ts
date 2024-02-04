@@ -46,7 +46,6 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
 
     // Check custom, config-based permissions
     if (command.configPermission) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const matchingConfig = await this.pluginData!.config.getMatchingConfig({
         member: interaction.member,
         userId: interaction.user.id,
@@ -73,7 +72,6 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
         continue;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       optionsWithValues[option.name] = option.resolveValue(interaction);
     }
 
@@ -115,7 +113,6 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
           }
         }
 
-        // eslint-disable-next-line no-console
         console.warn(
           `[WARN] Received interaction for subcommand group ${interaction.commandName} -> ${subcommandGroupName} but expected subcommand`,
         );
@@ -133,7 +130,6 @@ export class PluginSlashCommandManager<TPluginData extends AnyPluginData<any>> {
           return item;
         }
 
-        // eslint-disable-next-line no-console
         console.warn(
           `[WARN] Received interaction for subcommand ${interaction.commandName} -> ${subcommandName} but expected subcommand group`,
         );

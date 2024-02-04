@@ -20,9 +20,7 @@ describe("pluginUtils", () => {
     type Expected = { someFn: 5 };
     type NotExpected = { someFn: "foo" };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result1: AssertEquals<Expected, PublicInterface> = true;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result2: AssertEquals<NotExpected, PublicInterface> = false;
   });
 });

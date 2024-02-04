@@ -137,7 +137,6 @@ describe("Knub", () => {
         logFn: noop,
       },
     });
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     knub.on("error", () => {});
 
     const guild = createMockGuild(client);

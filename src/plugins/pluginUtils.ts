@@ -37,7 +37,6 @@ export function getMemberLevel(
 }
 
 export function isGuildContext(ctx: AnyContext): ctx is GuildContext {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   return (ctx as any).guildId != null;
 }
 
@@ -66,7 +65,6 @@ export type PluginPublicInterface<T extends AnyPluginBlueprint> = T["public"] ex
 /**
  * By default, return an empty config for all guilds and the global config
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function defaultGetConfig() {
   return {};
 }

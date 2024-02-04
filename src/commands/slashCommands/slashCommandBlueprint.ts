@@ -30,7 +30,6 @@ function slashCommand<TPluginData extends AnyPluginData<BasePluginType>>(...args
   if (args.length === 1) {
     // (blueprint)
     // Return command blueprint
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return {
       ...args[0],
       type: "slash",
@@ -63,7 +62,6 @@ export function guildPluginSlashCommand<TPluginType extends BasePluginType>(): S
 >;
 
 export function guildPluginSlashCommand(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return slashCommand<GuildPluginData<any>>(...args);
 }
 
@@ -85,6 +83,5 @@ export function globalPluginSlashCommand<TPluginType extends BasePluginType>(): 
 >;
 
 export function globalPluginSlashCommand(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return slashCommand<GlobalPluginData<any>>(...args);
 }

@@ -117,7 +117,6 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
     }
 
     const valueMap = Object.entries(matchedCommand.values).reduce((map, [key, matched]) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       map[key] = matched.value;
       return map;
     }, {});
@@ -125,14 +124,12 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
     const meta: MessageCommandMeta<TPluginData, any> = {
       ...extraMeta,
       args: valueMap,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       message: msg as any,
       pluginData: this.pluginData!,
       command: matchedCommand,
     };
 
     const startTime = performance.now();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await handler(meta);
     const commandName =
       typeof matchedCommand.originalTriggers[0] === "string"

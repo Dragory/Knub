@@ -49,7 +49,6 @@ function command<TPluginData extends AnyPluginData<BasePluginType>>(...args) {
   if (args.length === 1) {
     // (blueprint)
     // Return command blueprint with proper type
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return {
       ...args[0],
       type: "message",
@@ -82,7 +81,6 @@ export function guildPluginMessageCommand<TPluginType extends BasePluginType>():
 >;
 
 export function guildPluginMessageCommand(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return command<GuildPluginData<any>>(...args);
 }
 
@@ -103,6 +101,5 @@ export function globalPluginMessageCommand<TPluginType extends BasePluginType>()
 >;
 
 export function globalPluginMessageCommand(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return command<GlobalPluginData<any>>(...args);
 }

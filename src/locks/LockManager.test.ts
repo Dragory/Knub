@@ -31,7 +31,6 @@ describe("LockManager", () => {
       lock.unlock();
     })();
 
-    // eslint-disable-next-line @typescript-eslint/require-await
     const process3 = (async () => {
       numbers.push(5);
       numbers.push(6);

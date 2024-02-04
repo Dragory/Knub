@@ -226,7 +226,6 @@ function pluginCreator(...args) {
   if (args.length === 1) {
     // (blueprint)
     // Return blueprint
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return args[0];
   }
 
@@ -262,7 +261,6 @@ export function guildPlugin<TPluginType extends BasePluginType>(): GuildPluginBl
 >;
 
 export function guildPlugin(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return pluginCreator(...args);
 }
 
@@ -292,7 +290,6 @@ export function globalPlugin<TPluginType extends BasePluginType>(): GlobalPlugin
 >;
 
 export function globalPlugin(...args: any[]): any {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-argument
   return pluginCreator(...args);
 }
 

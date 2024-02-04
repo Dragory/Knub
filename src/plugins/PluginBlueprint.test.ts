@@ -473,7 +473,6 @@ describe("PluginBlueprint", () => {
                   name: "one_level_down",
                   description: "",
                   signature: [],
-                  // eslint-disable-next-line @typescript-eslint/no-empty-function
                   run() {},
                 }),
 
@@ -485,7 +484,6 @@ describe("PluginBlueprint", () => {
                       name: "two_levels_down",
                       description: "",
                       signature: [],
-                      // eslint-disable-next-line @typescript-eslint/no-empty-function
                       run() {},
                     }),
                   ],
@@ -897,9 +895,7 @@ describe("PluginBlueprint", () => {
           configParser: () => ({}),
 
           beforeLoad(partialPluginData) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             assert.strictEqual((partialPluginData as any).getPlugin, undefined);
             done();
           },
@@ -933,9 +929,7 @@ describe("PluginBlueprint", () => {
           configParser: () => ({}),
 
           beforeLoad(partialPluginData) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             assert.strictEqual((partialPluginData as any).getPlugin, undefined);
             done();
           },
@@ -963,9 +957,7 @@ describe("PluginBlueprint", () => {
           configParser: () => ({}),
 
           afterUnload(partialPluginData) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             assert.strictEqual((partialPluginData as any).getPlugin, undefined);
             done();
           },
@@ -1002,9 +994,7 @@ describe("PluginBlueprint", () => {
           configParser: () => ({}),
 
           afterUnload(partialPluginData) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             assert.strictEqual((partialPluginData as any).getPlugin, undefined);
             done();
           },
@@ -1055,16 +1045,14 @@ describe("PluginBlueprint", () => {
           },
           afterUnload() {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-call
               getPluginFn(PluginWithPublicInterface);
               assert.fail("getPluginFn() should have failed");
-            } catch {} // eslint-disable-line no-empty
+            } catch {}
 
             try {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
               plugin1Interface.myFn();
               assert.fail("plugin1Interface.myFn() should have failed");
-            } catch {} // eslint-disable-line no-empty
+            } catch {}
 
             done();
           },
@@ -1122,16 +1110,14 @@ describe("PluginBlueprint", () => {
           },
           afterUnload() {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-call
               getPluginFn(PluginWithPublicInterface);
               assert.fail("getPluginFn() should have failed");
-            } catch {} // eslint-disable-line no-empty
+            } catch {}
 
             try {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
               plugin1Interface.myFn();
               assert.fail("plugin1Interface.myFn() should have failed");
-            } catch {} // eslint-disable-line no-empty
+            } catch {}
 
             done();
           },
@@ -1463,9 +1449,7 @@ describe("PluginBlueprint", () => {
           public: {
             ok(pluginData) {
               assert.ok(pluginData != null);
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               assert.strictEqual(pluginData.config.get().some_value, "cookies");
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
               assert.notStrictEqual(pluginData.config.get().some_value, "milk");
 
               return () => done();
@@ -1848,8 +1832,6 @@ describe("PluginBlueprint", () => {
 
         const types = {
           foo: (value, ctx) => {
-            // eslint-disable-next-line max-len
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions,@typescript-eslint/no-unsafe-member-access
             return `${value}-${ctx.pluginData.guild.id}`;
           },
         };
@@ -2059,11 +2041,9 @@ describe("PluginBlueprint", () => {
         configParser: () => ({}),
 
         beforeLoad(partialPluginData) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const typeCheck: AssertEquals<typeof partialPluginData, BeforeLoadGuildPluginData<CustomPluginType>> = true;
         },
         afterLoad(pluginData) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const typeCheck: AssertEquals<typeof pluginData, GuildPluginData<CustomPluginType>> = true;
         },
       });
@@ -2087,16 +2067,13 @@ describe("PluginBlueprint", () => {
 
         public: {
           myFn(pluginData) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const result: AssertEquals<typeof pluginData.state.foo, OtherPluginType["state"]["foo"]> = true;
 
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/no-empty-function
             return (param: "a constant string") => {};
           },
         },
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const MainPlugin = guildPlugin({
         name: "main-plugin",
         configParser: () => ({}),
@@ -2104,7 +2081,6 @@ describe("PluginBlueprint", () => {
         afterLoad(pluginData) {
           const otherPlugin = pluginData.getPlugin(OtherPlugin);
 
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const result: AssertEquals<Parameters<typeof otherPlugin.myFn>[0], "a constant string"> = true;
         },
       });

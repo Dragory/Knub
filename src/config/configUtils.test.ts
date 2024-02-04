@@ -6,10 +6,6 @@ import { sleep } from "../testUtils";
 import { CustomOverrideCriteriaFunctions } from "./configTypes";
 import { getMatchingPluginConfig, mergeConfig } from "./configUtils";
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
 describe("configUtils", () => {
   describe("mergeConfig", () => {
     const base = {
@@ -475,7 +471,7 @@ describe("configUtils", () => {
           userId: "500",
         });
         expect.fail("No error was thrown");
-      } catch {} // eslint-disable-line no-empty
+      } catch {}
     });
 
     it("'all' special criterion", async () => {

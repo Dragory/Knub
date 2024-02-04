@@ -97,8 +97,6 @@ function compareAPIData(
 
   return diff;
 }
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment */
 function hasPendingDataChanged(pendingData: any, existingData: any): boolean {
   if (pendingData == null && existingData == null) {
     return false;
@@ -156,7 +154,6 @@ function hasPendingDataChanged(pendingData: any, existingData: any): boolean {
 
   return false;
 }
-/* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment */
 
 function applicationCommandToAPIData(input: AnyApplicationCommandBlueprint): RESTPostAPIApplicationCommandsJSONBody {
   if (input.type === "slash-group") {
@@ -175,7 +172,6 @@ function applicationCommandToAPIData(input: AnyApplicationCommandBlueprint): RES
     return userContextMenuCommandToAPIData(input);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/restrict-template-expressions
   throw new Error(`Unknown command type: ${(input as any).type}`);
 }
 
@@ -240,7 +236,6 @@ function slashCommandToAPIData(
           dm_permission: Boolean(blueprint.allowDms),
         }
       : {}),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     options: blueprint.signature.map((option) => optionToAPIData(option)),
   };
 }
@@ -252,7 +247,6 @@ function optionToAPIData(option: BaseSlashCommandOption<any, AnySlashCommandSign
     description: option.description,
     description_localizations: option.descriptionLocalizations,
     required: option.required,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     type: option.type,
     ...option.getExtraAPIProps(),
   };

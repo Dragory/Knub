@@ -25,7 +25,6 @@ export function withFilters<T extends Listener<any, any>>(
 ): FilteredListener<T> {
   const wrapped: Listener<any, any> = async (meta) => {
     for (const filter of filters) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const filterResult = await filter(event, meta);
       if (!filterResult) return;
     }
@@ -47,7 +46,6 @@ export function withAnyFilter<T extends Listener<any, any>>(
 ): FilteredListener<T> {
   const wrapped: Listener<any, any> = async (meta) => {
     for (const filter of filters) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const filterResult = await filter(event, meta);
       if (filterResult) {
         return listener(meta);
@@ -60,16 +58,12 @@ export function withAnyFilter<T extends Listener<any, any>>(
   return wrapped as FilteredListener<T>;
 }
 
-// eslint-disable-next-line max-len
-/* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-member-access */
-
 export function onlyGuild(): EventFilter {
   return (event, { args, pluginData }) => {
     if (!isGuildPluginData(pluginData)) {
       return false;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const guild = eventToGuild[event]?.(args as any) ?? null;
     return Boolean(guild && pluginData.guild === guild);
   };
@@ -77,7 +71,6 @@ export function onlyGuild(): EventFilter {
 
 export function onlyDM(): EventFilter {
   return (event, { args }) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const channel = eventToChannel[event]?.(args as any) ?? null;
     return Boolean(channel && channel instanceof DMChannel);
   };
@@ -89,11 +82,8 @@ export function cooldown(timeMs: number, permission?: string): EventFilter {
   return async (event, { args, pluginData }) => {
     let cdApplies = true;
     if (permission) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const user = eventToUser[event]?.(args as any);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const channel = eventToChannel[event]?.(args as any);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const msg = eventToMessage[event]?.(args as any);
       const config = await pluginData.config.getMatchingConfig({
         channelId: channel?.id,
@@ -116,7 +106,6 @@ export function cooldown(timeMs: number, permission?: string): EventFilter {
 
 export function requirePermission(permission: string): EventFilter {
   return async (event, { args, pluginData }) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const user = eventToUser[event]?.(args as any) ?? null;
     const member = user && isGuildPluginData(pluginData) ? pluginData.guild.members.resolve(user.id) : null;
     const config = member
@@ -131,7 +120,6 @@ export function requirePermission(permission: string): EventFilter {
 
 export function ignoreBots(): EventFilter {
   return (event, { args }) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const user = eventToUser[event]?.(args as any) ?? null;
     return !user || !(user as User).bot;
   };
@@ -139,7 +127,6 @@ export function ignoreBots(): EventFilter {
 
 export function ignoreSelf(): EventFilter {
   return (event, { args, pluginData }) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const user = eventToUser[event]?.(args as any) ?? null;
     return !user || user.id !== pluginData.client.user!.id;
   };

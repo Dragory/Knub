@@ -59,7 +59,6 @@ const defaultKnubArgs: KnubArgs = {
 };
 
 const defaultLogFn: LogFn = (level: string, ...args) => {
-  /* eslint-disable no-console,@typescript-eslint/no-unsafe-argument */
   if (level === "error") {
     console.error("[ERROR]", ...args);
   } else if (level === "warn") {
@@ -67,7 +66,6 @@ const defaultLogFn: LogFn = (level: string, ...args) => {
   } else {
     console.log(`[${level.toUpperCase()}]`, ...args);
   }
-  /* eslint-enable no-console,@typescript-eslint/no-unsafe-argument */
 };
 
 export class Knub extends EventEmitter {
@@ -124,13 +122,11 @@ export class Knub extends EventEmitter {
 
     for (const globalPlugin of args.globalPlugins) {
       validatePlugin(globalPlugin);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       this.globalPlugins.set(globalPlugin.name, globalPlugin);
     }
 
     for (const guildPlugin of args.guildPlugins) {
       validatePlugin(guildPlugin);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       this.guildPlugins.set(guildPlugin.name, guildPlugin);
     }
 
@@ -226,7 +222,6 @@ export class Knub extends EventEmitter {
   ): Promise<BeforeLoadGuildPluginData<TPluginType>> {
     const configManager = new PluginConfigManager<GuildPluginData<TPluginType>>(
       plugin.defaultOptions ?? { config: {} },
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       (get(ctx.config, `plugins.${plugin.name}`) as any) || {},
       {
         levels: ctx.config.levels || {},
@@ -245,7 +240,6 @@ export class Knub extends EventEmitter {
     }
 
     return {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _pluginType: undefined as any,
 
       context: "guild",
@@ -290,7 +284,6 @@ export class Knub extends EventEmitter {
   ): Promise<BeforeLoadGlobalPluginData<TPluginType>> {
     const configManager = new PluginConfigManager<GlobalPluginData<TPluginType>>(
       plugin.defaultOptions ?? { config: {} },
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       (get(ctx.config, `plugins.${plugin.name}`) as any) || {},
       {
         levels: ctx.config.levels || {},
@@ -309,7 +302,6 @@ export class Knub extends EventEmitter {
     }
 
     return {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _pluginType: undefined as any,
 
       context: "global",
@@ -392,7 +384,6 @@ export class Knub extends EventEmitter {
 
     // @ts-ignore
     return Array.from(Object.entries(blueprint.public)).reduce((obj, [prop, fn]) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const finalFn = fn(pluginData);
       obj[prop] = (...args: any[]) => {
         if (!pluginData.loaded) {
@@ -400,7 +391,6 @@ export class Knub extends EventEmitter {
             `Tried to access plugin public interface (${blueprint.name}), but the plugin is no longer loaded`,
           );
         }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-return
         return finalFn(...args);
       };
       return obj;
@@ -451,7 +441,6 @@ export class Knub extends EventEmitter {
         await this.loadGuildConfig(guildContext);
         await this.loadGuildPlugins(guildContext);
       } catch (_err) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         err = _err;
       }
 
@@ -544,7 +533,6 @@ export class Knub extends EventEmitter {
   }
 
   protected async loadGuildConfig(ctx: GuildContext): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     ctx.config = await this.options.getConfig(ctx.guildId);
   }
 
@@ -713,7 +701,6 @@ export class Knub extends EventEmitter {
     }
 
     const globalContext = {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       config: await this.options.getConfig("global"),
       loadedPlugins: new Map(),
       locks: new LockManager(),

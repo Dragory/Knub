@@ -78,7 +78,6 @@ export function createMockClient(): Client<true> {
 
       if (p === "options") {
         return {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           intents: null as any,
           makeCache: Options.cacheEverything(),
         };
@@ -147,7 +146,6 @@ export function createMockMember(guild: Guild, user: User, data = {}): GuildMemb
   // @ts-ignore
   // Not sure why the eslint rule below is triggered, but it probably
   // has something to do with the constructor being marked as private.
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   guild.members.cache.set(user.id, new GuildMember(guild.client, { user, ...data }, guild));
   return guild.members.cache.get(user.id)!;
 }
@@ -157,7 +155,6 @@ export function createMockTextChannel(client: Client, guildId: Snowflake, data =
   const id = (++mockChannelId).toString();
   const guild = client.guilds.cache.get(guildId)!;
 
-  /* eslint-disable @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access */
   // @ts-ignore
   const mockChannel = new TextChannel(
     guild,
@@ -257,7 +254,5 @@ export type AssertTypeEquals<TActual, TExpected> = TActual extends TExpected ? t
 export function assertTypeEquals<
   TExpected,
   TActual,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TAssert extends TActual extends TExpected ? true : false,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
 >(): void {}

@@ -10,7 +10,6 @@ describe("guildPluginEventListener() helper", () => {
   it("(blueprint)", () => {
     const blueprint1 = guildPluginEventListener({
       event: "messageCreate",
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
 
@@ -24,7 +23,6 @@ describe("guildPluginEventListener() helper", () => {
       event: "messageCreate",
       listener({ args }) {
         // Test type inference
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args, { message: GuildMessage }> = true;
       },
     });
@@ -34,7 +32,6 @@ describe("guildPluginEventListener() helper", () => {
       event: "channelUpdate",
       listener({ args }) {
         // Test type inference
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args, { oldChannel: GuildChannel; newChannel: GuildChannel }> = true;
       },
     });
@@ -43,7 +40,6 @@ describe("guildPluginEventListener() helper", () => {
       event: "typingStart",
       listener({ args }) {
         // Test type inference
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args.typing.channel, GuildTextBasedChannel> = true;
       },
     });
@@ -58,7 +54,6 @@ describe("guildPluginEventListener() helper", () => {
   it("<TPluginType>()(blueprint)", () => {
     const blueprint = guildPluginEventListener<CustomPluginType>()({
       event: "messageCreate",
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
 
@@ -72,7 +67,6 @@ describe("globalPluginEventListener() helper", () => {
   it("(blueprint)", () => {
     const blueprint = globalPluginEventListener({
       event: "messageCreate",
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
 
@@ -86,7 +80,6 @@ describe("globalPluginEventListener() helper", () => {
       event: "messageCreate",
       listener({ args }) {
         // Test type inference
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args, { message: Message }> = true;
       },
     });
@@ -96,7 +89,6 @@ describe("globalPluginEventListener() helper", () => {
       event: "channelUpdate",
       listener({ args }) {
         // Test type inference
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args, { oldChannel: Channel; newChannel: Channel }> = true;
       },
     });
@@ -105,7 +97,6 @@ describe("globalPluginEventListener() helper", () => {
       event: "typingStart",
       listener({ args }) {
         // Test type inference
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result: AssertEquals<typeof args.typing.channel, TextBasedChannel> = true;
       },
     });
@@ -120,7 +111,6 @@ describe("globalPluginEventListener() helper", () => {
   it("<TPluginType>()(blueprint)", () => {
     const blueprint = globalPluginEventListener<CustomPluginType>()({
       event: "messageCreate",
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       listener() {},
     });
 

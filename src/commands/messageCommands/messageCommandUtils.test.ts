@@ -28,9 +28,7 @@ describe("messageCommandUtils", () => {
     };
 
     type TArgsFromSignature = ArgsFromSignatureOrArray<typeof signature>;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result1: AssertEquals<TArgsFromSignature["foo"], string> = true;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result2: AssertEquals<TArgsFromSignature["bar"], number> = true;
   });
 
@@ -41,9 +39,7 @@ describe("messageCommandUtils", () => {
     };
 
     type TArgsFromSignature = ArgsFromSignatureOrArray<typeof signature>;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result1: AssertEquals<TArgsFromSignature["foo"], string[]> = true;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result2: AssertEquals<TArgsFromSignature["bar"], number[]> = true;
   });
 });
