@@ -1,3 +1,4 @@
+import { describe, it } from "mocha";
 import { AssertTypeEquals } from "../../testUtils";
 import { slashOptions } from "./slashCommandOptions";
 import { OptionsFromSignature, SlashCommandSignature } from "./slashCommandUtils";

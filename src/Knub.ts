@@ -69,7 +69,7 @@ const defaultLogFn: LogFn = (level: string, ...args) => {
 };
 
 export class Knub extends EventEmitter {
-  protected client: Client;
+  public client: Client;
   protected eventRelay: EventRelay;
 
   protected guildPlugins: GuildPluginMap = new Map() as GuildPluginMap;
@@ -80,6 +80,7 @@ export class Knub extends EventEmitter {
   protected guildLoadQueues: Map<string, Queue> = new Map<string, Queue>();
   protected globalContext: GlobalContext;
   protected globalContextLoaded = false;
+  protected globalContextLoadPromise = Promise.resolve();
 
   protected options: KnubOptions;
 
@@ -88,6 +89,10 @@ export class Knub extends EventEmitter {
   public profiler = new Profiler();
 
   #guildLoadRunner: ConcurrentRunner;
+
+  #loadErrorInterval: NodeJS.Timeout | null = null;
+
+  protected destroyPromise: Promise<void> | null = null;
 
   constructor(client: Client, userArgs: Partial<KnubArgs>) {
     super();
@@ -148,12 +153,14 @@ export class Knub extends EventEmitter {
   }
 
   public initialize(): void {
-    const loadErrorInterval = setInterval(() => {
+    this.#loadErrorInterval = setInterval(() => {
       this.log("info", "Still connecting...");
     }, 30 * 1000);
 
     this.client.once("shardReady", () => {
-      clearInterval(loadErrorInterval);
+      if (this.#loadErrorInterval) {
+        clearInterval(this.#loadErrorInterval);
+      }
       this.log("info", "Bot connected!");
     });
 
@@ -194,10 +201,20 @@ export class Knub extends EventEmitter {
     });
   }
 
-  public async stop(): Promise<void> {
-    await this.unloadAllGuilds();
-    await this.unloadGlobalContext();
-    this.client.destroy();
+  public async destroy(): Promise<void> {
+    if (!this.destroyPromise) {
+      this.destroyPromise = (async () => {
+        this.client.destroy();
+        await this.unloadAllGuilds();
+        await this.unloadGlobalContext();
+        this.removeAllListeners();
+        this.clearGuildLoadQueues();
+        if (this.#loadErrorInterval) {
+          clearInterval(this.#loadErrorInterval);
+        }
+      })();
+    }
+    return this.destroyPromise;
   }
 
   public getAvailablePlugins(): GuildPluginMap {
@@ -245,7 +262,6 @@ export class Knub extends EventEmitter {
       context: "guild",
       pluginName: plugin.name,
       loaded: false,
-      initialized: false,
       client: this.client,
       config: configManager,
       locks: ctx.locks,
@@ -307,7 +323,6 @@ export class Knub extends EventEmitter {
       context: "global",
       pluginName: plugin.name,
       loaded: false,
-      initialized: false,
       client: this.client,
       config: configManager,
       locks: ctx.locks,
@@ -453,6 +468,11 @@ export class Knub extends EventEmitter {
         throw err;
       }
       this.emit("guildLoaded", guildId);
+
+      // Call afterLoad() hooks
+      for (const loadedPlugin of guildContext.loadedPlugins.values()) {
+        await loadedPlugin.blueprint.afterLoad?.(loadedPlugin.pluginData);
+      }
     });
 
     guildLoadPromise = guildLoadPromise.catch(async (err) => {
@@ -491,26 +511,30 @@ export class Knub extends EventEmitter {
 
       // 2. Remove event listeners and mark each plugin as unloaded
       for (const [pluginName, loadedPlugin] of pluginsToUnload) {
-        loadedPlugin.pluginData.events.clearAllListeners();
+        await this.destroyPluginData(loadedPlugin.pluginData);
         loadedPlugin.pluginData.loaded = false;
-        loadedPlugin.pluginData.initialized = false;
         ctx.loadedPlugins.delete(pluginName);
       }
 
-      // 3. Run each plugin's afterUnload() function
+      // 3. Mark the guild as unloaded
+      this.loadedGuilds.delete(ctx.guildId);
+      this.emit("guildUnloaded", ctx.guildId);
+
+      // 4. Run each plugin's afterUnload() function
       for (const [_, loadedPlugin] of pluginsToUnload) {
         const afterUnloadPluginData = this.getAfterUnloadPluginData(loadedPlugin.pluginData);
         await loadedPlugin.blueprint.afterUnload?.(afterUnloadPluginData);
       }
-
-      this.loadedGuilds.delete(ctx.guildId);
-      this.emit("guildUnloaded", ctx.guildId);
     });
   }
 
   protected async unloadAllGuilds(): Promise<void> {
-    const loadedGuilds = this.getLoadedGuilds();
-    const unloadPromises = loadedGuilds.map((loadedGuild) => this.unloadGuild(loadedGuild.guildId));
+    // Merge guild IDs of loaded guilds and those that are in the progress of being loaded
+    // This way we won't miss guilds that are still undergoing their initial load, i.e. they're not returned by getLoadedGuilds()
+    const loadedGuildIds = this.getLoadedGuilds().map((c) => c.guildId);
+    const queuedGuildIds = Array.from(this.guildLoadQueues.keys());
+    const uniqueGuildIds = new Set([...loadedGuildIds, ...queuedGuildIds]);
+    const unloadPromises = Array.from(uniqueGuildIds).map((guildId) => this.unloadGuild(guildId));
 
     await Promise.all(unloadPromises);
   }
@@ -522,6 +546,13 @@ export class Knub extends EventEmitter {
     }
 
     return this.guildLoadQueues.get(guildId)!;
+  }
+
+  protected clearGuildLoadQueues(): void {
+    for (const [key, queue] of this.guildLoadQueues) {
+      this.guildLoadQueues.delete(key);
+      queue.destroy();
+    }
   }
 
   public getLoadedGuild(guildId: Snowflake): GuildContext | undefined {
@@ -548,25 +579,16 @@ export class Knub extends EventEmitter {
 
     const pluginsToLoad = Array.from(new Set([...dependenciesArr, ...enabledPlugins]));
 
-    const pluginsInProgress: Array<{
-      pluginName: string;
-      pluginData: GuildPluginData<any>;
-      isDependency: boolean;
-      startTime: number;
-    }> = [];
-
     // 1. Set up plugin data for each plugin. Call beforeLoad() hook.
     for (const pluginName of pluginsToLoad) {
       if (!this.guildPlugins.has(pluginName)) {
         throw new UnknownPluginError(`Unknown plugin: ${pluginName}`);
       }
 
-      const startTime = performance.now();
-
       const plugin = this.guildPlugins.get(pluginName)!;
-      const isDependency = !enabledPlugins.includes(pluginName);
+      const onlyLoadedAsDependency = !enabledPlugins.includes(pluginName);
 
-      const preloadPluginData = await this.getBeforeLoadGuildPluginData(ctx, plugin, isDependency);
+      const preloadPluginData = await this.getBeforeLoadGuildPluginData(ctx, plugin, onlyLoadedAsDependency);
       preloadPluginData.context = "guild";
       preloadPluginData.guild = this.client.guilds.resolve(ctx.guildId)!;
 
@@ -579,7 +601,7 @@ export class Knub extends EventEmitter {
 
       const fullPluginData = this.withFinalGuildPluginDataProperties(ctx, preloadPluginData);
 
-      preloadPluginData.events.setPluginData(fullPluginData);
+      preloadPluginData.events!.setPluginData(fullPluginData);
       preloadPluginData.messageCommands.setPluginData(fullPluginData);
       preloadPluginData.slashCommands.setPluginData(fullPluginData);
       preloadPluginData.contextMenuCommands.setPluginData(fullPluginData);
@@ -588,47 +610,32 @@ export class Knub extends EventEmitter {
       try {
         await plugin.beforeLoad?.(preloadPluginData);
       } catch (e) {
+        await this.destroyPluginData(fullPluginData);
         throw new PluginLoadError(plugin.name, ctx, e as Error);
       }
 
-      pluginsInProgress.push({
-        pluginName,
+      ctx.loadedPlugins.set(pluginName, {
+        blueprint: plugin,
         pluginData: fullPluginData,
-        isDependency,
-        startTime,
+        onlyLoadedAsDependency,
       });
     }
 
-    // 2. Call each plugin's beforeInit() hook
-    for (const { pluginName, pluginData } of pluginsInProgress) {
-      const plugin = this.guildPlugins.get(pluginName)!;
+    // 2. Call each plugin's beforeStart() hook
+    for (const [pluginName, loadedPlugin] of ctx.loadedPlugins) {
       try {
-        await plugin.beforeInit?.(pluginData);
+        loadedPlugin.blueprint.beforeStart?.(loadedPlugin.pluginData);
       } catch (e) {
-        throw new PluginLoadError(plugin.name, ctx, e as Error);
-      }
-
-      pluginData.initialized = true;
-    }
-
-    // 3. Call each plugin's afterInit() hook
-    for (const { pluginName, pluginData } of pluginsInProgress) {
-      const plugin = this.guildPlugins.get(pluginName)!;
-      try {
-        await plugin.afterInit?.(pluginData);
-      } catch (e) {
-        throw new PluginLoadError(plugin.name, ctx, e as Error);
+        throw new PluginLoadError(pluginName, ctx, e as Error);
       }
     }
 
-    // 4. Register event handlers and commands
-    for (const { pluginName, pluginData, isDependency, startTime } of pluginsInProgress) {
-      const plugin = this.guildPlugins.get(pluginName)!;
-
-      if (!isDependency) {
+    // 3. Register event handlers and commands
+    for (const [pluginName, { blueprint, pluginData, onlyLoadedAsDependency }] of ctx.loadedPlugins) {
+      if (!onlyLoadedAsDependency) {
         // Register event listeners
-        if (plugin.events) {
-          for (const eventListenerBlueprint of plugin.events) {
+        if (blueprint.events) {
+          for (const eventListenerBlueprint of blueprint.events) {
             pluginData.events.registerEventListener({
               ...eventListenerBlueprint,
               listener: eventListenerBlueprint.listener,
@@ -637,8 +644,8 @@ export class Knub extends EventEmitter {
         }
 
         // Register message commands
-        if (plugin.messageCommands) {
-          for (const commandBlueprint of plugin.messageCommands) {
+        if (blueprint.messageCommands) {
+          for (const commandBlueprint of blueprint.messageCommands) {
             pluginData.messageCommands.add({
               ...commandBlueprint,
               run: commandBlueprint.run,
@@ -652,8 +659,8 @@ export class Knub extends EventEmitter {
         });
 
         // Register slash commands
-        if (plugin.slashCommands) {
-          for (const slashCommandBlueprint of plugin.slashCommands) {
+        if (blueprint.slashCommands) {
+          for (const slashCommandBlueprint of blueprint.slashCommands) {
             pluginData.slashCommands.add(slashCommandBlueprint);
           }
         }
@@ -664,8 +671,8 @@ export class Knub extends EventEmitter {
         });
 
         // Register context menu commands
-        if (plugin.contextMenuCommands) {
-          for (const contextMenuCommandBlueprint of plugin.contextMenuCommands) {
+        if (blueprint.contextMenuCommands) {
+          for (const contextMenuCommandBlueprint of blueprint.contextMenuCommands) {
             pluginData.contextMenuCommands.add(contextMenuCommandBlueprint);
           }
         }
@@ -677,18 +684,6 @@ export class Knub extends EventEmitter {
       }
 
       pluginData.loaded = true;
-      ctx.loadedPlugins.set(pluginName, {
-        blueprint: plugin,
-        pluginData,
-      });
-
-      const totalLoadTime = performance.now() - startTime;
-      this.profiler.addDataPoint(`load-plugin:${pluginName}`, totalLoadTime);
-    }
-
-    // 5. Call each plugin's afterLoad() hook
-    for (const loadedPlugin of ctx.loadedPlugins.values()) {
-      await loadedPlugin.blueprint.afterLoad?.(loadedPlugin.pluginData);
     }
   }
 
@@ -700,16 +695,24 @@ export class Knub extends EventEmitter {
       return;
     }
 
-    const globalContext = {
-      config: await this.options.getConfig("global"),
-      loadedPlugins: new Map(),
-      locks: new LockManager(),
-    };
+    this.globalContextLoadPromise = (async () => {
+      const globalContext = {
+        config: await this.options.getConfig("global"),
+        loadedPlugins: new Map(),
+        locks: new LockManager(),
+      };
 
-    await this.loadGlobalPlugins(globalContext);
+      await this.loadGlobalPlugins(globalContext);
 
-    this.globalContext = globalContext;
-    this.globalContextLoaded = true;
+      this.globalContext = globalContext;
+      this.globalContextLoaded = true;
+
+      // Call afterLoad() hooks after the context has been loaded
+      for (const loadedPlugin of this.globalContext.loadedPlugins.values()) {
+        loadedPlugin.blueprint.afterLoad?.(loadedPlugin.pluginData);
+      }
+    })();
+    await this.globalContextLoadPromise;
   }
 
   public async reloadGlobalContext(): Promise<void> {
@@ -718,6 +721,9 @@ export class Knub extends EventEmitter {
   }
 
   public async unloadGlobalContext(): Promise<void> {
+    // Make sure we don't start unloading the global context while it's still loading
+    await this.globalContextLoadPromise;
+
     const pluginsToUnload = Array.from(this.globalContext.loadedPlugins.entries());
 
     // 1. Run each plugin's beforeUnload() function
@@ -727,27 +733,22 @@ export class Knub extends EventEmitter {
 
     // 2. Remove event listeners and mark each plugin as unloaded
     for (const [pluginName, loadedPlugin] of pluginsToUnload) {
-      loadedPlugin.pluginData.events.clearAllListeners();
+      await this.destroyPluginData(loadedPlugin.pluginData);
       loadedPlugin.pluginData.loaded = false;
-      loadedPlugin.pluginData.initialized = false;
       this.globalContext.loadedPlugins.delete(pluginName);
     }
 
-    // 3. Run each plugin's afterUnload() function
+    // 3. Mark the global context as unloaded
+    this.globalContextLoaded = false;
+
+    // 4. Run each plugin's afterUnload() function
     for (const [_, loadedPlugin] of pluginsToUnload) {
       const afterUnloadPluginData = this.getAfterUnloadPluginData(loadedPlugin.pluginData);
       await loadedPlugin.blueprint.afterUnload?.(afterUnloadPluginData);
     }
-
-    this.globalContextLoaded = false;
   }
 
   protected async loadGlobalPlugins(ctx: GlobalContext): Promise<void> {
-    const pluginsInProgress: Array<{
-      pluginName: string;
-      pluginData: GlobalPluginData<any>;
-    }> = [];
-
     // 1. Set up plugin data for each plugin. Call beforeLoad() hooks.
     for (const [pluginName, plugin] of this.globalPlugins.entries()) {
       const beforeLoadPluginData = await this.getBeforeLoadGlobalPluginData(ctx, plugin, false);
@@ -770,44 +771,30 @@ export class Knub extends EventEmitter {
       try {
         await plugin.beforeLoad?.(beforeLoadPluginData);
       } catch (e) {
+        await this.destroyPluginData(fullPluginData);
         throw new PluginLoadError(plugin.name, ctx, e as Error);
       }
 
-      pluginsInProgress.push({
-        pluginName,
+      ctx.loadedPlugins.set(pluginName, {
+        blueprint: plugin,
         pluginData: fullPluginData,
       });
     }
 
-    // 2. Call each plugin's beforeInit() hook
-    for (const { pluginName, pluginData } of pluginsInProgress) {
-      const plugin = this.globalPlugins.get(pluginName)!;
+    // 2. Call each plugin's beforeStart() hook
+    for (const [pluginName, loadedPlugin] of ctx.loadedPlugins) {
       try {
-        await plugin.beforeInit?.(pluginData);
+        await loadedPlugin.blueprint.beforeStart?.(loadedPlugin.pluginData);
       } catch (e) {
-        throw new PluginLoadError(plugin.name, ctx, e as Error);
-      }
-
-      pluginData.initialized = true;
-    }
-
-    // 3. Call each plugin's afterInit() hook
-    for (const { pluginName, pluginData } of pluginsInProgress) {
-      const plugin = this.globalPlugins.get(pluginName)!;
-      try {
-        await plugin.afterInit?.(pluginData);
-      } catch (e) {
-        throw new PluginLoadError(plugin.name, ctx, e as Error);
+        throw new PluginLoadError(pluginName, ctx, e as Error);
       }
     }
 
-    // 4. Register each plugin's event listeners and commands
-    for (const { pluginName, pluginData } of pluginsInProgress) {
-      const plugin = this.globalPlugins.get(pluginName)!;
-
+    // 3. Register each plugin's event listeners and commands
+    for (const [pluginName, { pluginData, blueprint }] of ctx.loadedPlugins) {
       // Register event listeners
-      if (plugin.events) {
-        for (const eventListenerBlueprint of plugin.events) {
+      if (blueprint.events) {
+        for (const eventListenerBlueprint of blueprint.events) {
           pluginData.events.registerEventListener({
             ...eventListenerBlueprint,
             listener: eventListenerBlueprint.listener,
@@ -816,8 +803,8 @@ export class Knub extends EventEmitter {
       }
 
       // Register message commands
-      if (plugin.messageCommands) {
-        for (const commandBlueprint of plugin.messageCommands) {
+      if (blueprint.messageCommands) {
+        for (const commandBlueprint of blueprint.messageCommands) {
           pluginData.messageCommands.add({
             ...commandBlueprint,
             run: commandBlueprint.run,
@@ -831,8 +818,8 @@ export class Knub extends EventEmitter {
       });
 
       // Register slash commands
-      if (plugin.slashCommands) {
-        for (const slashCommandBlueprint of plugin.slashCommands) {
+      if (blueprint.slashCommands) {
+        for (const slashCommandBlueprint of blueprint.slashCommands) {
           pluginData.slashCommands.add(slashCommandBlueprint);
         }
       }
@@ -843,8 +830,8 @@ export class Knub extends EventEmitter {
       });
 
       // Register context menu commands
-      if (plugin.contextMenuCommands) {
-        for (const contextMenuCommandBlueprint of plugin.contextMenuCommands) {
+      if (blueprint.contextMenuCommands) {
+        for (const contextMenuCommandBlueprint of blueprint.contextMenuCommands) {
           pluginData.contextMenuCommands.add(contextMenuCommandBlueprint);
         }
       }
@@ -855,16 +842,16 @@ export class Knub extends EventEmitter {
       });
 
       pluginData.loaded = true;
-      ctx.loadedPlugins.set(plugin.name, {
-        pluginData,
-        blueprint: plugin,
-      });
     }
+  }
 
-    // 5. Call each plugin's afterLoad() hook
-    for (const loadedPlugin of ctx.loadedPlugins.values()) {
-      await loadedPlugin.blueprint.afterLoad?.(loadedPlugin.pluginData);
-    }
+  /**
+   * Cleans up plugin data by removing any dangling event handlers and timers
+   */
+  protected async destroyPluginData(pluginData: GuildPluginData<any> | GlobalPluginData<any>): Promise<void> {
+    pluginData.cooldowns.destroy();
+    pluginData.events.destroy();
+    await pluginData.locks.destroy();
   }
 
   protected async registerApplicationCommands(): Promise<void> {

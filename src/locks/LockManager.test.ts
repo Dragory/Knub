@@ -1,14 +1,9 @@
-import assert from "assert";
+import { assert, expect } from "chai";
+import { describe, it } from "mocha";
 import { sleep } from "../testUtils";
 import { LockManager } from "./LockManager";
 
 describe("LockManager", () => {
-  before(() => {
-    process.on("unhandledRejection", (err) => {
-      throw err;
-    });
-  });
-
   it("simple lock", async () => {
     const numbers: number[] = [];
 
@@ -39,6 +34,8 @@ describe("LockManager", () => {
     await Promise.all([process1, process2, process3]);
 
     assert.deepStrictEqual(numbers, [5, 6, 1, 2, 3, 4]);
+
+    await lockManager.destroy();
   });
 
   it("expiring lock", async () => {
@@ -54,6 +51,8 @@ describe("LockManager", () => {
 
     await lockManager.acquire(lockName);
     assert.strictEqual(unlockedManually, false);
+
+    await lockManager.destroy();
   });
 
   it("combined locks", async () => {
@@ -89,5 +88,7 @@ describe("LockManager", () => {
     // after the combined lock encompassing them both is unlocked
     await Promise.race([lockManager.acquire(lock1Name), lockManager.acquire(lock2Name)]);
     assert.strictEqual(combinedLockUnlocked, true);
+
+    await lockManager.destroy();
   });
 });

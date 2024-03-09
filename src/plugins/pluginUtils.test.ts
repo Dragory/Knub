@@ -1,3 +1,4 @@
+import { describe, it } from "mocha";
 import { GuildPluginBlueprint } from "./PluginBlueprint";
 import { PluginPublicInterface } from "./pluginUtils";
 

@@ -24,6 +24,8 @@ import {
   UserManager,
   WebSocketManager,
 } from "discord.js";
+import { Knub } from "./Knub";
+import { KnubArgs } from "./types";
 
 const EventEmitter = events.EventEmitter;
 
@@ -60,6 +62,10 @@ export function createMockClient(): Client<true> {
         return target[p] as unknown;
       }
 
+      if (p === "destroy") {
+        return () => target.removeAllListeners();
+      }
+
       if (p === "ws") {
         return persist(target, p, createMockWebSocketManager());
       }
@@ -91,6 +97,50 @@ export function createMockClient(): Client<true> {
 
       return noop;
     },
+  });
+}
+
+/**
+ * Helper function to set up Knub with auto-cleanup
+ */
+export async function withKnub(
+  mochaDoneFn: () => void,
+  fn: (createKnub: (args: Partial<KnubArgs>) => Knub, done: () => void) => void | Promise<void>,
+): Promise<void> {
+  let knub: Knub | null = null;
+  const createKnub = (args: Partial<KnubArgs>) => {
+    const client = createMockClient();
+    knub = new Knub(client, args);
+    return knub;
+  };
+  const done = () => {
+    if (!knub) {
+      throw new Error("createKnub() was not called in withKnub()");
+    }
+    void knub.destroy();
+    mochaDoneFn();
+  };
+  try {
+    await fn(createKnub, done);
+  } catch (e) {
+    // TS doing some weird inference here, narrowing `knub` to `never`, hence the assertation
+    await (knub as Knub | null)?.destroy();
+    throw e;
+  }
+}
+
+/**
+ * Most tests need to initialize Knub, so this is a helper function to handle that
+ */
+export async function initializeKnub(knub: Knub): Promise<void> {
+  return new Promise<void>((resolve) => {
+    knub.once("loadingFinished", () => {
+      resolve();
+    });
+    knub.initialize();
+    knub.client.emit("connect");
+    knub.client.emit("shardReady", 0, undefined);
+    knub.client.emit("ready", knub.client as Client<true>);
   });
 }
 

@@ -5,16 +5,15 @@
   "author": "Miikka <contact@mivir.fi>",
   "license": "MIT",
   "scripts": {
-    "test-files": "mocha --exit -r ts-node/register",
-    "test": "mocha --exit -r ts-node/register \"src/**/*.test.ts\" -- --trace-warnings",
-    "test-debug": "mocha --exit -r ts-node/register -g \"command permissions\" \"src/**/*.test.ts\" -- --trace-warnings",
-    "build": "shx touch dist && shx rm -r dist && shx rm tsconfig.tsbuildinfo && tsc --sourceMap false && shx cp .npmignore dist/",
+    "test": "npm run build-debug && mocha dist --recursive",
+    "test-debug": "npm run build-debug && why-is-node-running ./node_modules/.bin/mocha dist --recursive",
+    "build-debug": "shx rm -rf dist && shx rm -f tsconfig.tsbuildinfo && tsc --sourceMap true",
+    "build": "shx rm -rf dist && shx rm -f tsconfig.tsbuildinfo && tsc --sourceMap false && shx cp .npmignore dist/",
     "preversion": "npm run test",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "shx touch dist && shx rm -r dist && tsc --watch",
     "biome-check": "biome check ./src",
-    "biome-fix": "biome lint --apply ./src",
-    "biome-format": "biome format --write ./src",
+    "biome-fix": "biome check --apply ./src",
     "prepare": "husky install"
   },
   "main": "dist/index.js",
@@ -47,7 +46,8 @@
     "mocha": "^10",
     "shx": "^0.3.3",
     "ts-node": "^10.9",
-    "typescript": "5.3"
+    "typescript": "5.3",
+    "why-is-node-running": "^2.2.2"
   },
   "files": [
     "/dist"

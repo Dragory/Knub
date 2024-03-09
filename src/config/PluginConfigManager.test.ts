@@ -1,4 +1,5 @@
 import { assert, expect } from "chai";
+import { describe, it } from "mocha";
 import { z } from "zod";
 import { BasePluginData, GuildPluginData } from "../plugins/PluginData";
 import { BasePluginType } from "../plugins/pluginTypes";

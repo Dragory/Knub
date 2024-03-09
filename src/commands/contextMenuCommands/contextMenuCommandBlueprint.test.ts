@@ -1,5 +1,5 @@
 import { MessageContextMenuCommandInteraction, UserContextMenuCommandInteraction } from "discord.js";
-import { GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
+import { describe, it } from "mocha";
 import { BasePluginType } from "../../plugins/pluginTypes";
 import {
   globalPluginMessageContextMenuCommand,

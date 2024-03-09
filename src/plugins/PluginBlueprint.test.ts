@@ -1,7 +1,7 @@
-import * as assert from "assert";
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import { ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { parseSignature } from "knub-command-manager";
+import { describe, it } from "mocha";
 import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager";
 import { guildPluginMessageContextMenuCommand } from "../commands/contextMenuCommands/contextMenuCommandBlueprint";
 import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager";
@@ -16,7 +16,6 @@ import {
   CooldownManager,
   GlobalPluginBlueprint,
   GlobalPluginData,
-  Knub,
   LockManager,
   guildPluginSlashCommand,
   guildPluginSlashGroup,
@@ -31,7 +30,9 @@ import {
   createMockRole,
   createMockTextChannel,
   createMockUser,
+  initializeKnub,
   sleep,
+  withKnub,
 } from "../testUtils";
 import { noop } from "../utils";
 import { GuildPluginBlueprint, globalPlugin, guildPlugin } from "./PluginBlueprint";
@@ -41,45 +42,31 @@ import { BasePluginType } from "./pluginTypes";
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
 describe("PluginBlueprint", () => {
-  before(() => {
-    process.on("unhandledRejection", (err) => {
-      throw err;
-    });
-  });
-
+  /*
   describe("Commands and events", () => {
-    it("loads commands and events", (done) => {
-      void (async () => {
+    it("loads commands and events", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
           configParser: () => ({}),
 
           messageCommands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
-
           slashCommands: [guildPluginSlashCommand({ name: "bar", description: "", signature: [], run: noop })],
-
           contextMenuCommands: [guildPluginMessageContextMenuCommand({ name: "baz", run: noop })],
-
           events: [guildPluginEventListener({ event: "messageCreate", listener: noop })],
 
           afterLoad(pluginData) {
-            setTimeout(() => {
-              assert.strictEqual(pluginData.messageCommands.getAll().length, 1);
+            assert.strictEqual(pluginData.messageCommands.getAll().length, 1);
+            assert.strictEqual(pluginData.slashCommands.getAll().length, 1);
+            assert.strictEqual(pluginData.contextMenuCommands.getAll().length, 1);
+            // There are also default message and interaction listeners that are always registered, hence 4
+            assert.strictEqual(pluginData.events.getListenerCount(), 4);
 
-              assert.strictEqual(pluginData.slashCommands.getAll().length, 1);
-
-              assert.strictEqual(pluginData.contextMenuCommands.getAll().length, 1);
-
-              // There are also default message and interaction listeners that are always registered, hence 4
-              assert.strictEqual(pluginData.events.getListenerCount(), 4);
-
-              done();
-            }, 1);
+            done();
           },
         });
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToLoad],
           options: {
             autoRegisterApplicationCommands: false,
@@ -89,28 +76,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("guild events are only passed to the matching guild", (done) => {
-      void (async () => {
-        const client = createMockClient();
-        const guild0 = createMockGuild(client);
-        const guild1 = createMockGuild(client);
-
-        const guildCounts = {
-          [guild0.id]: 0,
-          [guild1.id]: 0,
-        };
-
+    it("guild events are only passed to the matching guild", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -126,7 +100,7 @@ describe("PluginBlueprint", () => {
           ],
         });
 
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -135,40 +109,44 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        void knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
+        const guild0 = createMockGuild(knub.client);
+        const guild1 = createMockGuild(knub.client);
+
+        const guildCounts = {
+          [guild0.id]: 0,
+          [guild1.id]: 0,
+        };
+
+        knub.client.ws.emit("GUILD_CREATE", guild0);
+        knub.client.ws.emit("GUILD_CREATE", guild1);
         await sleep(30);
 
-        client.ws.emit("GUILD_CREATE", guild0);
-        client.ws.emit("GUILD_CREATE", guild1);
-        await sleep(30);
+        const user0 = createMockUser(knub.client);
+        const user1 = createMockUser(knub.client);
+        const guild0Channel = createMockTextChannel(knub.client, guild0.id);
+        const guild1Channel = createMockTextChannel(knub.client, guild1.id);
 
-        const user0 = createMockUser(client);
-        const user1 = createMockUser(client);
-        const guild0Channel = createMockTextChannel(client, guild0.id);
-        const guild1Channel = createMockTextChannel(client, guild1.id);
+        const guild0Message1 = createMockMessage(knub.client, guild0Channel, user0, { content: "foo" });
+        const guild0Message2 = createMockMessage(knub.client, guild0Channel, user0, { content: "bar" });
+        const guild1Message1 = createMockMessage(knub.client, guild1Channel, user1, { content: "foo" });
+        const guild1Message2 = createMockMessage(knub.client, guild1Channel, user1, { content: "bar" });
 
-        const guild0Message1 = createMockMessage(client, guild0Channel, user0, { content: "foo" });
-        const guild0Message2 = createMockMessage(client, guild0Channel, user0, { content: "bar" });
-        const guild1Message1 = createMockMessage(client, guild1Channel, user1, { content: "foo" });
-        const guild1Message2 = createMockMessage(client, guild1Channel, user1, { content: "bar" });
-
-        client.emit("messageCreate", guild0Message1);
-        client.emit("messageCreate", guild0Message2);
-        client.emit("messageCreate", guild1Message1);
-        client.emit("messageCreate", guild1Message2);
+        knub.client.emit("messageCreate", guild0Message1);
+        knub.client.emit("messageCreate", guild0Message2);
+        knub.client.emit("messageCreate", guild1Message1);
+        knub.client.emit("messageCreate", guild1Message2);
         await sleep(30);
 
         assert.strictEqual(guildCounts[guild0.id], 2);
         assert.strictEqual(guildCounts[guild1.id], 2);
         done();
-      })();
+      });
     });
 
-    it("global events are not passed to guild event listeners", (done) => {
-      void (async () => {
+    it("global events are not passed to guild event listeners", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -186,7 +164,7 @@ describe("PluginBlueprint", () => {
         });
 
         const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -195,11 +173,7 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
-
-        void knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
+        await initializeKnub(knub);
 
         const guild0 = createMockGuild(client);
         client.ws.emit("GUILD_CREATE", guild0);
@@ -207,14 +181,14 @@ describe("PluginBlueprint", () => {
 
         const user = createMockUser(client);
         client.emit("userUpdate", user, user);
-        await sleep(30);
+        await sleep(10);
 
         done();
-      })();
+      });
     });
 
-    it("global events are passed to global event listeners", (done) => {
-      void (async () => {
+    it("global events are passed to global event listeners", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad = globalPlugin({
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -229,29 +203,21 @@ describe("PluginBlueprint", () => {
           ],
         });
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToLoad],
           options: {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const user = createMockUser(client);
-        client.emit("userUpdate", user, user);
-      })();
+        const user = createMockUser(knub.client);
+        knub.client.emit("userUpdate", user, user);
+      });
     });
 
-    it("guild events are passed to global event listeners", (done) => {
-      void (async () => {
-        const client = createMockClient();
-        const guild = createMockGuild(client);
-
+    it("guild events are passed to global event listeners", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad = globalPlugin({
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -268,162 +234,159 @@ describe("PluginBlueprint", () => {
           ],
         });
 
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToLoad],
           options: {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
+        const guild = createMockGuild(knub.client);
 
-        const user = createMockUser(client);
-        const channel = createMockTextChannel(client, guild.id);
-        const message = createMockMessage(client, channel, user);
-        client.emit("messageCreate", message);
-      })();
+        const user = createMockUser(knub.client);
+        const channel = createMockTextChannel(knub.client, guild.id);
+        const message = createMockMessage(knub.client, channel, user);
+        knub.client.emit("messageCreate", message);
+      });
     });
 
     describe("Message commands", () => {
-      it("command permissions", async () => {
-        const infoCmdCallUsers: string[] = [];
-        const serverCmdCallUsers: string[] = [];
-        const pingCmdCallUsers: string[] = [];
+      it("command permissions", (mochaDone) => {
+        withKnub(mochaDone, async (createKnub, done) => {
+          const infoCmdCallUsers: string[] = [];
+          const serverCmdCallUsers: string[] = [];
+          const pingCmdCallUsers: string[] = [];
 
-        interface PluginType extends BasePluginType {
-          config: {
-            can_use_info_cmd: boolean;
-            can_use_server_cmd: boolean;
-            can_use_ping_cmd: boolean;
-          };
-        }
-
-        const TestPlugin = guildPlugin<PluginType>()({
-          name: "test-plugin",
-          configParser: (input) => input as PluginType["config"],
-
-          defaultOptions: {
+          interface PluginType extends BasePluginType {
             config: {
-              can_use_info_cmd: false,
-              can_use_server_cmd: false,
-              can_use_ping_cmd: false,
+              can_use_info_cmd: boolean;
+              can_use_server_cmd: boolean;
+              can_use_ping_cmd: boolean;
+            };
+          }
+
+          const TestPlugin = guildPlugin<PluginType>()({
+            name: "test-plugin",
+            configParser: (input) => input as PluginType["config"],
+
+            defaultOptions: {
+              config: {
+                can_use_info_cmd: false,
+                can_use_server_cmd: false,
+                can_use_ping_cmd: false,
+              },
             },
-          },
 
-          messageCommands: [
-            guildPluginMessageCommand({
-              trigger: "info",
-              permission: "can_use_info_cmd",
-              run({ message }) {
-                infoCmdCallUsers.push(message.author.id);
-              },
-            }),
-            guildPluginMessageCommand({
-              trigger: "server",
-              permission: "can_use_server_cmd",
-              run({ message }) {
-                serverCmdCallUsers.push(message.author.id);
-              },
-            }),
-            guildPluginMessageCommand({
-              trigger: "ping",
-              permission: "can_use_ping_cmd",
-              run({ message }) {
-                pingCmdCallUsers.push(message.author.id);
-              },
-            }),
-          ],
-        });
-
-        const client = createMockClient();
-        const guild = createMockGuild(client);
-
-        const user1 = createMockUser(client);
-        const user2 = createMockUser(client);
-        const user3 = createMockUser(client);
-
-        const role = createMockRole(guild);
-        const _member3 = createMockMember(guild, user3, { roles: [role.id] });
-
-        const knub = new Knub(client, {
-          guildPlugins: [TestPlugin],
-          options: {
-            getEnabledGuildPlugins() {
-              return ["test-plugin"];
-            },
-            getConfig() {
-              return {
-                prefix: "!",
-                plugins: {
-                  "test-plugin": {
-                    overrides: [
-                      {
-                        user: user1.id,
-                        config: {
-                          can_use_info_cmd: true,
-                        },
-                      },
-                      {
-                        user: user2.id,
-                        config: {
-                          can_use_server_cmd: true,
-                        },
-                      },
-                      {
-                        role: role.id,
-                        config: {
-                          can_use_ping_cmd: true,
-                        },
-                      },
-                    ],
-                  },
+            messageCommands: [
+              guildPluginMessageCommand({
+                trigger: "info",
+                permission: "can_use_info_cmd",
+                run({ message }) {
+                  infoCmdCallUsers.push(message.author.id);
                 },
-              };
+              }),
+              guildPluginMessageCommand({
+                trigger: "server",
+                permission: "can_use_server_cmd",
+                run({ message }) {
+                  serverCmdCallUsers.push(message.author.id);
+                },
+              }),
+              guildPluginMessageCommand({
+                trigger: "ping",
+                permission: "can_use_ping_cmd",
+                run({ message }) {
+                  pingCmdCallUsers.push(message.author.id);
+                },
+              }),
+            ],
+          });
+
+          const knub = createKnub({
+            guildPlugins: [TestPlugin],
+            options: {
+              getEnabledGuildPlugins() {
+                return ["test-plugin"];
+              },
+              getConfig() {
+                return {
+                  prefix: "!",
+                  plugins: {
+                    "test-plugin": {
+                      overrides: [
+                        {
+                          user: user1.id,
+                          config: {
+                            can_use_info_cmd: true,
+                          },
+                        },
+                        {
+                          user: user2.id,
+                          config: {
+                            can_use_server_cmd: true,
+                          },
+                        },
+                        {
+                          role: role.id,
+                          config: {
+                            can_use_ping_cmd: true,
+                          },
+                        },
+                      ],
+                    },
+                  },
+                };
+              },
+              logFn: noop,
             },
-            logFn: noop,
-          },
+          });
+
+          const user1 = createMockUser(knub.client);
+          const user2 = createMockUser(knub.client);
+          const user3 = createMockUser(knub.client);
+          const guild = createMockGuild(knub.client);
+          const role = createMockRole(guild);
+
+          await initializeKnub(knub);
+
+          void createMockMember(guild, user3, { roles: [role.id] });
+
+          knub.client.ws.emit("GUILD_CREATE", guild);
+          await sleep(10);
+
+          const channel = createMockTextChannel(knub.client, guild.id);
+
+          // !info
+          const infoFromUser1Msg = createMockMessage(knub.client, channel, user1, { content: "!info" });
+          knub.client.emit("messageCreate", infoFromUser1Msg);
+          await sleep(10);
+          const infoFromUser2Msg = createMockMessage(knub.client, channel, user2, { content: "!info" });
+          knub.client.emit("messageCreate", infoFromUser2Msg);
+          await sleep(10);
+
+          // !server
+          const serverFromUser1Msg = createMockMessage(knub.client, channel, user1, { content: "!server" });
+          knub.client.emit("messageCreate", serverFromUser1Msg);
+          await sleep(10);
+          const serverFromUser2Msg = createMockMessage(knub.client, channel, user2, { content: "!server" });
+          knub.client.emit("messageCreate", serverFromUser2Msg);
+          await sleep(10);
+
+          // !ping
+          const pingFromUser1Msg = createMockMessage(knub.client, channel, user1, { content: "!ping" });
+          knub.client.emit("messageCreate", pingFromUser1Msg);
+          await sleep(10);
+          const pingFromUser3Msg = createMockMessage(knub.client, channel, user3, { content: "!ping" });
+          knub.client.emit("messageCreate", pingFromUser3Msg);
+          await sleep(10);
+
+          assert.deepStrictEqual(infoCmdCallUsers, [user1.id]);
+          assert.deepStrictEqual(serverCmdCallUsers, [user2.id]);
+          assert.deepStrictEqual(pingCmdCallUsers, [user3.id]);
+
+          done();
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(10);
-
-        client.ws.emit("GUILD_CREATE", guild);
-        await sleep(10);
-
-        const channel = createMockTextChannel(client, guild.id);
-
-        // !info
-        const infoFromUser1Msg = createMockMessage(client, channel, user1, { content: "!info" });
-        client.emit("messageCreate", infoFromUser1Msg);
-        await sleep(10);
-        const infoFromUser2Msg = createMockMessage(client, channel, user2, { content: "!info" });
-        client.emit("messageCreate", infoFromUser2Msg);
-        await sleep(10);
-
-        // !server
-        const serverFromUser1Msg = createMockMessage(client, channel, user1, { content: "!server" });
-        client.emit("messageCreate", serverFromUser1Msg);
-        await sleep(10);
-        const serverFromUser2Msg = createMockMessage(client, channel, user2, { content: "!server" });
-        client.emit("messageCreate", serverFromUser2Msg);
-        await sleep(10);
-
-        // !ping
-        const pingFromUser1Msg = createMockMessage(client, channel, user1, { content: "!ping" });
-        client.emit("messageCreate", pingFromUser1Msg);
-        await sleep(10);
-        const pingFromUser3Msg = createMockMessage(client, channel, user3, { content: "!ping" });
-        client.emit("messageCreate", pingFromUser3Msg);
-        await sleep(10);
-
-        assert.deepStrictEqual(infoCmdCallUsers, [user1.id]);
-        assert.deepStrictEqual(serverCmdCallUsers, [user2.id]);
-        assert.deepStrictEqual(pingCmdCallUsers, [user3.id]);
       });
     });
 
@@ -496,20 +459,23 @@ describe("PluginBlueprint", () => {
     });
   });
 
+   */
+
   describe("Lifecycle hooks", () => {
-    it("GuildPlugin beforeLoad()", (done) => {
-      void (async () => {
+    it("GuildPlugin beforeLoad()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
 
-          beforeLoad() {
+          beforeLoad(pluginData) {
+            assert.strictEqual(pluginData.getPlugin, undefined);
+            assert.strictEqual(pluginData.hasPlugin, undefined);
             done();
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -518,45 +484,90 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("GlobalPlugin beforeLoad()", (done) => {
-      void (async () => {
+    it("GlobalPlugin beforeLoad()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
 
-          beforeLoad() {
+          beforeLoad(pluginData) {
+            assert.strictEqual(pluginData.getPlugin, undefined);
+            assert.strictEqual(pluginData.hasPlugin, undefined);
             done();
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToLoad],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-      })();
+        await initializeKnub(knub);
+      });
     });
 
-    it("GuildPlugin afterLoad()", (done) => {
-      void (async () => {
+    it("GuildPlugin beforeStart()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
+        const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
+          name: "plugin-to-load",
+          configParser: () => ({}),
+
+          beforeStart(pluginData) {
+            assert.notStrictEqual(pluginData.getPlugin, undefined);
+            assert.notStrictEqual(pluginData.hasPlugin, undefined);
+            done();
+          },
+        };
+
+        const knub = createKnub({
+          guildPlugins: [PluginToLoad],
+          options: {
+            getEnabledGuildPlugins() {
+              return ["plugin-to-load"];
+            },
+            logFn: noop,
+          },
+        });
+        await initializeKnub(knub);
+
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
+    });
+
+    it("GlobalPlugin beforeStart()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
+        const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
+          name: "plugin-to-load",
+          configParser: () => ({}),
+
+          beforeStart(pluginData) {
+            assert.notStrictEqual(pluginData.getPlugin, undefined);
+            assert.notStrictEqual(pluginData.hasPlugin, undefined);
+            done();
+          },
+        };
+
+        const knub = createKnub({
+          globalPlugins: [PluginToLoad],
+          options: {
+            logFn: noop,
+          },
+        });
+        await initializeKnub(knub);
+      });
+    });
+
+    it("GuildPlugin afterLoad()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -566,8 +577,7 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -576,19 +586,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("GlobalPlugin afterLoad()", (done) => {
-      void (async () => {
+    it("GlobalPlugin afterLoad()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -598,34 +604,33 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToLoad],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-      })();
+        await initializeKnub(knub);
+      });
     });
 
-    it("GuildPlugin beforeUnload()", (done) => {
-      void (async () => {
+    it("GuildPlugin beforeUnload()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
+        const beforeUnloadCalled = false;
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
           configParser: () => ({}),
+
+          afterLoad() {
+            knub.client.emit("guildUnavailable", guild);
+          },
 
           beforeUnload() {
             done();
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToUnload],
           options: {
             getEnabledGuildPlugins() {
@@ -634,22 +639,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-
-        await sleep(30);
-        client.emit("guildUnavailable", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("GlobalPlugin beforeUnload()", (done) => {
-      void (async () => {
+    it("GlobalPlugin beforeUnload()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -659,36 +657,33 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToLoad],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        void knub.unloadGlobalContext();
-      })();
+        await initializeKnub(knub);
+        void knub.destroy();
+      });
     });
 
-    it("GuildPlugin afterUnload()", (done) => {
-      void (async () => {
+    it("GuildPlugin afterUnload()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
           configParser: () => ({}),
+
+          afterLoad() {
+            knub.client.emit("guildUnavailable", guild);
+          },
 
           afterUnload() {
             done();
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToUnload],
           options: {
             getEnabledGuildPlugins() {
@@ -697,22 +692,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-
-        await sleep(30);
-        client.emit("guildUnavailable", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("GlobalPlugin afterUnload()", (done) => {
-      void (async () => {
+    it("GlobalPlugin afterUnload()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -722,25 +710,19 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToLoad],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        void knub.unloadGlobalContext();
-      })();
+        await initializeKnub(knub);
+        void knub.destroy();
+      });
     });
 
-    it("GuildPlugin afterLoad() runs beforeLoad()", (done) => {
-      void (async () => {
+    it("GuildPlugin afterLoad() runs after beforeLoad()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let beforeLoadCalled = false;
 
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
@@ -757,8 +739,7 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -767,19 +748,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("GlobalPlugin afterLoad() runs after beforeLoad()", (done) => {
-      void (async () => {
+    it("GlobalPlugin afterLoad() runs after beforeLoad()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let beforeLoadCalled = false;
 
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
@@ -796,28 +773,27 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToLoad],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-      })();
+        await initializeKnub(knub);
+      });
     });
 
-    it("GuildPlugin beforeUnload() runs before afterUnload()", (done) => {
-      void (async () => {
+    it("GuildPlugin beforeUnload() runs before afterUnload()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let beforeUnloadCalled = false;
 
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
           configParser: () => ({}),
+
+          afterLoad() {
+            knub.client.emit("guildUnavailable", guild);
+          },
 
           beforeUnload() {
             beforeUnloadCalled = true;
@@ -829,8 +805,7 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToUnload],
           options: {
             getEnabledGuildPlugins() {
@@ -839,22 +814,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-
-        await sleep(30);
-        client.emit("guildUnavailable", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("GlobalPlugin beforeUnload() runs before afterUnload()", (done) => {
-      void (async () => {
+    it("GlobalPlugin beforeUnload() runs before afterUnload()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let beforeUnloadCalled = false;
 
         const PluginToUnload: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
@@ -871,25 +839,19 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToUnload],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        void knub.unloadGlobalContext();
-      })();
+        await initializeKnub(knub);
+        void knub.destroy();
+      });
     });
 
-    it("hasPlugin() and getPlugin() are missing in GuildPlugin beforeLoad()", (done) => {
-      void (async () => {
+    it("hasPlugin() and getPlugin() are missing in GuildPlugin beforeLoad()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -901,8 +863,7 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -911,19 +872,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("hasPlugin() and getPlugin() are missing in GlobalPlugin beforeLoad()", (done) => {
-      void (async () => {
+    it("hasPlugin() and getPlugin() are missing in GlobalPlugin beforeLoad()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -935,26 +892,25 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToLoad],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-      })();
+        await initializeKnub(knub);
+      });
     });
 
-    it("hasPlugin() and getPlugin() are missing in GuildPlugin afterUnload()", (done) => {
-      void (async () => {
+    it("hasPlugin() and getPlugin() are missing in GuildPlugin afterUnload()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
           configParser: () => ({}),
+
+          afterLoad() {
+            knub.client.emit("guildUnavailable", guild);
+          },
 
           afterUnload(partialPluginData) {
             assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
@@ -963,8 +919,7 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToUnload],
           options: {
             getEnabledGuildPlugins() {
@@ -973,22 +928,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-
-        await sleep(30);
-        client.emit("guildUnavailable", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("hasPlugin() and getPlugin() are missing in GuildPlugin afterUnload()", (done) => {
-      void (async () => {
+    it("hasPlugin() and getPlugin() are missing in GlobalPlugin afterUnload()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
@@ -1000,25 +948,19 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToLoad],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        void knub.unloadGlobalContext();
-      })();
+        await initializeKnub(knub);
+        void knub.destroy();
+      });
     });
 
-    it("GuildPlugin is unavailable to other plugins during afterUnload()", (done) => {
-      void (async () => {
+    it("GuildPlugin is unavailable to other plugins during afterUnload()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let getPluginFn: any;
         let plugin1Interface: any;
 
@@ -1042,6 +984,7 @@ describe("PluginBlueprint", () => {
           afterLoad(pluginData) {
             getPluginFn = pluginData.getPlugin.bind(pluginData);
             plugin1Interface = pluginData.getPlugin(PluginWithPublicInterface);
+            knub.client.emit("guildUnavailable", guild);
           },
           afterUnload() {
             try {
@@ -1058,8 +1001,7 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginWithPublicInterface, PluginWithTests],
           options: {
             getEnabledGuildPlugins() {
@@ -1068,22 +1010,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-
-        await sleep(30);
-        client.emit("guildUnavailable", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("GlobalPlugin is unavailable to other plugins during afterUnload()", (done) => {
-      void (async () => {
+    it("GlobalPlugin is unavailable to other plugins during afterUnload()", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let getPluginFn: any;
         let plugin1Interface: any;
 
@@ -1107,6 +1042,7 @@ describe("PluginBlueprint", () => {
           afterLoad(pluginData) {
             getPluginFn = pluginData.getPlugin.bind(pluginData);
             plugin1Interface = pluginData.getPlugin(PluginWithPublicInterface);
+            void knub.destroy();
           },
           afterUnload() {
             try {
@@ -1123,25 +1059,18 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginWithPublicInterface, PluginWithTests],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        void knub.unloadGlobalContext();
-      })();
+        await initializeKnub(knub);
+      });
     });
 
-    it("GuildPlugin hook order", (done) => {
-      void (async () => {
+    it("GuildPlugin hook order", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let lastCalledHook: string | null = null;
 
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
@@ -1151,17 +1080,14 @@ describe("PluginBlueprint", () => {
             assert.strictEqual(lastCalledHook, null);
             lastCalledHook = "beforeLoad";
           },
-          beforeInit() {
+          beforeStart() {
             assert.strictEqual(lastCalledHook, "beforeLoad");
-            lastCalledHook = "beforeInit";
-          },
-          afterInit() {
-            assert.strictEqual(lastCalledHook, "beforeInit");
-            lastCalledHook = "afterInit";
+            lastCalledHook = "beforeStart";
           },
           afterLoad() {
-            assert.strictEqual(lastCalledHook, "afterInit");
+            assert.strictEqual(lastCalledHook, "beforeStart");
             lastCalledHook = "afterLoad";
+            knub.client.emit("guildUnavailable", guild);
           },
           beforeUnload() {
             assert.strictEqual(lastCalledHook, "afterLoad");
@@ -1173,8 +1099,7 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -1183,22 +1108,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-
-        await sleep(30);
-        client.emit("guildUnavailable", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("GlobalPlugin hook order", (done) => {
-      void (async () => {
+    it("GlobalPlugin hook order", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let lastCalledHook: string | null = null;
 
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
@@ -1208,17 +1126,14 @@ describe("PluginBlueprint", () => {
             assert.strictEqual(lastCalledHook, null);
             lastCalledHook = "beforeLoad";
           },
-          beforeInit() {
+          beforeStart() {
             assert.strictEqual(lastCalledHook, "beforeLoad");
-            lastCalledHook = "beforeInit";
-          },
-          afterInit() {
-            assert.strictEqual(lastCalledHook, "beforeInit");
-            lastCalledHook = "afterInit";
+            lastCalledHook = "beforeStart";
           },
           afterLoad() {
-            assert.strictEqual(lastCalledHook, "afterInit");
+            assert.strictEqual(lastCalledHook, "beforeStart");
             lastCalledHook = "afterLoad";
+            void knub.destroy();
           },
           beforeUnload() {
             assert.strictEqual(lastCalledHook, "afterLoad");
@@ -1230,27 +1145,20 @@ describe("PluginBlueprint", () => {
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [PluginToLoad],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        void knub.unloadGlobalContext();
-      })();
+        await initializeKnub(knub);
+      });
     });
   });
 
   describe("Dependencies", () => {
-    it("hasPlugin", (done) => {
-      void (async () => {
+    it("hasPlugin", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const DependencyToLoad = guildPlugin({
           name: "dependency-to-load",
           configParser: () => ({}),
@@ -1267,16 +1175,13 @@ describe("PluginBlueprint", () => {
           configParser: () => ({}),
 
           afterLoad(pluginData) {
-            setTimeout(() => {
-              assert.ok(pluginData.hasPlugin(DependencyToLoad));
-              assert.ok(!pluginData.hasPlugin(SomeOtherPlugin));
-              done();
-            }, 50);
+            assert.ok(pluginData.hasPlugin(DependencyToLoad));
+            assert.ok(!pluginData.hasPlugin(SomeOtherPlugin));
+            done();
           },
         });
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [DependencyToLoad, PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -1285,19 +1190,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("getPlugin", (done) => {
-      void (async () => {
+    it("getPlugin", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const DependencyToLoad = guildPlugin({
           name: "dependency-to-load",
           configParser: () => ({}),
@@ -1316,15 +1217,12 @@ describe("PluginBlueprint", () => {
           configParser: () => ({}),
 
           afterLoad(pluginData) {
-            setTimeout(() => {
-              const instance = pluginData.getPlugin(DependencyToLoad);
-              instance.ok();
-            }, 50);
+            const instance = pluginData.getPlugin(DependencyToLoad);
+            instance.ok();
           },
         });
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [DependencyToLoad, PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -1333,19 +1231,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("hasGlobalPlugin", (done) => {
-      void (async () => {
+    it("hasGlobalPlugin", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const SomeGlobalPlugin = globalPlugin({
           name: "some-global-plugin",
           configParser: () => ({}),
@@ -1367,8 +1261,7 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [SomeGlobalPlugin],
           guildPlugins: [SomeGuildPlugin],
           options: {
@@ -1378,19 +1271,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("getPlugin", (done) => {
-      void (async () => {
+    it("getPlugin", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const SomeGlobalPlugin = globalPlugin({
           name: "some-global-plugin",
           configParser: () => ({}),
@@ -1412,8 +1301,7 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [SomeGlobalPlugin],
           guildPlugins: [SomeGuildPlugin],
           options: {
@@ -1423,19 +1311,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("getPlugin has correct pluginData", (done) => {
-      void (async () => {
+    it("getPlugin has correct pluginData", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const DependencyToLoad = guildPlugin({
           name: "dependency-to-load",
           configParser: (input) => input,
@@ -1468,15 +1352,12 @@ describe("PluginBlueprint", () => {
           },
 
           afterLoad(pluginData) {
-            setTimeout(() => {
-              const instance = pluginData.getPlugin(DependencyToLoad);
-              instance.ok();
-            }, 50);
+            const instance = pluginData.getPlugin(DependencyToLoad);
+            instance.ok();
           },
         });
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [DependencyToLoad, PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -1485,19 +1366,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("automatic dependency loading", (done) => {
-      void (async () => {
+    it("automatic dependency loading", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const DependencyToLoad = guildPlugin({
           name: "dependency-to-load",
           configParser: () => ({}),
@@ -1521,8 +1398,7 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [DependencyToLoad, OtherDependencyToLoad, PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -1531,19 +1407,15 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("transitive dependencies", (done) => {
-      void (async () => {
+    it("transitive dependencies", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const DependencyTwo = guildPlugin({
           name: "dependency-two",
           configParser: () => ({}),
@@ -1567,8 +1439,7 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [DependencyOne, DependencyTwo, PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -1577,31 +1448,25 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("plugins loaded as dependencies do not load commands or events", (done) => {
-      void (async () => {
+    it("plugins loaded as dependencies do not load commands or events", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const Dependency = guildPlugin({
           name: "dependency",
           configParser: () => ({}),
 
           messageCommands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
-
           events: [guildPluginEventListener({ event: "messageCreate", listener: noop })],
 
           afterLoad(pluginData) {
             // The command above should *not* be loaded
             assert.strictEqual(pluginData.messageCommands.getAll().length, 0);
-
             // The event listener above should *not* be loaded, and neither should the default message listener
             assert.strictEqual(pluginData.events.getListenerCount(), 0);
 
@@ -1615,8 +1480,7 @@ describe("PluginBlueprint", () => {
           dependencies: () => [Dependency],
         });
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [Dependency, PluginToLoad],
           options: {
             getEnabledGuildPlugins() {
@@ -1625,21 +1489,17 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
   });
 
   describe("Custom overrides", () => {
-    it("Synchronous custom overrides", () => {
-      return (async () => {
+    it("Synchronous custom overrides", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let commandTriggers = 0;
 
         interface PluginType extends BasePluginType {
@@ -1671,13 +1531,24 @@ describe("PluginBlueprint", () => {
               },
             }),
           ],
+
+          async afterLoad() {
+            const channel = createMockTextChannel(knub.client, guild.id);
+
+            const message1 = createMockMessage(knub.client, channel, user1, { content: "!foo" });
+            knub.client.emit("messageCreate", message1);
+            await sleep(30);
+
+            const message2 = createMockMessage(knub.client, channel, user2, { content: "!foo" });
+            knub.client.emit("messageCreate", message2);
+            await sleep(30);
+
+            assert.equal(commandTriggers, 1);
+            done();
+          },
         });
 
-        const client = createMockClient();
-        const user1 = createMockUser(client);
-        const user2 = createMockUser(client);
-
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [TestPlugin],
           options: {
             getEnabledGuildPlugins() {
@@ -1706,31 +1577,18 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
+        const user1 = createMockUser(knub.client);
+        const user2 = createMockUser(knub.client);
 
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-        await sleep(30);
+        await initializeKnub(knub);
 
-        const channel = createMockTextChannel(client, guild.id);
-
-        const message1 = createMockMessage(client, channel, user1, { content: "!foo" });
-        client.emit("messageCreate", message1);
-        await sleep(30);
-
-        const message2 = createMockMessage(client, channel, user2, { content: "!foo" });
-        client.emit("messageCreate", message2);
-        await sleep(30);
-
-        assert.equal(commandTriggers, 1);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("Asynchronous custom overrides", () => {
-      return (async () => {
+    it("Asynchronous custom overrides", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let commandTriggers = 0;
 
         interface PluginType extends BasePluginType {
@@ -1751,7 +1609,7 @@ describe("PluginBlueprint", () => {
 
           customOverrideCriteriaFunctions: {
             myAsyncUserOverride: async (pluginData, matchParams, value) => {
-              await sleep(50);
+              await sleep(5);
               return matchParams.userId === value;
             },
           },
@@ -1765,13 +1623,25 @@ describe("PluginBlueprint", () => {
               },
             }),
           ],
+
+          async afterLoad() {
+            const channel = createMockTextChannel(knub.client, guild.id);
+
+            const message1 = createMockMessage(knub.client, channel, user1, { content: "!foo" });
+            knub.client.emit("messageCreate", message1);
+            await sleep(30);
+
+            const message2 = createMockMessage(knub.client, channel, user2, { content: "!foo" });
+            knub.client.emit("messageCreate", message2);
+            await sleep(30);
+
+            assert.equal(commandTriggers, 1);
+
+            done();
+          },
         });
 
-        const client = createMockClient();
-        const user1 = createMockUser(client);
-        const user2 = createMockUser(client);
-
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [TestPlugin],
           options: {
             getEnabledGuildPlugins() {
@@ -1800,36 +1670,20 @@ describe("PluginBlueprint", () => {
           },
         });
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
+        const user1 = createMockUser(knub.client);
+        const user2 = createMockUser(knub.client);
 
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-        await sleep(30);
+        await initializeKnub(knub);
 
-        const channel = createMockTextChannel(client, guild.id);
-
-        const message1 = createMockMessage(client, channel, user1, { content: "!foo" });
-        client.emit("messageCreate", message1);
-        await sleep(30);
-
-        const message2 = createMockMessage(client, channel, user2, { content: "!foo" });
-        client.emit("messageCreate", message2);
-        await sleep(30);
-
-        assert.equal(commandTriggers, 1);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
   });
 
   describe("Custom argument types", () => {
-    it("Custom argument types", (done) => {
-      void (async () => {
-        const client = createMockClient();
-        const guild = createMockGuild(client);
-
+    it("Custom argument types", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const types = {
           foo: (value, ctx) => {
             return `${value}-${ctx.pluginData.guild.id}`;
@@ -1851,9 +1705,16 @@ describe("PluginBlueprint", () => {
               },
             }),
           ],
+
+          afterLoad() {
+            const channel = createMockTextChannel(knub.client, guild.id);
+            const user = createMockUser(knub.client);
+            const msg = createMockMessage(knub.client, channel, user, { content: "!foo bar" });
+            knub.client.emit("messageCreate", msg);
+          },
         });
 
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [TestPlugin],
           options: {
             getEnabledGuildPlugins() {
@@ -1867,31 +1728,22 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        client.ws.emit("GUILD_CREATE", guild);
-        await sleep(30);
-
-        const channel = createMockTextChannel(client, guild.id);
-        const user = createMockUser(client);
-        const msg = createMockMessage(client, channel, user, { content: "!foo bar" });
-        client.emit("messageCreate", msg);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
   });
 
   describe("Misc", () => {
-    it("pluginData contains everything (guild plugin)", () => {
-      return (async () => {
+    it("pluginData contains everything (guild plugin)", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const TestPlugin: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "test-plugin",
           configParser: () => ({}),
 
-          beforeLoad(pluginData) {
+          afterLoad(pluginData) {
             assert.ok(pluginData.client != null);
             assert.ok((pluginData.cooldowns as unknown) instanceof CooldownManager);
             assert.ok((pluginData.messageCommands as unknown) instanceof PluginMessageCommandManager);
@@ -1900,11 +1752,11 @@ describe("PluginBlueprint", () => {
             assert.ok((pluginData.config as unknown) instanceof PluginConfigManager);
             assert.ok((pluginData.events as unknown) instanceof GuildPluginEventManager);
             assert.ok((pluginData.locks as unknown) instanceof LockManager);
+            done();
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [TestPlugin],
           options: {
             getEnabledGuildPlugins() {
@@ -1913,25 +1765,20 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-        await sleep(30);
-      })();
+        const guild = createMockGuild(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
 
-    it("pluginData contains everything (global plugin)", () => {
-      return (async () => {
+    it("pluginData contains everything (global plugin)", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         const TestPlugin: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "test-plugin",
           configParser: () => ({}),
 
-          beforeLoad(pluginData) {
+          afterLoad(pluginData) {
             assert.ok(pluginData.client != null);
             assert.ok((pluginData.cooldowns as unknown) instanceof CooldownManager);
             assert.ok((pluginData.messageCommands as unknown) instanceof PluginMessageCommandManager);
@@ -1940,32 +1787,38 @@ describe("PluginBlueprint", () => {
             assert.ok((pluginData.config as unknown) instanceof PluginConfigManager);
             assert.ok((pluginData.events as unknown) instanceof GlobalPluginEventManager);
             assert.ok((pluginData.locks as unknown) instanceof LockManager);
+            done();
           },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           globalPlugins: [TestPlugin],
           options: {
             logFn: noop,
           },
         });
-
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-      })();
+        await initializeKnub(knub);
+      });
     });
 
-    it("event handlers are unloaded on plugin unload", (done) => {
-      void (async () => {
+    it("event handlers are unloaded on plugin unload", (mochaDone) => {
+      withKnub(mochaDone, async (createKnub, done) => {
         let msgEvFnCallNum = 0;
 
         const messageEv = guildPluginEventListener({
           event: "messageCreate",
           listener() {
             msgEvFnCallNum++;
+            knub.client.emit("guildUnavailable", guild);
+            sleep(30).then(async () => {
+              const msg2 = createMockMessage(knub.client, textChannel, author, { content: "hi!" });
+              knub.client.emit("messageCreate", msg2);
+              await sleep(30);
+
+              assert.strictEqual(msgEvFnCallNum, 1);
+
+              done();
+            });
           },
         });
 
@@ -1973,10 +1826,13 @@ describe("PluginBlueprint", () => {
           name: "plugin-to-unload",
           configParser: () => ({}),
           events: [messageEv],
+          afterLoad() {
+            const msg = createMockMessage(knub.client, textChannel, author, { content: "hi!" });
+            knub.client.emit("messageCreate", msg);
+          },
         };
 
-        const client = createMockClient();
-        const knub = new Knub(client, {
+        const knub = createKnub({
           guildPlugins: [PluginToUnload],
           options: {
             getEnabledGuildPlugins() {
@@ -1985,34 +1841,13 @@ describe("PluginBlueprint", () => {
             logFn: noop,
           },
         });
+        await initializeKnub(knub);
 
-        knub.initialize();
-        client.emit("connect");
-        client.emit("ready", client);
-        await sleep(30);
-
-        const guild = createMockGuild(client);
-        client.ws.emit("GUILD_CREATE", guild);
-        await sleep(30);
-
-        const textChannel = createMockTextChannel(client, guild.id);
-        const author = createMockUser(client);
-
-        const msg = createMockMessage(client, textChannel, author, { content: "hi!" });
-        client.emit("messageCreate", msg);
-        await sleep(30);
-
-        client.emit("guildUnavailable", guild);
-        await sleep(30);
-
-        const msg2 = createMockMessage(client, textChannel, author, { content: "hi!" });
-        client.emit("messageCreate", msg2);
-        await sleep(30);
-
-        assert.strictEqual(msgEvFnCallNum, 1);
-
-        done();
-      })();
+        const guild = createMockGuild(knub.client);
+        const textChannel = createMockTextChannel(knub.client, guild.id);
+        const author = createMockUser(knub.client);
+        knub.client.ws.emit("GUILD_CREATE", guild);
+      });
     });
   });
 

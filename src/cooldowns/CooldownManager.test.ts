@@ -1,18 +1,14 @@
-import assert from "assert";
+import { assert, expect } from "chai";
+import { describe, it } from "mocha";
 import { sleep } from "../testUtils";
 import { CooldownManager } from "./CooldownManager";
 
 describe("CooldownManager", () => {
-  before(() => {
-    process.on("unhandledRejection", (err) => {
-      throw err;
-    });
-  });
-
   it("getCooldownRemaining() initial value", () => {
     const cooldownManager = new CooldownManager();
     cooldownManager.setCooldown("test", 1000);
     assert.strictEqual(cooldownManager.getCooldownRemaining("test"), 1000);
+    cooldownManager.destroy();
   });
 
   it("getCooldownRemaining() after delay", async () => {
@@ -20,6 +16,7 @@ describe("CooldownManager", () => {
     cooldownManager.setCooldown("test", 1000);
     await sleep(10);
     assert.ok(cooldownManager.getCooldownRemaining("test") < 1000);
+    cooldownManager.destroy();
   });
 
   it("getCooldownRemaining() expired", async () => {
@@ -27,17 +24,20 @@ describe("CooldownManager", () => {
     cooldownManager.setCooldown("test", 10);
     await sleep(20);
     assert.strictEqual(cooldownManager.getCooldownRemaining("test"), 0);
+    cooldownManager.destroy();
   });
 
   it("getCooldownRemaining() unknown", () => {
     const cooldownManager = new CooldownManager();
     assert.strictEqual(cooldownManager.getCooldownRemaining("nonexistent"), 0);
+    cooldownManager.destroy();
   });
 
   it("isOnCooldown() initial", () => {
     const cooldownManager = new CooldownManager();
     cooldownManager.setCooldown("test", 1000);
     assert.ok(cooldownManager.isOnCooldown("test"));
+    cooldownManager.destroy();
   });
 
   it("isOnCooldown() after delay", async () => {
@@ -45,6 +45,7 @@ describe("CooldownManager", () => {
     cooldownManager.setCooldown("test", 1000);
     await sleep(10);
     assert.ok(cooldownManager.isOnCooldown("test"));
+    cooldownManager.destroy();
   });
 
   it("isOnCooldown() expired", async () => {
@@ -52,10 +53,12 @@ describe("CooldownManager", () => {
     cooldownManager.setCooldown("test", 10);
     await sleep(20);
     assert.ok(!cooldownManager.isOnCooldown("test"));
+    cooldownManager.destroy();
   });
 
   it("isOnCooldown() unknown", () => {
     const cooldownManager = new CooldownManager();
     assert.ok(!cooldownManager.isOnCooldown("nonexistent"));
+    cooldownManager.destroy();
   });
 });

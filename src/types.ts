@@ -44,6 +44,7 @@ export interface LoadedGuildPlugin<TPluginType extends BasePluginType> {
     PluginBlueprintPublicInterface<GuildPluginData<TPluginType>>
   >;
   pluginData: GuildPluginData<TPluginType>;
+  onlyLoadedAsDependency: boolean;
 }
 
 export interface LoadedGlobalPlugin<TPluginType extends BasePluginType> {

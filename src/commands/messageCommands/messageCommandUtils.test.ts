@@ -1,5 +1,6 @@
-import assert from "assert";
+import { assert, expect } from "chai";
 import { CommandManager, isError, number, string } from "knub-command-manager";
+import { describe, it } from "mocha";
 import {
   ArgsFromSignatureOrArray,
   CommandContext,

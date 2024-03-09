@@ -1,3 +1,4 @@
+import { describe, it } from "mocha";
 import { BasePluginType } from "../../plugins/pluginTypes";
 import { guildPluginSlashCommand } from "./slashCommandBlueprint";
 import { slashOptions } from "./slashCommandOptions";

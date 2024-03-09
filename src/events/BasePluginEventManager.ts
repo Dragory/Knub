@@ -63,4 +63,8 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
       }
     }
   }
+
+  public destroy(): void {
+    this.clearAllListeners();
+  }
 }

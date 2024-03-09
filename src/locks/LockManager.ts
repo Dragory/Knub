@@ -8,29 +8,48 @@ type ResolveFn = (...args: any[]) => any;
 
 export class Lock {
   public unlockPromise: Promise<Lock>;
+  public unlocked = false;
   public interrupted: boolean;
 
+  unlockTimeout: NodeJS.Timeout | null = null;
+
   protected resolve: ResolveFn = noop;
+  protected reject: () => void = noop;
 
   constructor(oldLocks: Lock[] = [], lockTimeout = DEFAULT_LOCK_TIMEOUT) {
     // A new lock can be built by combining the state from previous locks
     // For now, this means if any of the old locks was interrupted, the new one is as well
     this.interrupted = oldLocks.some((l) => l?.interrupted);
 
-    this.unlockPromise = new Promise<Lock>((resolve: ResolveFn) => {
+    this.unlockPromise = new Promise<Lock>((resolve: ResolveFn, reject) => {
       this.resolve = resolve;
+      this.reject = reject;
     });
 
-    setTimeout(() => this.unlock(), lockTimeout);
+    this.unlockTimeout = setTimeout(() => this.unlock(), lockTimeout);
   }
 
   public unlock(): void {
+    if (this.unlockTimeout) {
+      clearTimeout(this.unlockTimeout);
+    }
+    this.unlocked = true;
     this.resolve(this);
   }
 
   public interrupt(): void {
     this.interrupted = true;
     this.unlock();
+  }
+
+  public destroy(): void {
+    if (this.unlocked) {
+      return;
+    }
+    if (this.unlockTimeout) {
+      clearTimeout(this.unlockTimeout);
+    }
+    this.reject();
   }
 }
 
@@ -69,6 +88,9 @@ export class LockManager {
       .then((unlockedOldLocks) => {
         // And *then* we can return a new lock
         for (const key of keys) {
+          if (this.lockGCTimeouts.has(key)) {
+            clearTimeout(this.lockGCTimeouts.get(key)!);
+          }
           this.lockGCTimeouts.set(
             key,
             setTimeout(() => {
@@ -90,5 +112,17 @@ export class LockManager {
 
   public setLockTimeout(ms: number): void {
     this.lockTimeout = ms;
+  }
+
+  public async destroy(): Promise<void> {
+    for (const [key, lockPromise] of this.locks) {
+      const lock = await lockPromise;
+      lock.destroy();
+      this.locks.delete(key);
+    }
+    for (const [key, timeout] of this.lockGCTimeouts) {
+      clearTimeout(timeout);
+      this.lockGCTimeouts.delete(key);
+    }
   }
 }

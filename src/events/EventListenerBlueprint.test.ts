@@ -1,5 +1,6 @@
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import { Channel, GuildChannel, GuildTextBasedChannel, Message, TextBasedChannel } from "discord.js";
+import { describe, it } from "mocha";
 import { BasePluginType } from "../plugins/pluginTypes";
 import { GuildMessage } from "../types";
 import { globalPluginEventListener, guildPluginEventListener } from "./EventListenerBlueprint";
