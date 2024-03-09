@@ -26,6 +26,8 @@
     * E.g. `import { waitForReply } from "knub/helpers"`
 * ⚠️ **BREAKING CHANGE:** Renamed `autoRegisterSlashCommands` option to `autoRegisterApplicationCommands`
 * ⚠️ **BREAKING CHANGE:** If left unspecified, slash command `defaultMemberPermissions` now defaults to `"0"` i.e. admins only
+* ⚠️ **BREAKING CHANGE:** Renamed `Knub.stop()` to `Knub.destroy()`
+  * Matching naming with djs's `Client.destroy()`, and more clearly shows that the Knub instance is unusable after this
 * Context menu commands are now supported
   * Helpers: `guildPluginMessageContextMenuCommand()`, `guildPluginUserContextMenuCommand()`
   * Context menu blueprints are listed in the `contextMenuCommands` property of a plugin
