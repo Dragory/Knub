@@ -31,13 +31,20 @@
   * Context menu blueprints are listed in the `contextMenuCommands` property of a plugin
 * Added `PluginData.config.getForInteraction()` and `interaction` property for `PluginData.config.getMatchingConfig()` ([#28](https://github.com/Dragory/Knub/pull/28))
 * Added `slashOptions.attachment()` ([#29](https://github.com/Dragory/Knub/pull/29))
-* New hooks:
-  * `beforeInit()`
+* Hook changes:
+  * `afterLoad()` is now called after the guild has finished loading
+    * This means that `afterLoad()` no longer prevents the guild from being marked as loaded
+    * This should have no real effect on code using this hook
+  * New hook: `beforeStart()`
     * Called after the plugin's data has been set up, but before event listeners or commands are registered
     * Has access to `getPlugin()`
-  * `afterInit()`
-    * Called after each plugin's `beforeInit()` hook has been called, still before event listeners and commands
-  * With these, the hook order is now: `beforeLoad()`, `beforeInit()`, `afterInit()`, `afterLoad()`
+  * Hook order after these changes:
+    * `beforeLoad()`
+    * *PluginData is set up*
+    * `beforeStart()`
+    * *Event handlers and commands are registered*
+    * *Guild is marked as loaded*
+    * `afterLoad()`
 * It's now possible to get a global plugin's public interface from a guild plugin:
   * `PluginData.hasGlobalPlugin()`
   * `PluginData.getGlobalPlugin()`
