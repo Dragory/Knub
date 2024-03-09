@@ -42,7 +42,6 @@ import { BasePluginType } from "./pluginTypes";
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
 describe("PluginBlueprint", () => {
-  /*
   describe("Commands and events", () => {
     it("loads commands and events", (mochaDone) => {
       withKnub(mochaDone, async (createKnub, done) => {
@@ -458,8 +457,6 @@ describe("PluginBlueprint", () => {
       });
     });
   });
-
-   */
 
   describe("Lifecycle hooks", () => {
     it("GuildPlugin beforeLoad()", (mochaDone) => {
