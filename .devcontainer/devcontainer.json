@@ -1,0 +1,4 @@
+{
+	"name": "Knub development environment",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:20-bookworm"
+}
