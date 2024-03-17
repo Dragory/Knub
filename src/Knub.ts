@@ -177,7 +177,7 @@ export class Knub extends EventEmitter {
     this.client.ws.on(GatewayDispatchEvents.GuildCreate, (data: GatewayGuildCreateDispatchData) => {
       setImmediate(() => {
         this.log("info", `Guild available: ${data.id}`);
-        void this.#guildLoadRunner.run(() => this.loadGuild(data.id));
+        void this.#guildLoadRunner.run(() => this.loadGuild(data.id)).catch((err) => this.throwOrEmit(err));
       });
     });
 
@@ -206,6 +206,14 @@ export class Knub extends EventEmitter {
       })();
     }
     return this.destroyPromise;
+  }
+
+  protected throwOrEmit(error: any) {
+    if (this.listenerCount("error") > 0) {
+      this.emit("error", error);
+      return;
+    }
+    throw error;
   }
 
   public getAvailablePlugins(): GuildPluginMap {
@@ -438,8 +446,10 @@ export class Knub extends EventEmitter {
 
   protected async loadAllAvailableGuilds(): Promise<void> {
     const guilds: Guild[] = Array.from(this.client.guilds.cache.values());
-    const loadPromises = guilds.map((guild) => this.#guildLoadRunner.run(() => this.loadGuild(guild.id)));
-    await Promise.allSettled(loadPromises);
+    const loadPromises = guilds.map((guild) =>
+      this.#guildLoadRunner.run(() => this.loadGuild(guild.id)).catch((err) => this.throwOrEmit(err)),
+    );
+    await Promise.all(loadPromises);
   }
 
   public async loadGuild(guildId: Snowflake): Promise<void> {
@@ -488,11 +498,6 @@ export class Knub extends EventEmitter {
     guildLoadPromise = guildLoadPromise.catch(async (err) => {
       // If we encounter errors during loading, unload the guild and re-throw the error
       await this.unloadGuild(guildId);
-
-      if (this.listenerCount("error") > 0) {
-        this.emit("error", err);
-        return;
-      }
       throw err;
     });
 
@@ -501,7 +506,7 @@ export class Knub extends EventEmitter {
 
   public async reloadGuild(guildId: Snowflake): Promise<void> {
     await this.unloadGuild(guildId);
-    await this.#guildLoadRunner.run(() => this.loadGuild(guildId));
+    await this.#guildLoadRunner.run(() => this.loadGuild(guildId)).catch((err) => this.throwOrEmit(err));
   }
 
   public async unloadGuild(guildId: Snowflake): Promise<void> {
