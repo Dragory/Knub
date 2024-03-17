@@ -89,3 +89,9 @@ export function indexBy<Obj, Key extends keyof Obj>(arr: Obj[], key: Key): Map<O
     return map;
   }, new Map<Obj[Key], Obj>());
 }
+
+export function notCallable(message: string) {
+  return () => {
+    throw new Error(message);
+  };
+}

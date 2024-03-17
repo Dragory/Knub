@@ -8,12 +8,13 @@ import { CooldownManager } from "../cooldowns/CooldownManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { LockManager } from "../locks/LockManager";
-import { AnyPluginBlueprint } from "./PluginBlueprint";
+import { AnyPluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./PluginBlueprint";
 import { BasePluginType } from "./pluginTypes";
-import { PluginPublicInterface } from "./pluginUtils";
 
 export type HasPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => boolean;
-export type GetPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => PluginPublicInterface<T>;
+export type GetPluginFn = <T extends AnyPluginBlueprint>(
+  plugin: T,
+) => ResolvedPluginBlueprintPublicInterface<NonNullable<T["public"]>>;
 
 /**
  * PluginData for an unknown context.
@@ -82,11 +83,6 @@ export type BasePluginData<TPluginType extends BasePluginType> = {
   state: TPluginType["state"];
 };
 
-export type AfterUnloadPluginData<TPluginData extends BasePluginData<any>> = Omit<
-  TPluginData,
-  "hasPlugin" | "getPlugin"
->;
-
 /**
  * PluginData for a guild context
  */
@@ -104,19 +100,6 @@ export type GuildPluginData<TPluginType extends BasePluginType> = BasePluginData
   slashCommands: PluginSlashCommandManager<GuildPluginData<TPluginType>>;
   contextMenuCommands: PluginContextMenuCommandManager<GuildPluginData<TPluginType>>;
 };
-export type BeforeLoadGuildPluginDataMissingProps =
-  | "hasPlugin"
-  | "getPlugin"
-  | "guild"
-  | "events"
-  | "messageCommands"
-  | "slashCommands"
-  | "contextMenuCommands";
-export type BeforeLoadGuildPluginData<TPluginType extends BasePluginType> = Omit<
-  GuildPluginData<TPluginType>,
-  BeforeLoadGuildPluginDataMissingProps
-> &
-  Partial<Pick<GuildPluginData<TPluginType>, BeforeLoadGuildPluginDataMissingProps>>;
 
 /**
  * PluginData for a global context
@@ -130,18 +113,6 @@ export type GlobalPluginData<TPluginType extends BasePluginType> = BasePluginDat
   slashCommands: PluginSlashCommandManager<GlobalPluginData<TPluginType>>;
   contextMenuCommands: PluginContextMenuCommandManager<GlobalPluginData<TPluginType>>;
 };
-export type BeforeLoadGlobalPluginDataMissingProps =
-  | "hasPlugin"
-  | "getPlugin"
-  | "events"
-  | "messageCommands"
-  | "slashCommands"
-  | "contextMenuCommands";
-export type BeforeLoadGlobalPluginData<TPluginType extends BasePluginType> = Omit<
-  GlobalPluginData<TPluginType>,
-  BeforeLoadGlobalPluginDataMissingProps
-> &
-  Partial<Pick<GlobalPluginData<TPluginType>, BeforeLoadGlobalPluginDataMissingProps>>;
 
 export type AnyPluginData<TPluginType extends BasePluginType> =
   | GuildPluginData<TPluginType>

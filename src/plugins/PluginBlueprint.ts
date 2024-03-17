@@ -9,14 +9,7 @@ import { ConfigParserFn, CustomOverrideCriteriaFunctions, PluginOptions } from "
 import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
 import { GuildEvent, ValidEvent } from "../events/eventTypes";
 import { Awaitable } from "../utils";
-import {
-  AfterUnloadPluginData,
-  AnyPluginData,
-  BeforeLoadGlobalPluginData,
-  BeforeLoadGuildPluginData,
-  GlobalPluginData,
-  GuildPluginData,
-} from "./PluginData";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "./PluginData";
 import { BasePluginType } from "./pluginTypes";
 
 /**
@@ -80,6 +73,15 @@ export interface BasePluginBlueprint<
   public?: TPublicInterface;
 
   /**
+   * This hook is called before the plugin is loaded.
+   *
+   * Guarantees:
+   * 1. Other plugins can't yet interact with this plugin's public interface
+   * 2. `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable
+   */
+  beforeLoad?: (pluginData: TPluginData) => Awaitable<void>;
+
+  /**
    * This hook is called after each plugin's pluginData has been set up,
    * but before any event listeners or commands are loaded.
    *
@@ -116,7 +118,7 @@ export interface BasePluginBlueprint<
    * 1. Other plugins can no longer interact with this plugin's public interface
    * 2. `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable
    */
-  afterUnload?: (pluginData: AfterUnloadPluginData<TPluginData>) => Awaitable<void>;
+  afterUnload?: (pluginData: TPluginData) => Awaitable<void>;
 }
 
 /**
@@ -136,15 +138,6 @@ export interface GuildPluginBlueprint<
    * Event listeners that are automatically registered on plugin load
    */
   events?: Array<AnyGuildEventListenerBlueprint<TPluginData>>;
-
-  /**
-   * This hook is called before the plugin is loaded.
-   *
-   * Guarantees:
-   * 1. Other plugins can't yet interact with this plugin's public interface
-   * 2. `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable
-   */
-  beforeLoad?: (pluginData: BeforeLoadGuildPluginData<TPluginData["_pluginType"]>) => Awaitable<void>;
 }
 
 /**
@@ -179,17 +172,6 @@ export interface GlobalPluginBlueprint<
    * Event listeners that are automatically registered on plugin load
    */
   events?: Array<AnyGlobalEventListenerBlueprint<TPluginData>>;
-
-  /**
-   * This hook is called before the plugin is loaded.
-   * At this point, there are two guarantees:
-   *
-   * 1. Other plugins haven't yet interacted with this plugin
-   * 2. Other plugins can't interact with this plugin during this function
-   *
-   * Similarly, `PluginData.hasPlugin()` and `PluginData.getPlugin()` are unavailable.
-   */
-  beforeLoad?: (pluginData: BeforeLoadGlobalPluginData<TPluginData["_pluginType"]>) => Awaitable<void>;
 }
 
 /**
