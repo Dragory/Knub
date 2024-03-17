@@ -5,7 +5,7 @@
   "author": "Miikka <contact@mivir.fi>",
   "license": "MIT",
   "scripts": {
-    "test": "npm run build-debug && mocha dist --recursive",
+    "test": "npm run build-debug && mocha dist --recursive -r dist/testHooks.js --trace-uncaught",
     "test-debug": "npm run build-debug && why-is-node-running ./node_modules/.bin/mocha dist --recursive",
     "build-debug": "shx rm -rf dist && shx rm -f tsconfig.tsbuildinfo && tsc --sourceMap true",
     "build": "shx rm -rf dist && shx rm -f tsconfig.tsbuildinfo && tsc --sourceMap false && shx cp .npmignore dist/",
