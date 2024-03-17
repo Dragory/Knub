@@ -14,7 +14,7 @@ export class Lock {
   unlockTimeout: NodeJS.Timeout | null = null;
 
   protected resolve: ResolveFn = noop;
-  protected reject: () => void = noop;
+  protected reject: (reason: any) => void = noop;
 
   constructor(oldLocks: Lock[] = [], lockTimeout = DEFAULT_LOCK_TIMEOUT) {
     // A new lock can be built by combining the state from previous locks
@@ -49,17 +49,19 @@ export class Lock {
     if (this.unlockTimeout) {
       clearTimeout(this.unlockTimeout);
     }
-    this.reject();
+    this.reject(new Error("Lock was destroyed"));
   }
 }
 
 export class LockManager {
-  protected locks: Map<string, Promise<Lock>>;
+  protected lockPromises: Map<string, Promise<Lock>>;
+  protected acquiredLocks: Map<string, Lock>;
   protected lockTimeout: number;
   protected lockGCTimeouts: Map<string, Timeout>;
 
   constructor(lockTimeout = DEFAULT_LOCK_TIMEOUT) {
-    this.locks = new Map<string, Promise<Lock>>();
+    this.lockPromises = new Map();
+    this.acquiredLocks = new Map();
     this.lockTimeout = lockTimeout;
     this.lockGCTimeouts = new Map<string, Timeout>();
   }
@@ -75,8 +77,8 @@ export class LockManager {
 
     // To acquire a lock, we must first wait for all matching old locks to resolve
     const oldLockPromises = keys.reduce<Array<Promise<Lock>>>((lockPromises, key) => {
-      if (this.locks.has(key)) {
-        lockPromises.push(this.locks.get(key)!);
+      if (this.lockPromises.has(key)) {
+        lockPromises.push(this.lockPromises.get(key)!);
       }
       return lockPromises;
     }, []);
@@ -94,17 +96,22 @@ export class LockManager {
           this.lockGCTimeouts.set(
             key,
             setTimeout(() => {
-              this.locks.delete(key);
+              this.lockPromises.delete(key);
               this.lockGCTimeouts.delete(key);
+              this.acquiredLocks.delete(key);
             }, LOCK_GC_TIMEOUT),
           );
         }
 
-        return new Lock(unlockedOldLocks, lockTimeout);
+        const newLock = new Lock(unlockedOldLocks, lockTimeout);
+        for (const key of keys) {
+          this.acquiredLocks.set(key, newLock);
+        }
+        return newLock;
       });
 
     for (const key of keys) {
-      this.locks.set(key, newLockPromise);
+      this.lockPromises.set(key, newLockPromise);
     }
 
     return newLockPromise;
@@ -115,10 +122,9 @@ export class LockManager {
   }
 
   public async destroy(): Promise<void> {
-    for (const [key, lockPromise] of this.locks) {
-      const lock = await lockPromise;
+    for (const [key, lock] of this.acquiredLocks) {
       lock.destroy();
-      this.locks.delete(key);
+      this.acquiredLocks.delete(key);
     }
     for (const [key, timeout] of this.lockGCTimeouts) {
       clearTimeout(timeout);

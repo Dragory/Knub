@@ -1,7 +1,7 @@
 import { assert, expect } from "chai";
 import { describe, it } from "mocha";
 import { sleep } from "../testUtils";
-import { LockManager } from "./LockManager";
+import { Lock, LockManager } from "./LockManager";
 
 describe("LockManager", () => {
   it("simple lock", async () => {
@@ -49,8 +49,9 @@ describe("LockManager", () => {
       lock.unlock();
     }, 100);
 
-    await lockManager.acquire(lockName);
+    const lock2 = await lockManager.acquire(lockName);
     assert.strictEqual(unlockedManually, false);
+    lock2.unlock();
 
     await lockManager.destroy();
   });
@@ -86,9 +87,27 @@ describe("LockManager", () => {
 
     // We should only be able to acquire either of the individual locks
     // after the combined lock encompassing them both is unlocked
-    await Promise.race([lockManager.acquire(lock1Name), lockManager.acquire(lock2Name)]);
+    await Promise.race([
+      lockManager.acquire(lock1Name).then((l) => l.unlock()),
+      lockManager.acquire(lock2Name).then((l) => l.unlock()),
+    ]);
     assert.strictEqual(combinedLockUnlocked, true);
 
     await lockManager.destroy();
+  });
+
+  it("acquiring a lock throws an error if lock is destroyed", (done) => {
+    (async () => {
+      const lockName = "lock";
+      const lockManager = new LockManager(60 * 1000);
+      // 1. Acquire lock
+      await lockManager.acquire(lockName);
+      // 2. Attempt to acquire the lock again
+      lockManager.acquire(lockName).catch((err) => {
+        done();
+      });
+      // 3. Destroy the lock manager (and locks) before the second acquire() succeeds
+      lockManager.destroy();
+    })();
   });
 });
