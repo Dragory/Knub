@@ -12,7 +12,6 @@ import { globalPluginEventListener, guildPluginEventListener } from "../events/E
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import {
-  BeforeLoadGuildPluginData,
   CooldownManager,
   GlobalPluginBlueprint,
   GlobalPluginData,
@@ -35,7 +34,7 @@ import {
   withKnub,
 } from "../testUtils";
 import { noop } from "../utils";
-import { GuildPluginBlueprint, globalPlugin, guildPlugin } from "./PluginBlueprint";
+import { AnyPluginBlueprint, GuildPluginBlueprint, globalPlugin, guildPlugin } from "./PluginBlueprint";
 import { GuildPluginData, isGlobalPluginData } from "./PluginData";
 import { BasePluginType } from "./pluginTypes";
 
@@ -465,9 +464,7 @@ describe("PluginBlueprint", () => {
           name: "plugin-to-load",
           configParser: () => ({}),
 
-          beforeLoad(pluginData) {
-            assert.strictEqual(pluginData.getPlugin, undefined);
-            assert.strictEqual(pluginData.hasPlugin, undefined);
+          beforeLoad() {
             done();
           },
         };
@@ -494,9 +491,7 @@ describe("PluginBlueprint", () => {
           name: "plugin-to-load",
           configParser: () => ({}),
 
-          beforeLoad(pluginData) {
-            assert.strictEqual(pluginData.getPlugin, undefined);
-            assert.strictEqual(pluginData.hasPlugin, undefined);
+          beforeLoad() {
             done();
           },
         };
@@ -517,9 +512,7 @@ describe("PluginBlueprint", () => {
           name: "plugin-to-load",
           configParser: () => ({}),
 
-          beforeStart(pluginData) {
-            assert.notStrictEqual(pluginData.getPlugin, undefined);
-            assert.notStrictEqual(pluginData.hasPlugin, undefined);
+          beforeStart() {
             done();
           },
         };
@@ -546,9 +539,7 @@ describe("PluginBlueprint", () => {
           name: "plugin-to-load",
           configParser: () => ({}),
 
-          beforeStart(pluginData) {
-            assert.notStrictEqual(pluginData.getPlugin, undefined);
-            assert.notStrictEqual(pluginData.hasPlugin, undefined);
+          beforeStart() {
             done();
           },
         };
@@ -847,15 +838,15 @@ describe("PluginBlueprint", () => {
       });
     });
 
-    it("hasPlugin() and getPlugin() are missing in GuildPlugin beforeLoad()", (mochaDone) => {
+    it("hasPlugin() and getPlugin() are unavailable in GuildPlugin beforeLoad()", (mochaDone) => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
 
-          beforeLoad(partialPluginData) {
-            assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
-            assert.strictEqual((partialPluginData as any).getPlugin, undefined);
+          beforeLoad(pluginData) {
+            assert.throws(() => pluginData.hasPlugin({} as AnyPluginBlueprint));
+            assert.throws(() => pluginData.getPlugin({} as AnyPluginBlueprint));
             done();
           },
         };
@@ -876,15 +867,15 @@ describe("PluginBlueprint", () => {
       });
     });
 
-    it("hasPlugin() and getPlugin() are missing in GlobalPlugin beforeLoad()", (mochaDone) => {
+    it("hasPlugin() and getPlugin() are unavailable in GlobalPlugin beforeLoad()", (mochaDone) => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
 
-          beforeLoad(partialPluginData) {
-            assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
-            assert.strictEqual((partialPluginData as any).getPlugin, undefined);
+          beforeLoad(pluginData) {
+            assert.throws(() => pluginData.hasPlugin({} as AnyPluginBlueprint));
+            assert.throws(() => pluginData.getPlugin({} as AnyPluginBlueprint));
             done();
           },
         };
@@ -899,7 +890,7 @@ describe("PluginBlueprint", () => {
       });
     });
 
-    it("hasPlugin() and getPlugin() are missing in GuildPlugin afterUnload()", (mochaDone) => {
+    it("hasPlugin() and getPlugin() are unavailable in GuildPlugin afterUnload()", (mochaDone) => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
@@ -909,9 +900,9 @@ describe("PluginBlueprint", () => {
             knub.client.emit("guildUnavailable", guild);
           },
 
-          afterUnload(partialPluginData) {
-            assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
-            assert.strictEqual((partialPluginData as any).getPlugin, undefined);
+          afterUnload(pluginData) {
+            assert.throws(() => pluginData.hasPlugin({} as AnyPluginBlueprint));
+            assert.throws(() => pluginData.getPlugin({} as AnyPluginBlueprint));
             done();
           },
         };
@@ -932,15 +923,15 @@ describe("PluginBlueprint", () => {
       });
     });
 
-    it("hasPlugin() and getPlugin() are missing in GlobalPlugin afterUnload()", (mochaDone) => {
+    it("hasPlugin() and getPlugin() are unavailable in GlobalPlugin afterUnload()", (mochaDone) => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
           configParser: () => ({}),
 
-          afterUnload(partialPluginData) {
-            assert.strictEqual((partialPluginData as any).hasPlugin, undefined);
-            assert.strictEqual((partialPluginData as any).getPlugin, undefined);
+          afterUnload(pluginData) {
+            assert.throws(() => pluginData.hasPlugin({} as AnyPluginBlueprint));
+            assert.throws(() => pluginData.getPlugin({} as AnyPluginBlueprint));
             done();
           },
         };
@@ -1872,8 +1863,8 @@ describe("PluginBlueprint", () => {
         info: "foo",
         configParser: () => ({}),
 
-        beforeLoad(partialPluginData) {
-          const typeCheck: AssertEquals<typeof partialPluginData, BeforeLoadGuildPluginData<CustomPluginType>> = true;
+        beforeLoad(pluginData) {
+          const typeCheck: AssertEquals<typeof pluginData, GuildPluginData<CustomPluginType>> = true;
         },
         afterLoad(pluginData) {
           const typeCheck: AssertEquals<typeof pluginData, GuildPluginData<CustomPluginType>> = true;
