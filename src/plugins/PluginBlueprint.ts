@@ -37,12 +37,6 @@ export interface BasePluginBlueprint<
   name: string;
 
   /**
-   * Arbitrary info about the plugin, e.g. description.
-   * This property is mainly here to set a convention, as it's not actually used in Knub itself.
-   */
-  info?: any;
-
-  /**
    * The plugin's default options, including overrides
    */
   defaultOptions?: PluginOptions<TPluginData["_pluginType"]>;

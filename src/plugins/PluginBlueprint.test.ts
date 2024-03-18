@@ -1843,12 +1843,10 @@ describe("PluginBlueprint", () => {
     it("(blueprint)", () => {
       const blueprint = guildPlugin({
         name: "my-plugin",
-        info: "foo",
         configParser: () => ({}),
       });
 
       expect(blueprint.name).to.equal("my-plugin");
-      expect(blueprint.info).to.equal("foo");
     });
 
     interface CustomPluginType extends BasePluginType {
@@ -1860,7 +1858,6 @@ describe("PluginBlueprint", () => {
     it("<TPluginType>()(blueprint)", () => {
       const blueprint = guildPlugin<CustomPluginType>()({
         name: "my-plugin",
-        info: "foo",
         configParser: () => ({}),
 
         beforeLoad(pluginData) {
@@ -1872,7 +1869,6 @@ describe("PluginBlueprint", () => {
       });
 
       expect(blueprint.name).to.equal("my-plugin");
-      expect(blueprint.info).to.equal("foo");
     });
   });
 
