@@ -1,6 +1,25 @@
 # NEXT
-* ⚠️ **BREAKING CHANGE:** Knub now requires discord.js v14.11
-* ⚠️ **BREAKING CHANGE:** Guild and global configs are now enforced to a standard type, which is roughly:
+## ⚠️ Breaking changes
+* Knub now requires discord.js v14.11
+* Knub now uses the package.json `exports` property. This means arbitrary sub-path imports are no longer possible.
+  * More exports have been made available to accomodate certain use cases
+  * You can now import Knub helper functions from `knub/helpers`
+    * E.g. `import { waitForReply } from "knub/helpers"`
+* Renamed `autoRegisterSlashCommands` option to `autoRegisterApplicationCommands`
+* If left unspecified, slash command `defaultMemberPermissions` now defaults to `"0"` i.e. admins only
+* Plugin `public` property should now be a function that returns the public interface. For example:
+  ```ts
+  const myPlugin = {
+    public(pluginData) {
+      return {
+        somePublicFn() { ... },
+        someOtherPublicFn() { ... },
+      };
+    },
+  };
+  ```
+  * This simplifies the API and inferred types
+* Guild and global configs are now enforced to a standard type, which is roughly:
   ```
   {
     prefix?: string;
@@ -11,7 +30,7 @@
   * Extra properties at the top level will throw an error during validation.
     Consider using a plugin to store these properties instead.
   * Since this type is now always the same, the config type generics from Knub constructor have been removed
-* ⚠️ **BREAKING CHANGE:** The general type of plugin options is now type-checked and extra properties throw an error.
+* The general type of plugin options is now type-checked and extra properties throw an error.
   This general type is roughly:
   ```
   {
@@ -20,16 +39,12 @@
     overrides?: [ ... ];
   }
   ```
-* ⚠️ **BREAKING CHANGE:** Knub now uses the package.json `exports` property. This means arbitrary sub-path imports are no longer possible.
-  * More exports have been made available to accomodate certain use cases
-  * You can now import Knub helper functions from `knub/helpers`
-    * E.g. `import { waitForReply } from "knub/helpers"`
-* ⚠️ **BREAKING CHANGE:** Renamed `autoRegisterSlashCommands` option to `autoRegisterApplicationCommands`
-* ⚠️ **BREAKING CHANGE:** If left unspecified, slash command `defaultMemberPermissions` now defaults to `"0"` i.e. admins only
-* ⚠️ **BREAKING CHANGE:** Renamed `Knub.stop()` to `Knub.destroy()`
-  * Matching naming with djs's `Client.destroy()`, and more clearly shows that the Knub instance is unusable after this
-* ⚠️ **BREAKING CHANGE:** Removed `info` property from PluginBlueprint
+* Removed `info` property from PluginBlueprint
   * This property really only existed for Zeppelin. If you need to add it back, extend the interface.
+* Renamed `Knub.stop()` to `Knub.destroy()`
+  * Matching naming with djs's `Client.destroy()`, and more clearly shows that the Knub instance is unusable after this
+
+## Other changes
 * Context menu commands are now supported
   * Helpers: `guildPluginMessageContextMenuCommand()`, `guildPluginUserContextMenuCommand()`
   * Context menu blueprints are listed in the `contextMenuCommands` property of a plugin

@@ -37,6 +37,7 @@ import { noop } from "../utils";
 import { AnyPluginBlueprint, GuildPluginBlueprint, globalPlugin, guildPlugin } from "./PluginBlueprint";
 import { GuildPluginData, isGlobalPluginData } from "./PluginData";
 import { BasePluginType } from "./pluginTypes";
+import { PluginPublicInterface } from "./pluginUtils";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
@@ -949,42 +950,24 @@ describe("PluginBlueprint", () => {
 
     it("GuildPlugin is unavailable to other plugins during afterUnload()", (mochaDone) => {
       withKnub(mochaDone, async (createKnub, done) => {
-        let getPluginFn: any;
-        let plugin1Interface: any;
-
-        const PluginWithPublicInterface: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
+        const PluginWithPublicInterface = guildPlugin<BasePluginType>()({
           name: "plugin-with-public-interface",
           configParser: () => ({}),
 
-          public: {
-            myFn() {
-              return () => {
-                assert.fail("This should not be called");
-              };
-            },
+          public() {
+            return {};
           },
-        };
+        });
 
         const PluginWithTests: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-with-tests",
           configParser: () => ({}),
           dependencies: () => [PluginWithPublicInterface],
-          afterLoad(pluginData) {
-            getPluginFn = pluginData.getPlugin.bind(pluginData);
-            plugin1Interface = pluginData.getPlugin(PluginWithPublicInterface);
+          afterLoad() {
             knub.client.emit("guildUnavailable", guild);
           },
-          afterUnload() {
-            try {
-              getPluginFn(PluginWithPublicInterface);
-              assert.fail("getPluginFn() should have failed");
-            } catch {}
-
-            try {
-              plugin1Interface.myFn();
-              assert.fail("plugin1Interface.myFn() should have failed");
-            } catch {}
-
+          afterUnload(pluginData) {
+            assert.throws(() => pluginData.getPlugin(PluginWithPublicInterface));
             done();
           },
         };
@@ -1007,42 +990,24 @@ describe("PluginBlueprint", () => {
 
     it("GlobalPlugin is unavailable to other plugins during afterUnload()", (mochaDone) => {
       withKnub(mochaDone, async (createKnub, done) => {
-        let getPluginFn: any;
-        let plugin1Interface: any;
-
-        const PluginWithPublicInterface: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
+        const PluginWithPublicInterface = globalPlugin<BasePluginType>()({
           name: "plugin-with-public-interface",
           configParser: () => ({}),
 
-          public: {
-            myFn() {
-              return () => {
-                assert.fail("This should not be called");
-              };
-            },
+          public() {
+            return {};
           },
-        };
+        });
 
         const PluginWithTests: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-with-tests",
           configParser: () => ({}),
           dependencies: () => [PluginWithPublicInterface],
-          afterLoad(pluginData) {
-            getPluginFn = pluginData.getPlugin.bind(pluginData);
-            plugin1Interface = pluginData.getPlugin(PluginWithPublicInterface);
+          afterLoad() {
             void knub.destroy();
           },
-          afterUnload() {
-            try {
-              getPluginFn(PluginWithPublicInterface);
-              assert.fail("getPluginFn() should have failed");
-            } catch {}
-
-            try {
-              plugin1Interface.myFn();
-              assert.fail("plugin1Interface.myFn() should have failed");
-            } catch {}
-
+          afterUnload(pluginData) {
+            assert.throws(() => pluginData.getPlugin(PluginWithPublicInterface));
             done();
           },
         };
@@ -1187,16 +1152,25 @@ describe("PluginBlueprint", () => {
 
     it("getPlugin", (mochaDone) => {
       withKnub(mochaDone, async (createKnub, done) => {
-        const DependencyToLoad = guildPlugin({
+        interface DependencyPluginType extends BasePluginType {
+          state: { value: number };
+        }
+
+        const DependencyToLoad = guildPlugin<DependencyPluginType>()({
           name: "dependency-to-load",
           configParser: () => ({}),
 
-          public: {
-            ok(pluginData) {
-              assert.ok(pluginData != null);
+          public(pluginData) {
+            return {
+              ok() {
+                assert.strictEqual(pluginData.state.value, 10);
+                done();
+              },
+            };
+          },
 
-              return () => done();
-            },
+          beforeLoad(pluginData) {
+            pluginData.state.value = 10;
           },
         });
 
@@ -1231,10 +1205,10 @@ describe("PluginBlueprint", () => {
         const SomeGlobalPlugin = globalPlugin({
           name: "some-global-plugin",
           configParser: () => ({}),
-          public: {
-            works() {
-              return () => true;
-            },
+          public() {
+            return {
+              works: () => true,
+            };
           },
         });
 
@@ -1271,10 +1245,10 @@ describe("PluginBlueprint", () => {
         const SomeGlobalPlugin = globalPlugin({
           name: "some-global-plugin",
           configParser: () => ({}),
-          public: {
-            works() {
-              return () => true;
-            },
+          public() {
+            return {
+              works: () => true,
+            };
           },
         });
 
@@ -1318,14 +1292,16 @@ describe("PluginBlueprint", () => {
             },
           },
 
-          public: {
-            ok(pluginData) {
-              assert.ok(pluginData != null);
-              assert.strictEqual(pluginData.config.get().some_value, "cookies");
-              assert.notStrictEqual(pluginData.config.get().some_value, "milk");
+          public(pluginData) {
+            return {
+              ok() {
+                assert.ok(pluginData != null);
+                assert.strictEqual(pluginData.config.get().some_value, "cookies");
+                assert.notStrictEqual(pluginData.config.get().some_value, "milk");
 
-              return () => done();
-            },
+                done();
+              },
+            };
           },
         });
 
@@ -1884,12 +1860,12 @@ describe("PluginBlueprint", () => {
         name: "other-plugin",
         configParser: () => ({}),
 
-        public: {
-          myFn(pluginData) {
-            const result: AssertEquals<typeof pluginData.state.foo, OtherPluginType["state"]["foo"]> = true;
-
-            return (param: "a constant string") => {};
-          },
+        public(pluginData) {
+          return {
+            myFn(param: "a constant string") {
+              const result: AssertEquals<typeof pluginData.state.foo, OtherPluginType["state"]["foo"]> = true;
+            },
+          };
         },
       });
 

@@ -6,7 +6,6 @@ import {
   AnyGuildPluginBlueprint,
   GlobalPluginBlueprint,
   GuildPluginBlueprint,
-  PluginBlueprintPublicInterface,
 } from "./plugins/PluginBlueprint";
 import { GlobalPluginData, GuildPluginData } from "./plugins/PluginData";
 import { BasePluginType } from "./plugins/pluginTypes";
@@ -39,19 +38,13 @@ export interface KnubArgs {
 }
 
 export interface LoadedGuildPlugin<TPluginType extends BasePluginType> {
-  blueprint: GuildPluginBlueprint<
-    GuildPluginData<TPluginType>,
-    PluginBlueprintPublicInterface<GuildPluginData<TPluginType>>
-  >;
+  blueprint: GuildPluginBlueprint<GuildPluginData<TPluginType>, unknown>;
   pluginData: GuildPluginData<TPluginType>;
   onlyLoadedAsDependency: boolean;
 }
 
 export interface LoadedGlobalPlugin<TPluginType extends BasePluginType> {
-  blueprint: GlobalPluginBlueprint<
-    GlobalPluginData<TPluginType>,
-    PluginBlueprintPublicInterface<GlobalPluginData<TPluginType>>
-  >;
+  blueprint: GlobalPluginBlueprint<GlobalPluginData<TPluginType>, unknown>;
   pluginData: GlobalPluginData<TPluginType>;
 }
 

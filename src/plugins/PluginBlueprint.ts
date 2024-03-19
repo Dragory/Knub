@@ -12,25 +12,7 @@ import { Awaitable } from "../utils";
 import { AnyPluginData, GlobalPluginData, GuildPluginData } from "./PluginData";
 import { BasePluginType } from "./pluginTypes";
 
-/**
- * Each value in the public interface is a function that returns the actual
- * value that other plugins can access when using the interface.
- * This allows other plugins to be unaware of the pluginData object for the
- * plugin with the public interface.
- */
-export interface PluginBlueprintPublicInterface<TPluginData extends AnyPluginData<any>> {
-  [key: string]: (pluginData: TPluginData) => any;
-}
-
-// The actual interface that other plugins receive
-export type ResolvedPluginBlueprintPublicInterface<T extends PluginBlueprintPublicInterface<AnyPluginData<any>>> = {
-  [P in keyof T]: ReturnType<T[P]>;
-};
-
-export interface BasePluginBlueprint<
-  TPluginData extends AnyPluginData<any>,
-  TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>,
-> {
+export interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>, TPublicInterface> {
   /**
    * **[Required]** Internal name for the plugin
    */
@@ -64,7 +46,7 @@ export interface BasePluginBlueprint<
   /**
    * Public interface for this plugin
    */
-  public?: TPublicInterface;
+  public?: (pluginData: TPluginData) => TPublicInterface;
 
   /**
    * This hook is called before the plugin is loaded.
@@ -118,10 +100,8 @@ export interface BasePluginBlueprint<
 /**
  * Blueprint for a plugin that can only be loaded in a guild context
  */
-export interface GuildPluginBlueprint<
-  TPluginData extends GuildPluginData<any>,
-  TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>,
-> extends BasePluginBlueprint<TPluginData, TPublicInterface> {
+export interface GuildPluginBlueprint<TPluginData extends GuildPluginData<any>, TPublicInterface>
+  extends BasePluginBlueprint<TPluginData, TPublicInterface> {
   /**
    * Function that returns other plugins that are required for this plugin to function.
    * They will be loaded before this plugin.
@@ -152,10 +132,8 @@ export type AnyGuildEventListenerBlueprint<TPluginData extends GuildPluginData<a
 /**
  * Blueprint for a plugin that can only be loaded in a global context
  */
-export interface GlobalPluginBlueprint<
-  TPluginData extends GlobalPluginData<any>,
-  TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>,
-> extends BasePluginBlueprint<TPluginData, TPublicInterface> {
+export interface GlobalPluginBlueprint<TPluginData extends GlobalPluginData<any>, TPublicInterface>
+  extends BasePluginBlueprint<TPluginData, TPublicInterface> {
   /**
    * Function that returns other plugins that are required for this plugin to function.
    * They will be loaded before this plugin.
@@ -183,16 +161,9 @@ type GlobalEventListenerBlueprintsHelper<TPluginData extends GlobalPluginData<an
 export type AnyGlobalEventListenerBlueprint<TPluginData extends GlobalPluginData<any>> =
   GlobalEventListenerBlueprintsHelper<TPluginData>[keyof GlobalEventListenerBlueprintsHelper<TPluginData>];
 
-export type AnyGuildPluginBlueprint = GuildPluginBlueprint<GuildPluginData<any>, PluginBlueprintPublicInterface<any>>;
-export type AnyGlobalPluginBlueprint = GlobalPluginBlueprint<
-  GlobalPluginData<any>,
-  PluginBlueprintPublicInterface<any>
->;
+export type AnyGuildPluginBlueprint = GuildPluginBlueprint<GuildPluginData<any>, any>;
+export type AnyGlobalPluginBlueprint = GlobalPluginBlueprint<GlobalPluginData<any>, any>;
 export type AnyPluginBlueprint = AnyGuildPluginBlueprint | AnyGlobalPluginBlueprint;
-
-type PluginBlueprintCreator<TBaseBlueprint extends AnyPluginBlueprint> = <TBlueprint extends TBaseBlueprint>(
-  blueprint: TBlueprint,
-) => TBlueprint;
 
 function pluginCreator(...args) {
   if (args.length === 1) {
@@ -209,9 +180,7 @@ function pluginCreator(...args) {
   throw new Error(`No signature of plugin() takes ${args.length} arguments`);
 }
 
-export type GuildPluginBlueprintCreator<TPluginData extends GuildPluginData<any>> = <
-  TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>,
->(
+export type GuildPluginBlueprintCreator<TPluginData extends GuildPluginData<any>> = <TPublicInterface>(
   blueprint: GuildPluginBlueprint<TPluginData, TPublicInterface>,
 ) => GuildPluginBlueprint<TPluginData, TPublicInterface>;
 
@@ -220,10 +189,9 @@ export type GuildPluginBlueprintCreator<TPluginData extends GuildPluginData<any>
  *
  * To specify `TPluginType` for additional type hints, use: `guildPlugin<TPluginType>()(blueprint)`
  */
-export function guildPlugin<
-  TPluginData extends GuildPluginData<any>,
-  TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>,
->(blueprint: GuildPluginBlueprint<TPluginData, TPublicInterface>): GuildPluginBlueprint<TPluginData, TPublicInterface>;
+export function guildPlugin<TPluginData extends GuildPluginData<any>, TPublicInterface>(
+  blueprint: GuildPluginBlueprint<TPluginData, TPublicInterface>,
+): GuildPluginBlueprint<TPluginData, TPublicInterface>;
 
 /**
  * Helper function with no arguments. Specify `TPluginType` for type hints and return self.
@@ -236,9 +204,7 @@ export function guildPlugin(...args: any[]): any {
   return pluginCreator(...args);
 }
 
-export type GlobalPluginBlueprintCreator<TPluginData extends GlobalPluginData<any>> = <
-  TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>,
->(
+export type GlobalPluginBlueprintCreator<TPluginData extends GlobalPluginData<any>> = <TPublicInterface>(
   blueprint: GlobalPluginBlueprint<TPluginData, TPublicInterface>,
 ) => GlobalPluginBlueprint<TPluginData, TPublicInterface>;
 
@@ -247,10 +213,7 @@ export type GlobalPluginBlueprintCreator<TPluginData extends GlobalPluginData<an
  *
  * To specify `TPluginType` for additional type hints, use: `globalPlugin<TPluginType>()(blueprint)`
  */
-export function globalPlugin<
-  TPluginData extends GlobalPluginData<any>,
-  TPublicInterface extends PluginBlueprintPublicInterface<TPluginData>,
->(
+export function globalPlugin<TPluginData extends GlobalPluginData<any>, TPublicInterface>(
   blueprint: GlobalPluginBlueprint<TPluginData, TPublicInterface>,
 ): GlobalPluginBlueprint<TPluginData, TPublicInterface>;
 

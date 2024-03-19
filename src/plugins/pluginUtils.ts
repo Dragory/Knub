@@ -6,10 +6,7 @@ import {
   AnyGlobalPluginBlueprint,
   AnyGuildPluginBlueprint,
   AnyPluginBlueprint,
-  GlobalPluginBlueprint,
-  GuildPluginBlueprint,
-  PluginBlueprintPublicInterface,
-  ResolvedPluginBlueprintPublicInterface,
+  BasePluginBlueprint,
 } from "./PluginBlueprint";
 
 export function getMemberRoles(member: GuildMember | PartialGuildMember | APIInteractionGuildMember): string[] {
@@ -58,9 +55,11 @@ export function isGlobalBlueprintByContext(
   return true;
 }
 
-export type PluginPublicInterface<T extends AnyPluginBlueprint> = T["public"] extends undefined
-  ? null
-  : ResolvedPluginBlueprintPublicInterface<NonNullable<T["public"]>>;
+export type PluginPublicInterface<T extends BasePluginBlueprint<any, any>> = NonNullable<T["public"]> extends (
+  ...args: any[]
+) => infer R
+  ? R
+  : null;
 
 /**
  * By default, return an empty config for all guilds and the global config

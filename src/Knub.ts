@@ -20,8 +20,6 @@ import {
   AnyPluginBlueprint,
   GlobalPluginBlueprint,
   GuildPluginBlueprint,
-  PluginBlueprintPublicInterface,
-  ResolvedPluginBlueprintPublicInterface,
 } from "./plugins/PluginBlueprint";
 import { AnyPluginData, GlobalPluginData, GuildPluginData } from "./plugins/PluginData";
 import { PluginLoadError } from "./plugins/PluginLoadError";
@@ -407,29 +405,6 @@ export class Knub extends EventEmitter {
     return ctx.loadedPlugins.has(plugin.name);
   }
 
-  protected resolvePluginBlueprintPublicInterface<T extends AnyPluginBlueprint, TPublic = T["public"]>(
-    blueprint: T,
-    pluginData: AnyPluginData<any>,
-  ): TPublic extends PluginBlueprintPublicInterface<any> ? ResolvedPluginBlueprintPublicInterface<TPublic> : null {
-    if (!blueprint.public) {
-      return null!;
-    }
-
-    // @ts-ignore
-    return Array.from(Object.entries(blueprint.public)).reduce((obj, [prop, fn]) => {
-      const finalFn = fn(pluginData);
-      obj[prop] = (...args: any[]) => {
-        if (!pluginData.loaded) {
-          throw new PluginNotLoadedError(
-            `Tried to access plugin public interface (${blueprint.name}), but the plugin is no longer loaded`,
-          );
-        }
-        return finalFn(...args);
-      };
-      return obj;
-    }, {}) as ResolvedPluginBlueprintPublicInterface<any>;
-  }
-
   protected getPluginPublicInterface<T extends AnyPluginBlueprint>(
     ctx: AnyContext,
     plugin: T,
@@ -439,7 +414,9 @@ export class Knub extends EventEmitter {
     }
 
     const loadedPlugin = ctx.loadedPlugins.get(plugin.name)!;
-    const publicInterface = this.resolvePluginBlueprintPublicInterface(loadedPlugin.blueprint, loadedPlugin.pluginData);
+    // FIXME: TS can't associate loadedPlugin.publicData with loadedPlugin.blueprint.public's type here
+    // @ts-expect-error
+    const publicInterface = loadedPlugin.blueprint.public?.(loadedPlugin.pluginData) ?? null;
 
     return publicInterface as PluginPublicInterface<T>;
   }

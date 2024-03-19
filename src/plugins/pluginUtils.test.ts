@@ -10,10 +10,10 @@ describe("pluginUtils", () => {
       name: "my-plugin",
       configParser: () => ({}),
 
-      public: {
-        someFn() {
-          return 5;
-        },
+      public() {
+        return {
+          someFn: 5,
+        };
       },
     } satisfies GuildPluginBlueprint<any, any>;
 

@@ -8,13 +8,12 @@ import { CooldownManager } from "../cooldowns/CooldownManager";
 import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
 import { LockManager } from "../locks/LockManager";
-import { AnyPluginBlueprint, ResolvedPluginBlueprintPublicInterface } from "./PluginBlueprint";
+import { BasePluginBlueprint } from "./PluginBlueprint";
 import { BasePluginType } from "./pluginTypes";
+import { PluginPublicInterface } from "./pluginUtils";
 
-export type HasPluginFn = <T extends AnyPluginBlueprint>(plugin: T) => boolean;
-export type GetPluginFn = <T extends AnyPluginBlueprint>(
-  plugin: T,
-) => ResolvedPluginBlueprintPublicInterface<NonNullable<T["public"]>>;
+export type HasPluginFn = <T extends BasePluginBlueprint<any, unknown>>(plugin: T) => boolean;
+export type GetPluginFn = <T extends BasePluginBlueprint<any, unknown>>(plugin: T) => PluginPublicInterface<T>;
 
 /**
  * PluginData for an unknown context.
