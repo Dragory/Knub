@@ -40,7 +40,7 @@
     "@biomejs/biome": "1.5.3",
     "@types/chai": "^4",
     "@types/mocha": "^9",
-    "@types/node": "^16",
+    "@types/node": "^22.15.18",
     "chai": "^4",
     "husky": "^8",
     "mocha": "^10",
@@ -53,6 +53,6 @@
     "/dist"
   ],
   "engines": {
-    "node": ">=16"
+    "node": ">=22"
   }
 }
