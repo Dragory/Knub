@@ -2,7 +2,7 @@
  * @file Public helper functions/types
  */
 
-import { Client, GuildMember, Invite, Message, TextBasedChannel } from "discord.js";
+import { Client, GuildMember, Invite, Message, SendableChannels, TextBasedChannel } from "discord.js";
 import { GuildPluginData } from "./plugins/PluginData";
 import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils";
 import { get } from "./utils";
@@ -79,7 +79,7 @@ export function splitMessageIntoChunks(str: string, chunkLength = 1990): string[
  * Sends a message to the specified channel, splitting it into multiple shorter messages if the message text goes over
  * the Discord message length limit (2000)
  */
-export async function createChunkedMessage(channel: TextBasedChannel, messageText: string): Promise<Message[]> {
+export async function createChunkedMessage(channel: SendableChannels, messageText: string): Promise<Message[]> {
   const chunks = splitMessageIntoChunks(messageText);
   const messages: Message[] = [];
 

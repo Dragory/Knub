@@ -14,6 +14,7 @@ import {
   GuildMemberManager,
   Message,
   NewsChannel,
+  OmitPartialGroupDMChannel,
   Options,
   Role,
   RoleManager,
@@ -228,7 +229,7 @@ export function createMockMessage(
   channel: TextChannel | DMChannel | NewsChannel | ThreadChannel,
   author: User,
   data = {},
-): Message {
+): OmitPartialGroupDMChannel<Message> {
   // @ts-ignore
   // This type assertation is needed because the constructor is marked as private
   const message = new Message(client, {
@@ -238,7 +239,7 @@ export function createMockMessage(
     // @ts-ignore
     author,
     ...data,
-  }) as Message;
+  }) as OmitPartialGroupDMChannel<Message>;
 
   return message;
 }

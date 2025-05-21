@@ -1,4 +1,4 @@
-import { Client, Message } from "discord.js";
+import { Client, DMChannel, Message } from "discord.js";
 import { CommandManager, IMatchedCommand, isError } from "knub-command-manager";
 import { performance } from "perf_hooks";
 import { AnyPluginData } from "../../plugins/PluginData";
@@ -94,7 +94,7 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
 
     if (isError(command)) {
       const usageLine = getMessageCommandSignature(command.command);
-      void msg.channel.send(`${command.error}\nUsage: \`${usageLine}\``);
+      void msg.reply(`${command.error}\nUsage: \`${usageLine}\``);
       return;
     }
 

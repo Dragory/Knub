@@ -58,10 +58,6 @@ describe("guildPluginMessageCommand() helper", () => {
       trigger: "foo",
       permission: null,
       run({ message }) {
-        // Make sure message.member cannot be null
-        // https://github.com/microsoft/TypeScript/issues/29627#issuecomment-458329399
-        const result: null extends typeof message.member ? false : true = true;
-
         // Make sure message.channel is always a textable guild channel and cannot be a private channel
         const result2: DMChannel extends typeof message.channel
           ? false

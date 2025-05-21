@@ -25,7 +25,7 @@ export function getDefaultMessageCommandPrefix(client: Client): RegExp {
 }
 
 export type ContextualCommandMessage<TPluginData extends AnyPluginData<any>> = TPluginData extends GuildPluginData<any>
-  ? GuildMessage
+  ? Message<true>
   : Message;
 
 export interface MessageCommandMeta<TPluginData extends AnyPluginData<any>, TArguments> {

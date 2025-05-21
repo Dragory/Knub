@@ -46,7 +46,7 @@
     "mocha": "^10",
     "shx": "^0.3.3",
     "ts-node": "^10.9",
-    "typescript": "5.3",
+    "typescript": "5.8",
     "why-is-node-running": "^2.2.2"
   },
   "files": [

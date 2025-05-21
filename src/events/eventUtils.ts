@@ -25,6 +25,9 @@ export const eventToGuild: EventToGuild = {
   channelCreate: ({ channel }) => channel.guild,
   channelDelete: ({ channel }) => (channel as GuildChannel).guild,
   channelUpdate: ({ newChannel }) => (newChannel as GuildChannel).guild,
+  entitlementCreate: ({ entitlement }) => entitlement.guild,
+  entitlementDelete: ({ entitlement }) => entitlement.guild,
+  entitlementUpdate: ({ newEntitlement }) => newEntitlement.guild,
   guildAuditLogEntryCreate: ({ guild }) => guild,
   guildBanAdd: ({ ban }) => ban.guild,
   guildBanRemove: ({ ban }) => ban.guild,
@@ -40,6 +43,9 @@ export const eventToGuild: EventToGuild = {
   guildScheduledEventDelete: ({ guildScheduledEvent }) => guildScheduledEvent.guild,
   guildScheduledEventUserAdd: ({ guildScheduledEvent }) => guildScheduledEvent.guild,
   guildScheduledEventUserRemove: ({ guildScheduledEvent }) => guildScheduledEvent.guild,
+  guildSoundboardSoundCreate: ({ soundboardSound }) => soundboardSound.guild,
+  guildSoundboardSoundDelete: ({ soundboardSound }) => soundboardSound.guild,
+  guildSoundboardSoundUpdate: ({ newSoundboardSound }) => newSoundboardSound.guild,
   roleCreate: ({ role }) => role.guild,
   roleDelete: ({ role }) => role.guild,
   roleUpdate: ({ newRole }) => newRole.guild,
@@ -54,6 +60,7 @@ export const eventToGuild: EventToGuild = {
   typingStart: ({ typing }) => typing.guild,
   voiceStateUpdate: ({ oldState, newState }) => newState?.guild ?? oldState?.guild,
   interactionCreate: ({ interaction }) => interaction.guild ?? undefined,
+  soundboardSounds: ({ guild }) => guild,
   threadCreate: ({ thread }) => thread.guild,
   threadDelete: ({ thread }) => thread.guild,
   threadUpdate: ({ oldThread, newThread }) => newThread.guild ?? oldThread.guild,
@@ -71,6 +78,7 @@ export const eventToGuild: EventToGuild = {
   stickerCreate: ({ sticker }) => sticker.guild ?? undefined,
   stickerDelete: ({ sticker }) => sticker.guild ?? undefined,
   stickerUpdate: ({ oldSticker, newSticker }) => newSticker.guild ?? oldSticker.guild ?? undefined,
+  voiceChannelEffectSend: ({ voiceChannelEffect }) => voiceChannelEffect.guild,
 };
 
 export const eventToUser: EventToUser = {
@@ -79,6 +87,9 @@ export const eventToUser: EventToUser = {
   guildMemberAdd: ({ member }) => member.user,
   guildMemberRemove: ({ member }) => member.user ?? undefined,
   guildMemberUpdate: ({ newMember }) => newMember.user,
+  guildSoundboardSoundCreate: ({ soundboardSound }) => soundboardSound.user,
+  guildSoundboardSoundDelete: ({ soundboardSound }) => soundboardSound.user,
+  guildSoundboardSoundUpdate: ({ newSoundboardSound }) => newSoundboardSound.user,
   messageCreate: ({ message }) => message.author,
   messageDelete: ({ message }) => (message as Message).author,
   messageReactionAdd: ({ user }) => user,
@@ -112,6 +123,7 @@ export const eventToChannel: EventToChannel = {
   stageInstanceDelete: ({ stageInstance }) => stageInstance.channel ?? undefined,
   stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
     newStageInstance.channel ?? oldStageInstance?.channel ?? undefined,
+  voiceChannelEffectSend: ({ voiceChannelEffect }) => voiceChannelEffect.channel,
 };
 
 export const eventToMessage: EventToMessage = {
