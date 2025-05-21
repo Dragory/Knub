@@ -31,7 +31,13 @@ export {
   LoadedGlobalPlugin,
 } from "./types.ts";
 
-export { PermissionLevels, BaseConfig, PluginOptions, PluginOverrideCriteria } from "./config/configTypes.ts";
+export {
+  PermissionLevels,
+  BaseConfig,
+  PluginOptions,
+  PluginOverrideCriteria,
+  pluginOverrideCriteriaSchema,
+} from "./config/configTypes.ts";
 
 export { BasePluginType } from "./plugins/pluginTypes.ts";
 
