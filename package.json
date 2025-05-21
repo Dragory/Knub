@@ -32,10 +32,10 @@
   },
   "dependencies": {
     "discord-api-types": "^0.37.67",
-    "discord.js": "^14.14.1",
+    "discord.js": "^14.19.3",
     "knub-command-manager": "^9.1.0",
     "ts-essentials": "^9",
-    "zod": "^3.19.1"
+    "zod": "^3.25.17"
   },
   "devDependencies": {
     "@biomejs/biome": "1.5.3",
