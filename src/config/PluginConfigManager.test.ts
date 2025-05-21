@@ -1,6 +1,6 @@
 import { assert, expect } from "chai";
 import { describe, it } from "mocha";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { BasePluginData, GuildPluginData } from "../plugins/PluginData.ts";
 import { BasePluginType } from "../plugins/pluginTypes.ts";
 import {

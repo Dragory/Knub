@@ -1,5 +1,5 @@
 import { DeepPartial } from "ts-essentials";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { BasePluginData } from "../plugins/PluginData.ts";
 import { BasePluginType } from "../plugins/pluginTypes.ts";
 import { Awaitable } from "../utils.ts";
