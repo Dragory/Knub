@@ -1,5 +1,5 @@
 import { assert, expect } from "chai";
-import { ChatInputCommandInteraction, TextChannel } from "discord.js";
+import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { parseSignature } from "knub-command-manager";
 import { describe, it } from "mocha";
 import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
@@ -13,8 +13,8 @@ import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager.ts"
 import { GuildPluginEventManager } from "../events/GuildPluginEventManager.ts";
 import {
   CooldownManager,
-  GlobalPluginBlueprint,
-  GlobalPluginData,
+  type GlobalPluginBlueprint,
+  type GlobalPluginData,
   LockManager,
   guildPluginSlashCommand,
   guildPluginSlashGroup,
@@ -34,9 +34,9 @@ import {
   withKnub,
 } from "../testUtils.ts";
 import { noop } from "../utils.ts";
-import { AnyPluginBlueprint, GuildPluginBlueprint, globalPlugin, guildPlugin } from "./PluginBlueprint.ts";
-import { GuildPluginData, isGlobalPluginData } from "./PluginData.ts";
-import { BasePluginType } from "./pluginTypes.ts";
+import { type AnyPluginBlueprint, type GuildPluginBlueprint, globalPlugin, guildPlugin } from "./PluginBlueprint.ts";
+import { type GuildPluginData, isGlobalPluginData } from "./PluginData.ts";
+import type { BasePluginType } from "./pluginTypes.ts";
 import { PluginPublicInterface } from "./pluginUtils.ts";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;

@@ -1,6 +1,6 @@
 import { describe, it } from "mocha";
-import { GuildPluginBlueprint } from "./PluginBlueprint.ts";
-import { PluginPublicInterface } from "./pluginUtils.ts";
+import type { GuildPluginBlueprint } from "./PluginBlueprint.ts";
+import type { PluginPublicInterface } from "./pluginUtils.ts";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

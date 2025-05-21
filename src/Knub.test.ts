@@ -1,5 +1,5 @@
 import { assert, expect } from "chai";
-import { Client } from "discord.js";
+import type { Client } from "discord.js";
 import { describe, it } from "mocha";
 import { Knub } from "./Knub.ts";
 import { guildPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint.ts";

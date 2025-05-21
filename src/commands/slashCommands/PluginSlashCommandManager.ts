@@ -1,9 +1,9 @@
-import { ChatInputCommandInteraction, CommandInteractionOption, Interaction } from "discord.js";
-import { AnyPluginData } from "../../plugins/PluginData.ts";
+import type { ChatInputCommandInteraction, CommandInteractionOption, Interaction } from "discord.js";
+import type { AnyPluginData } from "../../plugins/PluginData.ts";
 import { get } from "../../utils.ts";
-import { AnySlashCommandSignature, SlashCommandBlueprint } from "./slashCommandBlueprint.ts";
-import { SlashCommandMeta } from "./slashCommandUtils.ts";
-import { SlashGroupBlueprint } from "./slashGroupBlueprint.ts";
+import type { AnySlashCommandSignature, SlashCommandBlueprint } from "./slashCommandBlueprint.ts";
+import type { SlashCommandMeta } from "./slashCommandUtils.ts";
+import type { SlashGroupBlueprint } from "./slashGroupBlueprint.ts";
 
 type CommandOrGroup<TPluginData extends AnyPluginData<any>> =
   | SlashCommandBlueprint<TPluginData, AnySlashCommandSignature>

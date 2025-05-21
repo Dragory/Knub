@@ -1,20 +1,20 @@
-import { ChannelType, Client, Message } from "discord.js";
+import { ChannelType, type Client, type Message } from "discord.js";
 import {
-  ICommandConfig as MessageCommandConfig,
-  ICommandDefinition as MessageCommandDefinition,
-  IParameter as MessageCommandParameter,
-  TOption as MessageCommandOption,
-  TSafeSignature as MessageCommandSafeSignature,
-  TSignature as MessageCommandSignature,
+  type ICommandConfig as MessageCommandConfig,
+  type ICommandDefinition as MessageCommandDefinition,
+  type TOption as MessageCommandOption,
+  type IParameter as MessageCommandParameter,
+  type TSafeSignature as MessageCommandSafeSignature,
+  type TSignature as MessageCommandSignature,
   toSafeSignature as toMessageCommandSafeSignature,
 } from "knub-command-manager";
 import { hasPermission } from "../../helpers.ts";
-import { Lock } from "../../locks/LockManager.ts";
-import { AnyPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
-import { BasePluginType } from "../../plugins/pluginTypes.ts";
+import type { Lock } from "../../locks/LockManager.ts";
+import type { AnyPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
+import type { BasePluginType } from "../../plugins/pluginTypes.ts";
 import { GuildMessage } from "../../types.ts";
-import { Awaitable } from "../../utils.ts";
-import { MessageCommandBlueprint } from "./messageCommandBlueprint.ts";
+import type { Awaitable } from "../../utils.ts";
+import type { MessageCommandBlueprint } from "./messageCommandBlueprint.ts";
 
 export type MessageCommandSignatureOrArray<TPluginData extends AnyPluginData<any>> =
   | MessageCommandSignature<CommandContext<TPluginData>>

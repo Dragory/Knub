@@ -1,16 +1,16 @@
-import { Client, DMChannel, Message } from "discord.js";
-import { CommandManager, IMatchedCommand, isError } from "knub-command-manager";
-import { performance } from "perf_hooks";
-import { AnyPluginData } from "../../plugins/PluginData.ts";
-import { MessageCommandBlueprint } from "./messageCommandBlueprint.ts";
+import { performance } from "node:perf_hooks";
+import type { Client, Message } from "discord.js";
+import { CommandManager, type IMatchedCommand, isError } from "knub-command-manager";
+import type { AnyPluginData } from "../../plugins/PluginData.ts";
+import type { MessageCommandBlueprint } from "./messageCommandBlueprint.ts";
 import {
-  CommandContext,
-  CommandExtraData,
-  CommandFn,
-  ContextualCommandMessage,
-  MessageCommandMeta,
-  MessageCommandSignatureOrArray,
-  PluginCommandDefinition,
+  type CommandContext,
+  type CommandExtraData,
+  type CommandFn,
+  type ContextualCommandMessage,
+  type MessageCommandMeta,
+  type MessageCommandSignatureOrArray,
+  type PluginCommandDefinition,
   checkCommandCooldown,
   checkCommandLocks,
   checkCommandPermission,

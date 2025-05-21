@@ -1,15 +1,15 @@
 import {
-  APIInteractionDataResolvedGuildMember,
-  APIRole,
+  type APIInteractionDataResolvedGuildMember,
+  type APIRole,
   ApplicationCommandOptionType,
-  Attachment,
-  Channel,
-  ChannelType,
-  ChatInputCommandInteraction,
-  GuildMember,
-  Locale,
-  Role,
-  User,
+  type Attachment,
+  type Channel,
+  type ChannelType,
+  type ChatInputCommandInteraction,
+  type GuildMember,
+  type Locale,
+  type Role,
+  type User,
 } from "discord.js";
 
 // region Base

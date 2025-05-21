@@ -2,9 +2,9 @@ import { assert, expect } from "chai";
 import { CommandManager, isError, number, string } from "knub-command-manager";
 import { describe, it } from "mocha";
 import {
-  ArgsFromSignatureOrArray,
-  CommandContext,
-  CommandExtraData,
+  type ArgsFromSignatureOrArray,
+  type CommandContext,
+  type CommandExtraData,
   getMessageCommandSignature,
 } from "./messageCommandUtils.ts";
 

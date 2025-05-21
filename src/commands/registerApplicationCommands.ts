@@ -1,23 +1,23 @@
 import {
-  APIApplicationCommand,
-  APIApplicationCommandOption,
+  type APIApplicationCommand,
+  type APIApplicationCommandOption,
   ApplicationCommandOptionType,
   ApplicationCommandType,
-  Client,
-  RESTPostAPIApplicationCommandsJSONBody,
-  RESTPostAPIChatInputApplicationCommandsJSONBody,
-  RESTPostAPIContextMenuApplicationCommandsJSONBody,
+  type Client,
+  type RESTPostAPIApplicationCommandsJSONBody,
+  type RESTPostAPIChatInputApplicationCommandsJSONBody,
+  type RESTPostAPIContextMenuApplicationCommandsJSONBody,
   Routes,
 } from "discord.js";
-import { AnyPluginData } from "../plugins/PluginData.ts";
+import type { AnyPluginData } from "../plugins/PluginData.ts";
 import { indexBy } from "../utils.ts";
-import {
+import type {
   MessageContextMenuCommandBlueprint,
   UserContextMenuCommandBlueprint,
 } from "./contextMenuCommands/contextMenuCommandBlueprint.ts";
-import { AnySlashCommandSignature, SlashCommandBlueprint } from "./slashCommands/slashCommandBlueprint.ts";
-import { BaseSlashCommandOption } from "./slashCommands/slashCommandOptions.ts";
-import { SlashGroupBlueprint } from "./slashCommands/slashGroupBlueprint.ts";
+import type { AnySlashCommandSignature, SlashCommandBlueprint } from "./slashCommands/slashCommandBlueprint.ts";
+import type { BaseSlashCommandOption } from "./slashCommands/slashCommandOptions.ts";
+import type { SlashGroupBlueprint } from "./slashCommands/slashGroupBlueprint.ts";
 
 export type AnyApplicationCommandBlueprint =
   | SlashCommandBlueprint<any, any>

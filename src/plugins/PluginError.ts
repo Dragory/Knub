@@ -1,4 +1,4 @@
-import util from "util";
+import util from "node:util";
 
 /**
  * Errors in plugins (commands, event handlers, etc.) are re-thrown as this

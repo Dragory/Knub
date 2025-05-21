@@ -1,34 +1,32 @@
-import { noop } from "./utils.ts";
 import { EventEmitter } from "node:events";
 import {
-  AnyThreadChannel,
+  type AnyThreadChannel,
   ChannelManager,
   ChannelType,
-  Client,
-  DMChannel,
-  Guild,
-  GuildChannel,
+  type Client,
+  type DMChannel,
+  type Guild,
+  type GuildChannel,
   GuildChannelManager,
   GuildManager,
   GuildMember,
   GuildMemberManager,
   Message,
-  NewsChannel,
-  OmitPartialGroupDMChannel,
+  type NewsChannel,
+  type OmitPartialGroupDMChannel,
   Options,
   Role,
   RoleManager,
-  Snowflake,
+  type Snowflake,
   TextChannel,
   ThreadChannel,
   User,
   UserManager,
-  WebSocketManager,
+  type WebSocketManager,
 } from "discord.js";
 import { Knub } from "./Knub.ts";
-import { KnubArgs } from "./types.ts";
-
-const EventEmitter = events.EventEmitter;
+import type { KnubArgs } from "./types.ts";
+import { noop } from "./utils.ts";
 
 const persisted = new WeakMap<any, Map<string | number | symbol, any>>();
 function persist<T, TProp extends keyof T>(that: T, prop: TProp, initial: T[TProp]): T[TProp] {

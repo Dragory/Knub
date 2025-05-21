@@ -1,4 +1,12 @@
-import { Channel, ChannelType, GuildMember, GuildTextBasedChannel, Role, User, VoiceChannel } from "discord.js";
+import {
+  type Channel,
+  ChannelType,
+  type GuildMember,
+  type GuildTextBasedChannel,
+  type Role,
+  type User,
+  type VoiceChannel,
+} from "discord.js";
 import {
   TypeConversionError,
   bool,
@@ -8,9 +16,9 @@ import {
   switchOption,
 } from "knub-command-manager";
 import { disableCodeBlocks } from "../../helpers.ts";
-import { AnyPluginData } from "../../plugins/PluginData.ts";
+import type { AnyPluginData } from "../../plugins/PluginData.ts";
 import { getChannelId, getRoleId, getUserId } from "../../utils.ts";
-import { CommandContext } from "./messageCommandUtils.ts";
+import type { CommandContext } from "./messageCommandUtils.ts";
 
 export const messageCommandBaseTypeConverters = {
   ...defaultTypeConverters,
@@ -18,7 +26,7 @@ export const messageCommandBaseTypeConverters = {
   boolean: defaultTypeConverters.bool,
 
   number(value: string): number {
-    const result = parseFloat(value);
+    const result = Number.parseFloat(value);
     if (Number.isNaN(result)) {
       throw new TypeConversionError(`\`${disableCodeBlocks(value)}\` is not a valid number`);
     }

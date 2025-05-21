@@ -2,8 +2,8 @@
  * @file Public helper functions/types
  */
 
-import { Client, GuildMember, Invite, Message, SendableChannels, TextBasedChannel } from "discord.js";
-import { GuildPluginData } from "./plugins/PluginData.ts";
+import type { Client, GuildMember, Invite, Message, SendableChannels, TextBasedChannel } from "discord.js";
+import type { GuildPluginData } from "./plugins/PluginData.ts";
 import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils.ts";
 import { get } from "./utils.ts";
 

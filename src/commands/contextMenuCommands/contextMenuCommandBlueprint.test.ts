@@ -1,6 +1,6 @@
-import { MessageContextMenuCommandInteraction, UserContextMenuCommandInteraction } from "discord.js";
+import type { MessageContextMenuCommandInteraction, UserContextMenuCommandInteraction } from "discord.js";
 import { describe, it } from "mocha";
-import { BasePluginType } from "../../plugins/pluginTypes.ts";
+import type { BasePluginType } from "../../plugins/pluginTypes.ts";
 import {
   globalPluginMessageContextMenuCommand,
   globalPluginUserContextMenuCommand,

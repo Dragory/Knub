@@ -1,4 +1,4 @@
-import {
+import type {
   APIInteractionGuildMember,
   Channel,
   GuildChannel,
@@ -8,18 +8,18 @@ import {
   PartialUser,
   User,
 } from "discord.js";
-import { BasePluginData, isGuildPluginData } from "../plugins/PluginData.ts";
+import { type BasePluginData, isGuildPluginData } from "../plugins/PluginData.ts";
 import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils.ts";
 import { ConfigValidationError } from "./ConfigValidationError.ts";
 import {
-  ConfigParserFn,
-  CustomOverrideCriteriaFunctions,
-  PermissionLevels,
-  PluginOptions,
-  PluginOverride,
+  type ConfigParserFn,
+  type CustomOverrideCriteriaFunctions,
+  type PermissionLevels,
+  type PluginOptions,
+  type PluginOverride,
   pluginBaseOptionsSchema,
 } from "./configTypes.ts";
-import { MatchParams, getMatchingPluginConfig, mergeConfig } from "./configUtils.ts";
+import { type MatchParams, getMatchingPluginConfig, mergeConfig } from "./configUtils.ts";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string | null;
@@ -76,7 +76,7 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
       | Array<PluginOverride<TPluginData["_pluginType"]>>
       | undefined;
     const overrides: Array<PluginOverride<TPluginData["_pluginType"]>> = parsedUserInput.replaceDefaultOverrides
-      ? parsedUserInputOverrides ?? []
+      ? (parsedUserInputOverrides ?? [])
       : (this.defaultOptions.overrides ?? []).concat(parsedUserInputOverrides ?? []);
     const parsedValidOverrides: Array<PluginOverride<TPluginData["_pluginType"]>> = [];
     for (const override of overrides) {

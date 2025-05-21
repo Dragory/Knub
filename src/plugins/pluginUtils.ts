@@ -1,8 +1,8 @@
-import { APIInteractionGuildMember, Guild, GuildMember, PartialGuildMember } from "discord.js";
-import { PermissionLevels } from "../config/configTypes.ts";
-import { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types.ts";
-import { KeyOfMap } from "../utils.ts";
-import {
+import type { APIInteractionGuildMember, Guild, GuildMember, PartialGuildMember } from "discord.js";
+import type { PermissionLevels } from "../config/configTypes.ts";
+import type { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types.ts";
+import type { KeyOfMap } from "../utils.ts";
+import type {
   AnyGlobalPluginBlueprint,
   AnyGuildPluginBlueprint,
   AnyPluginBlueprint,

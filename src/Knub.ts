@@ -1,33 +1,42 @@
-import { EventEmitter } from "events";
-import { Client, GatewayDispatchEvents, GatewayGuildCreateDispatchData, Guild, Snowflake } from "discord.js";
+import { EventEmitter } from "node:events";
+import {
+  type Client,
+  GatewayDispatchEvents,
+  type GatewayGuildCreateDispatchData,
+  type Guild,
+  type Snowflake,
+} from "discord.js";
 import { ConcurrentRunner } from "./ConcurrentRunner.ts";
 import { Profiler } from "./Profiler.ts";
 import { Queue } from "./Queue.ts";
 import { PluginContextMenuCommandManager } from "./commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
 import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager.ts";
-import { AnyApplicationCommandBlueprint, registerApplicationCommands } from "./commands/registerApplicationCommands.ts";
+import {
+  type AnyApplicationCommandBlueprint,
+  registerApplicationCommands,
+} from "./commands/registerApplicationCommands.ts";
 import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashCommandManager.ts";
 import { PluginConfigManager } from "./config/PluginConfigManager.ts";
-import { BaseConfig } from "./config/configTypes.ts";
+import type { BaseConfig } from "./config/configTypes.ts";
 import { CooldownManager } from "./cooldowns/CooldownManager.ts";
 import { EventRelay } from "./events/EventRelay.ts";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager.ts";
 import { GuildPluginEventManager } from "./events/GuildPluginEventManager.ts";
 import { LockManager } from "./locks/LockManager.ts";
-import {
+import type {
   AnyGlobalEventListenerBlueprint,
   AnyGuildEventListenerBlueprint,
   AnyPluginBlueprint,
   GlobalPluginBlueprint,
   GuildPluginBlueprint,
 } from "./plugins/PluginBlueprint.ts";
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "./plugins/PluginData.ts";
+import type { AnyPluginData, GlobalPluginData, GuildPluginData } from "./plugins/PluginData.ts";
 import { PluginLoadError } from "./plugins/PluginLoadError.ts";
 import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError.ts";
 import { UnknownPluginError } from "./plugins/UnknownPluginError.ts";
-import { BasePluginType } from "./plugins/pluginTypes.ts";
-import { PluginPublicInterface, defaultGetConfig, defaultGetEnabledGuildPlugins } from "./plugins/pluginUtils.ts";
-import {
+import type { BasePluginType } from "./plugins/pluginTypes.ts";
+import { type PluginPublicInterface, defaultGetConfig, defaultGetEnabledGuildPlugins } from "./plugins/pluginUtils.ts";
+import type {
   AnyContext,
   GlobalContext,
   GlobalPluginMap,

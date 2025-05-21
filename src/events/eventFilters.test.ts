@@ -1,7 +1,7 @@
 import { assert, expect } from "chai";
-import { Message } from "discord.js";
+import type { Message } from "discord.js";
 import { describe, it } from "mocha";
-import { GlobalPluginData, GuildPluginData } from "../plugins/PluginData.ts";
+import type { GlobalPluginData, GuildPluginData } from "../plugins/PluginData.ts";
 import { onlyGuild } from "./eventFilters.ts";
 
 describe("Event filters", () => {

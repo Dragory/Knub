@@ -1,11 +1,11 @@
-import {
+import type {
   Locale,
   MessageContextMenuCommandInteraction,
   Permissions,
   UserContextMenuCommandInteraction,
 } from "discord.js";
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
-import { BasePluginType } from "../../plugins/pluginTypes.ts";
+import type { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
+import type { BasePluginType } from "../../plugins/pluginTypes.ts";
 
 export interface BaseContextMenuCommandBlueprint {
   name: string;

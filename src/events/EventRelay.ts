@@ -1,11 +1,11 @@
-import { Client, ClientEvents } from "discord.js";
-import { performance } from "perf_hooks";
-import { Profiler } from "../Profiler.ts";
+import { performance } from "node:perf_hooks";
+import type { Client, ClientEvents } from "discord.js";
+import type { Profiler } from "../Profiler.ts";
 import {
-  EventArguments,
-  ExtendedClientEvents,
-  GuildEvent,
-  ValidEvent,
+  type EventArguments,
+  type ExtendedClientEvents,
+  type GuildEvent,
+  type ValidEvent,
   fromDjsArgs,
   isGuildEvent,
 } from "./eventTypes.ts";

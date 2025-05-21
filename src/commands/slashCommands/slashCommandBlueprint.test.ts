@@ -1,5 +1,5 @@
 import { describe, it } from "mocha";
-import { BasePluginType } from "../../plugins/pluginTypes.ts";
+import type { BasePluginType } from "../../plugins/pluginTypes.ts";
 import { guildPluginSlashCommand } from "./slashCommandBlueprint.ts";
 import { slashOptions } from "./slashCommandOptions.ts";
 

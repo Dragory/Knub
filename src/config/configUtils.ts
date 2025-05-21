@@ -1,12 +1,12 @@
-import { AnyPluginData, BasePluginData } from "../plugins/PluginData.ts";
-import { BasePluginType } from "../plugins/pluginTypes.ts";
+import { AnyPluginData, type BasePluginData } from "../plugins/PluginData.ts";
+import type { BasePluginType } from "../plugins/pluginTypes.ts";
 import { typedKeys } from "../utils.ts";
-import { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "./configTypes.ts";
+import type { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "./configTypes.ts";
 
 const levelRangeRegex = /^([<>=!]+)(\d+)$/;
 const splitLevelRange = (v: string, defaultMod: string): [string, number] => {
   const match = levelRangeRegex.exec(v);
-  return match ? [match[1], parseInt(match[2], 10)] : [defaultMod, parseInt(v, 10)];
+  return match ? [match[1], Number.parseInt(match[2], 10)] : [defaultMod, Number.parseInt(v, 10)];
 };
 
 export interface MatchParams<TExtra extends Record<string, unknown> = Record<string, unknown>> {

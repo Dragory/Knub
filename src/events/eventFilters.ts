@@ -1,10 +1,10 @@
-import { DMChannel, User } from "discord.js";
+import { DMChannel, type User } from "discord.js";
 import { hasPermission } from "../helpers.ts";
-import { AnyPluginData, isGuildPluginData } from "../plugins/PluginData.ts";
-import { BasePluginType } from "../plugins/pluginTypes.ts";
-import { Awaitable } from "../utils.ts";
-import { EventMeta, Listener } from "./BasePluginEventManager.ts";
-import { EventArguments, ValidEvent } from "./eventTypes.ts";
+import { type AnyPluginData, isGuildPluginData } from "../plugins/PluginData.ts";
+import type { BasePluginType } from "../plugins/pluginTypes.ts";
+import type { Awaitable } from "../utils.ts";
+import type { EventMeta, Listener } from "./BasePluginEventManager.ts";
+import type { EventArguments, ValidEvent } from "./eventTypes.ts";
 import { eventToChannel, eventToGuild, eventToMessage, eventToUser } from "./eventUtils.ts";
 
 export type EventFilter = <TEventName extends ValidEvent>(

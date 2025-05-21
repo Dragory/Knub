@@ -1,8 +1,8 @@
 import { assert, expect } from "chai";
-import { DMChannel, TextChannel } from "discord.js";
+import type { DMChannel, TextChannel } from "discord.js";
 import { number, string } from "knub-command-manager";
 import { describe, it } from "mocha";
-import { BasePluginType } from "../../index.ts";
+import type { BasePluginType } from "../../index.ts";
 import { globalPluginMessageCommand, guildPluginMessageCommand } from "./messageCommandBlueprint.ts";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;

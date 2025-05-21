@@ -2,7 +2,7 @@
  * @file Internal utility functions/types
  */
 
-import { Snowflake } from "discord.js";
+import type { Snowflake } from "discord.js";
 
 /** */
 export type Awaitable<T = unknown> = T | Promise<T>;

@@ -1,8 +1,8 @@
-import { Locale, Permissions } from "discord.js";
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
-import { BasePluginType } from "../../plugins/pluginTypes.ts";
-import { BaseSlashCommandOption } from "./slashCommandOptions.ts";
-import { SlashCommandFn, SlashCommandSignature } from "./slashCommandUtils.ts";
+import type { Locale, Permissions } from "discord.js";
+import type { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
+import type { BasePluginType } from "../../plugins/pluginTypes.ts";
+import type { BaseSlashCommandOption } from "./slashCommandOptions.ts";
+import type { SlashCommandFn, SlashCommandSignature } from "./slashCommandUtils.ts";
 
 export type AnySlashCommandSignature = Array<BaseSlashCommandOption<any, any>>;
 
