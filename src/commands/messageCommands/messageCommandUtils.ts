@@ -1,4 +1,4 @@
-import { ChannelType, type Client, type Message } from "discord.js";
+import { ChannelType, type Client, type Message, type OmitPartialGroupDMChannel } from "discord.js";
 import {
   type ICommandConfig as MessageCommandConfig,
   type ICommandDefinition as MessageCommandDefinition,
@@ -25,8 +25,8 @@ export function getDefaultMessageCommandPrefix(client: Client): RegExp {
 }
 
 export type ContextualCommandMessage<TPluginData extends AnyPluginData<any>> = TPluginData extends GuildPluginData<any>
-  ? Message<true>
-  : Message;
+  ? OmitPartialGroupDMChannel<Message<true>>
+  : OmitPartialGroupDMChannel<Message>;
 
 export interface MessageCommandMeta<TPluginData extends AnyPluginData<any>, TArguments> {
   args: TArguments;
