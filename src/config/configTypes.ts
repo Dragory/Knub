@@ -27,27 +27,53 @@ export interface PluginOptions<TPluginType extends BasePluginType> {
   overrides?: Array<PluginOverride<TPluginType>>;
 }
 
-export interface PluginOverride<TPluginType extends BasePluginType>
-  extends PluginOverrideCriteria<TPluginType["customOverrideCriteria"]> {
+export interface PluginOverride<TPluginType extends BasePluginType> extends PluginOverrideCriteria {
   config?: DeepPartial<TPluginType["config"]>;
 }
 
-export interface PluginOverrideCriteria<TCustomOverrideCriteria> {
-  channel?: string | string[] | null;
-  category?: string | string[] | null;
-  level?: string | string[] | null;
-  user?: string | string[] | null;
-  role?: string | string[] | null;
-  thread?: string | string[] | null;
-  is_thread?: boolean | null;
-  thread_type?: "public" | "private" | null;
+export const basePluginOverrideCriteriaSchema = z.strictObject({
+  channel: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
+  category: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
+  level: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
+  user: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
+  role: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
+  thread: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
+  is_thread: z.boolean().nullable().optional(),
+  thread_type: z.literal(["public", "private"]).nullable().optional(),
+  extra: z.any().optional(),
+});
 
-  all?: Array<PluginOverrideCriteria<TCustomOverrideCriteria>> | null;
-  any?: Array<PluginOverrideCriteria<TCustomOverrideCriteria>> | null;
-  not?: PluginOverrideCriteria<TCustomOverrideCriteria> | null;
+export const pluginOverrideCriteriaSchema = basePluginOverrideCriteriaSchema.extend({
+  get all() {
+    return z.array(pluginOverrideCriteriaSchema).nullable().optional();
+  },
+  get any() {
+    return z.array(pluginOverrideCriteriaSchema).nullable().optional();
+  },
+  get not() {
+    return pluginOverrideCriteriaSchema.nullable().optional();
+  },
+});
 
-  extra?: TCustomOverrideCriteria | null;
-}
+export type PluginOverrideCriteria = z.infer<typeof pluginOverrideCriteriaSchema>;
 
 export type ConfigParserFn<TConfig> = (input: unknown) => Awaitable<TConfig>;
 

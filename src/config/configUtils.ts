@@ -307,7 +307,7 @@ export async function evaluateOverrideCriteria<TPluginData extends BasePluginDat
     // Custom override criteria
     if (key === "extra") {
       const value = criteria[key]!;
-      for (const customKey of typedKeys(value)) {
+      for (const customKey of Object.keys(value)) {
         if (customOverrideCriteriaFunctions?.[customKey] == null) {
           throw new Error(`Unknown custom override criteria: ${String(customKey)}`);
         }
