@@ -1,5 +1,5 @@
 import { noop } from "./utils.ts";
-import events = require("events");
+import { EventEmitter } from "node:events";
 import {
   AnyThreadChannel,
   ChannelManager,
