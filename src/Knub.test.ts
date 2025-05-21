@@ -1,10 +1,10 @@
 import { assert, expect } from "chai";
 import { Client } from "discord.js";
 import { describe, it } from "mocha";
-import { Knub } from "./Knub";
-import { guildPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint";
-import { guildPluginEventListener } from "./events/EventListenerBlueprint";
-import { GuildPluginBlueprint, guildPlugin } from "./plugins/PluginBlueprint";
+import { Knub } from "./Knub.ts";
+import { guildPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint.ts";
+import { guildPluginEventListener } from "./events/EventListenerBlueprint.ts";
+import { GuildPluginBlueprint, guildPlugin } from "./plugins/PluginBlueprint.ts";
 import {
   createMockClient,
   createMockGuild,
@@ -14,8 +14,8 @@ import {
   initializeKnub,
   sleep,
   withKnub,
-} from "./testUtils";
-import { noop } from "./utils";
+} from "./testUtils.ts";
+import { noop } from "./utils.ts";
 
 describe("Knub", () => {
   it("Multiple GUILD_CREATE events load guild's plugins only once", (mochaDone) => {

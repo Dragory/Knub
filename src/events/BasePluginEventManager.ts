@@ -1,9 +1,9 @@
-import { Lock } from "../locks/LockManager";
-import { AnyPluginData, GuildPluginData } from "../plugins/PluginData";
-import { Awaitable } from "../utils";
-import { EventRelay } from "./EventRelay";
-import { EventFilter } from "./eventFilters";
-import { EventArguments, GuildEventArguments, ValidEvent } from "./eventTypes";
+import { Lock } from "../locks/LockManager.ts";
+import { AnyPluginData, GuildPluginData } from "../plugins/PluginData.ts";
+import { Awaitable } from "../utils.ts";
+import { EventRelay } from "./EventRelay.ts";
+import { EventFilter } from "./eventFilters.ts";
+import { EventArguments, GuildEventArguments, ValidEvent } from "./eventTypes.ts";
 
 export interface EventMeta<TPluginData extends AnyPluginData<any>, TArguments> {
   args: TArguments;

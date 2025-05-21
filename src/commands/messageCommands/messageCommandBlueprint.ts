@@ -1,6 +1,6 @@
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
-import { BasePluginType } from "../../plugins/pluginTypes";
-import { CommandFn, MessageCommandSignatureOrArray, PluginCommandConfig } from "./messageCommandUtils";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
+import { BasePluginType } from "../../plugins/pluginTypes.ts";
+import { CommandFn, MessageCommandSignatureOrArray, PluginCommandConfig } from "./messageCommandUtils.ts";
 
 type CommandSource = "guild" | "dm";
 

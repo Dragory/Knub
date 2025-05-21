@@ -1,8 +1,8 @@
 import { Client, DMChannel, Message } from "discord.js";
 import { CommandManager, IMatchedCommand, isError } from "knub-command-manager";
 import { performance } from "perf_hooks";
-import { AnyPluginData } from "../../plugins/PluginData";
-import { MessageCommandBlueprint } from "./messageCommandBlueprint";
+import { AnyPluginData } from "../../plugins/PluginData.ts";
+import { MessageCommandBlueprint } from "./messageCommandBlueprint.ts";
 import {
   CommandContext,
   CommandExtraData,
@@ -17,7 +17,7 @@ import {
   getDefaultMessageCommandPrefix,
   getMessageCommandSignature,
   restrictCommandSource,
-} from "./messageCommandUtils";
+} from "./messageCommandUtils.ts";
 
 export interface PluginCommandManagerOpts {
   prefix?: string | RegExp;

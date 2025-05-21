@@ -1,25 +1,25 @@
-import * as configUtils from "./config/configUtils";
-import * as helpers from "./helpers";
-import * as pluginUtils from "./plugins/pluginUtils";
+import * as configUtils from "./config/configUtils.ts";
+import * as helpers from "./helpers.ts";
+import * as pluginUtils from "./plugins/pluginUtils.ts";
 
-export { Knub } from "./Knub";
+export { Knub } from "./Knub.ts";
 
-export * from "./plugins/PluginBlueprint";
-export * from "./events/EventListenerBlueprint";
-export * from "./commands/messageCommands/messageCommandBlueprint";
-export * from "./commands/slashCommands/slashCommandBlueprint";
-export * from "./commands/slashCommands/slashCommandUtils";
-export * from "./commands/contextMenuCommands/contextMenuCommandBlueprint";
+export * from "./plugins/PluginBlueprint.ts";
+export * from "./events/EventListenerBlueprint.ts";
+export * from "./commands/messageCommands/messageCommandBlueprint.ts";
+export * from "./commands/slashCommands/slashCommandBlueprint.ts";
+export * from "./commands/slashCommands/slashCommandUtils.ts";
+export * from "./commands/contextMenuCommands/contextMenuCommandBlueprint.ts";
 
 export { configUtils };
-export { ConfigValidationError } from "./config/ConfigValidationError";
+export { ConfigValidationError } from "./config/ConfigValidationError.ts";
 
 export { pluginUtils };
 
-export * from "./plugins/PluginData";
+export * from "./plugins/PluginData.ts";
 
-export * from "./commands/slashCommands/slashCommandOptions";
-export * from "./commands/slashCommands/slashGroupBlueprint";
+export * from "./commands/slashCommands/slashCommandOptions.ts";
+export * from "./commands/slashCommands/slashGroupBlueprint.ts";
 
 export {
   KnubOptions,
@@ -29,31 +29,31 @@ export {
   AnyContext,
   LoadedGuildPlugin,
   LoadedGlobalPlugin,
-} from "./types";
+} from "./types.ts";
 
-export { PermissionLevels, BaseConfig, PluginOptions, PluginOverrideCriteria } from "./config/configTypes";
+export { PermissionLevels, BaseConfig, PluginOptions, PluginOverrideCriteria } from "./config/configTypes.ts";
 
-export { BasePluginType } from "./plugins/pluginTypes";
+export { BasePluginType } from "./plugins/pluginTypes.ts";
 
-export * from "./commands/messageCommands/messageCommandUtils";
+export * from "./commands/messageCommands/messageCommandUtils.ts";
 
-export * from "./commands/messageCommands/messageCommandBaseTypeConverters";
+export * from "./commands/messageCommands/messageCommandBaseTypeConverters.ts";
 
 export { helpers };
 
-export { PluginError } from "./plugins/PluginError";
+export { PluginError } from "./plugins/PluginError.ts";
 
-export { PluginConfigManager, ExtendedMatchParams } from "./config/PluginConfigManager";
-export { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager";
-export { GuildPluginEventManager } from "./events/GuildPluginEventManager";
-export { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
-export { LockManager, Lock } from "./locks/LockManager";
-export { CooldownManager } from "./cooldowns/CooldownManager";
+export { PluginConfigManager, ExtendedMatchParams } from "./config/PluginConfigManager.ts";
+export { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager.ts";
+export { GuildPluginEventManager } from "./events/GuildPluginEventManager.ts";
+export { GlobalPluginEventManager } from "./events/GlobalPluginEventManager.ts";
+export { LockManager, Lock } from "./locks/LockManager.ts";
+export { CooldownManager } from "./cooldowns/CooldownManager.ts";
 
 export { TypeConversionError, parseSignature, TTypeHelperResult, TTypeHelperOpts } from "knub-command-manager";
 
-export { PluginLoadError } from "./plugins/PluginLoadError";
-export { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
-export { UnknownPluginError } from "./plugins/UnknownPluginError";
+export { PluginLoadError } from "./plugins/PluginLoadError.ts";
+export { PluginNotLoadedError } from "./plugins/PluginNotLoadedError.ts";
+export { UnknownPluginError } from "./plugins/UnknownPluginError.ts";
 
-export * from "./events/eventTypes";
+export * from "./events/eventTypes.ts";

@@ -8,13 +8,13 @@ import {
   TSignature as MessageCommandSignature,
   toSafeSignature as toMessageCommandSafeSignature,
 } from "knub-command-manager";
-import { hasPermission } from "../../helpers";
-import { Lock } from "../../locks/LockManager";
-import { AnyPluginData, GuildPluginData } from "../../plugins/PluginData";
-import { BasePluginType } from "../../plugins/pluginTypes";
-import { GuildMessage } from "../../types";
-import { Awaitable } from "../../utils";
-import { MessageCommandBlueprint } from "./messageCommandBlueprint";
+import { hasPermission } from "../../helpers.ts";
+import { Lock } from "../../locks/LockManager.ts";
+import { AnyPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
+import { BasePluginType } from "../../plugins/pluginTypes.ts";
+import { GuildMessage } from "../../types.ts";
+import { Awaitable } from "../../utils.ts";
+import { MessageCommandBlueprint } from "./messageCommandBlueprint.ts";
 
 export type MessageCommandSignatureOrArray<TPluginData extends AnyPluginData<any>> =
   | MessageCommandSignature<CommandContext<TPluginData>>

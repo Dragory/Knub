@@ -6,7 +6,7 @@ import {
   CommandContext,
   CommandExtraData,
   getMessageCommandSignature,
-} from "./messageCommandUtils";
+} from "./messageCommandUtils.ts";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

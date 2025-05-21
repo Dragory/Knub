@@ -2,15 +2,15 @@ import { assert, expect } from "chai";
 import { ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { parseSignature } from "knub-command-manager";
 import { describe, it } from "mocha";
-import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager";
-import { guildPluginMessageContextMenuCommand } from "../commands/contextMenuCommands/contextMenuCommandBlueprint";
-import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager";
-import { guildPluginMessageCommand } from "../commands/messageCommands/messageCommandBlueprint";
-import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager";
-import { PluginConfigManager } from "../config/PluginConfigManager";
-import { globalPluginEventListener, guildPluginEventListener } from "../events/EventListenerBlueprint";
-import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
-import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
+import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
+import { guildPluginMessageContextMenuCommand } from "../commands/contextMenuCommands/contextMenuCommandBlueprint.ts";
+import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager.ts";
+import { guildPluginMessageCommand } from "../commands/messageCommands/messageCommandBlueprint.ts";
+import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager.ts";
+import { PluginConfigManager } from "../config/PluginConfigManager.ts";
+import { globalPluginEventListener, guildPluginEventListener } from "../events/EventListenerBlueprint.ts";
+import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager.ts";
+import { GuildPluginEventManager } from "../events/GuildPluginEventManager.ts";
 import {
   CooldownManager,
   GlobalPluginBlueprint,
@@ -19,7 +19,7 @@ import {
   guildPluginSlashCommand,
   guildPluginSlashGroup,
   slashOptions,
-} from "../index";
+} from "../index.ts";
 import {
   assertTypeEquals,
   createMockClient,
@@ -32,12 +32,12 @@ import {
   initializeKnub,
   sleep,
   withKnub,
-} from "../testUtils";
-import { noop } from "../utils";
-import { AnyPluginBlueprint, GuildPluginBlueprint, globalPlugin, guildPlugin } from "./PluginBlueprint";
-import { GuildPluginData, isGlobalPluginData } from "./PluginData";
-import { BasePluginType } from "./pluginTypes";
-import { PluginPublicInterface } from "./pluginUtils";
+} from "../testUtils.ts";
+import { noop } from "../utils.ts";
+import { AnyPluginBlueprint, GuildPluginBlueprint, globalPlugin, guildPlugin } from "./PluginBlueprint.ts";
+import { GuildPluginData, isGlobalPluginData } from "./PluginData.ts";
+import { BasePluginType } from "./pluginTypes.ts";
+import { PluginPublicInterface } from "./pluginUtils.ts";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

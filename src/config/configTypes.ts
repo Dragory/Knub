@@ -1,9 +1,9 @@
 import { DeepPartial } from "ts-essentials";
 import { z } from "zod";
-import { AnyPluginData, BasePluginData } from "../plugins/PluginData";
-import { BasePluginType } from "../plugins/pluginTypes";
-import { Awaitable } from "../utils";
-import { MatchParams } from "./configUtils";
+import { BasePluginData } from "../plugins/PluginData.ts";
+import { BasePluginType } from "../plugins/pluginTypes.ts";
+import { Awaitable } from "../utils.ts";
+import { MatchParams } from "./configUtils.ts";
 
 export const permissionLevelsSchema = z.record(z.string(), z.number().int(), {});
 export type PermissionLevels = z.TypeOf<typeof permissionLevelsSchema>;

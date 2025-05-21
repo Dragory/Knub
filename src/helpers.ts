@@ -3,9 +3,9 @@
  */
 
 import { Client, GuildMember, Invite, Message, SendableChannels, TextBasedChannel } from "discord.js";
-import { GuildPluginData } from "./plugins/PluginData";
-import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils";
-import { get } from "./utils";
+import { GuildPluginData } from "./plugins/PluginData.ts";
+import { getMemberLevel as _getMemberLevel } from "./plugins/pluginUtils.ts";
+import { get } from "./utils.ts";
 
 /**
  * Splits a string into chunks, preferring to split at newlines if possible
@@ -161,4 +161,4 @@ export {
   getChannelId,
   getRoleId,
   getUserId,
-} from "./utils";
+} from "./utils.ts";

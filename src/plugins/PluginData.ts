@@ -1,16 +1,16 @@
 import { Client, Guild } from "discord.js";
-import { Knub } from "../Knub";
-import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager";
-import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager";
-import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager";
-import { PluginConfigManager } from "../config/PluginConfigManager";
-import { CooldownManager } from "../cooldowns/CooldownManager";
-import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager";
-import { GuildPluginEventManager } from "../events/GuildPluginEventManager";
-import { LockManager } from "../locks/LockManager";
-import { BasePluginBlueprint } from "./PluginBlueprint";
-import { BasePluginType } from "./pluginTypes";
-import { PluginPublicInterface } from "./pluginUtils";
+import { Knub } from "../Knub.ts";
+import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
+import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager.ts";
+import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager.ts";
+import { PluginConfigManager } from "../config/PluginConfigManager.ts";
+import { CooldownManager } from "../cooldowns/CooldownManager.ts";
+import { GlobalPluginEventManager } from "../events/GlobalPluginEventManager.ts";
+import { GuildPluginEventManager } from "../events/GuildPluginEventManager.ts";
+import { LockManager } from "../locks/LockManager.ts";
+import { BasePluginBlueprint } from "./PluginBlueprint.ts";
+import { BasePluginType } from "./pluginTypes.ts";
+import { PluginPublicInterface } from "./pluginUtils.ts";
 
 export type HasPluginFn = <T extends BasePluginBlueprint<any, unknown>>(plugin: T) => boolean;
 export type GetPluginFn = <T extends BasePluginBlueprint<any, unknown>>(plugin: T) => PluginPublicInterface<T>;

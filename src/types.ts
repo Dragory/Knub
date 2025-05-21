@@ -1,15 +1,15 @@
 import { GuildMember, GuildTextBasedChannel, Message, Snowflake } from "discord.js";
-import { BaseConfig } from "./config/configTypes";
-import { LockManager } from "./locks/LockManager";
+import { BaseConfig } from "./config/configTypes.ts";
+import { LockManager } from "./locks/LockManager.ts";
 import {
   AnyGlobalPluginBlueprint,
   AnyGuildPluginBlueprint,
   GlobalPluginBlueprint,
   GuildPluginBlueprint,
-} from "./plugins/PluginBlueprint";
-import { GlobalPluginData, GuildPluginData } from "./plugins/PluginData";
-import { BasePluginType } from "./plugins/pluginTypes";
-import { Awaitable } from "./utils";
+} from "./plugins/PluginBlueprint.ts";
+import { GlobalPluginData, GuildPluginData } from "./plugins/PluginData.ts";
+import { BasePluginType } from "./plugins/pluginTypes.ts";
+import { Awaitable } from "./utils.ts";
 
 export type GuildPluginMap = Map<string, AnyGuildPluginBlueprint>;
 export type GlobalPluginMap = Map<string, AnyGlobalPluginBlueprint>;

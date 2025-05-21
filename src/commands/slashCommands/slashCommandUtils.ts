@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction } from "discord.js";
-import { AnyPluginData } from "../../plugins/PluginData";
-import { BaseSlashCommandOption } from "./slashCommandOptions";
+import { AnyPluginData } from "../../plugins/PluginData.ts";
+import { BaseSlashCommandOption } from "./slashCommandOptions.ts";
 
 export type SlashCommandSignature = Array<BaseSlashCommandOption<any, any>>;
 

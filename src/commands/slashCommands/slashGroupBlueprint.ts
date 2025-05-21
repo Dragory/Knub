@@ -1,7 +1,7 @@
 import { Locale, Permissions } from "discord.js";
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
-import { BasePluginType } from "../../plugins/pluginTypes";
-import { SlashCommandBlueprint } from "./slashCommandBlueprint";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
+import { BasePluginType } from "../../plugins/pluginTypes.ts";
+import { SlashCommandBlueprint } from "./slashCommandBlueprint.ts";
 
 export type SlashGroupBlueprint<TPluginData extends AnyPluginData<any>> = {
   type: "slash-group";

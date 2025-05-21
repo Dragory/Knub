@@ -1,7 +1,7 @@
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../plugins/PluginData";
-import { BasePluginType } from "../plugins/pluginTypes";
-import { Listener, OnOpts } from "./BasePluginEventManager";
-import { GuildEvent, ValidEvent } from "./eventTypes";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../plugins/PluginData.ts";
+import { BasePluginType } from "../plugins/pluginTypes.ts";
+import { Listener, OnOpts } from "./BasePluginEventManager.ts";
+import { GuildEvent, ValidEvent } from "./eventTypes.ts";
 
 export interface EventListenerBlueprint<
   TPluginData extends AnyPluginData<any>,

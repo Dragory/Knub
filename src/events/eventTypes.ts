@@ -41,7 +41,7 @@ import {
   VoiceChannel,
   VoiceState,
 } from "discord.js";
-import { GuildMessage } from "../types";
+import { GuildMessage } from "../types.ts";
 
 export type ExtendedClientEvents = ClientEvents & { raw: any[] };
 

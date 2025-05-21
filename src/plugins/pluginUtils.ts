@@ -1,13 +1,13 @@
 import { APIInteractionGuildMember, Guild, GuildMember, PartialGuildMember } from "discord.js";
-import { PermissionLevels } from "../config/configTypes";
-import { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types";
-import { KeyOfMap } from "../utils";
+import { PermissionLevels } from "../config/configTypes.ts";
+import { AnyContext, GlobalContext, GuildContext, GuildPluginMap } from "../types.ts";
+import { KeyOfMap } from "../utils.ts";
 import {
   AnyGlobalPluginBlueprint,
   AnyGuildPluginBlueprint,
   AnyPluginBlueprint,
   BasePluginBlueprint,
-} from "./PluginBlueprint";
+} from "./PluginBlueprint.ts";
 
 export function getMemberRoles(member: GuildMember | PartialGuildMember | APIInteractionGuildMember): string[] {
   return Array.isArray(member.roles) ? member.roles : Array.from(member.roles.cache.values()).map((r) => r.id);

@@ -1,7 +1,7 @@
 import { Interaction, MessageContextMenuCommandInteraction } from "discord.js";
-import { AnyPluginData } from "../../plugins/PluginData";
-import { get } from "../../utils";
-import { MessageContextMenuCommandBlueprint, UserContextMenuCommandBlueprint } from "./contextMenuCommandBlueprint";
+import { AnyPluginData } from "../../plugins/PluginData.ts";
+import { get } from "../../utils.ts";
+import { MessageContextMenuCommandBlueprint, UserContextMenuCommandBlueprint } from "./contextMenuCommandBlueprint.ts";
 
 type AnyContextMenuCommand<TPluginData extends AnyPluginData<any>> =
   | MessageContextMenuCommandBlueprint<TPluginData>

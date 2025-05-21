@@ -4,6 +4,7 @@
   "description": "A bot framework for Discord",
   "author": "Miikka <contact@mivir.fi>",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "test": "npm run build-debug && mocha dist --recursive -r dist/testHooks.js --trace-uncaught",
     "test-debug": "npm run build-debug && why-is-node-running ./node_modules/.bin/mocha dist --recursive",

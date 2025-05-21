@@ -7,10 +7,10 @@ import {
   string,
   switchOption,
 } from "knub-command-manager";
-import { disableCodeBlocks } from "../../helpers";
-import { AnyPluginData } from "../../plugins/PluginData";
-import { getChannelId, getRoleId, getUserId } from "../../utils";
-import { CommandContext } from "./messageCommandUtils";
+import { disableCodeBlocks } from "../../helpers.ts";
+import { AnyPluginData } from "../../plugins/PluginData.ts";
+import { getChannelId, getRoleId, getUserId } from "../../utils.ts";
+import { CommandContext } from "./messageCommandUtils.ts";
 
 export const messageCommandBaseTypeConverters = {
   ...defaultTypeConverters,

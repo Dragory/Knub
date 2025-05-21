@@ -1,8 +1,8 @@
 import { assert, expect } from "chai";
 import { describe, it } from "mocha";
 import { z } from "zod";
-import { BasePluginData, GuildPluginData } from "../plugins/PluginData";
-import { BasePluginType } from "../plugins/pluginTypes";
+import { BasePluginData, GuildPluginData } from "../plugins/PluginData.ts";
+import { BasePluginType } from "../plugins/pluginTypes.ts";
 import {
   createMockClient,
   createMockGuild,
@@ -13,8 +13,8 @@ import {
   createMockThread,
   createMockUser,
   sleep,
-} from "../testUtils";
-import { PluginConfigManager } from "./PluginConfigManager";
+} from "../testUtils.ts";
+import { PluginConfigManager } from "./PluginConfigManager.ts";
 
 describe("PluginConfigManager", () => {
   it("merge user config with default config", async () => {

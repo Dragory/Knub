@@ -1,5 +1,5 @@
-import { AnyContext } from "../types";
-import { isGuildContext } from "./pluginUtils";
+import { AnyContext } from "../types.ts";
+import { isGuildContext } from "./pluginUtils.ts";
 
 export class PluginLoadError extends Error {
   public pluginName: string;

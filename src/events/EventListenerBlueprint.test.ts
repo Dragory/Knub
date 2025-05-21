@@ -1,9 +1,9 @@
 import { assert, expect } from "chai";
 import { Channel, GuildChannel, GuildTextBasedChannel, Message, TextBasedChannel } from "discord.js";
 import { describe, it } from "mocha";
-import { BasePluginType } from "../plugins/pluginTypes";
-import { GuildMessage } from "../types";
-import { globalPluginEventListener, guildPluginEventListener } from "./EventListenerBlueprint";
+import { BasePluginType } from "../plugins/pluginTypes.ts";
+import { GuildMessage } from "../types.ts";
+import { globalPluginEventListener, guildPluginEventListener } from "./EventListenerBlueprint.ts";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

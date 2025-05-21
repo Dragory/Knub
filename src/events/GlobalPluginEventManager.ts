@@ -1,8 +1,8 @@
-import { GlobalPluginData } from "..";
-import { AnyGlobalEventListenerBlueprint } from "../plugins/PluginBlueprint";
-import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager";
-import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
-import { EventArguments, ValidEvent } from "./eventTypes";
+import { GlobalPluginData } from "../index.ts";
+import { AnyGlobalEventListenerBlueprint } from "../plugins/PluginBlueprint.ts";
+import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager.ts";
+import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters.ts";
+import { EventArguments, ValidEvent } from "./eventTypes.ts";
 
 export class GlobalPluginEventManager<
   TPluginData extends GlobalPluginData<any>,

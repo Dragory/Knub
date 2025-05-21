@@ -1,7 +1,7 @@
 import { assert, expect } from "chai";
 import { describe, it } from "mocha";
-import { sleep } from "../testUtils";
-import { CooldownManager } from "./CooldownManager";
+import { sleep } from "../testUtils.ts";
+import { CooldownManager } from "./CooldownManager.ts";
 
 describe("CooldownManager", () => {
   it("getCooldownRemaining() initial value", () => {

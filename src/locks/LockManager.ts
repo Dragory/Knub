@@ -1,5 +1,5 @@
 import Timeout = NodeJS.Timeout;
-import { noop } from "../utils";
+import { noop } from "../utils.ts";
 
 const DEFAULT_LOCK_TIMEOUT = 10 * 1000;
 const LOCK_GC_TIMEOUT = 120 * 1000;

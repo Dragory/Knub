@@ -1,5 +1,5 @@
 import { Channel, Guild, GuildChannel, Message, PartialDMChannel, PartialUser, TextChannel, User } from "discord.js";
-import { KnownEvents } from "./eventTypes";
+import { KnownEvents } from "./eventTypes.ts";
 
 type EventToGuild = {
   [P in keyof KnownEvents]?: (args: KnownEvents[P]) => Guild | null | undefined;

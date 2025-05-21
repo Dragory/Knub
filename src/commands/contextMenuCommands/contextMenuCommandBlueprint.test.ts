@@ -1,12 +1,12 @@
 import { MessageContextMenuCommandInteraction, UserContextMenuCommandInteraction } from "discord.js";
 import { describe, it } from "mocha";
-import { BasePluginType } from "../../plugins/pluginTypes";
+import { BasePluginType } from "../../plugins/pluginTypes.ts";
 import {
   globalPluginMessageContextMenuCommand,
   globalPluginUserContextMenuCommand,
   guildPluginMessageContextMenuCommand,
   guildPluginUserContextMenuCommand,
-} from "./contextMenuCommandBlueprint";
+} from "./contextMenuCommandBlueprint.ts";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

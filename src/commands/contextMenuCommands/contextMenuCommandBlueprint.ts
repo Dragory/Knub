@@ -4,8 +4,8 @@ import {
   Permissions,
   UserContextMenuCommandInteraction,
 } from "discord.js";
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData";
-import { BasePluginType } from "../../plugins/pluginTypes";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
+import { BasePluginType } from "../../plugins/pluginTypes.ts";
 
 export interface BaseContextMenuCommandBlueprint {
   name: string;

@@ -1,7 +1,7 @@
 import { describe, it } from "mocha";
-import { BasePluginType } from "../../plugins/pluginTypes";
-import { guildPluginSlashCommand } from "./slashCommandBlueprint";
-import { slashOptions } from "./slashCommandOptions";
+import { BasePluginType } from "../../plugins/pluginTypes.ts";
+import { guildPluginSlashCommand } from "./slashCommandBlueprint.ts";
+import { slashOptions } from "./slashCommandOptions.ts";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 

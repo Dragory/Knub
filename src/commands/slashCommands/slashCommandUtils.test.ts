@@ -1,7 +1,7 @@
 import { describe, it } from "mocha";
-import { AssertTypeEquals } from "../../testUtils";
-import { slashOptions } from "./slashCommandOptions";
-import { OptionsFromSignature, SlashCommandSignature } from "./slashCommandUtils";
+import { AssertTypeEquals } from "../../testUtils.ts";
+import { slashOptions } from "./slashCommandOptions.ts";
+import { OptionsFromSignature, SlashCommandSignature } from "./slashCommandUtils.ts";
 
 describe("slashCommandUtils", () => {
   it("OptionsFromSignature basic functionality", () => {

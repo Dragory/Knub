@@ -1,32 +1,32 @@
 import { EventEmitter } from "events";
 import { Client, GatewayDispatchEvents, GatewayGuildCreateDispatchData, Guild, Snowflake } from "discord.js";
-import { ConcurrentRunner } from "./ConcurrentRunner";
-import { Profiler } from "./Profiler";
-import { Queue } from "./Queue";
-import { PluginContextMenuCommandManager } from "./commands/contextMenuCommands/PluginContextMenuCommandManager";
-import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager";
-import { AnyApplicationCommandBlueprint, registerApplicationCommands } from "./commands/registerApplicationCommands";
-import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashCommandManager";
-import { PluginConfigManager } from "./config/PluginConfigManager";
-import { BaseConfig } from "./config/configTypes";
-import { CooldownManager } from "./cooldowns/CooldownManager";
-import { EventRelay } from "./events/EventRelay";
-import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager";
-import { GuildPluginEventManager } from "./events/GuildPluginEventManager";
-import { LockManager } from "./locks/LockManager";
+import { ConcurrentRunner } from "./ConcurrentRunner.ts";
+import { Profiler } from "./Profiler.ts";
+import { Queue } from "./Queue.ts";
+import { PluginContextMenuCommandManager } from "./commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
+import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager.ts";
+import { AnyApplicationCommandBlueprint, registerApplicationCommands } from "./commands/registerApplicationCommands.ts";
+import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashCommandManager.ts";
+import { PluginConfigManager } from "./config/PluginConfigManager.ts";
+import { BaseConfig } from "./config/configTypes.ts";
+import { CooldownManager } from "./cooldowns/CooldownManager.ts";
+import { EventRelay } from "./events/EventRelay.ts";
+import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager.ts";
+import { GuildPluginEventManager } from "./events/GuildPluginEventManager.ts";
+import { LockManager } from "./locks/LockManager.ts";
 import {
   AnyGlobalEventListenerBlueprint,
   AnyGuildEventListenerBlueprint,
   AnyPluginBlueprint,
   GlobalPluginBlueprint,
   GuildPluginBlueprint,
-} from "./plugins/PluginBlueprint";
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "./plugins/PluginData";
-import { PluginLoadError } from "./plugins/PluginLoadError";
-import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError";
-import { UnknownPluginError } from "./plugins/UnknownPluginError";
-import { BasePluginType } from "./plugins/pluginTypes";
-import { PluginPublicInterface, defaultGetConfig, defaultGetEnabledGuildPlugins } from "./plugins/pluginUtils";
+} from "./plugins/PluginBlueprint.ts";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "./plugins/PluginData.ts";
+import { PluginLoadError } from "./plugins/PluginLoadError.ts";
+import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError.ts";
+import { UnknownPluginError } from "./plugins/UnknownPluginError.ts";
+import { BasePluginType } from "./plugins/pluginTypes.ts";
+import { PluginPublicInterface, defaultGetConfig, defaultGetEnabledGuildPlugins } from "./plugins/pluginUtils.ts";
 import {
   AnyContext,
   GlobalContext,
@@ -38,8 +38,8 @@ import {
   LoadedGlobalPlugin,
   LoadedGuildPlugin,
   LogFn,
-} from "./types";
-import { get, notCallable } from "./utils";
+} from "./types.ts";
+import { get, notCallable } from "./utils.ts";
 
 const defaultKnubArgs: KnubArgs = {
   guildPlugins: [],

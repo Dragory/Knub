@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2020",
+    "target": "ESNext",
     "lib": [
       "esnext"
     ],
@@ -12,11 +13,12 @@
     "outDir": "dist",
     "sourceMap": true,
     "declaration": true,
-    "experimentalDecorators": true,
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
-    "composite": true
+    "composite": true,
+    "alwaysStrict": true,
+    "rewriteRelativeImportExtensions": true
   },
   "include": [
     "src/**/*"

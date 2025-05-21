@@ -1,4 +1,4 @@
-import { noop } from "./utils";
+import { noop } from "./utils.ts";
 import events = require("events");
 import {
   AnyThreadChannel,
@@ -25,8 +25,8 @@ import {
   UserManager,
   WebSocketManager,
 } from "discord.js";
-import { Knub } from "./Knub";
-import { KnubArgs } from "./types";
+import { Knub } from "./Knub.ts";
+import { KnubArgs } from "./types.ts";
 
 const EventEmitter = events.EventEmitter;
 

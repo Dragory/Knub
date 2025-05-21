@@ -1,7 +1,7 @@
-import { AnyPluginData, BasePluginData } from "../plugins/PluginData";
-import { BasePluginType } from "../plugins/pluginTypes";
-import { typedKeys } from "../utils";
-import { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "./configTypes";
+import { AnyPluginData, BasePluginData } from "../plugins/PluginData.ts";
+import { BasePluginType } from "../plugins/pluginTypes.ts";
+import { typedKeys } from "../utils.ts";
+import { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "./configTypes.ts";
 
 const levelRangeRegex = /^([<>=!]+)(\d+)$/;
 const splitLevelRange = (v: string, defaultMod: string): [string, number] => {

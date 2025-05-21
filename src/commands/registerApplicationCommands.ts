@@ -1,6 +1,6 @@
-import { APIApplicationCommandOption } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {
   APIApplicationCommand,
+  APIApplicationCommandOption,
   ApplicationCommandOptionType,
   ApplicationCommandType,
   Client,
@@ -9,15 +9,15 @@ import {
   RESTPostAPIContextMenuApplicationCommandsJSONBody,
   Routes,
 } from "discord.js";
-import { AnyPluginData } from "../plugins/PluginData";
-import { indexBy } from "../utils";
+import { AnyPluginData } from "../plugins/PluginData.ts";
+import { indexBy } from "../utils.ts";
 import {
   MessageContextMenuCommandBlueprint,
   UserContextMenuCommandBlueprint,
-} from "./contextMenuCommands/contextMenuCommandBlueprint";
-import { AnySlashCommandSignature, SlashCommandBlueprint } from "./slashCommands/slashCommandBlueprint";
-import { BaseSlashCommandOption } from "./slashCommands/slashCommandOptions";
-import { SlashGroupBlueprint } from "./slashCommands/slashGroupBlueprint";
+} from "./contextMenuCommands/contextMenuCommandBlueprint.ts";
+import { AnySlashCommandSignature, SlashCommandBlueprint } from "./slashCommands/slashCommandBlueprint.ts";
+import { BaseSlashCommandOption } from "./slashCommands/slashCommandOptions.ts";
+import { SlashGroupBlueprint } from "./slashCommands/slashGroupBlueprint.ts";
 
 export type AnyApplicationCommandBlueprint =
   | SlashCommandBlueprint<any, any>

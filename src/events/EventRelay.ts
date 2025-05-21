@@ -1,8 +1,15 @@
 import { Client, ClientEvents } from "discord.js";
 import { performance } from "perf_hooks";
-import { Profiler } from "../Profiler";
-import { EventArguments, ExtendedClientEvents, GuildEvent, ValidEvent, fromDjsArgs, isGuildEvent } from "./eventTypes";
-import { eventToGuild } from "./eventUtils";
+import { Profiler } from "../Profiler.ts";
+import {
+  EventArguments,
+  ExtendedClientEvents,
+  GuildEvent,
+  ValidEvent,
+  fromDjsArgs,
+  isGuildEvent,
+} from "./eventTypes.ts";
+import { eventToGuild } from "./eventUtils.ts";
 
 export type RelayListener<TEvent extends ValidEvent> = {
   (args: EventArguments[TEvent]): any;

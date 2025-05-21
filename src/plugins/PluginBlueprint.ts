@@ -1,16 +1,16 @@
 import {
   MessageContextMenuCommandBlueprint,
   UserContextMenuCommandBlueprint,
-} from "../commands/contextMenuCommands/contextMenuCommandBlueprint";
-import { MessageCommandBlueprint } from "../commands/messageCommands/messageCommandBlueprint";
-import { AnySlashCommandSignature, SlashCommandBlueprint } from "../commands/slashCommands/slashCommandBlueprint";
-import { SlashGroupBlueprint } from "../commands/slashCommands/slashGroupBlueprint";
-import { ConfigParserFn, CustomOverrideCriteriaFunctions, PluginOptions } from "../config/configTypes";
-import { EventListenerBlueprint } from "../events/EventListenerBlueprint";
-import { GuildEvent, ValidEvent } from "../events/eventTypes";
-import { Awaitable } from "../utils";
-import { AnyPluginData, GlobalPluginData, GuildPluginData } from "./PluginData";
-import { BasePluginType } from "./pluginTypes";
+} from "../commands/contextMenuCommands/contextMenuCommandBlueprint.ts";
+import { MessageCommandBlueprint } from "../commands/messageCommands/messageCommandBlueprint.ts";
+import { AnySlashCommandSignature, SlashCommandBlueprint } from "../commands/slashCommands/slashCommandBlueprint.ts";
+import { SlashGroupBlueprint } from "../commands/slashCommands/slashGroupBlueprint.ts";
+import { ConfigParserFn, CustomOverrideCriteriaFunctions, PluginOptions } from "../config/configTypes.ts";
+import { EventListenerBlueprint } from "../events/EventListenerBlueprint.ts";
+import { GuildEvent, ValidEvent } from "../events/eventTypes.ts";
+import { Awaitable } from "../utils.ts";
+import { AnyPluginData, GlobalPluginData, GuildPluginData } from "./PluginData.ts";
+import { BasePluginType } from "./pluginTypes.ts";
 
 export interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>, TPublicInterface> {
   /**

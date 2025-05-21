@@ -1,9 +1,9 @@
-import { GuildPluginData } from "..";
-import { AnyGuildEventListenerBlueprint } from "../plugins/PluginBlueprint";
-import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager";
-import { RelayListener } from "./EventRelay";
-import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters";
-import { GuildEvent, GuildEventArguments } from "./eventTypes";
+import { GuildPluginData } from "../index.ts";
+import { AnyGuildEventListenerBlueprint } from "../plugins/PluginBlueprint.ts";
+import { BasePluginEventManager, Listener, OnOpts, WrappedListener } from "./BasePluginEventManager.ts";
+import { RelayListener } from "./EventRelay.ts";
+import { FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters.ts";
+import { GuildEvent, GuildEventArguments } from "./eventTypes.ts";
 
 export class GuildPluginEventManager<
   TPluginData extends GuildPluginData<any>,

@@ -8,9 +8,9 @@ import {
   PartialUser,
   User,
 } from "discord.js";
-import { BasePluginData, isGuildPluginData } from "../plugins/PluginData";
-import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils";
-import { ConfigValidationError } from "./ConfigValidationError";
+import { BasePluginData, isGuildPluginData } from "../plugins/PluginData.ts";
+import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils.ts";
+import { ConfigValidationError } from "./ConfigValidationError.ts";
 import {
   ConfigParserFn,
   CustomOverrideCriteriaFunctions,
@@ -18,8 +18,8 @@ import {
   PluginOptions,
   PluginOverride,
   pluginBaseOptionsSchema,
-} from "./configTypes";
-import { MatchParams, getMatchingPluginConfig, mergeConfig } from "./configUtils";
+} from "./configTypes.ts";
+import { MatchParams, getMatchingPluginConfig, mergeConfig } from "./configUtils.ts";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string | null;

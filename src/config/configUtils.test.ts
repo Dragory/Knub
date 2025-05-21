@@ -1,11 +1,11 @@
 import { assert, expect } from "chai";
 import { describe, it } from "mocha";
-import { PluginOptions } from "../index";
-import { GuildPluginData } from "../plugins/PluginData";
-import { BasePluginType } from "../plugins/pluginTypes";
-import { sleep } from "../testUtils";
-import { CustomOverrideCriteriaFunctions } from "./configTypes";
-import { getMatchingPluginConfig, mergeConfig } from "./configUtils";
+import { PluginOptions } from "../index.ts";
+import { GuildPluginData } from "../plugins/PluginData.ts";
+import { BasePluginType } from "../plugins/pluginTypes.ts";
+import { sleep } from "../testUtils.ts";
+import { CustomOverrideCriteriaFunctions } from "./configTypes.ts";
+import { getMatchingPluginConfig, mergeConfig } from "./configUtils.ts";
 
 describe("configUtils", () => {
   describe("mergeConfig", () => {
