@@ -14,7 +14,7 @@
     "prepublishOnly": "npm run test && npm run build",
     "watch": "shx touch dist && shx rm -r dist && tsc --watch",
     "biome-check": "biome check ./src",
-    "biome-fix": "biome check --apply ./src",
+    "biome-fix": "biome check --write ./src",
     "prepare": "husky"
   },
   "main": "dist/index.js",
