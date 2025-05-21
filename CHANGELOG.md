@@ -1,7 +1,9 @@
 # NEXT
 ## ⚠️ Breaking changes
-* Knub now requires discord.js v14.11
-* Knub now uses the package.json `exports` property. This means arbitrary sub-path imports are no longer possible.
+* Knub now requires discord.js v14.19.3 or newer
+* Knub now requires TypeScript 5.8 or newer
+* Exported zod schemas now use [zod v4](https://zod.dev/v4)
+* Knub now uses ESM and the package.json `exports` property. This means arbitrary sub-path imports are no longer possible.
   * More exports have been made available to accomodate certain use cases
   * You can now import Knub helper functions from `knub/helpers`
     * E.g. `import { waitForReply } from "knub/helpers"`
@@ -43,6 +45,7 @@
   * This property really only existed for Zeppelin. If you need to add it back, extend the interface.
 * Renamed `Knub.stop()` to `Knub.destroy()`
   * Matching naming with djs's `Client.destroy()`, and more clearly shows that the Knub instance is unusable after this
+* The type `PluginOverrideCriteria` no longer takes a generic argument
 
 ## Other changes
 * Context menu commands are now supported
