@@ -15,7 +15,7 @@
     "watch": "shx touch dist && shx rm -r dist && tsc --watch",
     "biome-check": "biome check ./src",
     "biome-fix": "biome check --apply ./src",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "main": "dist/index.js",
   "exports": {
@@ -34,21 +34,20 @@
     "discord-api-types": "^0.38.8",
     "discord.js": "^14.19.3",
     "knub-command-manager": "^9.1.0",
-    "ts-essentials": "^9",
+    "ts-essentials": "^10.0.4",
     "zod": "^3.25.17"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.5.3",
-    "@types/chai": "^4",
-    "@types/mocha": "^9",
+    "@biomejs/biome": "^1.9.4",
+    "@types/chai": "^5.2.2",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^22.15.18",
-    "chai": "^4",
-    "husky": "^8",
-    "mocha": "^10",
-    "shx": "^0.3.3",
-    "ts-node": "^10.9",
+    "chai": "^5.2.0",
+    "husky": "^9.1.7",
+    "mocha": "^11.4.0",
+    "shx": "^0.4.0",
     "typescript": "5.8",
-    "why-is-node-running": "^2.2.2"
+    "why-is-node-running": "^3.2.2"
   },
   "files": [
     "/dist"
