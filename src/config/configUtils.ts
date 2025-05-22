@@ -1,3 +1,4 @@
+import type z from "zod/v4";
 import { AnyPluginData, type BasePluginData } from "../plugins/PluginData.ts";
 import type { BasePluginType } from "../plugins/pluginTypes.ts";
 import { typedKeys } from "../utils.ts";
@@ -71,8 +72,8 @@ export async function getMatchingPluginConfig<
   pluginOptions: TPluginOptions,
   matchParams: MatchParams<TPluginData["_pluginType"]["customOverrideMatchParams"]>,
   customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>,
-): Promise<TPluginData["_pluginType"]["config"]> {
-  let result: TPluginData["_pluginType"]["config"] = mergeConfig(pluginOptions.config || {});
+): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
+  let result: z.output<TPluginData["_pluginType"]["configSchema"]> = mergeConfig(pluginOptions.config || {});
 
   const overrides = pluginOptions.overrides || [];
   for (const override of overrides) {

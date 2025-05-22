@@ -2,6 +2,9 @@
 ## ⚠️ Breaking changes
 * Knub now requires discord.js v14.19.3 or newer
 * Knub now requires TypeScript 5.8 or newer
+* Plugin property `configParser` has been replaced by `configSchema`, which takes a Zod v4+ schema
+* Plugin property `defaultOptions` has been replaced by `defaultOverrides`
+  * To set default config values, use Zod's `default()` function in the schema
 * Exported zod schemas now use [zod v4](https://zod.dev/v4)
 * Knub now uses ESM and the package.json `exports` property. This means arbitrary sub-path imports are no longer possible.
   * More exports have been made available to accomodate certain use cases

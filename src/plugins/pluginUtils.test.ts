@@ -1,4 +1,5 @@
 import { describe, it } from "mocha";
+import { z } from "zod/v4";
 import type { GuildPluginBlueprint } from "./PluginBlueprint.ts";
 import type { PluginPublicInterface } from "./pluginUtils.ts";
 
@@ -8,7 +9,7 @@ describe("pluginUtils", () => {
   it("PluginPublicInterface type", () => {
     const myPlugin = {
       name: "my-plugin",
-      configParser: () => ({}),
+      configSchema: z.strictObject({}),
 
       public() {
         return {

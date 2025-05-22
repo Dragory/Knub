@@ -8,7 +8,9 @@ import type {
   PartialUser,
   User,
 } from "discord.js";
+import type z from "zod/v4";
 import { type BasePluginData, isGuildPluginData } from "../plugins/PluginData.ts";
+import type { BasePluginType } from "../plugins/pluginTypes.ts";
 import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils.ts";
 import { ConfigValidationError } from "./ConfigValidationError.ts";
 import {
@@ -29,32 +31,32 @@ export interface ExtendedMatchParams extends MatchParams {
   interaction?: Interaction | null;
 }
 
-export interface PluginConfigManagerOpts<TPluginData extends BasePluginData<any>> {
+export interface PluginConfigManagerOpts<TPluginData extends BasePluginData<BasePluginType>> {
+  configSchema: TPluginData["_pluginType"]["configSchema"];
+  defaultOverrides: Array<PluginOverride<TPluginData["_pluginType"]>>;
   levels: PermissionLevels;
-  parser: ConfigParserFn<TPluginData["_pluginType"]["config"]>;
   customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>;
 }
 
-export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
-  private readonly defaultOptions: PluginOptions<TPluginData["_pluginType"]>;
+export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginType>> {
   private readonly userInput: unknown;
+
+  private readonly configSchema: TPluginData["_pluginType"]["configSchema"];
+  private readonly defaultOverrides: Array<PluginOverride<TPluginData["_pluginType"]>>;
   private readonly levels: PermissionLevels;
   private readonly customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>;
-  private readonly parser: ConfigParserFn<TPluginData["_pluginType"]["config"]>;
+
   private pluginData?: TPluginData;
 
   private initialized = false;
   private parsedOptions: PluginOptions<TPluginData["_pluginType"]> | null = null;
 
-  constructor(
-    defaultOptions: PluginOptions<TPluginData["_pluginType"]>,
-    userInput: unknown,
-    opts: PluginConfigManagerOpts<TPluginData>,
-  ) {
-    this.defaultOptions = defaultOptions;
+  constructor(userInput: unknown, opts: PluginConfigManagerOpts<TPluginData>) {
     this.userInput = userInput;
+
+    this.configSchema = opts.configSchema;
+    this.defaultOverrides = opts.defaultOverrides;
     this.levels = opts.levels;
-    this.parser = opts.parser;
     this.customOverrideCriteriaFunctions = opts.customOverrideCriteriaFunctions;
   }
 
@@ -63,37 +65,36 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
       throw new Error("Already initialized");
     }
 
-    const userInputParseResult = pluginBaseOptionsSchema.safeParse(this.userInput);
-    if (!userInputParseResult.success) {
-      throw new ConfigValidationError(userInputParseResult.error.message);
+    const userInputBaseParseResult = pluginBaseOptionsSchema.safeParse(this.userInput);
+    if (!userInputBaseParseResult.success) {
+      throw new ConfigValidationError(userInputBaseParseResult.error.message);
     }
 
-    const parsedUserInput = userInputParseResult.data;
-    const config = mergeConfig(this.defaultOptions.config ?? {}, parsedUserInput.config ?? {});
-    const parsedValidConfig = await this.parser(config);
+    const baseParsedUserInput = userInputBaseParseResult.data;
+    const parsedValidConfig = await this.configSchema.parseAsync(baseParsedUserInput.config ?? {});
 
-    const parsedUserInputOverrides = parsedUserInput.overrides as
+    const parsedUserInputOverrides = baseParsedUserInput.overrides as
       | Array<PluginOverride<TPluginData["_pluginType"]>>
       | undefined;
-    const overrides: Array<PluginOverride<TPluginData["_pluginType"]>> = parsedUserInput.replaceDefaultOverrides
+    const overrides: Array<PluginOverride<TPluginData["_pluginType"]>> = baseParsedUserInput.replaceDefaultOverrides
       ? (parsedUserInputOverrides ?? [])
-      : (this.defaultOptions.overrides ?? []).concat(parsedUserInputOverrides ?? []);
+      : this.defaultOverrides.concat(parsedUserInputOverrides ?? []);
     const parsedValidOverrides: Array<PluginOverride<TPluginData["_pluginType"]>> = [];
     for (const override of overrides) {
       if (!("config" in override)) {
         throw new ConfigValidationError("Overrides must include the config property");
       }
-      if (!config) {
+      if (!parsedValidConfig) {
         // FIXME: Debug
         console.debug(
           "!! DEBUG !! PluginConfigManager.init config missing",
           this.pluginData && isGuildPluginData(this.pluginData) ? this.pluginData.guild.id : "(global)",
         );
       }
-      const overrideConfig = mergeConfig(config, override.config ?? {});
+      const overrideConfig = mergeConfig(parsedValidConfig, override.config ?? {});
       // Validate the override config as if it was already merged with the base config
       // In reality, overrides are merged with the base config when they are evaluated
-      await this.parser(overrideConfig);
+      await this.configSchema.parseAsync(overrideConfig);
       parsedValidOverrides.push(override);
     }
 
@@ -128,11 +129,13 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
     this.pluginData = pluginData;
   }
 
-  public get(): TPluginData["_pluginType"]["config"] {
+  public get(): z.output<TPluginData["_pluginType"]["configSchema"]> {
     return this.getParsedOptions().config;
   }
 
-  public getMatchingConfig(matchParams: ExtendedMatchParams): Promise<TPluginData["_pluginType"]["config"]> {
+  public getMatchingConfig(
+    matchParams: ExtendedMatchParams,
+  ): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
     const { message, interaction } = matchParams;
 
     const userId =
@@ -227,7 +230,7 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
     );
   }
 
-  public getForMessage(msg: Message): Promise<TPluginData["_pluginType"]["config"]> {
+  public getForMessage(msg: Message): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
     const level = msg.member ? this.getMemberLevel(msg.member) : null;
     return this.getMatchingConfig({
       level,
@@ -238,24 +241,24 @@ export class PluginConfigManager<TPluginData extends BasePluginData<any>> {
     });
   }
 
-  public getForInteraction(interaction: Interaction): Promise<TPluginData["_pluginType"]["config"]> {
+  public getForInteraction(interaction: Interaction): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
     return this.getMatchingConfig({ interaction });
   }
 
-  public getForChannel(channel: Channel): Promise<TPluginData["_pluginType"]["config"]> {
+  public getForChannel(channel: Channel): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
     return this.getMatchingConfig({
       channelId: channel.id,
       categoryId: (channel as GuildChannel).parentId,
     });
   }
 
-  public getForUser(user: User | PartialUser): Promise<TPluginData["_pluginType"]["config"]> {
+  public getForUser(user: User | PartialUser): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
     return this.getMatchingConfig({
       userId: user.id,
     });
   }
 
-  public getForMember(member: GuildMember): Promise<TPluginData["_pluginType"]["config"]> {
+  public getForMember(member: GuildMember): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
     const level = this.getMemberLevel(member);
     return this.getMatchingConfig({
       level,

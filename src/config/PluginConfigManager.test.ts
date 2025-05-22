@@ -18,26 +18,18 @@ import { PluginConfigManager } from "./PluginConfigManager.ts";
 
 describe("PluginConfigManager", () => {
   it("merge user config with default config", async () => {
+    const configSchema = z.strictObject({
+      can_do: z.boolean().default(false),
+      nested: z.strictObject({
+        one: z.number().default(10),
+        two: z.number().default(20),
+      }),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        can_do: boolean;
-        nested: {
-          one: number;
-          two: number;
-        };
-      };
+      configSchema: typeof configSchema;
     }
 
     const configManager = new PluginConfigManager<GuildPluginData<PluginType>>(
-      {
-        config: {
-          can_do: false,
-          nested: {
-            one: 10,
-            two: 20,
-          },
-        },
-      },
       {
         config: {
           can_do: true,
@@ -47,8 +39,9 @@ describe("PluginConfigManager", () => {
         },
       },
       {
+        configSchema,
+        defaultOverrides: [],
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     await configManager.init();
@@ -59,26 +52,14 @@ describe("PluginConfigManager", () => {
   });
 
   it("merge user overrides with default overrides", async () => {
+    const configSchema = z.strictObject({
+      can_do: z.boolean().default(false),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        can_do: boolean;
-      };
+      configSchema: typeof configSchema;
     }
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
-      {
-        config: {
-          can_do: false,
-        },
-        overrides: [
-          {
-            level: ">=50",
-            config: {
-              can_do: true,
-            },
-          },
-        ],
-      },
       {
         overrides: [
           {
@@ -96,8 +77,16 @@ describe("PluginConfigManager", () => {
         ],
       },
       {
+        configSchema,
+        defaultOverrides: [
+          {
+            level: ">=50",
+            config: {
+              can_do: true,
+            },
+          },
+        ],
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     await configManager.init();
@@ -109,26 +98,14 @@ describe("PluginConfigManager", () => {
   });
 
   it("replace default overrides", async () => {
+    const configSchema = z.strictObject({
+      can_do: z.boolean().default(false),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        can_do: boolean;
-      };
+      configSchema: typeof configSchema;
     }
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
-      {
-        config: {
-          can_do: false,
-        },
-        overrides: [
-          {
-            level: ">=50",
-            config: {
-              can_do: true,
-            },
-          },
-        ],
-      },
       {
         replaceDefaultOverrides: true,
         overrides: [
@@ -141,8 +118,16 @@ describe("PluginConfigManager", () => {
         ],
       },
       {
+        configSchema,
+        defaultOverrides: [
+          {
+            level: ">=50",
+            config: {
+              can_do: true,
+            },
+          },
+        ],
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     await configManager.init();
@@ -152,30 +137,24 @@ describe("PluginConfigManager", () => {
     expect((await configManager.getMatchingConfig({ level: 100 })).can_do).to.equal(true);
   });
 
-  it("Config parser", async () => {
+  it("Config schema", async () => {
     const configSchema = z.strictObject({
-      something: z.number(),
+      something: z.number().default(0),
     });
-    type ConfigSchema = z.TypeOf<typeof configSchema>;
-
     interface PluginType extends BasePluginType {
-      config: ConfigSchema;
+      config: typeof configSchema;
     }
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
-      {
-        config: {
-          something: 0,
-        },
-      },
       {
         config: {
           something: "not a number",
         },
       },
       {
+        configSchema,
+        defaultOverrides: [],
         levels: {},
-        parser: (input) => configSchema.parse(input),
       },
     );
 
@@ -185,67 +164,33 @@ describe("PluginConfigManager", () => {
       return;
     }
 
-    assert.fail("Config parser did not throw an error");
+    assert.fail("Config schema parsing did not throw an error");
   });
 
-  it("Config parser mutations", async () => {
-    interface PluginType extends BasePluginType {
-      config: {
-        something: number;
-      };
-    }
-
-    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
-      {
-        config: {
-          something: 0,
-        },
-      },
-      {
-        config: {
-          someThing: 5,
-        },
-      },
-      {
-        levels: {},
-        parser: () => {
-          return {
-            something: 7,
-          };
-        },
-      },
-    );
-    await configManager.init();
-
-    expect(configManager.get().something).to.equal(7);
-  });
-
-  it("Async config parser", async () => {
-    interface PluginType extends BasePluginType {
-      config: {
-        something: number;
-      };
-    }
-
-    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
-      {
-        config: {
-          something: 0,
-        },
-      },
-      {
-        config: {
-          someThing: 5,
-        },
-      },
-      {
-        levels: {},
-        parser: async () => {
+  it("Async config schema", async () => {
+    const configSchema = z.strictObject({
+      something: z
+        .string()
+        .default("0")
+        .transform(async (val) => {
           await sleep(1);
-          return {
-            something: 7,
-          };
+          return Number.parseInt(val, 10);
+        }),
+    });
+    interface PluginType extends BasePluginType {
+      configSchema: typeof configSchema;
+    }
+
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
+      {
+        config: {
+          something: "7",
         },
+      },
+      {
+        configSchema,
+        defaultOverrides: [],
+        levels: {},
       },
     );
     await configManager.init();
@@ -254,10 +199,11 @@ describe("PluginConfigManager", () => {
   });
 
   it("getMatchingConfig(): user", async () => {
+    const configSchema = z.strictObject({
+      works: z.boolean().default(false),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        works: boolean;
-      };
+      configSchema: typeof configSchema;
     }
 
     const client = createMockClient();
@@ -268,11 +214,10 @@ describe("PluginConfigManager", () => {
     const message = createMockMessage(client, channel, user);
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
+      {},
       {
-        config: {
-          works: false,
-        },
-        overrides: [
+        configSchema,
+        defaultOverrides: [
           {
             user: user.id,
             config: {
@@ -280,11 +225,7 @@ describe("PluginConfigManager", () => {
             },
           },
         ],
-      },
-      {},
-      {
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
@@ -297,10 +238,11 @@ describe("PluginConfigManager", () => {
   });
 
   it("getMatchingConfig(): channel", async () => {
+    const configSchema = z.strictObject({
+      works: z.boolean().default(false),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        works: boolean;
-      };
+      configSchema: typeof configSchema;
     }
 
     const client = createMockClient();
@@ -310,11 +252,10 @@ describe("PluginConfigManager", () => {
     const message = createMockMessage(client, channel, user);
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
+      {},
       {
-        config: {
-          works: false,
-        },
-        overrides: [
+        configSchema,
+        defaultOverrides: [
           {
             channel: channel.id,
             config: {
@@ -322,11 +263,7 @@ describe("PluginConfigManager", () => {
             },
           },
         ],
-      },
-      {},
-      {
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     await configManager.init();
@@ -337,10 +274,11 @@ describe("PluginConfigManager", () => {
   });
 
   it("getMatchingConfig(): channel of thread message", async () => {
+    const configSchema = z.strictObject({
+      works: z.boolean().default(false),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        works: boolean;
-      };
+      configSchema: typeof configSchema;
     }
 
     const client = createMockClient();
@@ -351,11 +289,10 @@ describe("PluginConfigManager", () => {
     const message = createMockMessage(client, thread, user);
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
+      {},
       {
-        config: {
-          works: false,
-        },
-        overrides: [
+        configSchema,
+        defaultOverrides: [
           {
             channel: channel.id,
             config: {
@@ -363,11 +300,7 @@ describe("PluginConfigManager", () => {
             },
           },
         ],
-      },
-      {},
-      {
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     await configManager.init();
@@ -377,10 +310,11 @@ describe("PluginConfigManager", () => {
   });
 
   it("getMatchingConfig(): category", async () => {
+    const configSchema = z.strictObject({
+      works: z.boolean().default(false),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        works: boolean;
-      };
+      configSchema: typeof configSchema;
     }
 
     const categoryId = "12345";
@@ -391,11 +325,10 @@ describe("PluginConfigManager", () => {
     const message = createMockMessage(client, channel, user);
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
+      {},
       {
-        config: {
-          works: false,
-        },
-        overrides: [
+        configSchema,
+        defaultOverrides: [
           {
             category: categoryId,
             config: {
@@ -403,11 +336,7 @@ describe("PluginConfigManager", () => {
             },
           },
         ],
-      },
-      {},
-      {
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     await configManager.init();
@@ -418,10 +347,11 @@ describe("PluginConfigManager", () => {
   });
 
   it("getMatchingConfig(): category of thread message", async () => {
+    const configSchema = z.strictObject({
+      works: z.boolean().default(false),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        works: boolean;
-      };
+      configSchema: typeof configSchema;
     }
 
     const categoryId = "12345";
@@ -433,11 +363,10 @@ describe("PluginConfigManager", () => {
     const message = createMockMessage(client, thread, user);
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
+      {},
       {
-        config: {
-          works: false,
-        },
-        overrides: [
+        configSchema,
+        defaultOverrides: [
           {
             category: categoryId,
             config: {
@@ -445,11 +374,7 @@ describe("PluginConfigManager", () => {
             },
           },
         ],
-      },
-      {},
-      {
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     await configManager.init();
@@ -459,10 +384,11 @@ describe("PluginConfigManager", () => {
   });
 
   it("getMatchingConfig(): thread", async () => {
+    const configSchema = z.strictObject({
+      works: z.boolean().default(false),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        works: boolean;
-      };
+      configSchema: typeof configSchema;
     }
 
     const client = createMockClient();
@@ -473,11 +399,10 @@ describe("PluginConfigManager", () => {
     const message = createMockMessage(client, thread, user);
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
+      {},
       {
-        config: {
-          works: false,
-        },
-        overrides: [
+        configSchema,
+        defaultOverrides: [
           {
             thread: thread.id,
             config: {
@@ -485,11 +410,7 @@ describe("PluginConfigManager", () => {
             },
           },
         ],
-      },
-      {},
-      {
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     await configManager.init();
@@ -499,10 +420,11 @@ describe("PluginConfigManager", () => {
   });
 
   it("getMatchingConfig(): is_thread", async () => {
+    const configSchema = z.strictObject({
+      works: z.boolean().default(false),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        works: boolean;
-      };
+      configSchema: typeof configSchema;
     }
 
     const client = createMockClient();
@@ -513,11 +435,10 @@ describe("PluginConfigManager", () => {
     const message = createMockMessage(client, thread, user);
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
+      {},
       {
-        config: {
-          works: false,
-        },
-        overrides: [
+        configSchema,
+        defaultOverrides: [
           {
             is_thread: true,
             config: {
@@ -525,11 +446,7 @@ describe("PluginConfigManager", () => {
             },
           },
         ],
-      },
-      {},
-      {
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     await configManager.init();
@@ -539,10 +456,11 @@ describe("PluginConfigManager", () => {
   });
 
   it("getMatchingConfig(): roles", async () => {
+    const configSchema = z.strictObject({
+      works: z.boolean().default(false),
+    });
     interface PluginType extends BasePluginType {
-      config: {
-        works: boolean;
-      };
+      configSchema: typeof configSchema;
     }
 
     const client = createMockClient();
@@ -554,11 +472,10 @@ describe("PluginConfigManager", () => {
     const message = createMockMessage(client, channel, user);
 
     const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
+      {},
       {
-        config: {
-          works: false,
-        },
-        overrides: [
+        configSchema,
+        defaultOverrides: [
           {
             role: role.id,
             config: {
@@ -566,11 +483,7 @@ describe("PluginConfigManager", () => {
             },
           },
         ],
-      },
-      {},
-      {
         levels: {},
-        parser: (input) => input as PluginType["config"],
       },
     );
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);

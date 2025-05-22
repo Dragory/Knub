@@ -1,5 +1,6 @@
 import { assert, expect } from "chai";
 import { describe, it } from "mocha";
+import { z } from "zod/v4";
 import type { PluginOptions } from "../index.ts";
 import type { GuildPluginData } from "../plugins/PluginData.ts";
 import type { BasePluginType } from "../plugins/pluginTypes.ts";
@@ -60,18 +61,16 @@ describe("configUtils", () => {
   });
 
   describe("getMatchingPluginConfig", () => {
+    const sharedConfigSchema = z.strictObject({
+      value: z.number().default(5),
+      hasAccess: z.boolean().default(false),
+    });
     interface SharedPluginType extends BasePluginType {
-      config: {
-        value: number;
-        hasAccess: boolean;
-      };
+      configSchema: typeof sharedConfigSchema;
     }
 
     const sharedPluginOptions: PluginOptions<SharedPluginType> = {
-      config: {
-        value: 5,
-        hasAccess: false,
-      },
+      config: sharedConfigSchema.parse({}), // Defaults
       overrides: [
         {
           level: ">=20",
@@ -226,10 +225,11 @@ describe("configUtils", () => {
     });
 
     it("custom override criteria", async () => {
+      const customConfigSchema = z.strictObject({
+        value: z.number().default(5),
+      });
       interface CustomPluginType extends BasePluginType {
-        config: {
-          value: number;
-        };
+        configSchema: typeof customConfigSchema;
         customOverrideCriteria: {
           bestPlant?: string;
           worstPlant?: string;
@@ -240,9 +240,7 @@ describe("configUtils", () => {
       }
 
       const customPluginOptions: PluginOptions<CustomPluginType> = {
-        config: {
-          value: 5,
-        },
+        config: customConfigSchema.parse({}), // Defaults
         overrides: [
           {
             extra: {
@@ -327,10 +325,11 @@ describe("configUtils", () => {
     });
 
     it("custom async override criteria", async () => {
+      const customConfigSchema = z.strictObject({
+        value: z.number().default(5),
+      });
       interface CustomPluginType extends BasePluginType {
-        config: {
-          value: number;
-        };
+        configSchema: typeof customConfigSchema;
         customOverrideCriteria: {
           bestPlant?: string;
           worstPlant?: string;
@@ -341,9 +340,7 @@ describe("configUtils", () => {
       }
 
       const customPluginOptions: PluginOptions<CustomPluginType> = {
-        config: {
-          value: 5,
-        },
+        config: customConfigSchema.parse({}), // Defaults
         overrides: [
           {
             extra: {
@@ -476,16 +473,15 @@ describe("configUtils", () => {
     });
 
     it("'all' special criterion", async () => {
+      const configSchema = z.strictObject({
+        value: z.number().default(5),
+      });
       interface PluginType extends BasePluginType {
-        config: {
-          value: number;
-        };
+        configSchema: typeof configSchema;
       }
 
       const pluginOpts: PluginOptions<PluginType> = {
-        config: {
-          value: 5,
-        },
+        config: configSchema.parse({}), // Defaults
         overrides: [
           {
             user: "1000",
@@ -535,16 +531,15 @@ describe("configUtils", () => {
     });
 
     it("'any' special criterion", async () => {
+      const configSchema = z.strictObject({
+        value: z.number().default(5),
+      });
       interface PluginType extends BasePluginType {
-        config: {
-          value: number;
-        };
+        configSchema: typeof configSchema;
       }
 
       const pluginOpts: PluginOptions<PluginType> = {
-        config: {
-          value: 5,
-        },
+        config: configSchema.parse({}), // Defaults
         overrides: [
           {
             any: [
@@ -590,16 +585,15 @@ describe("configUtils", () => {
     });
 
     it("'not' special criterion", async () => {
+      const configSchema = z.strictObject({
+        value: z.number().default(5),
+      });
       interface PluginType extends BasePluginType {
-        config: {
-          value: number;
-        };
+        configSchema: typeof configSchema;
       }
 
       const pluginOpts1: PluginOptions<PluginType> = {
-        config: {
-          value: 5,
-        },
+        config: configSchema.parse({}), // Defaults
         overrides: [
           // Matches as long as the user isn't 1234
           {
@@ -614,9 +608,7 @@ describe("configUtils", () => {
       };
 
       const pluginOpts2: PluginOptions<PluginType> = {
-        config: {
-          value: 5,
-        },
+        config: configSchema.parse({}), // Defaults
         overrides: [
           // Matches if your level is greater than or equal to 50, as long as the user isn't 1234
           {

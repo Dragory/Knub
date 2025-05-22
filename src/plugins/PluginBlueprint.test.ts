@@ -2,6 +2,7 @@ import { assert, expect } from "chai";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { parseSignature } from "knub-command-manager";
 import { describe, it } from "mocha";
+import z from "zod/v4";
 import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
 import { guildPluginMessageContextMenuCommand } from "../commands/contextMenuCommands/contextMenuCommandBlueprint.ts";
 import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager.ts";
@@ -47,7 +48,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           messageCommands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
           slashCommands: [guildPluginSlashCommand({ name: "bar", description: "", signature: [], run: noop })],
@@ -86,7 +87,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           events: [
             guildPluginEventListener({
@@ -148,7 +149,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           events: [
             // @ts-expect-error: "userUpdate" is not a valid guild event
@@ -190,7 +191,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad = globalPlugin({
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           events: [
             globalPluginEventListener({
@@ -219,7 +220,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad = globalPlugin({
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           events: [
             globalPluginEventListener({
@@ -257,25 +258,18 @@ describe("PluginBlueprint", () => {
           const serverCmdCallUsers: string[] = [];
           const pingCmdCallUsers: string[] = [];
 
+          const configSchema = z.strictObject({
+            can_use_info_cmd: z.boolean().default(false),
+            can_use_server_cmd: z.boolean().default(false),
+            can_use_ping_cmd: z.boolean().default(false),
+          });
           interface PluginType extends BasePluginType {
-            config: {
-              can_use_info_cmd: boolean;
-              can_use_server_cmd: boolean;
-              can_use_ping_cmd: boolean;
-            };
+            configSchema: typeof configSchema;
           }
 
           const TestPlugin = guildPlugin<PluginType>()({
             name: "test-plugin",
-            configParser: (input) => input as PluginType["config"],
-
-            defaultOptions: {
-              config: {
-                can_use_info_cmd: false,
-                can_use_server_cmd: false,
-                can_use_ping_cmd: false,
-              },
-            },
+            configSchema,
 
             messageCommands: [
               guildPluginMessageCommand({
@@ -393,7 +387,7 @@ describe("PluginBlueprint", () => {
       it("Type inference in slash command function", () => {
         guildPlugin({
           name: "slash-test-plugin",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           slashCommands: [
             guildPluginSlashCommand({
@@ -424,7 +418,7 @@ describe("PluginBlueprint", () => {
       it("Slash command group types", () => {
         guildPlugin({
           name: "slash-test-plugin",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           slashCommands: [
             guildPluginSlashGroup({
@@ -463,7 +457,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeLoad() {
             done();
@@ -490,7 +484,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeLoad() {
             done();
@@ -511,7 +505,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeStart() {
             done();
@@ -538,7 +532,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeStart() {
             done();
@@ -559,7 +553,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterLoad() {
             done();
@@ -586,7 +580,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterLoad() {
             done();
@@ -608,7 +602,7 @@ describe("PluginBlueprint", () => {
         const beforeUnloadCalled = false;
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterLoad() {
             knub.client.emit("guildUnavailable", guild);
@@ -639,7 +633,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeUnload() {
             done();
@@ -661,7 +655,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterLoad() {
             knub.client.emit("guildUnavailable", guild);
@@ -692,7 +686,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterUnload() {
             done();
@@ -716,7 +710,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeLoad() {
             beforeLoadCalled = true;
@@ -750,7 +744,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeLoad() {
             beforeLoadCalled = true;
@@ -778,7 +772,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterLoad() {
             knub.client.emit("guildUnavailable", guild);
@@ -816,7 +810,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToUnload: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeUnload() {
             beforeUnloadCalled = true;
@@ -843,7 +837,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeLoad(pluginData) {
             assert.throws(() => pluginData.hasPlugin({} as AnyPluginBlueprint));
@@ -872,7 +866,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeLoad(pluginData) {
             assert.throws(() => pluginData.hasPlugin({} as AnyPluginBlueprint));
@@ -895,7 +889,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterLoad() {
             knub.client.emit("guildUnavailable", guild);
@@ -928,7 +922,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterUnload(pluginData) {
             assert.throws(() => pluginData.hasPlugin({} as AnyPluginBlueprint));
@@ -952,7 +946,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginWithPublicInterface = guildPlugin<BasePluginType>()({
           name: "plugin-with-public-interface",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           public() {
             return {};
@@ -961,7 +955,7 @@ describe("PluginBlueprint", () => {
 
         const PluginWithTests: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-with-tests",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
           dependencies: () => [PluginWithPublicInterface],
           afterLoad() {
             knub.client.emit("guildUnavailable", guild);
@@ -992,7 +986,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const PluginWithPublicInterface = globalPlugin<BasePluginType>()({
           name: "plugin-with-public-interface",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           public() {
             return {};
@@ -1001,7 +995,7 @@ describe("PluginBlueprint", () => {
 
         const PluginWithTests: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-with-tests",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
           dependencies: () => [PluginWithPublicInterface],
           afterLoad() {
             void knub.destroy();
@@ -1028,7 +1022,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToLoad: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
           beforeLoad() {
             assert.strictEqual(lastCalledHook, null);
             lastCalledHook = "beforeLoad";
@@ -1074,7 +1068,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToLoad: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
           beforeLoad() {
             assert.strictEqual(lastCalledHook, null);
             lastCalledHook = "beforeLoad";
@@ -1114,18 +1108,18 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const DependencyToLoad = guildPlugin({
           name: "dependency-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
         });
 
         const SomeOtherPlugin = guildPlugin({
           name: "some-other-plugin",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
         });
 
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
           dependencies: () => [DependencyToLoad],
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterLoad(pluginData) {
             assert.ok(pluginData.hasPlugin(DependencyToLoad));
@@ -1158,7 +1152,7 @@ describe("PluginBlueprint", () => {
 
         const DependencyToLoad = guildPlugin<DependencyPluginType>()({
           name: "dependency-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           public(pluginData) {
             return {
@@ -1176,7 +1170,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterLoad(pluginData) {
             const instance = pluginData.getPlugin(DependencyToLoad);
@@ -1204,7 +1198,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const SomeGlobalPlugin = globalPlugin({
           name: "some-global-plugin",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
           public() {
             return {
               works: () => true,
@@ -1214,7 +1208,7 @@ describe("PluginBlueprint", () => {
 
         const SomeGuildPlugin = guildPlugin({
           name: "some-guild-plugin",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeLoad(pluginData) {
             const hasGlobalPlugin = pluginData.hasGlobalPlugin(SomeGlobalPlugin);
@@ -1244,7 +1238,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const SomeGlobalPlugin = globalPlugin({
           name: "some-global-plugin",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
           public() {
             return {
               works: () => true,
@@ -1254,7 +1248,7 @@ describe("PluginBlueprint", () => {
 
         const SomeGuildPlugin = guildPlugin({
           name: "some-guild-plugin",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           beforeLoad(pluginData) {
             const globalPlugin = pluginData.getGlobalPlugin(SomeGlobalPlugin);
@@ -1284,13 +1278,9 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const DependencyToLoad = guildPlugin({
           name: "dependency-to-load",
-          configParser: (input) => input,
-
-          defaultOptions: {
-            config: {
-              some_value: "cookies",
-            },
-          },
+          configSchema: z.strictObject({
+            some_value: z.string().default("cookies"),
+          }),
 
           public(pluginData) {
             return {
@@ -1307,13 +1297,9 @@ describe("PluginBlueprint", () => {
 
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
-          configParser: () => ({}),
-
-          defaultOptions: {
-            config: {
-              some_value: "milk",
-            },
-          },
+          configSchema: z.strictObject({
+            some_value: z.string().default("milk"),
+          }),
 
           afterLoad(pluginData) {
             const instance = pluginData.getPlugin(DependencyToLoad);
@@ -1341,17 +1327,17 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const DependencyToLoad = guildPlugin({
           name: "dependency-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
         });
 
         const OtherDependencyToLoad = guildPlugin({
           name: "other-dependency-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
         });
 
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           dependencies: () => [DependencyToLoad, OtherDependencyToLoad],
 
@@ -1382,17 +1368,17 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const DependencyTwo = guildPlugin({
           name: "dependency-two",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
         });
         const DependencyOne = guildPlugin({
           name: "dependency-one",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
           dependencies: () => [DependencyTwo],
         });
 
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           dependencies: () => [DependencyOne],
 
@@ -1423,7 +1409,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const Dependency = guildPlugin({
           name: "dependency",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           messageCommands: [guildPluginMessageCommand({ trigger: "foo", permission: null, run: noop })],
           events: [guildPluginEventListener({ event: "messageCreate", listener: noop })],
@@ -1440,7 +1426,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToLoad = guildPlugin({
           name: "plugin-to-load",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
           dependencies: () => [Dependency],
         });
 
@@ -1474,13 +1460,9 @@ describe("PluginBlueprint", () => {
 
         const TestPlugin = guildPlugin<PluginType>()({
           name: "test-plugin",
-          configParser: () => ({}),
-
-          defaultOptions: {
-            config: {
-              can_do: false,
-            },
-          },
+          configSchema: z.strictObject({
+            can_do: z.boolean().default(false),
+          }),
 
           customOverrideCriteriaFunctions: {
             myUserOverride: (pluginData, matchParams, value) => matchParams.userId === value,
@@ -1563,13 +1545,9 @@ describe("PluginBlueprint", () => {
 
         const TestPlugin = guildPlugin<PluginType>()({
           name: "test-plugin",
-          configParser: () => ({}),
-
-          defaultOptions: {
-            config: {
-              can_do: false,
-            },
-          },
+          configSchema: z.strictObject({
+            can_do: z.boolean().default(false),
+          }),
 
           customOverrideCriteriaFunctions: {
             myAsyncUserOverride: async (pluginData, matchParams, value) => {
@@ -1656,7 +1634,7 @@ describe("PluginBlueprint", () => {
 
         const TestPlugin = guildPlugin({
           name: "test-plugin",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           messageCommands: [
             guildPluginMessageCommand({
@@ -1705,7 +1683,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const TestPlugin: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "test-plugin",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterLoad(pluginData) {
             assert.ok(pluginData.client != null);
@@ -1740,7 +1718,7 @@ describe("PluginBlueprint", () => {
       withKnub(mochaDone, async (createKnub, done) => {
         const TestPlugin: GlobalPluginBlueprint<GlobalPluginData<BasePluginType>, any> = {
           name: "test-plugin",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
 
           afterLoad(pluginData) {
             assert.ok(pluginData.client != null);
@@ -1788,7 +1766,7 @@ describe("PluginBlueprint", () => {
 
         const PluginToUnload: GuildPluginBlueprint<GuildPluginData<BasePluginType>, any> = {
           name: "plugin-to-unload",
-          configParser: () => ({}),
+          configSchema: z.strictObject({}),
           events: [messageEv],
           afterLoad() {
             const msg = createMockMessage(knub.client, textChannel, author, { content: "hi!" });
@@ -1819,7 +1797,7 @@ describe("PluginBlueprint", () => {
     it("(blueprint)", () => {
       const blueprint = guildPlugin({
         name: "my-plugin",
-        configParser: () => ({}),
+        configSchema: z.strictObject({}),
       });
 
       expect(blueprint.name).to.equal("my-plugin");
@@ -1834,7 +1812,7 @@ describe("PluginBlueprint", () => {
     it("<TPluginType>()(blueprint)", () => {
       const blueprint = guildPlugin<CustomPluginType>()({
         name: "my-plugin",
-        configParser: () => ({}),
+        configSchema: z.strictObject({}),
 
         beforeLoad(pluginData) {
           const typeCheck: AssertEquals<typeof pluginData, GuildPluginData<CustomPluginType>> = true;
@@ -1858,7 +1836,7 @@ describe("PluginBlueprint", () => {
 
       const OtherPlugin = guildPlugin<OtherPluginType>()({
         name: "other-plugin",
-        configParser: () => ({}),
+        configSchema: z.strictObject({}),
 
         public(pluginData) {
           return {
@@ -1871,7 +1849,7 @@ describe("PluginBlueprint", () => {
 
       const MainPlugin = guildPlugin({
         name: "main-plugin",
-        configParser: () => ({}),
+        configSchema: z.strictObject({}),
 
         afterLoad(pluginData) {
           const otherPlugin = pluginData.getPlugin(OtherPlugin);

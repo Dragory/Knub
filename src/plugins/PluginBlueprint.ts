@@ -8,7 +8,7 @@ import type {
   SlashCommandBlueprint,
 } from "../commands/slashCommands/slashCommandBlueprint.ts";
 import type { SlashGroupBlueprint } from "../commands/slashCommands/slashGroupBlueprint.ts";
-import type { ConfigParserFn, CustomOverrideCriteriaFunctions, PluginOptions } from "../config/configTypes.ts";
+import type { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "../config/configTypes.ts";
 import type { EventListenerBlueprint } from "../events/EventListenerBlueprint.ts";
 import type { GuildEvent, ValidEvent } from "../events/eventTypes.ts";
 import type { Awaitable } from "../utils.ts";
@@ -21,15 +21,12 @@ export interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>, TPu
    */
   name: string;
 
-  /**
-   * The plugin's default options, including overrides
-   */
-  defaultOptions?: PluginOptions<TPluginData["_pluginType"]>;
+  defaultOverrides?: Array<PluginOverride<TPluginData["_pluginType"]>>;
 
   /**
-   * Parses the plugin's config from untrusted input, returning the correct type for the config or throwing an error
+   * Zod schema for this plugin's config. Default values can be included using zod's default() function.
    */
-  configParser: ConfigParserFn<TPluginData["_pluginType"]["config"]>;
+  configSchema: TPluginData["_pluginType"]["configSchema"];
 
   messageCommands?: Array<MessageCommandBlueprint<TPluginData, any>>;
 

@@ -243,15 +243,13 @@ export class Knub extends EventEmitter {
     plugin: GuildPluginBlueprint<GuildPluginData<TPluginType>, any>,
     loadedAsDependency: boolean,
   ): Promise<GuildPluginData<TPluginType>> {
-    const configManager = new PluginConfigManager<GuildPluginData<TPluginType>>(
-      plugin.defaultOptions ?? { config: {} },
-      (get(ctx.config, `plugins.${plugin.name}`) as any) || {},
-      {
-        levels: ctx.config.levels || {},
-        parser: plugin.configParser,
-        customOverrideCriteriaFunctions: plugin.customOverrideCriteriaFunctions,
-      },
-    );
+    const pluginOptionsInput = (get(ctx.config, `plugins.${plugin.name}`) as any) || {};
+    const configManager = new PluginConfigManager<GuildPluginData<TPluginType>>(pluginOptionsInput, {
+      configSchema: plugin.configSchema,
+      defaultOverrides: plugin.defaultOverrides ?? [],
+      levels: ctx.config.levels || {},
+      customOverrideCriteriaFunctions: plugin.customOverrideCriteriaFunctions,
+    });
 
     try {
       await configManager.init();
@@ -320,15 +318,13 @@ export class Knub extends EventEmitter {
     plugin: GlobalPluginBlueprint<GlobalPluginData<TPluginType>, any>,
     loadedAsDependency: boolean,
   ): Promise<GlobalPluginData<TPluginType>> {
-    const configManager = new PluginConfigManager<GlobalPluginData<TPluginType>>(
-      plugin.defaultOptions ?? { config: {} },
-      (get(ctx.config, `plugins.${plugin.name}`) as any) || {},
-      {
-        levels: ctx.config.levels || {},
-        parser: plugin.configParser,
-        customOverrideCriteriaFunctions: plugin.customOverrideCriteriaFunctions,
-      },
-    );
+    const pluginOptionsInput = (get(ctx.config, `plugins.${plugin.name}`) as any) || {};
+    const configManager = new PluginConfigManager<GlobalPluginData<TPluginType>>(pluginOptionsInput, {
+      configSchema: plugin.configSchema,
+      defaultOverrides: plugin.defaultOverrides ?? [],
+      levels: ctx.config.levels || {},
+      customOverrideCriteriaFunctions: plugin.customOverrideCriteriaFunctions,
+    });
 
     try {
       await configManager.init();

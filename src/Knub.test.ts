@@ -1,6 +1,7 @@
 import { assert, expect } from "chai";
 import type { Client } from "discord.js";
 import { describe, it } from "mocha";
+import z from "zod/v4";
 import { Knub } from "./Knub.ts";
 import { guildPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint.ts";
 import { guildPluginEventListener } from "./events/EventListenerBlueprint.ts";
@@ -24,7 +25,7 @@ describe("Knub", () => {
 
       const PluginToLoad = guildPlugin({
         name: "plugin-to-load",
-        configParser: () => ({}),
+        configSchema: z.strictObject({}),
 
         afterLoad() {
           loadedTimes++;
@@ -68,7 +69,7 @@ describe("Knub", () => {
 
       const PluginToLoad = guildPlugin({
         name: "plugin-to-load",
-        configParser: () => ({}),
+        configSchema: z.strictObject({}),
 
         afterLoad() {
           loadedTimes++;
@@ -108,7 +109,7 @@ describe("Knub", () => {
 
       const Plugin1 = guildPlugin({
         name: "plugin1",
-        configParser: () => ({}),
+        configSchema: z.strictObject({}),
 
         beforeLoad() {
           loadedTimes++;
@@ -121,7 +122,7 @@ describe("Knub", () => {
 
       const PluginWithError = guildPlugin({
         name: "plugin-with-error",
-        configParser: () => ({}),
+        configSchema: z.strictObject({}),
 
         beforeStart() {
           throw new Error("Foo");
@@ -301,7 +302,7 @@ describe("Knub", () => {
 
       const PluginToLoad = guildPlugin({
         name: "plugin-to-load",
-        configParser: () => ({}),
+        configSchema: z.strictObject({}),
 
         async beforeLoad() {
           await sleep(loadTimeMs);

@@ -1,5 +1,5 @@
 import type { DeepPartial } from "ts-essentials";
-import { z } from "zod/v4";
+import { ZodType, z } from "zod/v4";
 import type { BasePluginData } from "../plugins/PluginData.ts";
 import type { BasePluginType } from "../plugins/pluginTypes.ts";
 import type { Awaitable } from "../utils.ts";
@@ -22,13 +22,13 @@ export const baseConfigSchema = z.strictObject({
 export type BaseConfig = z.TypeOf<typeof baseConfigSchema>;
 
 export interface PluginOptions<TPluginType extends BasePluginType> {
-  config: TPluginType["config"];
+  config?: z.input<TPluginType["configSchema"]>;
   replaceDefaultOverrides?: boolean;
   overrides?: Array<PluginOverride<TPluginType>>;
 }
 
 export interface PluginOverride<TPluginType extends BasePluginType> extends PluginOverrideCriteria {
-  config?: DeepPartial<TPluginType["config"]>;
+  config?: DeepPartial<z.input<TPluginType["configSchema"]>>;
 }
 
 export const basePluginOverrideCriteriaSchema = z.strictObject({
