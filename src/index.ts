@@ -35,7 +35,9 @@ export {
   PermissionLevels,
   BaseConfig,
   PluginOptions,
+  PluginOverride,
   PluginOverrideCriteria,
+  basePluginOverrideCriteriaSchema,
   pluginOverrideCriteriaSchema,
 } from "./config/configTypes.ts";
 
