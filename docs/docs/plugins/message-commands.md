@@ -1,3 +1,7 @@
+---
+sidebar_position: 7
+---
+
 ## Message commands
 
 Knub supports traditional message-based commands in addition to slash commands. Message commands are defined using plain JavaScript/TypeScript objects and follow a similar structure to slash commands, with built-in type safety and permission support.
