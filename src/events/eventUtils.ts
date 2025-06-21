@@ -66,9 +66,10 @@ export const eventToGuild: EventToGuild = {
   messageReactionRemoveAll: ({ message }) => (message.channel as TextChannel)?.guild,
   messageUpdate: ({ newMessage }) => (newMessage.channel as TextChannel).guild,
   presenceUpdate: ({ newPresence }) => newPresence.member?.guild,
-  typingStart: ({ typing }) => typing.guild,
-  voiceStateUpdate: ({ oldState, newState }) => newState?.guild ?? oldState?.guild,
+  typingStart: ({ typing }) => typing.guild,  voiceStateUpdate: ({ oldState, newState }) => newState?.guild ?? oldState?.guild,
   interactionCreate: ({ interaction }) => interaction.guild ?? undefined,
+  inviteCreate: ({ invite }) => invite.guild ? (invite.guild as Guild) : null,
+  inviteDelete: ({ invite }) => invite.guild ? (invite.guild as Guild) : null,
   soundboardSounds: ({ guild }) => guild,
   threadCreate: ({ thread }) => thread.guild,
   threadDelete: ({ thread }) => thread.guild,
@@ -105,9 +106,10 @@ export const eventToUser: EventToUser = {
   messageUpdate: ({ newMessage }) => newMessage.author ?? undefined,
   presenceUpdate: ({ newPresence }) => newPresence.user ?? undefined,
   typingStart: ({ typing }) => typing.user,
-  userUpdate: ({ newUser }) => newUser,
-  voiceStateUpdate: ({ newState }) => newState.member?.user,
+  userUpdate: ({ newUser }) => newUser,  voiceStateUpdate: ({ newState }) => newState.member?.user,
   interactionCreate: ({ interaction }) => interaction.user ?? undefined,
+  inviteCreate: ({ invite }) => invite.inviter,
+  inviteDelete: ({ invite }) => invite.inviter,
 };
 
 export const eventToChannel: EventToChannel = {
@@ -129,9 +131,10 @@ export const eventToChannel: EventToChannel = {
   threadUpdate: ({ oldThread, newThread }) => newThread ?? oldThread,
   threadMembersUpdate: ({ thread }) => thread.parent,
   stageInstanceCreate: ({ stageInstance }) => stageInstance.channel ?? undefined,
-  stageInstanceDelete: ({ stageInstance }) => stageInstance.channel ?? undefined,
-  stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
+  stageInstanceDelete: ({ stageInstance }) => stageInstance.channel ?? undefined,  stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
     newStageInstance.channel ?? oldStageInstance?.channel ?? undefined,
+  inviteCreate: ({ invite }) => invite.channel,
+  inviteDelete: ({ invite }) => invite.channel,
   voiceChannelEffectSend: ({ voiceChannelEffect }) => voiceChannelEffect.channel,
 };
 
