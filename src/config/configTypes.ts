@@ -57,7 +57,7 @@ export const basePluginOverrideCriteriaSchema = z.strictObject({
     .nullable()
     .optional(),
   is_thread: z.boolean().nullable().optional(),
-  thread_type: z.literal(["public", "private"]).nullable().optional(),
+  thread_type: z.enum(["public", "private"]).nullable().optional(),
   extra: z.any().optional(),
 });
 
