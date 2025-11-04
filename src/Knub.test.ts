@@ -406,7 +406,7 @@ describe("Knub", () => {
               runCount += 1;
             },
           }),
-=======
+
   it("Unloading a guild waits for running event listeners to finish", (mochaDone) => {
     withKnub(mochaDone, async (createKnub, done) => {
       let listenerDone = false;
