@@ -494,4 +494,40 @@ describe("PluginConfigManager", () => {
     expect((await configManager.getMatchingConfig({ member })).works).to.equal(true);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
+
+  // Test for bug fixed in commit 77c9a0df53b1699d8a2c396d22bef29aeca9483a
+  it("support transformed properties", async () => {
+    const configSchema = z.strictObject({
+      dummy: z.number(),
+      transformed: z.string().transform((v) => Number(v)),
+    });
+    interface PluginType extends BasePluginType {
+      configSchema: typeof configSchema;
+    }
+
+    const configManager = new PluginConfigManager<BasePluginData<PluginType>>(
+      {
+        config: {
+          dummy: 1,
+          transformed: "20",
+        },
+      },
+      {
+        configSchema,
+        defaultOverrides: [
+          // Just the presence of an override would trigger the bug
+          {
+            level: ">=50",
+            config: {
+              dummy: 3,
+            },
+          },
+        ],
+        levels: {},
+      },
+    );
+    await configManager.init();
+
+    expect(configManager.get().transformed).to.equal(20);
+  });
 });
