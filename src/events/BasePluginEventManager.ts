@@ -1,6 +1,6 @@
 import type { Lock } from "../locks/LockManager.ts";
 import type { AnyPluginData, GuildPluginData } from "../plugins/PluginData.ts";
-import { sleep, type Awaitable } from "../utils.ts";
+import { type Awaitable, sleep } from "../utils.ts";
 import type { EventRelay } from "./EventRelay.ts";
 import type { EventFilter } from "./eventFilters.ts";
 import type { EventArguments, GuildEventArguments, ValidEvent } from "./eventTypes.ts";
@@ -71,10 +71,9 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
   }
 
   protected addRunningListener(awaitable: any): void {
-    const promise = Promise.resolve(awaitable)
-      .finally(() => {
-        this.runningListeners.delete(promise);
-      });
+    const promise = Promise.resolve(awaitable).finally(() => {
+      this.runningListeners.delete(promise);
+    });
     this.runningListeners.add(promise);
   }
 
