@@ -820,7 +820,7 @@ export class Knub extends EventEmitter {
    */
   protected async destroyPluginData(pluginData: GuildPluginData<any> | GlobalPluginData<any>): Promise<void> {
     pluginData.cooldowns.destroy();
-    pluginData.events.destroy();
+    await pluginData.events.destroy(10 * 1000);
     await pluginData.locks.destroy();
   }
 

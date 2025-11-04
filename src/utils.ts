@@ -95,3 +95,7 @@ export function notCallable(message: string) {
     throw new Error(message);
   };
 }
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

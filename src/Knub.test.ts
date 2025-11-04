@@ -338,4 +338,47 @@ describe("Knub", () => {
       done();
     });
   });
+
+  it("Unloading a guild waits for running event listeners to finish", (mochaDone) => {
+    withKnub(mochaDone, async (createKnub, done) => {
+      let listenerDone = false;
+      const Plugin = guildPlugin({
+        name: "plugin",
+        configSchema: z.strictObject({}),
+        events: [
+          {
+            event: "messageCreate",
+            async listener() {
+              await sleep(50);
+              listenerDone = true;
+            },
+          },
+        ],
+      });
+
+      const knub = createKnub({
+        guildPlugins: [Plugin],
+        options: {
+          autoRegisterApplicationCommands: false,
+          getEnabledGuildPlugins() {
+            return ["plugin"];
+          },
+          logFn: noop,
+        },
+      });
+      await initializeKnub(knub);
+
+      const guild = createMockGuild(knub.client);
+      const channel = createMockTextChannel(knub.client, guild.id);
+      const message = createMockMessage(knub.client, channel, createMockUser(knub.client));
+
+      await knub.loadGuild(guild.id);
+      knub.client.emit("messageCreate", message);
+      await knub.unloadGuild(guild.id);
+
+      assert.isTrue(listenerDone);
+
+      done();
+    });
+  });
 });

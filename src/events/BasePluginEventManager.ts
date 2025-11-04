@@ -1,6 +1,6 @@
 import type { Lock } from "../locks/LockManager.ts";
 import type { AnyPluginData, GuildPluginData } from "../plugins/PluginData.ts";
-import type { Awaitable } from "../utils.ts";
+import { sleep, type Awaitable } from "../utils.ts";
 import type { EventRelay } from "./EventRelay.ts";
 import type { EventFilter } from "./eventFilters.ts";
 import type { EventArguments, GuildEventArguments, ValidEvent } from "./eventTypes.ts";
@@ -35,6 +35,7 @@ export interface OnOpts {
 export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<any>> {
   protected listeners: Map<string, Set<WrappedListener>> = new Map<string, Set<WrappedListener>>();
   protected pluginData: TPluginData | undefined;
+  protected runningListeners: Set<Promise<void>> = new Set();
 
   constructor(protected eventRelay: EventRelay) {}
 
@@ -64,7 +65,27 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
     }
   }
 
-  public destroy(): void {
+  public async destroy(timeout: number): Promise<void> {
     this.clearAllListeners();
+    await this.waitForRunningListeners(timeout);
+  }
+
+  protected addRunningListener(awaitable: any): void {
+    const promise = Promise.resolve(awaitable)
+      .finally(() => {
+        this.runningListeners.delete(promise);
+      });
+    this.runningListeners.add(promise);
+  }
+
+  protected async waitForRunningListeners(timeout: number): Promise<void> {
+    const { promise, resolve, reject } = Promise.withResolvers<void>();
+
+    // Basically Promise.race(), but we remove the timeout as soon as the main promise resolves so tests don't hang
+    Promise.allSettled(Array.from(this.runningListeners)).then(() => resolve());
+    const timeoutId = setTimeout(() => resolve(), timeout);
+    promise.finally(() => clearTimeout(timeoutId));
+
+    return promise;
   }
 }
