@@ -26,6 +26,7 @@ export interface KnubOptions {
   getEnabledGuildPlugins?: (ctx: GuildContext, plugins: GuildPluginMap) => Awaitable<string[]>;
   canLoadGuild: (guildId: string) => Awaitable<boolean>;
   concurrentGuildLoadLimit: number;
+  pluginUnloadEventTimeoutMs: number;
   logFn?: LogFn;
 
   [key: string]: any;
