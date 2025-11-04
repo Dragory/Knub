@@ -18,6 +18,7 @@ export interface MatchParams<TExtra extends Record<string, unknown> = Record<str
   categoryId?: string | null;
   threadId?: string | null;
   isThread?: boolean | null;
+  threadType?: "public" | "private" | null;
   extra?: TExtra;
 }
 
@@ -215,6 +216,25 @@ export async function evaluateOverrideCriteria<TPluginData extends BasePluginDat
         return false;
       }
 
+      matchedOne = true;
+      continue;
+    }
+
+    // Match on thread type
+    // For a successful match, requires ANY of the specified types to match
+    if (key === "thread_type") {
+      const value = criteria[key]!;
+      const matchThreadType = matchParams.threadType;
+      if (matchThreadType) {
+        const types = Array.isArray(value) ? value : [value];
+        let match = false;
+        for (const t of types) {
+          match = match || matchThreadType === t;
+        }
+        if (!match) return false;
+      } else {
+        return false;
+      }
       matchedOne = true;
       continue;
     }

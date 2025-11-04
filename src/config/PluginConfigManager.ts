@@ -203,6 +203,12 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
       interaction?.channel?.isThread?.() ??
       null;
 
+    const threadType =
+      matchParams.threadType ??
+      (matchParams.channel?.isThread?.() ? (matchParams.channel.type === 12 ? "private" : "public") : null) ??
+      (message?.channel?.isThread?.() ? (message.channel.type === 12 ? "private" : "public") : null) ??
+      (interaction?.channel?.isThread?.() ? (interaction.channel.type === 12 ? "private" : "public") : null);
+
     // Passed member -> passed message's member -> passed interaction's member
     const member = matchParams.member || message?.member || interaction?.member;
 
@@ -219,6 +225,7 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
       categoryId,
       threadId,
       isThread,
+      threadType,
       memberRoles,
     };
 
