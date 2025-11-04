@@ -7,6 +7,7 @@ sidebar_position: 3
 ```ts
 import { Client, GatewayIntentBits } from "discord.js";
 import { Knub, guildPlugin, guildPluginSlashCommand, slashOptions } from "knub";
+import z from "zod/v4";
 
 // Create a command
 const echoCommand = guildPluginSlashCommand({
@@ -23,8 +24,7 @@ const echoCommand = guildPluginSlashCommand({
 // Create a plugin and give it the command
 const myPlugin = guildPlugin({
   name: "my-plugin",
-  configParser: () => ({}),
-
+  configSchema: z.strictObject({}),
   slashCommands: [
     echoCommand,
   ],

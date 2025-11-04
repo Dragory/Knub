@@ -4,6 +4,7 @@ import {
   GatewayDispatchEvents,
   type GatewayGuildCreateDispatchData,
   type Guild,
+  type Message,
   type Snowflake,
 } from "discord.js";
 import { ConcurrentRunner } from "./ConcurrentRunner.ts";
@@ -11,6 +12,10 @@ import { Profiler } from "./Profiler.ts";
 import { Queue } from "./Queue.ts";
 import { PluginContextMenuCommandManager } from "./commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
 import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager.ts";
+import {
+  hasMessageCommandBeenDispatched,
+  markMessageCommandDispatched,
+} from "./commands/messageCommands/messageCommandUtils.ts";
 import {
   type AnyApplicationCommandBlueprint,
   registerApplicationCommands,
@@ -561,6 +566,33 @@ export class Knub extends EventEmitter {
     return Array.from(this.loadedGuilds.values());
   }
 
+  public async dispatchMessageCommands(message: Message): Promise<void> {
+    if (hasMessageCommandBeenDispatched(message)) {
+      return;
+    }
+
+    markMessageCommandDispatched(message);
+
+    if (message.guildId) {
+      const guildContext = this.loadedGuilds.get(message.guildId);
+      if (guildContext) {
+        for (const { pluginData, onlyLoadedAsDependency } of guildContext.loadedPlugins.values()) {
+          if (onlyLoadedAsDependency) {
+            continue;
+          }
+
+          await pluginData.messageCommands.runFromMessage(message);
+        }
+      }
+    }
+
+    if (this.globalContextLoaded) {
+      for (const { pluginData } of this.globalContext.loadedPlugins.values()) {
+        await pluginData.messageCommands.runFromMessage(message);
+      }
+    }
+  }
+
   protected async loadGuildConfig(ctx: GuildContext): Promise<void> {
     ctx.config = await this.options.getConfig(ctx.guildId);
   }
@@ -635,8 +667,18 @@ export class Knub extends EventEmitter {
           }
         }
 
+        if (blueprint.deletedMessageCommands) {
+          for (const trigger of blueprint.deletedMessageCommands) {
+            pluginData.messageCommands.removeByTrigger(trigger);
+          }
+        }
+
         // Initialize messageCreate event listener for message commands
         pluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
+          if (hasMessageCommandBeenDispatched(message)) {
+            return;
+          }
+
           return _pluginData.messageCommands.runFromMessage(message);
         });
 
@@ -782,8 +824,18 @@ export class Knub extends EventEmitter {
         }
       }
 
+      if (blueprint.deletedMessageCommands) {
+        for (const trigger of blueprint.deletedMessageCommands) {
+          pluginData.messageCommands.removeByTrigger(trigger);
+        }
+      }
+
       // Add messageCreate event listener for commands
       pluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
+        if (hasMessageCommandBeenDispatched(message)) {
+          return;
+        }
+
         return _pluginData.messageCommands.runFromMessage(message);
       });
 

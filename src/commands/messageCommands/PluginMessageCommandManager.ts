@@ -30,6 +30,8 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   private pluginData: TPluginData | undefined;
   private manager: CommandManager<CommandContext<TPluginData>, CommandExtraData<TPluginData>>;
   private handlers: Map<number, CommandFn<TPluginData, any>>;
+  private commandAddedListeners: Set<CommandLifecycleListener<TPluginData>> = new Set();
+  private commandDeletedListeners: Set<CommandRemovedListener<TPluginData>> = new Set();
 
   constructor(client: Client, opts: PluginCommandManagerOpts = {}) {
     this.manager = new CommandManager<CommandContext<TPluginData>, CommandExtraData<TPluginData>>({
@@ -50,6 +52,11 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   public add<TSignature extends MessageCommandSignatureOrArray<TPluginData["_pluginType"]>>(
     blueprint: MessageCommandBlueprint<TPluginData, TSignature>,
   ): void {
+    const existingCommand = this.findCommandByBlueprint(blueprint);
+    if (existingCommand) {
+      this.remove(existingCommand.id, "replaced");
+    }
+
     const preFilters = Array.from(blueprint.config?.preFilters ?? []);
     preFilters.unshift(restrictCommandSource, checkCommandPermission);
 
@@ -67,15 +74,57 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
 
     const command = this.manager.add(blueprint.trigger, blueprint.signature, config);
     this.handlers.set(command.id, blueprint.run);
+
+    this.emitCommandAdded({
+      blueprint,
+      command,
+      pluginData: this.pluginData!,
+    });
   }
 
-  public remove(id: number): void {
+  public remove(id: number, reason: CommandRemovalReason = "manual"): void {
+    const command = this.manager.get(id);
+    if (!command) {
+      return;
+    }
+
     this.manager.remove(id);
     this.handlers.delete(id);
+
+    this.emitCommandDeleted({
+      blueprint: command.config!.extra?.blueprint as MessageCommandBlueprint<TPluginData, any>,
+      command,
+      pluginData: this.pluginData!,
+      reason,
+    });
   }
 
   public getAll(): PluginCommandDefinition[] {
     return this.manager.getAll();
+  }
+
+  public removeByTrigger(trigger: string): boolean {
+    const command = this.findCommandByTrigger(trigger);
+    if (!command) {
+      return false;
+    }
+
+    this.remove(command.id, "deleted");
+    return true;
+  }
+
+  public onCommandAdded(listener: CommandLifecycleListener<TPluginData>): () => void {
+    this.commandAddedListeners.add(listener);
+    return () => {
+      this.commandAddedListeners.delete(listener);
+    };
+  }
+
+  public onCommandDeleted(listener: CommandRemovedListener<TPluginData>): () => void {
+    this.commandDeletedListeners.add(listener);
+    return () => {
+      this.commandDeletedListeners.delete(listener);
+    };
   }
 
   public async runFromMessage(msg: Message): Promise<void> {
@@ -137,4 +186,69 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
         : matchedCommand.originalTriggers[0].source;
     this.pluginData!.getKnubInstance().profiler.addDataPoint(`command:${commandName}`, performance.now() - startTime);
   }
+
+  private emitCommandAdded(event: CommandLifecycleEvent<TPluginData>): void {
+    for (const listener of this.commandAddedListeners) {
+      listener(event);
+    }
+  }
+
+  private emitCommandDeleted(event: CommandRemovedEvent<TPluginData>): void {
+    for (const listener of this.commandDeletedListeners) {
+      listener(event);
+    }
+  }
+
+  private findCommandByBlueprint(
+    blueprint: MessageCommandBlueprint<TPluginData, any>,
+  ): PluginCommandDefinition | undefined {
+    return this.manager
+      .getAll()
+      .find((cmd) => triggersEqual(getBlueprintTriggers(cmd.config!.extra?.blueprint), getBlueprintTriggers(blueprint)));
+  }
+
+  private findCommandByTrigger(trigger: string): PluginCommandDefinition | undefined {
+    return this.manager
+      .getAll()
+      .find((cmd) => getBlueprintTriggers(cmd.config!.extra?.blueprint).includes(trigger));
+  }
+}
+
+export type CommandRemovalReason = "manual" | "deleted" | "replaced";
+
+export interface CommandLifecycleEvent<TPluginData extends AnyPluginData<any>> {
+  command: PluginCommandDefinition;
+  blueprint: MessageCommandBlueprint<TPluginData, any>;
+  pluginData: TPluginData;
+}
+
+export interface CommandRemovedEvent<TPluginData extends AnyPluginData<any>>
+  extends CommandLifecycleEvent<TPluginData> {
+  reason: CommandRemovalReason;
+}
+
+export type CommandLifecycleListener<TPluginData extends AnyPluginData<any>> = (
+  event: CommandLifecycleEvent<TPluginData>,
+) => void;
+
+export type CommandRemovedListener<TPluginData extends AnyPluginData<any>> = (
+  event: CommandRemovedEvent<TPluginData>,
+) => void;
+
+function getBlueprintTriggers(
+  blueprint?: MessageCommandBlueprint<any, any>,
+): string[] {
+  if (!blueprint) {
+    return [];
+  }
+
+  return Array.isArray(blueprint.trigger) ? blueprint.trigger : [blueprint.trigger];
+}
+
+function triggersEqual(first: string[], second: string[]): boolean {
+  if (first.length !== second.length) {
+    return false;
+  }
+
+  return first.every((trigger, index) => second[index] === trigger);
 }
