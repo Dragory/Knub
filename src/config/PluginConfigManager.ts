@@ -91,7 +91,7 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
           this.pluginData && isGuildPluginData(this.pluginData) ? this.pluginData.guild.id : "(global)",
         );
       }
-      const overrideConfig = mergeConfig(parsedValidConfig, override.config ?? {});
+      const overrideConfig = mergeConfig(baseParsedUserInput.config ?? {}, override.config ?? {});
       // Validate the override config as if it was already merged with the base config
       // In reality, overrides are merged with the base config when they are evaluated
       await this.configSchema.parseAsync(overrideConfig);

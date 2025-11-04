@@ -69,6 +69,8 @@ export const eventToGuild: EventToGuild = {
   typingStart: ({ typing }) => typing.guild,
   voiceStateUpdate: ({ oldState, newState }) => newState?.guild ?? oldState?.guild,
   interactionCreate: ({ interaction }) => interaction.guild ?? undefined,
+  inviteCreate: ({ invite }) => (invite.guild ? (invite.guild as Guild) : null),
+  inviteDelete: ({ invite }) => (invite.guild ? (invite.guild as Guild) : null),
   soundboardSounds: ({ guild }) => guild,
   threadCreate: ({ thread }) => thread.guild,
   threadDelete: ({ thread }) => thread.guild,
@@ -108,6 +110,8 @@ export const eventToUser: EventToUser = {
   userUpdate: ({ newUser }) => newUser,
   voiceStateUpdate: ({ newState }) => newState.member?.user,
   interactionCreate: ({ interaction }) => interaction.user ?? undefined,
+  inviteCreate: ({ invite }) => invite.inviter,
+  inviteDelete: ({ invite }) => invite.inviter,
 };
 
 export const eventToChannel: EventToChannel = {
@@ -132,6 +136,8 @@ export const eventToChannel: EventToChannel = {
   stageInstanceDelete: ({ stageInstance }) => stageInstance.channel ?? undefined,
   stageInstanceUpdate: ({ oldStageInstance, newStageInstance }) =>
     newStageInstance.channel ?? oldStageInstance?.channel ?? undefined,
+  inviteCreate: ({ invite }) => invite.channel,
+  inviteDelete: ({ invite }) => invite.channel,
   voiceChannelEffectSend: ({ voiceChannelEffect }) => voiceChannelEffect.channel,
 };
 

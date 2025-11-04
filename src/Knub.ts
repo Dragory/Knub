@@ -144,6 +144,7 @@ export class Knub extends EventEmitter {
       canLoadGuild: () => true,
       customArgumentTypes: {},
       concurrentGuildLoadLimit: 10,
+      pluginUnloadEventTimeoutMs: 1000 * 10,
     } satisfies KnubOptions;
 
     this.options = { ...defaultOptions, ...args.options };
@@ -872,7 +873,7 @@ export class Knub extends EventEmitter {
    */
   protected async destroyPluginData(pluginData: GuildPluginData<any> | GlobalPluginData<any>): Promise<void> {
     pluginData.cooldowns.destroy();
-    pluginData.events.destroy();
+    await pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
     await pluginData.locks.destroy();
   }
 

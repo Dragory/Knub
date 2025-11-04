@@ -28,12 +28,14 @@ export class GuildPluginEventManager<
     >;
 
     const wrappedListener: WrappedListener = (args: GuildEventArguments[T["event"]]) => {
-      return filteredListener({
+      const result = filteredListener({
         // @ts-ignore TS is having trouble inferring this correctly. We know TPluginData extends GuildPluginData, which
         // means that args should be GuildEventArguments[T["event"]], which it is as per the type annotation above.
         args,
         pluginData: this.pluginData!,
       });
+      this.addRunningListener(result);
+      return result;
     };
 
     this.listeners.get(blueprint.event)!.add(wrappedListener);
