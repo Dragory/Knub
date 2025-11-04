@@ -10,7 +10,7 @@
     "test-debug": "npm run build-debug && why-is-node-running ./node_modules/.bin/mocha dist --recursive",
     "build-debug": "shx rm -rf dist && shx rm -f tsconfig.tsbuildinfo && tsc --sourceMap true",
     "build": "shx rm -rf dist && shx rm -f tsconfig.tsbuildinfo && tsc --sourceMap false && shx cp .npmignore dist/",
-    "preversion": "npm run test",
+    "preversion": "npm run test && npm run biome-check",
     "prepublishOnly": "npm run test && npm run build",
     "watch": "shx touch dist && shx rm -r dist && tsc --watch",
     "biome-check": "biome check ./src",
