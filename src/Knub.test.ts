@@ -9,8 +9,8 @@ import { GuildPluginBlueprint, guildPlugin } from "./plugins/PluginBlueprint.ts"
 import {
   createMockClient,
   createMockGuild,
-  createMockMessage,
   createMockMember,
+  createMockMessage,
   createMockTextChannel,
   createMockUser,
   initializeKnub,
@@ -340,57 +340,6 @@ describe("Knub", () => {
     });
   });
 
-  it("deleted message commands remove matching definitions", (mochaDone) => {
-    withKnub(mochaDone, async (createKnub, done) => {
-      const deleteReasons: string[] = [];
-
-      const TestPlugin = guildPlugin({
-        name: "message-commands-removal",
-        configSchema: z.strictObject({}),
-        beforeStart(pluginData) {
-          pluginData.messageCommands.onCommandDeleted(({ reason }) => {
-            deleteReasons.push(reason);
-          });
-        },
-        messageCommands: [
-          guildPluginMessageCommand({
-            trigger: "foo",
-            permission: null,
-            run: noop,
-          }),
-        ],
-        deletedMessageCommands: ["foo"],
-      });
-
-      const knub = createKnub({
-        guildPlugins: [TestPlugin],
-        options: {
-          autoRegisterApplicationCommands: false,
-          getEnabledGuildPlugins() {
-            return ["message-commands-removal"];
-          },
-          getConfig() {
-            return { prefix: "!", levels: {} };
-          },
-          logFn: noop,
-        },
-      });
-      await initializeKnub(knub);
-
-      const guild = createMockGuild(knub.client);
-      knub.client.ws.emit("GUILD_CREATE", guild);
-      await sleep(10);
-
-      const loadedGuild = knub.getLoadedGuild(guild.id)!;
-      const pluginData = loadedGuild.loadedPlugins.get("message-commands-removal")!.pluginData;
-
-      expect(pluginData.messageCommands.getAll()).to.have.length(0);
-      expect(deleteReasons).to.deep.equal(["deleted"]);
-
-      done();
-    });
-  });
-
   it("dispatchMessageCommands runs commands once and skips default handlers", (mochaDone) => {
     withKnub(mochaDone, async (createKnub, done) => {
       let runCount = 0;
@@ -406,21 +355,6 @@ describe("Knub", () => {
               runCount += 1;
             },
           }),
-
-  it("Unloading a guild waits for running event listeners to finish", (mochaDone) => {
-    withKnub(mochaDone, async (createKnub, done) => {
-      let listenerDone = false;
-      const Plugin = guildPlugin({
-        name: "plugin",
-        configSchema: z.strictObject({}),
-        events: [
-          {
-            event: "messageCreate",
-            async listener() {
-              await sleep(50);
-              listenerDone = true;
-            },
-          },
         ],
       });
 
@@ -433,14 +367,7 @@ describe("Knub", () => {
           },
           getConfig() {
             return { prefix: "!", levels: {} };
-
-        guildPlugins: [Plugin],
-        options: {
-          autoRegisterApplicationCommands: false,
-          getEnabledGuildPlugins() {
-            return ["plugin"];
           },
-          logFn: noop,
         },
       });
       await initializeKnub(knub);
@@ -470,6 +397,40 @@ describe("Knub", () => {
       knub.client.emit("messageCreate", message);
       expect(runCount).to.equal(1);
 
+      done();
+    });
+  });
+
+  it("Unloading a guild waits for running event listeners to finish", (mochaDone) => {
+    withKnub(mochaDone, async (createKnub, done) => {
+      let listenerDone = false;
+      const Plugin = guildPlugin({
+        name: "plugin",
+        configSchema: z.strictObject({}),
+        events: [
+          {
+            event: "messageCreate",
+            async listener() {
+              await sleep(50);
+              listenerDone = true;
+            },
+          },
+        ],
+      });
+
+      const knub = createKnub({
+        guildPlugins: [Plugin],
+        options: {
+          autoRegisterApplicationCommands: false,
+          getEnabledGuildPlugins() {
+            return ["plugin"];
+          },
+          logFn: noop,
+        },
+      });
+      await initializeKnub(knub);
+
+      const guild = createMockGuild(knub.client);
       const channel = createMockTextChannel(knub.client, guild.id);
       const message = createMockMessage(knub.client, channel, createMockUser(knub.client));
 

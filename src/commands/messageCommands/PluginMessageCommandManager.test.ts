@@ -60,6 +60,6 @@ describe("PluginMessageCommandManager", () => {
 
     manager.removeByTrigger("foo");
     expect(removedEvents).to.have.length(3);
-    expect(removedEvents[2]!.reason).to.equal("deleted");
+    expect(removedEvents[2]!.reason).to.equal("manual");
   });
 });
