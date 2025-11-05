@@ -381,4 +381,52 @@ describe("Knub", () => {
       done();
     });
   });
+
+  it("Unloading a guild deals with event registration race conditions", (mochaDone) => {
+    withKnub(mochaDone, async (createKnub, done) => {
+      let cnt = 1;
+      const Plugin = guildPlugin({
+        name: "plugin",
+        configSchema: z.strictObject({}),
+        events: [
+          {
+            event: "messageCreate",
+            async listener({ pluginData }) {
+              cnt++;
+              await sleep(50);
+              pluginData.events.on("channelCreate", () => {
+                cnt++;
+              });
+              // The following should not cause the above listener to run after unload
+              knub.client.emit("channelCreate", channel);
+            },
+          },
+        ],
+      });
+
+      const knub = createKnub({
+        guildPlugins: [Plugin],
+        options: {
+          autoRegisterApplicationCommands: false,
+          getEnabledGuildPlugins() {
+            return ["plugin"];
+          },
+          logFn: noop,
+        },
+      });
+      await initializeKnub(knub);
+
+      const guild = createMockGuild(knub.client);
+      const channel = createMockTextChannel(knub.client, guild.id);
+      const message = createMockMessage(knub.client, channel, createMockUser(knub.client));
+
+      await knub.loadGuild(guild.id);
+      knub.client.emit("messageCreate", message);
+      await knub.unloadGuild(guild.id);
+
+      assert.equal(cnt, 2);
+
+      done();
+    });
+  });
 });

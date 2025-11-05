@@ -507,14 +507,20 @@ export class Knub extends EventEmitter {
         await loadedPlugin.blueprint.beforeUnload?.(loadedPlugin.pluginData);
       }
 
-      // 2. Remove event listeners and mark each plugin as unloaded
+      // 2. Mark each plugin as unloaded and remove event listeners
+      // After this step no plugin code should be running anymore
+      for (const [pluginName, loadedPlugin] of pluginsToUnload) {
+        loadedPlugin.pluginData.loaded = false;
+        await loadedPlugin.pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
+      }
+
+      // 3. Finish plugin cleanup
       for (const [pluginName, loadedPlugin] of pluginsToUnload) {
         await this.destroyPluginData(loadedPlugin.pluginData);
-        loadedPlugin.pluginData.loaded = false;
         ctx.loadedPlugins.delete(pluginName);
       }
 
-      // 3. Mark the guild as unloaded
+      // 4. Mark the guild as unloaded
       this.loadedGuilds.delete(ctx.guildId);
       this.emit("guildUnloaded", ctx.guildId);
 
@@ -714,17 +720,23 @@ export class Knub extends EventEmitter {
       await loadedPlugin.blueprint.beforeUnload?.(loadedPlugin.pluginData);
     }
 
-    // 2. Remove event listeners and mark each plugin as unloaded
+    // 2. Mark each plugin as unloaded and remove event listeners
+    // After this step no plugin code should be running anymore
+    for (const [pluginName, loadedPlugin] of pluginsToUnload) {
+      loadedPlugin.pluginData.loaded = false;
+      await loadedPlugin.pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
+    }
+
+    // 3. Finish plugin cleanup
     for (const [pluginName, loadedPlugin] of pluginsToUnload) {
       await this.destroyPluginData(loadedPlugin.pluginData);
-      loadedPlugin.pluginData.loaded = false;
       this.globalContext.loadedPlugins.delete(pluginName);
     }
 
-    // 3. Mark the global context as unloaded
+    // 4. Mark the global context as unloaded
     this.globalContextLoaded = false;
 
-    // 4. Run each plugin's afterUnload() function
+    // 5. Run each plugin's afterUnload() function
     for (const [_, loadedPlugin] of pluginsToUnload) {
       loadedPlugin.pluginData.hasPlugin = notCallable("hasPlugin is no longer available");
       loadedPlugin.pluginData.getPlugin = notCallable("getPlugin is no longer available");

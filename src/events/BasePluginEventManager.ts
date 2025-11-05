@@ -36,6 +36,7 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
   protected listeners: Map<string, Set<WrappedListener>> = new Map<string, Set<WrappedListener>>();
   protected pluginData: TPluginData | undefined;
   protected runningListeners: Set<Promise<void>> = new Set();
+  protected loaded = true;
 
   constructor(protected eventRelay: EventRelay) {}
 
@@ -66,6 +67,10 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
   }
 
   public async destroy(timeout: number): Promise<void> {
+    if (!this.loaded) {
+      return;
+    }
+    this.loaded = false;
     this.clearAllListeners();
     await this.waitForRunningListeners(timeout);
   }

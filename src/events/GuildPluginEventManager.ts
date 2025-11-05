@@ -1,5 +1,6 @@
 import type { GuildPluginData } from "../index.ts";
 import type { AnyGuildEventListenerBlueprint } from "../plugins/PluginBlueprint.ts";
+import { noop } from "../utils.ts";
 import { BasePluginEventManager, type Listener, type OnOpts, type WrappedListener } from "./BasePluginEventManager.ts";
 import type { RelayListener } from "./EventRelay.ts";
 import { type FilteredListener, ignoreBots, ignoreSelf, withFilters } from "./eventFilters.ts";
@@ -9,6 +10,10 @@ export class GuildPluginEventManager<
   TPluginData extends GuildPluginData<any>,
 > extends BasePluginEventManager<TPluginData> {
   registerEventListener<T extends AnyGuildEventListenerBlueprint<TPluginData>>(blueprint: T): WrappedListener {
+    if (!this.loaded) {
+      return noop;
+    }
+
     if (!this.listeners.has(blueprint.event)) {
       this.listeners.set(blueprint.event, new Set());
     }
