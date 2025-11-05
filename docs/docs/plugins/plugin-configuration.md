@@ -146,7 +146,7 @@ information throughout your code. You typically use zod for this:
 
 ```ts
 import { BasePluginType, guildPlugin } from "knub";
-import z from "zod/v4";
+import z from "zod";
 
 const configSchema = z.strictObject({
   coolness: z.number().default(0),

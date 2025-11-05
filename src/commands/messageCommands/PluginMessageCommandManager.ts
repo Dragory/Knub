@@ -141,7 +141,9 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   }
 
   public async destroy(timeout: number): Promise<void> {
-    this.loaded = false;
+    if (!this.loaded) {
+      return;
+    }
     this.clearAllLifecycleListeners();
     await this.waitForRunningHandlers(timeout);
   }

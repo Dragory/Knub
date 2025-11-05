@@ -7,7 +7,7 @@ sidebar_position: 3
 ```ts
 import { Client, GatewayIntentBits } from "discord.js";
 import { Knub, guildPlugin, guildPluginSlashCommand, slashOptions } from "knub";
-import z from "zod/v4";
+import z from "zod";
 
 // Create a command
 const echoCommand = guildPluginSlashCommand({

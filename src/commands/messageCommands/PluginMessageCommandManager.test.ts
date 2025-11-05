@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { PluginMessageCommandManager, type CommandRemovedEvent } from "./PluginMessageCommandManager.ts";
 import { createMockClient } from "../../testUtils.ts";
+import { type CommandRemovedEvent, PluginMessageCommandManager } from "./PluginMessageCommandManager.ts";
 
 const noop = () => {};
 
@@ -22,9 +22,10 @@ describe("PluginMessageCommandManager", () => {
     const removedEvents: CommandRemovedEvent<any>[] = [];
 
     manager.onCommandAdded(({ command }) => {
-      const trigger = typeof command.originalTriggers[0] === "string"
-        ? command.originalTriggers[0]
-        : command.originalTriggers[0].source;
+      const trigger =
+        typeof command.originalTriggers[0] === "string"
+          ? command.originalTriggers[0]
+          : command.originalTriggers[0].source;
       addedTriggers.push(trigger);
     });
 

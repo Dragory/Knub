@@ -2,7 +2,7 @@ import { assert, expect } from "chai";
 import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { parseSignature } from "knub-command-manager";
 import { describe, it } from "mocha";
-import z from "zod/v4";
+import z from "zod";
 import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
 import { guildPluginMessageContextMenuCommand } from "../commands/contextMenuCommands/contextMenuCommandBlueprint.ts";
 import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager.ts";

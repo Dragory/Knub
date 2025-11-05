@@ -8,7 +8,7 @@ import type {
   PartialUser,
   User,
 } from "discord.js";
-import type z from "zod/v4";
+import type z from "zod";
 import { type BasePluginData, isGuildPluginData } from "../plugins/PluginData.ts";
 import type { BasePluginType } from "../plugins/pluginTypes.ts";
 import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils.ts";

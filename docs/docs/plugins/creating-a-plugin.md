@@ -27,7 +27,7 @@ your config, any custom override criteria, and the plugin’s internal state.
 
 ```ts
 import { BasePluginType, guildPlugin } from "knub";
-import z from "zod/v4";
+import z from "zod";
 
 interface CooldownPluginType extends BasePluginType {
   configSchema: z.ZodType<{ cooldownMs: number }>;

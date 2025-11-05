@@ -15,7 +15,7 @@ to a plugin blueprint via the `messageCommands` array.
 
 ```ts
 import { guildPlugin, guildPluginMessageCommand } from "knub";
-import z from "zod/v4";
+import z from "zod";
 
 const pingCommand = guildPluginMessageCommand({
   trigger: "ping",
