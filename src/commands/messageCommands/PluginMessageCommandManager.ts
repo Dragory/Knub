@@ -234,21 +234,13 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
 
   private emitCommandAdded(event: CommandLifecycleEvent<TPluginData>): void {
     for (const listener of this.commandAddedListeners) {
-      try {
-        this.addRunningHandler(listener(event));
-      } catch (e) {
-        throw e;
-      }
+      this.addRunningHandler(listener(event));
     }
   }
 
   private emitCommandDeleted(event: CommandRemovedEvent<TPluginData>): void {
     for (const listener of this.commandDeletedListeners) {
-      try {
-        this.addRunningHandler(listener(event));
-      } catch (e) {
-        throw e;
-      }
+      this.addRunningHandler(listener(event));
     }
   }
 
@@ -257,13 +249,13 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   ): PluginCommandDefinition | undefined {
     return this.manager
       .getAll()
-      .find((cmd) => triggersEqual(getBlueprintTriggers(cmd.config!.extra?.blueprint), getBlueprintTriggers(blueprint)));
+      .find((cmd) =>
+        triggersEqual(getBlueprintTriggers(cmd.config!.extra?.blueprint), getBlueprintTriggers(blueprint)),
+      );
   }
 
   private findCommandByTrigger(trigger: string): PluginCommandDefinition | undefined {
-    return this.manager
-      .getAll()
-      .find((cmd) => getBlueprintTriggers(cmd.config!.extra?.blueprint).includes(trigger));
+    return this.manager.getAll().find((cmd) => getBlueprintTriggers(cmd.config!.extra?.blueprint).includes(trigger));
   }
 }
 
@@ -288,9 +280,7 @@ export type CommandRemovedListener<TPluginData extends AnyPluginData<any>> = (
   event: CommandRemovedEvent<TPluginData>,
 ) => void;
 
-function getBlueprintTriggers(
-  blueprint?: MessageCommandBlueprint<any, any>,
-): string[] {
+function getBlueprintTriggers(blueprint?: MessageCommandBlueprint<any, any>): string[] {
   if (!blueprint) {
     return [];
   }
