@@ -32,6 +32,7 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   private handlers: Map<number, CommandFn<TPluginData, any>>;
   private commandAddedListeners: Set<CommandLifecycleListener<TPluginData>> = new Set();
   private commandDeletedListeners: Set<CommandRemovedListener<TPluginData>> = new Set();
+  private runningHandlers: Set<Promise<void>> = new Set();
 
   constructor(client: Client, opts: PluginCommandManagerOpts = {}) {
     this.manager = new CommandManager<CommandContext<TPluginData>, CommandExtraData<TPluginData>>({
@@ -109,7 +110,7 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
       return false;
     }
 
-    this.remove(command.id, "deleted");
+    this.remove(command.id, "manual");
     return true;
   }
 
@@ -125,6 +126,26 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
     return () => {
       this.commandDeletedListeners.delete(listener);
     };
+  }
+
+  private addRunningHandler(awaitable: any): void {
+    const promise = Promise.resolve(awaitable).finally(() => {
+      this.runningHandlers.delete(promise);
+    });
+    this.runningHandlers.add(promise);
+  }
+
+  public async waitForRunningHandlers(timeout: number): Promise<void> {
+    const { promise, resolve, reject } = Promise.withResolvers<void>();
+
+    // Basically Promise.race(), but we remove the timeout as soon as the main promise resolves so tests don't hang
+    Promise.all(Array.from(this.runningHandlers))
+      .then(() => resolve())
+      .catch((err) => reject(err));
+    const timeoutId = setTimeout(() => resolve(), timeout);
+    promise.finally(() => clearTimeout(timeoutId));
+
+    return promise;
   }
 
   public async runFromMessage(msg: Message): Promise<void> {
@@ -179,6 +200,7 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
     };
 
     const startTime = performance.now();
+    this.addRunningHandler(handler(meta));
     await handler(meta);
     const commandName =
       typeof matchedCommand.originalTriggers[0] === "string"
@@ -189,13 +211,21 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
 
   private emitCommandAdded(event: CommandLifecycleEvent<TPluginData>): void {
     for (const listener of this.commandAddedListeners) {
-      listener(event);
+      try {
+        this.addRunningHandler(listener(event));
+      } catch (e) {
+        throw e;
+      }
     }
   }
 
   private emitCommandDeleted(event: CommandRemovedEvent<TPluginData>): void {
     for (const listener of this.commandDeletedListeners) {
-      listener(event);
+      try {
+        this.addRunningHandler(listener(event));
+      } catch (e) {
+        throw e;
+      }
     }
   }
 
@@ -214,7 +244,7 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   }
 }
 
-export type CommandRemovalReason = "manual" | "deleted" | "replaced";
+export type CommandRemovalReason = "manual" | "replaced";
 
 export interface CommandLifecycleEvent<TPluginData extends AnyPluginData<any>> {
   command: PluginCommandDefinition;

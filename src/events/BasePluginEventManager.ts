@@ -36,6 +36,7 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
   protected listeners: Map<string, Set<WrappedListener>> = new Map<string, Set<WrappedListener>>();
   protected pluginData: TPluginData | undefined;
   protected runningListeners: Set<Promise<void>> = new Set();
+  protected loaded = true;
 
   constructor(protected eventRelay: EventRelay) {}
 
@@ -66,6 +67,10 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
   }
 
   public async destroy(timeout: number): Promise<void> {
+    if (!this.loaded) {
+      return;
+    }
+    this.loaded = false;
     this.clearAllListeners();
     await this.waitForRunningListeners(timeout);
   }
@@ -81,7 +86,9 @@ export abstract class BasePluginEventManager<TPluginData extends AnyPluginData<a
     const { promise, resolve, reject } = Promise.withResolvers<void>();
 
     // Basically Promise.race(), but we remove the timeout as soon as the main promise resolves so tests don't hang
-    Promise.allSettled(Array.from(this.runningListeners)).then(() => resolve());
+    Promise.all(Array.from(this.runningListeners))
+      .then(() => resolve())
+      .catch((err) => reject(err));
     const timeoutId = setTimeout(() => resolve(), timeout);
     promise.finally(() => clearTimeout(timeoutId));
 

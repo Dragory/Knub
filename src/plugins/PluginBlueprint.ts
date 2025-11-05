@@ -29,7 +29,6 @@ export interface BasePluginBlueprint<TPluginData extends AnyPluginData<any>, TPu
   configSchema: TPluginData["_pluginType"]["configSchema"];
 
   messageCommands?: Array<MessageCommandBlueprint<TPluginData, any>>;
-  deletedMessageCommands?: string[];
 
   slashCommands?: Array<
     SlashCommandBlueprint<TPluginData, AnySlashCommandSignature> | SlashGroupBlueprint<TPluginData>

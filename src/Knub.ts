@@ -582,6 +582,10 @@ export class Knub extends EventEmitter {
             continue;
           }
 
+          if (!pluginData.loaded) {
+            continue;
+          }
+
           await pluginData.messageCommands.runFromMessage(message);
         }
       }
@@ -589,6 +593,10 @@ export class Knub extends EventEmitter {
 
     if (this.globalContextLoaded) {
       for (const { pluginData } of this.globalContext.loadedPlugins.values()) {
+        if (!pluginData.loaded) {
+          continue;
+        }
+
         await pluginData.messageCommands.runFromMessage(message);
       }
     }
@@ -665,12 +673,6 @@ export class Knub extends EventEmitter {
               ...commandBlueprint,
               run: commandBlueprint.run,
             });
-          }
-        }
-
-        if (blueprint.deletedMessageCommands) {
-          for (const trigger of blueprint.deletedMessageCommands) {
-            pluginData.messageCommands.removeByTrigger(trigger);
           }
         }
 
@@ -825,12 +827,6 @@ export class Knub extends EventEmitter {
         }
       }
 
-      if (blueprint.deletedMessageCommands) {
-        for (const trigger of blueprint.deletedMessageCommands) {
-          pluginData.messageCommands.removeByTrigger(trigger);
-        }
-      }
-
       // Add messageCreate event listener for commands
       pluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
         if (hasMessageCommandBeenDispatched(message)) {
@@ -874,6 +870,13 @@ export class Knub extends EventEmitter {
   protected async destroyPluginData(pluginData: GuildPluginData<any> | GlobalPluginData<any>): Promise<void> {
     pluginData.cooldowns.destroy();
     await pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
+    // Wait for any in-flight message command handlers to finish
+    try {
+      await pluginData.messageCommands.waitForRunningHandlers(this.options.pluginUnloadEventTimeoutMs);
+    } catch (err) {
+      // Propagate errors from handlers; caller will handle according to existing error flow
+      throw err;
+    }
     await pluginData.locks.destroy();
   }
 
