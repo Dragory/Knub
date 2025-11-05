@@ -1284,10 +1284,10 @@ describe("PluginBlueprint", () => {
 
           public(pluginData) {
             return {
-              ok() {
+              async ok() {
                 assert.ok(pluginData != null);
-                assert.strictEqual(pluginData.config.get().some_value, "cookies");
-                assert.notStrictEqual(pluginData.config.get().some_value, "milk");
+                assert.strictEqual((await pluginData.config.get()).some_value, "cookies");
+                assert.notStrictEqual((await pluginData.config.get()).some_value, "milk");
 
                 done();
               },

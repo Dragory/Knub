@@ -125,101 +125,111 @@ describe("configUtils", () => {
     };
 
     it("should use defaults with empty match params", async () => {
-      const matchedConfig = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>(
-        null as any,
-        sharedPluginOptions,
-        {},
-      );
+      const matchedConfig = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: sharedPluginOptions,
+        matchParams: {},
+      });
       expect(matchedConfig.value).to.equal(5);
       expect(matchedConfig.hasAccess).to.equal(false);
     });
 
     it("should match levels", async () => {
-      const matchedConfig = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>(
-        null as any,
-        sharedPluginOptions,
-        {
+      const matchedConfig = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: sharedPluginOptions,
+        matchParams: {
           level: 60,
         },
-      );
+      });
       expect(matchedConfig.hasAccess).to.equal(true);
     });
 
     it("should require all level conditions to apply", async () => {
-      const matchedConfig = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>(
-        null as any,
-        sharedPluginOptions,
-        {
+      const matchedConfig = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: sharedPluginOptions,
+        matchParams: {
           level: 35,
         },
-      );
+      });
       expect(matchedConfig.hasAccess).to.equal(false);
     });
 
     it("should match channels and accept any specified channel", async () => {
-      const matchedConfig1 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>(
-        null as any,
-        sharedPluginOptions,
-        {
+      const matchedConfig1 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: sharedPluginOptions,
+        matchParams: {
           channelId: "1100",
         },
-      );
-      const matchedConfig2 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>(
-        null as any,
-        sharedPluginOptions,
-        {
+      });
+      const matchedConfig2 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: sharedPluginOptions,
+        matchParams: {
           channelId: "1200",
         },
-      );
+      });
       expect(matchedConfig1.value).to.equal(10);
       expect(matchedConfig2.value).to.equal(10);
     });
 
     it("should match categories and accept any specified category", async () => {
-      const matchedConfig1 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>(
-        null as any,
-        sharedPluginOptions,
-        {
+      const matchedConfig1 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: sharedPluginOptions,
+        matchParams: {
           categoryId: "9100",
         },
-      );
-      const matchedConfig2 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>(
-        null as any,
-        sharedPluginOptions,
-        {
+      });
+      const matchedConfig2 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: sharedPluginOptions,
+        matchParams: {
           categoryId: "9200",
         },
-      );
+      });
       expect(matchedConfig1.value).to.equal(120);
       expect(matchedConfig2.value).to.equal(120);
     });
 
     it("should match users", async () => {
-      const matchedConfig = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>(
-        null as any,
-        sharedPluginOptions,
-        {
+      const matchedConfig = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: sharedPluginOptions,
+        matchParams: {
           userId: "2100",
         },
-      );
+      });
       expect(matchedConfig.value).to.equal(15);
     });
 
     it("should match roles", async () => {
-      const matchedConfig1 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>(
-        null as any,
-        sharedPluginOptions,
-        {
+      const matchedConfig1 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: sharedPluginOptions,
+        matchParams: {
           memberRoles: ["3100"],
         },
-      );
-      const matchedConfig2 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>(
-        null as any,
-        sharedPluginOptions,
-        {
+      });
+      const matchedConfig2 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: sharedPluginOptions,
+        matchParams: {
           memberRoles: ["3100", "3200"],
         },
-      );
+      });
       expect(matchedConfig1.value).to.equal(5); // has 3100 but no 3200 -> no match
       expect(matchedConfig2.value).to.equal(20); // has 3100 and 3200 -> match
     });
@@ -277,46 +287,50 @@ describe("configUtils", () => {
         worstPlant: (pluginData, matchParams, value) => last(matchParams.extra?.plantsInPreferenceOrder) === value,
       };
 
-      const matchedConfig1 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>(
-        null as any,
-        customPluginOptions,
-        {
+      const matchedConfig1 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>({
+        configSchema: customConfigSchema,
+        pluginData: null as any,
+        pluginOptions: customPluginOptions,
+        matchParams: {
           extra: {
             plantsInPreferenceOrder: ["ficus", "daisy", "rose", "pine"],
           },
         },
         customOverrideCriteriaFunctions,
-      );
-      const matchedConfig2 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>(
-        null as any,
-        customPluginOptions,
-        {
+      });
+      const matchedConfig2 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>({
+        configSchema: customConfigSchema,
+        pluginData: null as any,
+        pluginOptions: customPluginOptions,
+        matchParams: {
           extra: {
             plantsInPreferenceOrder: ["daisy", "ficus", "rose", "pine"],
           },
         },
         customOverrideCriteriaFunctions,
-      );
-      const matchedConfig3 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>(
-        null as any,
-        customPluginOptions,
-        {
+      });
+      const matchedConfig3 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>({
+        configSchema: customConfigSchema,
+        pluginData: null as any,
+        pluginOptions: customPluginOptions,
+        matchParams: {
           extra: {
             plantsInPreferenceOrder: ["pine", "daisy", "rose", "ficus"],
           },
         },
         customOverrideCriteriaFunctions,
-      );
-      const matchedConfig4 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>(
-        null as any,
-        customPluginOptions,
-        {
+      });
+      const matchedConfig4 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>({
+        configSchema: customConfigSchema,
+        pluginData: null as any,
+        pluginOptions: customPluginOptions,
+        matchParams: {
           extra: {
             plantsInPreferenceOrder: ["rose", "daisy", "ficus", "pine"],
           },
         },
         customOverrideCriteriaFunctions,
-      );
+      });
 
       expect(matchedConfig1.value).to.equal(10);
       expect(matchedConfig2.value).to.equal(20);
@@ -361,33 +375,35 @@ describe("configUtils", () => {
         },
       };
 
-      const matchedConfig1 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>(
-        null as any,
-        customPluginOptions,
-        {
+      const matchedConfig1 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>({
+        configSchema: customConfigSchema,
+        pluginData: null as any,
+        pluginOptions: customPluginOptions,
+        matchParams: {
           extra: {
             plantsInPreferenceOrder: ["ficus", "daisy", "rose", "pine"],
           },
         },
         customOverrideCriteriaFunctions,
-      );
-      const matchedConfig2 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>(
-        null as any,
-        customPluginOptions,
-        {
+      });
+      const matchedConfig2 = await getMatchingPluginConfig<CustomPluginType, GuildPluginData<CustomPluginType>>({
+        configSchema: customConfigSchema,
+        pluginData: null as any,
+        pluginOptions: customPluginOptions,
+        matchParams: {
           extra: {
             plantsInPreferenceOrder: ["daisy", "ficus", "rose", "pine"],
           },
         },
         customOverrideCriteriaFunctions,
-      );
+      });
 
       expect(matchedConfig1.value).to.equal(10); // Matched
       expect(matchedConfig2.value).to.equal(5); // No match
     });
 
     it("false when no conditions are present", async () => {
-      const pluginOpts: PluginOptions<BasePluginType> = {
+      const pluginOpts: PluginOptions<SharedPluginType> = {
         config: {
           value: 5,
         },
@@ -400,12 +416,17 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig = await getMatchingPluginConfig(null as any, pluginOpts, {});
+      const matchedConfig = await getMatchingPluginConfig({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {},
+      });
       expect(matchedConfig.value).to.equal(5);
     });
 
     it("false when an empty 'all' condition is present", async () => {
-      const pluginOpts: PluginOptions<BasePluginType> = {
+      const pluginOpts: PluginOptions<SharedPluginType> = {
         config: {
           value: 5,
         },
@@ -420,14 +441,19 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig = await getMatchingPluginConfig(null as any, pluginOpts, {
-        userId: "500",
+      const matchedConfig = await getMatchingPluginConfig({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
+          userId: "500",
+        },
       });
       expect(matchedConfig.value).to.equal(5);
     });
 
     it("false when an empty 'any' condition is present", async () => {
-      const pluginOpts: PluginOptions<BasePluginType> = {
+      const pluginOpts: PluginOptions<SharedPluginType> = {
         config: {
           value: 5,
         },
@@ -442,14 +468,19 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig = await getMatchingPluginConfig(null as any, pluginOpts, {
-        userId: "500",
+      const matchedConfig = await getMatchingPluginConfig({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
+          userId: "500",
+        },
       });
       expect(matchedConfig.value).to.equal(5);
     });
 
     it("errors when an unknown condition is present", async () => {
-      const pluginOpts: PluginOptions<BasePluginType> = {
+      const pluginOpts: PluginOptions<SharedPluginType> = {
         config: {
           value: 5,
         },
@@ -465,23 +496,21 @@ describe("configUtils", () => {
       };
 
       try {
-        await getMatchingPluginConfig(null as any, pluginOpts, {
-          userId: "500",
+        await getMatchingPluginConfig({
+          configSchema: sharedConfigSchema,
+          pluginData: null as any,
+          pluginOptions: pluginOpts,
+          matchParams: {
+            userId: "500",
+          },
         });
         expect.fail("No error was thrown");
       } catch {}
     });
 
     it("'all' special criterion", async () => {
-      const configSchema = z.strictObject({
-        value: z.number().default(5),
-      });
-      interface PluginType extends BasePluginType {
-        configSchema: typeof configSchema;
-      }
-
-      const pluginOpts: PluginOptions<PluginType> = {
-        config: configSchema.parse({}), // Defaults
+      const pluginOpts: PluginOptions<SharedPluginType> = {
+        config: {},
         overrides: [
           {
             user: "1000",
@@ -500,30 +529,33 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig1 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts,
-        {
+      const matchedConfig1 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
           userId: "1000",
           level: 75,
         },
-      );
-      const matchedConfig2 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts,
-        {
+      });
+      const matchedConfig2 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
           userId: "1000",
           level: 120,
         },
-      );
-      const matchedConfig3 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts,
-        {
+      });
+      const matchedConfig3 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
           userId: "1000",
           level: 25,
         },
-      );
+      });
 
       expect(matchedConfig1.value).to.equal(10);
       expect(matchedConfig2.value).to.equal(5);
@@ -531,15 +563,8 @@ describe("configUtils", () => {
     });
 
     it("'any' special criterion", async () => {
-      const configSchema = z.strictObject({
-        value: z.number().default(5),
-      });
-      interface PluginType extends BasePluginType {
-        configSchema: typeof configSchema;
-      }
-
-      const pluginOpts: PluginOptions<PluginType> = {
-        config: configSchema.parse({}), // Defaults
+      const pluginOpts: PluginOptions<SharedPluginType> = {
+        config: {},
         overrides: [
           {
             any: [
@@ -557,27 +582,30 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig1 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts,
-        {
+      const matchedConfig1 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
           level: 15,
         },
-      );
-      const matchedConfig2 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts,
-        {
+      });
+      const matchedConfig2 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
           level: 95,
         },
-      );
-      const matchedConfig3 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts,
-        {
+      });
+      const matchedConfig3 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
           level: 50,
         },
-      );
+      });
 
       expect(matchedConfig1.value).to.equal(10);
       expect(matchedConfig2.value).to.equal(10);
@@ -585,15 +613,8 @@ describe("configUtils", () => {
     });
 
     it("'not' special criterion", async () => {
-      const configSchema = z.strictObject({
-        value: z.number().default(5),
-      });
-      interface PluginType extends BasePluginType {
-        configSchema: typeof configSchema;
-      }
-
-      const pluginOpts1: PluginOptions<PluginType> = {
-        config: configSchema.parse({}), // Defaults
+      const pluginOpts1: PluginOptions<SharedPluginType> = {
+        config: {},
         overrides: [
           // Matches as long as the user isn't 1234
           {
@@ -607,8 +628,8 @@ describe("configUtils", () => {
         ],
       };
 
-      const pluginOpts2: PluginOptions<PluginType> = {
-        config: configSchema.parse({}), // Defaults
+      const pluginOpts2: PluginOptions<SharedPluginType> = {
+        config: {},
         overrides: [
           // Matches if your level is greater than or equal to 50, as long as the user isn't 1234
           {
@@ -629,7 +650,7 @@ describe("configUtils", () => {
         ],
       };
 
-      const pluginOpts3: PluginOptions<PluginType> = {
+      const pluginOpts3: PluginOptions<SharedPluginType> = {
         config: {
           value: 5,
         },
@@ -646,65 +667,72 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig1 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts1,
-        {
+      const matchedConfig1 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts1,
+        matchParams: {
           userId: "1234",
         },
-      );
-      const matchedConfig2 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts1,
-        {
+      });
+      const matchedConfig2 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts1,
+        matchParams: {
           userId: "5678",
         },
-      );
+      });
 
       expect(matchedConfig1.value).to.equal(5);
       expect(matchedConfig2.value).to.equal(10);
 
-      const matchedConfig3 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts2,
-        {
+      const matchedConfig3 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts2,
+        matchParams: {
           level: 95,
           userId: "1234",
         },
-      );
-      const matchedConfig4 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts2,
-        {
+      });
+      const matchedConfig4 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts2,
+        matchParams: {
           level: 95,
           userId: "5678",
         },
-      );
+      });
 
       expect(matchedConfig3.value).to.equal(5);
       expect(matchedConfig4.value).to.equal(20);
 
-      const matchedConfig5 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts3,
-        {
+      const matchedConfig5 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts3,
+        matchParams: {
           level: 49,
         },
-      );
-      const matchedConfig6 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts3,
-        {
+      });
+      const matchedConfig6 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts3,
+        matchParams: {
           level: 50,
         },
-      );
-      const matchedConfig7 = await getMatchingPluginConfig<PluginType, GuildPluginData<PluginType>>(
-        null as any,
-        pluginOpts3,
-        {
+      });
+      const matchedConfig7 = await getMatchingPluginConfig<SharedPluginType, GuildPluginData<SharedPluginType>>({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts3,
+        matchParams: {
           level: 51,
         },
-      );
+      });
 
       expect(matchedConfig5.value).to.equal(5);
       expect(matchedConfig6.value).to.equal(30);
@@ -726,7 +754,12 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig = await getMatchingPluginConfig(null as any, pluginOpts, { level: 0 });
+      const matchedConfig = await getMatchingPluginConfig({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: { level: 0 },
+      });
       expect(matchedConfig.value).to.equal(20);
     });
 
@@ -767,41 +800,71 @@ describe("configUtils", () => {
         ],
       };
 
-      const matchedConfig1 = await getMatchingPluginConfig(null as any, pluginOpts, {});
+      const matchedConfig1 = await getMatchingPluginConfig({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {},
+      });
       expect(matchedConfig1.value).to.equal(5);
 
       // Excluded role "789" included, fail
-      const matchedConfig2 = await getMatchingPluginConfig(null as any, pluginOpts, {
-        channelId: "123",
-        memberRoles: ["456", "789"],
+      const matchedConfig2 = await getMatchingPluginConfig({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
+          channelId: "123",
+          memberRoles: ["456", "789"],
+        },
       });
       expect(matchedConfig2.value).to.equal(5);
 
       // Excluded role "789" not included, pass
-      const matchedConfig3 = await getMatchingPluginConfig(null as any, pluginOpts, {
-        channelId: "123",
-        memberRoles: ["456"],
+      const matchedConfig3 = await getMatchingPluginConfig({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
+          channelId: "123",
+          memberRoles: ["456"],
+        },
       });
       expect(matchedConfig3.value).to.equal(20);
 
       // Required role "456" not included, fail
-      const matchedConfig4 = await getMatchingPluginConfig(null as any, pluginOpts, {
-        channelId: "123",
-        memberRoles: [],
+      const matchedConfig4 = await getMatchingPluginConfig({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
+          channelId: "123",
+          memberRoles: [],
+        },
       });
       expect(matchedConfig4.value).to.equal(5);
 
       // Alternative condition, pass
-      const matchedConfig5 = await getMatchingPluginConfig(null as any, pluginOpts, {
-        channelId: "111",
-        memberRoles: ["222"],
+      const matchedConfig5 = await getMatchingPluginConfig({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
+          channelId: "111",
+          memberRoles: ["222"],
+        },
       });
       expect(matchedConfig5.value).to.equal(20);
 
       // Alternative condition with excluded role of first condition, pass
-      const matchedConfig6 = await getMatchingPluginConfig(null as any, pluginOpts, {
-        channelId: "111",
-        memberRoles: ["222", "789"],
+      const matchedConfig6 = await getMatchingPluginConfig({
+        configSchema: sharedConfigSchema,
+        pluginData: null as any,
+        pluginOptions: pluginOpts,
+        matchParams: {
+          channelId: "111",
+          memberRoles: ["222", "789"],
+        },
       });
       expect(matchedConfig6.value).to.equal(20);
     });
