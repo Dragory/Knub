@@ -35,7 +35,7 @@
     "discord.js": "^14.19.3",
     "knub-command-manager": "^9.1.0",
     "ts-essentials": "^10.0.4",
-    "zod": "^3.25.17"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
