@@ -14,12 +14,12 @@ import type { BasePluginType } from "../plugins/pluginTypes.ts";
 import { getMemberLevel, getMemberRoles } from "../plugins/pluginUtils.ts";
 import { ConfigValidationError } from "./ConfigValidationError.ts";
 import {
-  type ConfigParserFn,
   type CustomOverrideCriteriaFunctions,
   type PermissionLevels,
   type PluginOptions,
   type PluginOverride,
   pluginBaseOptionsSchema,
+  pluginOverrideCriteriaSchema,
 } from "./configTypes.ts";
 import { type MatchParams, getMatchingPluginConfig, mergeConfig } from "./configUtils.ts";
 
@@ -49,7 +49,7 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
   private pluginData?: TPluginData;
 
   private initialized = false;
-  private parsedOptions: PluginOptions<TPluginData["_pluginType"]> | null = null;
+  private pluginOptions: PluginOptions<TPluginData["_pluginType"]> | null = null;
 
   constructor(userInput: unknown, opts: PluginConfigManagerOpts<TPluginData>) {
     this.userInput = userInput;
@@ -71,46 +71,57 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
     }
 
     const baseParsedUserInput = userInputBaseParseResult.data;
-    const parsedValidConfig = await this.configSchema.parseAsync(baseParsedUserInput.config ?? {});
 
-    const parsedUserInputOverrides = baseParsedUserInput.overrides as
+    // Validate config
+    const unparsedUserConfig = (baseParsedUserInput.config ?? {}) as z.input<
+      TPluginData["_pluginType"]["configSchema"]
+    >;
+    const userConfigParseResult = await this.configSchema.safeParseAsync(unparsedUserConfig);
+    if (!userConfigParseResult.success) {
+      throw new ConfigValidationError(userConfigParseResult.error.message);
+    }
+
+    // Validate overrides
+    const baseParsedUserOverrides = baseParsedUserInput.overrides as
       | Array<PluginOverride<TPluginData["_pluginType"]>>
       | undefined;
-    const overrides: Array<PluginOverride<TPluginData["_pluginType"]>> = baseParsedUserInput.replaceDefaultOverrides
-      ? (parsedUserInputOverrides ?? [])
-      : this.defaultOverrides.concat(parsedUserInputOverrides ?? []);
-    const parsedValidOverrides: Array<PluginOverride<TPluginData["_pluginType"]>> = [];
-    for (const override of overrides) {
+    const combinedOverrides: Array<PluginOverride<TPluginData["_pluginType"]>> =
+      baseParsedUserInput.replaceDefaultOverrides
+        ? (baseParsedUserOverrides ?? [])
+        : this.defaultOverrides.concat(baseParsedUserOverrides ?? []);
+    for (const override of combinedOverrides) {
       if (!("config" in override)) {
         throw new ConfigValidationError("Overrides must include the config property");
       }
-      if (!parsedValidConfig) {
-        // FIXME: Debug
-        console.debug(
-          "!! DEBUG !! PluginConfigManager.init config missing",
-          this.pluginData && isGuildPluginData(this.pluginData) ? this.pluginData.guild.id : "(global)",
-        );
+
+      const { config: overrideConfig, ...overrideCriteria } = override;
+      const overrideCriteriaParseResult = pluginOverrideCriteriaSchema.safeParse(overrideCriteria);
+      if (!overrideCriteriaParseResult.success) {
+        throw new ConfigValidationError(`Invalid override criteria: ${overrideCriteriaParseResult.error.message}`);
       }
-      const overrideConfig = mergeConfig(baseParsedUserInput.config ?? {}, override.config ?? {});
+
+      const mergedOverrideConfig = mergeConfig(baseParsedUserInput.config ?? {}, override.config ?? {});
       // Validate the override config as if it was already merged with the base config
       // In reality, overrides are merged with the base config when they are evaluated
-      await this.configSchema.parseAsync(overrideConfig);
-      parsedValidOverrides.push(override);
+      const overrideConfigParseResult = await this.configSchema.safeParseAsync(mergedOverrideConfig);
+      if (!overrideConfigParseResult.success) {
+        throw new ConfigValidationError(`Invalid override config: ${overrideConfigParseResult.error.message}`);
+      }
     }
 
-    this.parsedOptions = {
-      config: parsedValidConfig,
-      overrides: parsedValidOverrides,
+    this.pluginOptions = {
+      config: unparsedUserConfig,
+      overrides: combinedOverrides,
     };
     this.initialized = true;
   }
 
-  protected getParsedOptions(): PluginOptions<TPluginData["_pluginType"]> {
+  protected getPluginOptions(): PluginOptions<TPluginData["_pluginType"]> {
     if (!this.initialized) {
       throw new Error("Not initialized");
     }
 
-    return this.parsedOptions!;
+    return this.pluginOptions!;
   }
 
   protected getMemberLevel(member: GuildMember | APIInteractionGuildMember): number | null {
@@ -129,8 +140,8 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
     this.pluginData = pluginData;
   }
 
-  public get(): z.output<TPluginData["_pluginType"]["configSchema"]> {
-    return this.getParsedOptions().config;
+  public async get(): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
+    return this.configSchema.parseAsync(this.getPluginOptions().config);
   }
 
   public getMatchingConfig(
@@ -229,12 +240,13 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
       memberRoles,
     };
 
-    return getMatchingPluginConfig<TPluginData["_pluginType"], TPluginData>(
-      this.pluginData!,
-      this.getParsedOptions(),
-      finalMatchParams,
-      this.customOverrideCriteriaFunctions,
-    );
+    return getMatchingPluginConfig<TPluginData["_pluginType"], TPluginData>({
+      configSchema: this.configSchema,
+      pluginData: this.pluginData!,
+      pluginOptions: this.getPluginOptions(),
+      matchParams: finalMatchParams,
+      customOverrideCriteriaFunctions: this.customOverrideCriteriaFunctions,
+    });
   }
 
   public getForMessage(msg: Message): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {

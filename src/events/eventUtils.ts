@@ -55,6 +55,7 @@ export const eventToGuild: EventToGuild = {
   guildSoundboardSoundCreate: ({ soundboardSound }) => soundboardSound.guild,
   guildSoundboardSoundDelete: ({ soundboardSound }) => soundboardSound.guild,
   guildSoundboardSoundUpdate: ({ newSoundboardSound }) => newSoundboardSound.guild,
+  guildSoundboardSoundsUpdate: ({ guild }) => guild,
   roleCreate: ({ role }) => role.guild,
   roleDelete: ({ role }) => role.guild,
   roleUpdate: ({ newRole }) => newRole.guild,

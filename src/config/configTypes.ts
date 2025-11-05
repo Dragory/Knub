@@ -22,9 +22,9 @@ export const baseConfigSchema = z.strictObject({
 export type BaseConfig = z.TypeOf<typeof baseConfigSchema>;
 
 export interface PluginOptions<TPluginType extends BasePluginType> {
-  config?: z.input<TPluginType["configSchema"]>;
+  config: z.input<TPluginType["configSchema"]>;
   replaceDefaultOverrides?: boolean;
-  overrides?: Array<PluginOverride<TPluginType>>;
+  overrides: Array<PluginOverride<TPluginType>>;
 }
 
 export interface PluginOverride<TPluginType extends BasePluginType> extends PluginOverrideCriteria {

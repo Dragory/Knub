@@ -1,6 +1,7 @@
 import type z from "zod/v4";
 import { AnyPluginData, type BasePluginData } from "../plugins/PluginData.ts";
 import type { BasePluginType } from "../plugins/pluginTypes.ts";
+import { AnyLoadedPlugin } from "../types.ts";
 import { typedKeys } from "../utils.ts";
 import type { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "./configTypes.ts";
 
@@ -68,13 +69,20 @@ export async function getMatchingPluginConfig<
   TPluginData extends BasePluginData<TPluginType> = BasePluginData<TPluginType>,
   // Inferred type, should not be overridden
   TPluginOptions extends PluginOptions<TPluginData["_pluginType"]> = PluginOptions<TPluginData["_pluginType"]>,
->(
-  pluginData: TPluginData,
-  pluginOptions: TPluginOptions,
-  matchParams: MatchParams<TPluginData["_pluginType"]["customOverrideMatchParams"]>,
-  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>,
-): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
-  let result: z.output<TPluginData["_pluginType"]["configSchema"]> = mergeConfig(pluginOptions.config || {});
+>({
+  configSchema,
+  pluginData,
+  pluginOptions,
+  matchParams,
+  customOverrideCriteriaFunctions,
+}: {
+  configSchema: TPluginData["_pluginType"]["configSchema"];
+  pluginData: TPluginData;
+  pluginOptions: TPluginOptions;
+  matchParams: MatchParams<TPluginData["_pluginType"]["customOverrideMatchParams"]>;
+  customOverrideCriteriaFunctions?: CustomOverrideCriteriaFunctions<TPluginData>;
+}): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
+  let unparsedResult = mergeConfig(pluginOptions.config || {});
 
   const overrides = pluginOptions.overrides || [];
   for (const override of overrides) {
@@ -86,11 +94,11 @@ export async function getMatchingPluginConfig<
     );
 
     if (matches) {
-      result = mergeConfig(result, override.config || {});
+      unparsedResult = mergeConfig(unparsedResult, override.config || {});
     }
   }
 
-  return result;
+  return configSchema.parseAsync(unparsedResult);
 }
 
 /**

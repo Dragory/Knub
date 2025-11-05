@@ -49,6 +49,10 @@ export interface LoadedGlobalPlugin<TPluginType extends BasePluginType> {
   pluginData: GlobalPluginData<TPluginType>;
 }
 
+export type AnyLoadedPlugin<TPluginType extends BasePluginType> =
+  | LoadedGuildPlugin<TPluginType>
+  | LoadedGlobalPlugin<TPluginType>;
+
 interface BaseContext {
   config: BaseConfig;
   locks: LockManager;
