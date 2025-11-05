@@ -33,6 +33,7 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   private commandAddedListeners: Set<CommandLifecycleListener<TPluginData>> = new Set();
   private commandDeletedListeners: Set<CommandRemovedListener<TPluginData>> = new Set();
   private runningHandlers: Set<Promise<void>> = new Set();
+  private loaded = true;
 
   constructor(client: Client, opts: PluginCommandManagerOpts = {}) {
     this.manager = new CommandManager<CommandContext<TPluginData>, CommandExtraData<TPluginData>>({
@@ -115,6 +116,9 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   }
 
   public onCommandAdded(listener: CommandLifecycleListener<TPluginData>): () => void {
+    if (!this.loaded) {
+      return () => {};
+    }
     this.commandAddedListeners.add(listener);
     return () => {
       this.commandAddedListeners.delete(listener);
@@ -122,10 +126,24 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
   }
 
   public onCommandDeleted(listener: CommandRemovedListener<TPluginData>): () => void {
+    if (!this.loaded) {
+      return () => {};
+    }
     this.commandDeletedListeners.add(listener);
     return () => {
       this.commandDeletedListeners.delete(listener);
     };
+  }
+
+  public clearAllLifecycleListeners(): void {
+    this.commandAddedListeners.clear();
+    this.commandDeletedListeners.clear();
+  }
+
+  public async destroy(timeout: number): Promise<void> {
+    this.loaded = false;
+    this.clearAllLifecycleListeners();
+    await this.waitForRunningHandlers(timeout);
   }
 
   private addRunningHandler(awaitable: any): void {

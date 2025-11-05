@@ -517,7 +517,7 @@ export class Knub extends EventEmitter {
       for (const [pluginName, loadedPlugin] of pluginsToUnload) {
         loadedPlugin.pluginData.loaded = false;
         await loadedPlugin.pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
-        await loadedPlugin.pluginData.messageCommands.waitForRunningHandlers(this.options.pluginUnloadEventTimeoutMs);
+        await loadedPlugin.pluginData.messageCommands.destroy(this.options.pluginUnloadEventTimeoutMs);
       }
 
       // 3. Finish plugin cleanup
@@ -770,7 +770,7 @@ export class Knub extends EventEmitter {
     for (const [pluginName, loadedPlugin] of pluginsToUnload) {
       loadedPlugin.pluginData.loaded = false;
       await loadedPlugin.pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
-      await loadedPlugin.pluginData.messageCommands.waitForRunningHandlers(this.options.pluginUnloadEventTimeoutMs);
+      await loadedPlugin.pluginData.messageCommands.destroy(this.options.pluginUnloadEventTimeoutMs);
     }
 
     // 3. Finish plugin cleanup
