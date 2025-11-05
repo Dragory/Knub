@@ -1,4 +1,4 @@
-import type { ZodType } from "zod/v4";
+import type { ZodType } from "zod";
 
 export interface BasePluginType {
   configSchema: ZodType;

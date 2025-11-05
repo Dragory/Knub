@@ -20,6 +20,16 @@ export type MessageCommandSignatureOrArray<TPluginData extends AnyPluginData<any
   | MessageCommandSignature<CommandContext<TPluginData>>
   | Array<MessageCommandSignature<CommandContext<TPluginData>>>;
 
+const manuallyDispatchedMessages = new WeakSet<Message>();
+
+export function markMessageCommandDispatched(message: Message): void {
+  manuallyDispatchedMessages.add(message);
+}
+
+export function hasMessageCommandBeenDispatched(message: Message): boolean {
+  return manuallyDispatchedMessages.has(message);
+}
+
 export function getDefaultMessageCommandPrefix(client: Client): RegExp {
   return new RegExp(`<@!?${client.user!.id}> `);
 }

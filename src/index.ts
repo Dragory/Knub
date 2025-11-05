@@ -52,7 +52,14 @@ export { helpers };
 export { PluginError } from "./plugins/PluginError.ts";
 
 export { PluginConfigManager, ExtendedMatchParams } from "./config/PluginConfigManager.ts";
-export { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager.ts";
+export {
+  PluginMessageCommandManager,
+  type CommandLifecycleEvent,
+  type CommandLifecycleListener,
+  type CommandRemovalReason,
+  type CommandRemovedEvent,
+  type CommandRemovedListener,
+} from "./commands/messageCommands/PluginMessageCommandManager.ts";
 export { GuildPluginEventManager } from "./events/GuildPluginEventManager.ts";
 export { GlobalPluginEventManager } from "./events/GlobalPluginEventManager.ts";
 export { LockManager, Lock } from "./locks/LockManager.ts";

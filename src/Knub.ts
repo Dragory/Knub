@@ -4,6 +4,7 @@ import {
   GatewayDispatchEvents,
   type GatewayGuildCreateDispatchData,
   type Guild,
+  type Message,
   type Snowflake,
 } from "discord.js";
 import { ConcurrentRunner } from "./ConcurrentRunner.ts";
@@ -11,6 +12,10 @@ import { Profiler } from "./Profiler.ts";
 import { Queue } from "./Queue.ts";
 import { PluginContextMenuCommandManager } from "./commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
 import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager.ts";
+import {
+  hasMessageCommandBeenDispatched,
+  markMessageCommandDispatched,
+} from "./commands/messageCommands/messageCommandUtils.ts";
 import {
   type AnyApplicationCommandBlueprint,
   registerApplicationCommands,
@@ -512,6 +517,7 @@ export class Knub extends EventEmitter {
       for (const [pluginName, loadedPlugin] of pluginsToUnload) {
         loadedPlugin.pluginData.loaded = false;
         await loadedPlugin.pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
+        await loadedPlugin.pluginData.messageCommands.destroy(this.options.pluginUnloadEventTimeoutMs);
       }
 
       // 3. Finish plugin cleanup
@@ -524,7 +530,7 @@ export class Knub extends EventEmitter {
       this.loadedGuilds.delete(ctx.guildId);
       this.emit("guildUnloaded", ctx.guildId);
 
-      // 4. Run each plugin's afterUnload() function
+      // 5. Run each plugin's afterUnload() function
       for (const [_, loadedPlugin] of pluginsToUnload) {
         loadedPlugin.pluginData.hasPlugin = notCallable("hasPlugin is no longer available");
         loadedPlugin.pluginData.getPlugin = notCallable("getPlugin is no longer available");
@@ -566,6 +572,41 @@ export class Knub extends EventEmitter {
 
   public getLoadedGuilds(): GuildContext[] {
     return Array.from(this.loadedGuilds.values());
+  }
+
+  public async dispatchMessageCommands(message: Message): Promise<void> {
+    if (hasMessageCommandBeenDispatched(message)) {
+      return;
+    }
+
+    markMessageCommandDispatched(message);
+
+    if (message.guildId) {
+      const guildContext = this.loadedGuilds.get(message.guildId);
+      if (guildContext) {
+        for (const { pluginData, onlyLoadedAsDependency } of guildContext.loadedPlugins.values()) {
+          if (onlyLoadedAsDependency) {
+            continue;
+          }
+
+          if (!pluginData.loaded) {
+            continue;
+          }
+
+          await pluginData.messageCommands.runFromMessage(message);
+        }
+      }
+    }
+
+    if (this.globalContextLoaded) {
+      for (const { pluginData } of this.globalContext.loadedPlugins.values()) {
+        if (!pluginData.loaded) {
+          continue;
+        }
+
+        await pluginData.messageCommands.runFromMessage(message);
+      }
+    }
   }
 
   protected async loadGuildConfig(ctx: GuildContext): Promise<void> {
@@ -644,6 +685,10 @@ export class Knub extends EventEmitter {
 
         // Initialize messageCreate event listener for message commands
         pluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
+          if (hasMessageCommandBeenDispatched(message)) {
+            return;
+          }
+
           return _pluginData.messageCommands.runFromMessage(message);
         });
 
@@ -725,6 +770,7 @@ export class Knub extends EventEmitter {
     for (const [pluginName, loadedPlugin] of pluginsToUnload) {
       loadedPlugin.pluginData.loaded = false;
       await loadedPlugin.pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
+      await loadedPlugin.pluginData.messageCommands.destroy(this.options.pluginUnloadEventTimeoutMs);
     }
 
     // 3. Finish plugin cleanup
@@ -797,6 +843,10 @@ export class Knub extends EventEmitter {
 
       // Add messageCreate event listener for commands
       pluginData.events.on("messageCreate", ({ args: { message }, pluginData: _pluginData }) => {
+        if (hasMessageCommandBeenDispatched(message)) {
+          return;
+        }
+
         return _pluginData.messageCommands.runFromMessage(message);
       });
 
@@ -833,7 +883,6 @@ export class Knub extends EventEmitter {
    */
   protected async destroyPluginData(pluginData: GuildPluginData<any> | GlobalPluginData<any>): Promise<void> {
     pluginData.cooldowns.destroy();
-    await pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
     await pluginData.locks.destroy();
   }
 

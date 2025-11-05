@@ -8,9 +8,10 @@ Many functions, such as `beforeLoad()`, `afterLoad()`, command `run()`, event li
 receive an object called `pluginData` as one of their arguments.
 
 This object is the "heart" of a plugin. It contains:
-* The plugin's config (`pluginData.config`)
-* Helpers (`pluginData.locks`, `pluginData.cooldowns`)
-* Access plugin dependencies (`pluginData.getPlugin()`)
+* Configuration helpers (`pluginData.config`)
+* Command managers (`pluginData.messageCommands`, `pluginData.slashCommands`, `pluginData.contextMenuCommands`)
+* Utility helpers (`pluginData.locks`, `pluginData.cooldowns`)
+* Access to dependencies (`pluginData.getPlugin()` / `pluginData.getGlobalPlugin()`)
 * Any custom internal state (`pluginData.state`)
 
 If a function your plugin uses requires access to e.g. the plugin's config, you can pass this object to it.
@@ -38,6 +39,28 @@ Returns the plugin's config without any overrides applied
 ### `pluginData.config.getMatchingConfig(matchParams): Promise<config>`
 (Async) Returns the plugin's config with overrides applied based on the supplied match parameters.
 See the type of matchParams for more details on what data can be passed.
+
+## Message command manager
+
+`pluginData.messageCommands` exposes a `PluginMessageCommandManager` instance that you rarely need to construct
+yourself. Besides registering blueprints (handled automatically during plugin load), the manager exposes hooks that are
+useful for analytics or migrations:
+
+### `pluginData.messageCommands.onCommandAdded(listener)`
+Subscribes to command registration events. The callback receives the command definition, the original blueprint, and
+`pluginData`. The function returns an unsubscribe handler.
+
+### `pluginData.messageCommands.onCommandDeleted(listener)`
+Subscribes to command removal events. The callback additionally includes a `reason` field describing why the command was
+removed (`"manual"`, `"deleted"`, or `"replaced"`).
+
+### `pluginData.messageCommands.removeByTrigger(trigger)`
+Removes the first command matching the provided trigger string and returns a boolean indicating whether anything was
+removed. This is what Knub uses under the hood for `deletedMessageCommands`.
+
+You can still call `pluginData.messageCommands.runFromMessage(message)` manually, but in most cases you should prefer the
+global [`knub.dispatchMessageCommands`](../plugins/message-commands.md#manual-command-dispatch) helper to make sure all
+plugins – guild and global – receive the message consistently.
 
 ## Custom state
 

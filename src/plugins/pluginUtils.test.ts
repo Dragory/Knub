@@ -1,5 +1,5 @@
 import { describe, it } from "mocha";
-import { z } from "zod/v4";
+import { z } from "zod";
 import type { GuildPluginBlueprint } from "./PluginBlueprint.ts";
 import type { PluginPublicInterface } from "./pluginUtils.ts";
 

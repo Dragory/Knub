@@ -1,4 +1,4 @@
-import type z from "zod/v4";
+import type z from "zod";
 import { AnyPluginData, type BasePluginData } from "../plugins/PluginData.ts";
 import type { BasePluginType } from "../plugins/pluginTypes.ts";
 import { AnyLoadedPlugin } from "../types.ts";
