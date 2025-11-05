@@ -19,6 +19,7 @@ import {
   type PluginOptions,
   type PluginOverride,
   pluginBaseOptionsSchema,
+  pluginOverrideCriteriaSchema,
 } from "./configTypes.ts";
 import { type MatchParams, getMatchingPluginConfig, mergeConfig } from "./configUtils.ts";
 
@@ -75,7 +76,10 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
     const unparsedUserConfig = (baseParsedUserInput.config ?? {}) as z.input<
       TPluginData["_pluginType"]["configSchema"]
     >;
-    await this.configSchema.parseAsync(unparsedUserConfig);
+    const userConfigParseResult = await this.configSchema.safeParseAsync(unparsedUserConfig);
+    if (!userConfigParseResult.success) {
+      throw new ConfigValidationError(userConfigParseResult.error.message);
+    }
 
     // Validate overrides
     const baseParsedUserOverrides = baseParsedUserInput.overrides as
@@ -89,10 +93,20 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
       if (!("config" in override)) {
         throw new ConfigValidationError("Overrides must include the config property");
       }
-      const overrideConfig = mergeConfig(baseParsedUserInput.config ?? {}, override.config ?? {});
+
+      const { config: overrideConfig, ...overrideCriteria } = override;
+      const overrideCriteriaParseResult = pluginOverrideCriteriaSchema.safeParse(overrideCriteria);
+      if (!overrideCriteriaParseResult.success) {
+        throw new ConfigValidationError(`Invalid override criteria: ${overrideCriteriaParseResult.error.message}`);
+      }
+
+      const mergedOverrideConfig = mergeConfig(baseParsedUserInput.config ?? {}, override.config ?? {});
       // Validate the override config as if it was already merged with the base config
       // In reality, overrides are merged with the base config when they are evaluated
-      await this.configSchema.parseAsync(overrideConfig);
+      const overrideConfigParseResult = await this.configSchema.safeParseAsync(mergedOverrideConfig);
+      if (!overrideConfigParseResult.success) {
+        throw new ConfigValidationError(`Invalid override config: ${overrideConfigParseResult.error.message}`);
+      }
     }
 
     this.pluginOptions = {
