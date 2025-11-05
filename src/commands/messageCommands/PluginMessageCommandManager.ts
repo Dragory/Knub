@@ -220,8 +220,11 @@ export class PluginMessageCommandManager<TPluginData extends AnyPluginData<any>>
     };
 
     const startTime = performance.now();
-    this.addRunningHandler(handler(meta));
-    await handler(meta);
+
+    const handlerResult = handler(meta);
+    this.addRunningHandler(handlerResult);
+    await handlerResult;
+
     const commandName =
       typeof matchedCommand.originalTriggers[0] === "string"
         ? matchedCommand.originalTriggers[0]
