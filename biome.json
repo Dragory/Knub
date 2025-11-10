@@ -1,5 +1,4 @@
 {
-  "organizeImports": { "enabled": true },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -17,6 +16,13 @@
       },
       "suspicious": {
         "noExplicitAny": "off"
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
       }
     }
   }
