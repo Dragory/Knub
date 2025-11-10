@@ -48,8 +48,10 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
 
   private pluginData?: TPluginData;
 
-  private initialized = false;
+  private baseConfig: z.output<TPluginData["_pluginType"]["configSchema"]> | null = null;
   private pluginOptions: PluginOptions<TPluginData["_pluginType"]> | null = null;
+
+  private initialized = false;
 
   constructor(userInput: unknown, opts: PluginConfigManagerOpts<TPluginData>) {
     this.userInput = userInput;
@@ -109,10 +111,12 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
       }
     }
 
+    this.baseConfig = userConfigParseResult.data;
     this.pluginOptions = {
       config: unparsedUserConfig,
       overrides: combinedOverrides,
     };
+
     this.initialized = true;
   }
 
@@ -140,8 +144,15 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
     this.pluginData = pluginData;
   }
 
-  public async get(): Promise<z.output<TPluginData["_pluginType"]["configSchema"]>> {
-    return this.configSchema.parseAsync(this.getPluginOptions().config);
+  /**
+   * Get the base config (without overrides)
+   */
+  public get(): z.output<TPluginData["_pluginType"]["configSchema"]> {
+    if (!this.initialized) {
+      throw new Error("Not initialized");
+    }
+
+    return this.baseConfig!;
   }
 
   public getMatchingConfig(

@@ -46,9 +46,9 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).can_do).to.equal(true);
-    expect((await configManager.get()).nested.one).to.equal(10);
-    expect((await configManager.get()).nested.two).to.equal(30);
+    expect(configManager.get().can_do).to.equal(true);
+    expect(configManager.get().nested.one).to.equal(10);
+    expect(configManager.get().nested.two).to.equal(30);
   });
 
   it("merge user overrides with default overrides", async () => {
@@ -91,7 +91,7 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).can_do).to.equal(false);
+    expect(configManager.get().can_do).to.equal(false);
     expect((await configManager.getMatchingConfig({ level: 20 })).can_do).to.equal(true);
     expect((await configManager.getMatchingConfig({ level: 40 })).can_do).to.equal(false);
     expect((await configManager.getMatchingConfig({ level: 50 })).can_do).to.equal(false);
@@ -132,7 +132,7 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).can_do).to.equal(false);
+    expect(configManager.get().can_do).to.equal(false);
     expect((await configManager.getMatchingConfig({ level: 50 })).can_do).to.equal(false);
     expect((await configManager.getMatchingConfig({ level: 100 })).can_do).to.equal(true);
   });
@@ -195,7 +195,7 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).something).to.equal(7);
+    expect(configManager.get().something).to.equal(7);
   });
 
   it("getMatchingConfig(): user", async () => {
@@ -231,7 +231,7 @@ describe("PluginConfigManager", () => {
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
     await configManager.init();
 
-    expect((await configManager.get()).works).to.equal(false);
+    expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ userId: user.id })).works).to.equal(true);
     expect((await configManager.getMatchingConfig({ member })).works).to.equal(true);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
@@ -268,7 +268,7 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).works).to.equal(false);
+    expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ channelId: channel.id })).works).to.equal(true);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
@@ -305,7 +305,7 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).works).to.equal(false);
+    expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
 
@@ -341,7 +341,7 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).works).to.equal(false);
+    expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ categoryId })).works).to.equal(true);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
@@ -379,7 +379,7 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).works).to.equal(false);
+    expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
 
@@ -415,7 +415,7 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).works).to.equal(false);
+    expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
 
@@ -451,7 +451,7 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).works).to.equal(false);
+    expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
   });
 
@@ -489,7 +489,7 @@ describe("PluginConfigManager", () => {
     configManager.setPluginData({ context: "guild", guild } as GuildPluginData<any>);
     await configManager.init();
 
-    expect((await configManager.get()).works).to.equal(false);
+    expect(configManager.get().works).to.equal(false);
     expect((await configManager.getMatchingConfig({ memberRoles: [role.id] })).works).to.equal(true);
     expect((await configManager.getMatchingConfig({ member })).works).to.equal(true);
     expect((await configManager.getMatchingConfig({ message })).works).to.equal(true);
@@ -528,7 +528,7 @@ describe("PluginConfigManager", () => {
     );
     await configManager.init();
 
-    expect((await configManager.get()).transformed).to.equal(20);
+    expect(configManager.get().transformed).to.equal(20);
   });
 
   it("reject invalid override criteria", async () => {

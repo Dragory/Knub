@@ -112,7 +112,7 @@ export function requirePermission(permission: string): EventFilter {
       ? await pluginData.config.getForMember(member)
       : user
         ? await pluginData.config.getForUser(user)
-        : await pluginData.config.get();
+        : pluginData.config.get();
 
     return hasPermission(config, permission);
   };
