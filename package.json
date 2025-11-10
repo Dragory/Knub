@@ -31,8 +31,7 @@
     }
   },
   "dependencies": {
-    "discord-api-types": "^0.38.8",
-    "discord.js": "^14.19.3",
+    "discord.js": "=14.23.2",
     "knub-command-manager": "^9.1.0",
     "ts-essentials": "^10.0.4",
     "zod": "^4.1.12"
