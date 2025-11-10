@@ -8,7 +8,7 @@ import type {
   SlashCommandBlueprint,
 } from "../commands/slashCommands/slashCommandBlueprint.ts";
 import type { SlashGroupBlueprint } from "../commands/slashCommands/slashGroupBlueprint.ts";
-import type { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "../config/configTypes.ts";
+import type { CustomOverrideCriteriaFunctions, PluginOverride } from "../config/configTypes.ts";
 import type { EventListenerBlueprint } from "../events/EventListenerBlueprint.ts";
 import type { GuildEvent, ValidEvent } from "../events/eventTypes.ts";
 import type { Awaitable } from "../utils.ts";

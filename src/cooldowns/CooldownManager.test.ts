@@ -1,4 +1,4 @@
-import { assert, expect } from "chai";
+import { assert } from "chai";
 import { describe, it } from "mocha";
 import { sleep } from "../testUtils.ts";
 import { CooldownManager } from "./CooldownManager.ts";

@@ -2,12 +2,9 @@ import { assert, expect } from "chai";
 import type { Client } from "discord.js";
 import { describe, it } from "mocha";
 import z from "zod/v4";
-import { Knub } from "./Knub.ts";
 import { guildPluginMessageCommand } from "./commands/messageCommands/messageCommandBlueprint.ts";
-import { guildPluginEventListener } from "./events/EventListenerBlueprint.ts";
-import { GuildPluginBlueprint, guildPlugin } from "./plugins/PluginBlueprint.ts";
+import { guildPlugin } from "./plugins/PluginBlueprint.ts";
 import {
-  createMockClient,
   createMockGuild,
   createMockMember,
   createMockMessage,

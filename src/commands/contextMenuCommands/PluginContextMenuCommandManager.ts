@@ -1,4 +1,4 @@
-import { type Interaction, MessageContextMenuCommandInteraction } from "discord.js";
+import type { Interaction } from "discord.js";
 import type { AnyPluginData } from "../../plugins/PluginData.ts";
 import { get } from "../../utils.ts";
 import type {

@@ -1,7 +1,7 @@
-import { assert, expect } from "chai";
+import { assert } from "chai";
 import { describe, it } from "mocha";
 import { sleep } from "../testUtils.ts";
-import { Lock, LockManager } from "./LockManager.ts";
+import { LockManager } from "./LockManager.ts";
 
 describe("LockManager", () => {
   it("simple lock", async () => {

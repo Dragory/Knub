@@ -1,4 +1,4 @@
-import { assert, expect } from "chai";
+import { assert } from "chai";
 import type { Message, OmitPartialGroupDMChannel } from "discord.js";
 import { describe, it } from "mocha";
 import type { GlobalPluginData, GuildPluginData } from "../plugins/PluginData.ts";

@@ -28,13 +28,12 @@ export class GlobalPluginEventManager<
     }
 
     const filteredListener = withFilters(blueprint.event, blueprint.listener, filters) as FilteredListener<
-      Listener<TPluginData["_pluginType"], T["event"]>
+      Listener<TPluginData, T["event"]>
     >;
 
     const wrappedListener: WrappedListener = (args: EventArguments[T["event"]]) => {
       const result = filteredListener({
-        // @ts-ignore TS is having trouble inferring this correctly. We know TPluginData extends GlobalPluginData, which
-        // means that args should be EventArguments[T["event"]], which it is as per the type annotation above.
+        // @ts-expect-error
         args,
         pluginData: this.pluginData!,
       });

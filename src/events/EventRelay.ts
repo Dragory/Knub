@@ -4,10 +4,10 @@ import type { Profiler } from "../Profiler.ts";
 import {
   type EventArguments,
   type ExtendedClientEvents,
-  type GuildEvent,
-  type ValidEvent,
   fromDjsArgs,
+  type GuildEvent,
   isGuildEvent,
+  type ValidEvent,
 } from "./eventTypes.ts";
 import { eventToGuild } from "./eventUtils.ts";
 

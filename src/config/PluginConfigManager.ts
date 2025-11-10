@@ -21,7 +21,7 @@ import {
   pluginBaseOptionsSchema,
   pluginOverrideCriteriaSchema,
 } from "./configTypes.ts";
-import { type MatchParams, getMatchingPluginConfig, mergeConfig } from "./configUtils.ts";
+import { getMatchingPluginConfig, type MatchParams, mergeConfig } from "./configUtils.ts";
 
 export interface ExtendedMatchParams extends MatchParams {
   channelId?: string | null;
@@ -94,7 +94,7 @@ export class PluginConfigManager<TPluginData extends BasePluginData<BasePluginTy
         throw new ConfigValidationError("Overrides must include the config property");
       }
 
-      const { config: overrideConfig, ...overrideCriteria } = override;
+      const { config: _overrideConfig, ...overrideCriteria } = override;
       const overrideCriteriaParseResult = pluginOverrideCriteriaSchema.safeParse(overrideCriteria);
       if (!overrideCriteriaParseResult.success) {
         throw new ConfigValidationError(`Invalid override criteria: ${overrideCriteriaParseResult.error.message}`);

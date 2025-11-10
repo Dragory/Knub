@@ -12,7 +12,6 @@ import { hasPermission } from "../../helpers.ts";
 import type { Lock } from "../../locks/LockManager.ts";
 import type { AnyPluginData, GuildPluginData } from "../../plugins/PluginData.ts";
 import type { BasePluginType } from "../../plugins/pluginTypes.ts";
-import { GuildMessage } from "../../types.ts";
 import type { Awaitable } from "../../utils.ts";
 import type { MessageCommandBlueprint } from "./messageCommandBlueprint.ts";
 

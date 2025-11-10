@@ -72,7 +72,7 @@ export function defaultGetConfig() {
  * By default, load all available guild plugins
  */
 export function defaultGetEnabledGuildPlugins(
-  ctx: AnyContext,
+  _ctx: AnyContext,
   guildPlugins: GuildPluginMap,
 ): Array<KeyOfMap<GuildPluginMap>> {
   return Array.from(guildPlugins.keys());

@@ -1,5 +1,4 @@
 import type { Client, Guild } from "discord.js";
-import type { Knub } from "../Knub.ts";
 import type { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
 import type { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager.ts";
 import type { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager.ts";
@@ -7,6 +6,7 @@ import type { PluginConfigManager } from "../config/PluginConfigManager.ts";
 import type { CooldownManager } from "../cooldowns/CooldownManager.ts";
 import type { GlobalPluginEventManager } from "../events/GlobalPluginEventManager.ts";
 import type { GuildPluginEventManager } from "../events/GuildPluginEventManager.ts";
+import type { Knub } from "../Knub.ts";
 import type { LockManager } from "../locks/LockManager.ts";
 import type { BasePluginBlueprint } from "./PluginBlueprint.ts";
 import type { BasePluginType } from "./pluginTypes.ts";

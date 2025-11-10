@@ -8,14 +8,14 @@ import {
   type CommandExtraData,
   type CommandFn,
   type ContextualCommandMessage,
-  type MessageCommandMeta,
-  type MessageCommandSignatureOrArray,
-  type PluginCommandDefinition,
   checkCommandCooldown,
   checkCommandLocks,
   checkCommandPermission,
   getDefaultMessageCommandPrefix,
   getMessageCommandSignature,
+  type MessageCommandMeta,
+  type MessageCommandSignatureOrArray,
+  type PluginCommandDefinition,
   restrictCommandSource,
 } from "./messageCommandUtils.ts";
 

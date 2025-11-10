@@ -1,4 +1,4 @@
-import { assert, expect } from "chai";
+import { expect } from "chai";
 import type { DMChannel, TextChannel } from "discord.js";
 import { number, string } from "knub-command-manager";
 import { describe, it } from "mocha";

@@ -1,7 +1,6 @@
 import type z from "zod";
-import { AnyPluginData, type BasePluginData } from "../plugins/PluginData.ts";
+import type { BasePluginData } from "../plugins/PluginData.ts";
 import type { BasePluginType } from "../plugins/pluginTypes.ts";
-import { AnyLoadedPlugin } from "../types.ts";
 import { typedKeys } from "../utils.ts";
 import type { CustomOverrideCriteriaFunctions, PluginOptions, PluginOverride } from "./configTypes.ts";
 

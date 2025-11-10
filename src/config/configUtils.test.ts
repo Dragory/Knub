@@ -1,4 +1,4 @@
-import { assert, expect } from "chai";
+import { expect } from "chai";
 import { describe, it } from "mocha";
 import { z } from "zod";
 import type { PluginOptions } from "../index.ts";

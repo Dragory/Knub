@@ -8,26 +8,25 @@ import {
   type Snowflake,
 } from "discord.js";
 import { ConcurrentRunner } from "./ConcurrentRunner.ts";
-import { Profiler } from "./Profiler.ts";
-import { Queue } from "./Queue.ts";
 import { PluginContextMenuCommandManager } from "./commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
-import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager.ts";
 import {
   hasMessageCommandBeenDispatched,
   markMessageCommandDispatched,
 } from "./commands/messageCommands/messageCommandUtils.ts";
+import { PluginMessageCommandManager } from "./commands/messageCommands/PluginMessageCommandManager.ts";
 import {
   type AnyApplicationCommandBlueprint,
   registerApplicationCommands,
 } from "./commands/registerApplicationCommands.ts";
 import { PluginSlashCommandManager } from "./commands/slashCommands/PluginSlashCommandManager.ts";
-import { PluginConfigManager } from "./config/PluginConfigManager.ts";
 import type { BaseConfig } from "./config/configTypes.ts";
+import { PluginConfigManager } from "./config/PluginConfigManager.ts";
 import { CooldownManager } from "./cooldowns/CooldownManager.ts";
 import { EventRelay } from "./events/EventRelay.ts";
 import { GlobalPluginEventManager } from "./events/GlobalPluginEventManager.ts";
 import { GuildPluginEventManager } from "./events/GuildPluginEventManager.ts";
 import { LockManager } from "./locks/LockManager.ts";
+import { Profiler } from "./Profiler.ts";
 import type {
   AnyGlobalEventListenerBlueprint,
   AnyGuildEventListenerBlueprint,
@@ -38,9 +37,10 @@ import type {
 import type { AnyPluginData, GlobalPluginData, GuildPluginData } from "./plugins/PluginData.ts";
 import { PluginLoadError } from "./plugins/PluginLoadError.ts";
 import { PluginNotLoadedError } from "./plugins/PluginNotLoadedError.ts";
-import { UnknownPluginError } from "./plugins/UnknownPluginError.ts";
 import type { BasePluginType } from "./plugins/pluginTypes.ts";
-import { type PluginPublicInterface, defaultGetConfig, defaultGetEnabledGuildPlugins } from "./plugins/pluginUtils.ts";
+import { defaultGetConfig, defaultGetEnabledGuildPlugins, type PluginPublicInterface } from "./plugins/pluginUtils.ts";
+import { UnknownPluginError } from "./plugins/UnknownPluginError.ts";
+import { Queue } from "./Queue.ts";
 import type {
   AnyContext,
   GlobalContext,
@@ -109,7 +109,7 @@ export class Knub extends EventEmitter {
     this.eventRelay = new EventRelay(client, this.profiler);
 
     this.globalContext = {
-      // @ts-ignore: This property is always set in loadGlobalConfig() before it can be used by plugins
+      // @ts-expect-error This property is always set in loadGlobalConfig() before it can be used by plugins
       config: null,
       loadedPlugins: new Map<string, LoadedGlobalPlugin<any>>(),
       locks: new LockManager(),
@@ -359,7 +359,6 @@ export class Knub extends EventEmitter {
 
       loadedAsDependency,
 
-      // @ts-ignore: This is actually correct, dw about it
       getKnubInstance: () => this,
       hasGlobalPlugin: notCallable("hasGlobalPlugin is not available yet"),
       getGlobalPlugin: notCallable("getGlobalPlugin is not available yet"),
@@ -453,7 +452,7 @@ export class Knub extends EventEmitter {
 
       const guildContext: GuildContext = {
         guildId,
-        // @ts-ignore: This property is always set below before it can be used by plugins
+        // @ts-expect-error This property is always set below before it can be used by plugins
         config: null,
         loadedPlugins: new Map<string, LoadedGuildPlugin<any>>(),
         locks: new LockManager(),
@@ -514,7 +513,7 @@ export class Knub extends EventEmitter {
 
       // 2. Mark each plugin as unloaded and remove event listeners
       // After this step no plugin code should be running anymore
-      for (const [pluginName, loadedPlugin] of pluginsToUnload) {
+      for (const [_pluginName, loadedPlugin] of pluginsToUnload) {
         loadedPlugin.pluginData.loaded = false;
         await loadedPlugin.pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
         await loadedPlugin.pluginData.messageCommands.destroy(this.options.pluginUnloadEventTimeoutMs);
@@ -661,7 +660,7 @@ export class Knub extends EventEmitter {
     }
 
     // 3. Register event handlers and commands
-    for (const [pluginName, { blueprint, pluginData, onlyLoadedAsDependency }] of ctx.loadedPlugins) {
+    for (const [_pluginName, { blueprint, pluginData, onlyLoadedAsDependency }] of ctx.loadedPlugins) {
       if (!onlyLoadedAsDependency) {
         // Register event listeners
         if (blueprint.events) {
@@ -767,7 +766,7 @@ export class Knub extends EventEmitter {
 
     // 2. Mark each plugin as unloaded and remove event listeners
     // After this step no plugin code should be running anymore
-    for (const [pluginName, loadedPlugin] of pluginsToUnload) {
+    for (const [_pluginName, loadedPlugin] of pluginsToUnload) {
       loadedPlugin.pluginData.loaded = false;
       await loadedPlugin.pluginData.events.destroy(this.options.pluginUnloadEventTimeoutMs);
       await loadedPlugin.pluginData.messageCommands.destroy(this.options.pluginUnloadEventTimeoutMs);
@@ -820,7 +819,7 @@ export class Knub extends EventEmitter {
     }
 
     // 3. Register each plugin's event listeners and commands
-    for (const [pluginName, { pluginData, blueprint }] of ctx.loadedPlugins) {
+    for (const [_pluginName, { pluginData, blueprint }] of ctx.loadedPlugins) {
       // Register event listeners
       if (blueprint.events) {
         for (const eventListenerBlueprint of blueprint.events) {

@@ -3,7 +3,7 @@ export const mochaHooks = {
     process.on("uncaughtException", (err) => {
       throw err;
     });
-    process.on("unhandledRejection", (err, promise) => {
+    process.on("unhandledRejection", (err) => {
       throw err;
     });
   },

@@ -1,6 +1,6 @@
 import type { Lock } from "../locks/LockManager.ts";
 import type { AnyPluginData, GuildPluginData } from "../plugins/PluginData.ts";
-import { type Awaitable, sleep } from "../utils.ts";
+import type { Awaitable } from "../utils.ts";
 import type { EventRelay } from "./EventRelay.ts";
 import type { EventFilter } from "./eventFilters.ts";
 import type { EventArguments, GuildEventArguments, ValidEvent } from "./eventTypes.ts";

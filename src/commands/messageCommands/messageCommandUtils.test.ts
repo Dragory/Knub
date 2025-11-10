@@ -1,4 +1,4 @@
-import { assert, expect } from "chai";
+import { assert } from "chai";
 import { CommandManager, isError, number, string } from "knub-command-manager";
 import { describe, it } from "mocha";
 import {

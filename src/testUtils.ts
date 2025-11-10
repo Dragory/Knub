@@ -76,8 +76,7 @@ export function createMockClient(): Client<true> {
       }
 
       if (p === "guilds") {
-        // @ts-ignore
-        // This type assertation is needed because the constructor is marked as private
+        // @ts-expect-error This type assertation is needed because the constructor is marked as private
         return persist(target, p, new GuildManager(proxy) as GuildManager);
       }
 
@@ -89,8 +88,7 @@ export function createMockClient(): Client<true> {
       }
 
       if (p === "channels") {
-        // @ts-ignore
-        // This type assertation is needed because the constructor is marked as private
+        // @ts-expect-error This type assertation is needed because the constructor is marked as private
         return persist(target, p, new ChannelManager(proxy, []) as ChannelManager);
       }
 
@@ -158,14 +156,11 @@ export function createMockGuild(client: Client, data = {}): Guild {
   } as Guild);
 
   const mockGuild = client.guilds.cache.get(id)!;
-  // @ts-ignore
-  // This type assertation is needed because the constructor is marked as private
+  // @ts-expect-error This type assertation is needed because the constructor is marked as private
   mockGuild.members = new GuildMemberManager(mockGuild) as GuildMemberManager;
-  // @ts-ignore
-  // This type assertation is needed because the constructor is marked as private
+  // @ts-expect-error This type assertation is needed because the constructor is marked as private
   mockGuild.channels = new GuildChannelManager(mockGuild) as GuildChannelManager;
-  // @ts-ignore
-  // This type assertation is needed because the constructor is marked as private
+  // @ts-expect-error This type assertation is needed because the constructor is marked as private
   mockGuild.roles = new RoleManager(mockGuild) as RoleManager;
 
   // Add everyone role
@@ -179,7 +174,7 @@ export function createMockUser(client: Client, data = {}): User {
   const id = (++mockUserId).toString();
   const mockUser = client.users.cache.set(
     id,
-    // @ts-ignore
+    // @ts-expect-error This type assertation is needed because the constructor is marked as private
     new User(client, {
       id,
       username: `mockuser_${id}`,
@@ -192,7 +187,7 @@ export function createMockUser(client: Client, data = {}): User {
 }
 
 export function createMockMember(guild: Guild, user: User, data = {}): GuildMember {
-  // @ts-ignore
+  // @ts-expect-error
   // Not sure why the eslint rule below is triggered, but it probably
   // has something to do with the constructor being marked as private.
   guild.members.cache.set(user.id, new GuildMember(guild.client, { user, ...data }, guild));
@@ -204,7 +199,7 @@ export function createMockTextChannel(client: Client, guildId: Snowflake, data =
   const id = (++mockChannelId).toString();
   const guild = client.guilds.cache.get(guildId)!;
 
-  // @ts-ignore
+  // @ts-expect-error This type assertation is needed because the constructor is marked as private
   const mockChannel = new TextChannel(
     guild,
     {
@@ -228,13 +223,11 @@ export function createMockMessage(
   author: User,
   data = {},
 ): OmitPartialGroupDMChannel<Message> {
-  // @ts-ignore
-  // This type assertation is needed because the constructor is marked as private
+  // @ts-expect-error This type assertation is needed because the constructor is marked as private
   const message = new Message(client, {
     id: (++mockMessageId).toString(),
     channel_id: channel.id,
     mentions: [],
-    // @ts-ignore
     author,
     ...data,
   }) as OmitPartialGroupDMChannel<Message>;
@@ -247,8 +240,7 @@ export function createMockRole(guild: Guild, data = {}, overrideId: string | nul
   const id = overrideId || (++mockRoleId).toString();
   guild.roles.cache.set(
     id,
-    // @ts-ignore
-    // This type assertation is needed because the constructor is marked as private
+    // @ts-expect-error This type assertation is needed because the constructor is marked as private
     new Role(
       guild.client,
       {
@@ -267,8 +259,7 @@ export function createMockThread(channel: NewsChannel | GuildChannel): AnyThread
   const id = (++mockThreadId).toString();
   channel.guild.channels.cache.set(
     id,
-    // @ts-ignore
-    // This type assertation is needed because the constructor is marked as private
+    // @ts-expect-error This type assertation is needed because the constructor is marked as private
     new ThreadChannel(
       channel.guild,
       {
@@ -303,5 +294,5 @@ export type AssertTypeEquals<TActual, TExpected> = TActual extends TExpected ? t
 export function assertTypeEquals<
   TExpected,
   TActual,
-  TAssert extends TActual extends TExpected ? true : false,
+  _TAssert extends TActual extends TExpected ? true : false,
 >(): void {}

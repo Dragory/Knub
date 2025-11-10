@@ -133,7 +133,7 @@ export function ignoreSelf(): EventFilter {
 }
 
 export function locks(locksToAcquire: string | string[]): EventFilter {
-  return async (event, meta) => {
+  return async (_event, meta) => {
     const lock = await meta.pluginData.locks.acquire(locksToAcquire);
     if (lock.interrupted) return false;
 

@@ -1,4 +1,4 @@
-import { assert, expect } from "chai";
+import { expect } from "chai";
 import type { Channel, GuildChannel, GuildTextBasedChannel, Message, TextBasedChannel } from "discord.js";
 import { describe, it } from "mocha";
 import type { BasePluginType } from "../plugins/pluginTypes.ts";

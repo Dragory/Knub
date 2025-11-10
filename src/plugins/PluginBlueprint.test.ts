@@ -3,10 +3,10 @@ import type { ChatInputCommandInteraction, TextChannel } from "discord.js";
 import { parseSignature } from "knub-command-manager";
 import { describe, it } from "mocha";
 import z from "zod";
-import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
 import { guildPluginMessageContextMenuCommand } from "../commands/contextMenuCommands/contextMenuCommandBlueprint.ts";
-import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager.ts";
+import { PluginContextMenuCommandManager } from "../commands/contextMenuCommands/PluginContextMenuCommandManager.ts";
 import { guildPluginMessageCommand } from "../commands/messageCommands/messageCommandBlueprint.ts";
+import { PluginMessageCommandManager } from "../commands/messageCommands/PluginMessageCommandManager.ts";
 import { PluginSlashCommandManager } from "../commands/slashCommands/PluginSlashCommandManager.ts";
 import { PluginConfigManager } from "../config/PluginConfigManager.ts";
 import { globalPluginEventListener, guildPluginEventListener } from "../events/EventListenerBlueprint.ts";
@@ -16,9 +16,9 @@ import {
   CooldownManager,
   type GlobalPluginBlueprint,
   type GlobalPluginData,
-  LockManager,
   guildPluginSlashCommand,
   guildPluginSlashGroup,
+  LockManager,
   slashOptions,
 } from "../index.ts";
 import {
@@ -38,7 +38,6 @@ import { noop } from "../utils.ts";
 import { type AnyPluginBlueprint, type GuildPluginBlueprint, globalPlugin, guildPlugin } from "./PluginBlueprint.ts";
 import { type GuildPluginData, isGlobalPluginData } from "./PluginData.ts";
 import type { BasePluginType } from "./pluginTypes.ts";
-import { PluginPublicInterface } from "./pluginUtils.ts";
 
 type AssertEquals<TActual, TExpected> = TActual extends TExpected ? true : false;
 
